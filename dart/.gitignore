@@ -36,7 +36,5 @@ doc/api/
 
 # End of https://www.toptal.com/developers/gitignore/api/dart
 
-# Protobuf classes are generated/compiled into the lib directory.  Ignore it in git so that CI/CD can generate it fresh
-lib/
 # Protobuf files are copied into this directory
 tmp/
