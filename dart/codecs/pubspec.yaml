@@ -1,5 +1,5 @@
-name: blockchain_block_production
-description: Blockchain block production
+name: blockchain_codecs
+description: Blockchain codecs
 
 publish_to: 'none'
 
@@ -10,12 +10,10 @@ environment:
 
 
 dependencies:
+  crypto: ^3.0.2
+  bs58: ^1.0.2
   blockchain_protobuf:
     path: ../protobuf_dart
-  blockchain_common:
-    path: ../common
-  blockchain_codecs:
-    path: ../codecs
 
 dev_dependencies:
   test: ^1.22.1

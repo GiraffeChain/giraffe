@@ -41,28 +41,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.10.0"
-  base_x:
-    dependency: transitive
-    description:
-      name: base_x
-      sha256: "3f1043679659f1759c651f900da6f24f0a8062c28daa6f9625e8d580002e187b"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.0"
-  blockchain_codecs:
-    dependency: "direct main"
-    description:
-      path: "../codecs"
-      relative: true
-    source: path
-    version: "2.0.0+1"
-  blockchain_common:
-    dependency: "direct main"
-    description:
-      path: "../common"
-      relative: true
-    source: path
-    version: "2.0.0+1"
   blockchain_protobuf:
     dependency: "direct main"
     description:
@@ -78,14 +56,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  bs58:
-    dependency: transitive
-    description:
-      name: bs58
-      sha256: "3ed24dadf386ca749ff50af678be1131ef569a3583a6f37b87b90c032270c767"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.2"
   collection:
     dependency: transitive
     description:
@@ -127,7 +97,7 @@ packages:
     source: hosted
     version: "6.1.4"
   fixnum:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: fixnum
       sha256: "25517a4deb0c03aa0f32fd12db525856438902d9c16536311e76cdc57b31d7d1"

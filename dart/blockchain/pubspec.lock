@@ -49,6 +49,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  blockchain_block_production:
+    dependency: "direct main"
+    description:
+      path: "../block_production"
+      relative: true
+    source: path
+    version: "2.0.0+1"
   blockchain_codecs:
     dependency: "direct main"
     description:
@@ -60,6 +67,27 @@ packages:
     dependency: "direct main"
     description:
       path: "../common"
+      relative: true
+    source: path
+    version: "2.0.0+1"
+  blockchain_consensus:
+    dependency: "direct main"
+    description:
+      path: "../consensus"
+      relative: true
+    source: path
+    version: "2.0.0+1"
+  blockchain_ledger:
+    dependency: "direct main"
+    description:
+      path: "../ledger"
+      relative: true
+    source: path
+    version: "2.0.0+1"
+  blockchain_network:
+    dependency: "direct main"
+    description:
+      path: "../network"
       relative: true
     source: path
     version: "2.0.0+1"
@@ -127,7 +155,7 @@ packages:
     source: hosted
     version: "6.1.4"
   fixnum:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: fixnum
       sha256: "25517a4deb0c03aa0f32fd12db525856438902d9c16536311e76cdc57b31d7d1"

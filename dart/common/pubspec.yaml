@@ -1,5 +1,5 @@
-name: blockchain_block_production
-description: Blockchain block production
+name: blockchain_common
+description: Blockchain common
 
 publish_to: 'none'
 
@@ -10,12 +10,9 @@ environment:
 
 
 dependencies:
+  fixnum:
   blockchain_protobuf:
     path: ../protobuf_dart
-  blockchain_common:
-    path: ../common
-  blockchain_codecs:
-    path: ../codecs
 
 dev_dependencies:
   test: ^1.22.1

@@ -1,0 +1,31 @@
+name: blockchain
+description: Blockchain
+
+publish_to: 'none'
+
+version: 2.0.0+1
+
+environment:
+  sdk: ">=2.17.0-266.8.beta <3.0.0"
+
+
+dependencies:
+  fixnum:
+  blockchain_network:
+    path: ../network
+  blockchain_protobuf:
+    path: ../protobuf_dart
+  blockchain_codecs:
+    path: ../codecs
+  blockchain_block_production:
+    path: ../block_production
+  blockchain_consensus:
+    path: ../consensus
+  blockchain_ledger:
+    path: ../ledger
+  blockchain_common:
+    path: ../common
+
+
+dev_dependencies:
+  test: ^1.22.1
