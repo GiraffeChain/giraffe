@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.blockchain.models;
+
+import 'models/transaction.proto';
+
+message BlockId {
+    bytes bytes = 1;
+}
+
+message Block {
+    BlockId parentHeaderId = 1;
+    uint64 timestamp = 2;
+    uint64 height = 3;
+    uint64 slot = 4;
+    bytes proof = 5;
+    repeated TransactionId transactionIds = 6;
+}
+

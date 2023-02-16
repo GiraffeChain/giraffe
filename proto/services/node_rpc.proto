@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package com.blockchain.services;
+
+import 'models/transaction.proto';
+import 'models/block.proto';
+
+service NodeRpc {
+    rpc BroadcastTransaction (BroadcastTransactionReq) returns (BroadcastTransactionRes);
+    rpc GetBlock(GetBlockReq) returns (GetBlockRes);
+    rpc GetTransaction(GetTransactionReq) returns (GetTransactionRes);
+    rpc BlockIdGossip(BlockIdGossipReq) returns (stream BlockIdGossipRes);
+    rpc TransactionIdGossip(TransactionIdGossipReq) returns (stream TransactionIdGossipRes);
+}
+
+message BroadcastTransactionReq {
+    com.blockchain.models.Transaction transaction = 1;
+}
+
+message BroadcastTransactionRes {}
+
+message GetBlockReq {
+    com.blockchain.models.BlockId blockId = 1;
+}
+
+message GetBlockRes {
+    com.blockchain.models.Block block = 1;
+}
+
+message GetTransactionReq {
+    com.blockchain.models.TransactionId transactionId = 1;
+}
+
+message GetTransactionRes {
+    com.blockchain.models.Transaction transaction = 1;
+}
+
+message BlockIdGossipReq {}
+
+message BlockIdGossipRes {
+    com.blockchain.models.BlockId blockId = 1;
+}
+
+message TransactionIdGossipReq {}
+
+message TransactionIdGossipRes {
+    com.blockchain.models.TransactionId transactionId = 1;
+}
+
