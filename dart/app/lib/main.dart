@@ -34,7 +34,8 @@ class BlockchainHomePage extends StatefulWidget {
 class _BlockchainHomePageState extends State<BlockchainHomePage> {
   final _configFormKey = GlobalKey<FormState>();
 
-  final _config = BlockchainConfig("localhost", 9555, DateTime.now(), []);
+  final _config = BlockchainConfig(
+      "localhost", 9555, DateTime.fromMillisecondsSinceEpoch(0), []);
   bool _launched = false;
 
   @override
@@ -91,13 +92,18 @@ class _BlockchainHomePageState extends State<BlockchainHomePage> {
     );
 
     final genesisTimestamp = TextFormField(
-      initialValue: _config.initialPeers.join(","),
+      initialValue: _config.genesisTimestamp.millisecondsSinceEpoch.toString(),
       decoration: const InputDecoration(hintText: "Genesis timestamp"),
       validator: (value) {
         if (value != null) int.tryParse(value) != null;
       },
-      onChanged: (timestamp) => setState(() => _config.genesisTimestamp =
-          DateTime.fromMillisecondsSinceEpoch(int.parse(timestamp))),
+      onChanged: (timestamp) => setState(() {
+        final maybeInt = int.tryParse(timestamp);
+        if (maybeInt != null) {
+          _config.genesisTimestamp =
+              DateTime.fromMillisecondsSinceEpoch(maybeInt!);
+        }
+      }),
     );
 
     final launchButton = TextButton.icon(
@@ -106,9 +112,12 @@ class _BlockchainHomePageState extends State<BlockchainHomePage> {
         if (form.validate()) {
           form.save();
           setState(() {
+            if (_config.genesisTimestamp.millisecondsSinceEpoch == 0) {
+              _config.genesisTimestamp = DateTime.now();
+            }
             _launched = true;
+            print(_config.genesisTimestamp.millisecondsSinceEpoch);
           });
-          print(_config.genesisTimestamp.millisecondsSinceEpoch);
         }
       },
       icon: const Icon(Icons.launch),

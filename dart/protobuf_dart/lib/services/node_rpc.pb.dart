@@ -9,8 +9,100 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../models/transaction.pb.dart' as $1;
 import '../models/block.pb.dart' as $2;
+import '../models/transaction.pb.dart' as $1;
+
+class HandshakeReq extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'HandshakeReq', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+    ..aOM<$2.BlockId>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'genesisBlockId', protoName: 'genesisBlockId', subBuilder: $2.BlockId.create)
+    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'p2pAddress', protoName: 'p2pAddress')
+    ..hasRequiredFields = false
+  ;
+
+  HandshakeReq._() : super();
+  factory HandshakeReq({
+    $2.BlockId? genesisBlockId,
+    $core.String? p2pAddress,
+  }) {
+    final _result = create();
+    if (genesisBlockId != null) {
+      _result.genesisBlockId = genesisBlockId;
+    }
+    if (p2pAddress != null) {
+      _result.p2pAddress = p2pAddress;
+    }
+    return _result;
+  }
+  factory HandshakeReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory HandshakeReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  HandshakeReq clone() => HandshakeReq()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  HandshakeReq copyWith(void Function(HandshakeReq) updates) => super.copyWith((message) => updates(message as HandshakeReq)) as HandshakeReq; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static HandshakeReq create() => HandshakeReq._();
+  HandshakeReq createEmptyInstance() => create();
+  static $pb.PbList<HandshakeReq> createRepeated() => $pb.PbList<HandshakeReq>();
+  @$core.pragma('dart2js:noInline')
+  static HandshakeReq getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<HandshakeReq>(create);
+  static HandshakeReq? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $2.BlockId get genesisBlockId => $_getN(0);
+  @$pb.TagNumber(1)
+  set genesisBlockId($2.BlockId v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasGenesisBlockId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearGenesisBlockId() => clearField(1);
+  @$pb.TagNumber(1)
+  $2.BlockId ensureGenesisBlockId() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.String get p2pAddress => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set p2pAddress($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasP2pAddress() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearP2pAddress() => clearField(2);
+}
+
+class HandshakeRes extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'HandshakeRes', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
+
+  HandshakeRes._() : super();
+  factory HandshakeRes() => create();
+  factory HandshakeRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory HandshakeRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  HandshakeRes clone() => HandshakeRes()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  HandshakeRes copyWith(void Function(HandshakeRes) updates) => super.copyWith((message) => updates(message as HandshakeRes)) as HandshakeRes; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static HandshakeRes create() => HandshakeRes._();
+  HandshakeRes createEmptyInstance() => create();
+  static $pb.PbList<HandshakeRes> createRepeated() => $pb.PbList<HandshakeRes>();
+  @$core.pragma('dart2js:noInline')
+  static HandshakeRes getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<HandshakeRes>(create);
+  static HandshakeRes? _defaultInstance;
+}
 
 class BroadcastTransactionReq extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'BroadcastTransactionReq', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.services'), createEmptyInstance: create)

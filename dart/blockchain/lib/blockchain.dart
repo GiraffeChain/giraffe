@@ -22,9 +22,10 @@ class Blockchain {
   final Consensus consensus;
   final Store<BlockId, Block> blockStore;
   final Network network;
+  final StreamController remoteBlocksController;
 
   Blockchain(this.config, this.clock, this.blockProducer, this.consensus,
-      this.blockStore, this.network);
+      this.blockStore, this.network, this.remoteBlocksController);
 
   static Future<Blockchain> make(BlockchainConfig config) async {
     final genesisTimestamp =
@@ -38,20 +39,35 @@ class Blockchain {
     await blockStore.set(genesisBlockId, genesisBlock);
     final consensus = ConsensusImpl(genesisBlockId, blockStore.getOrRaise);
 
-    final network = await Network.make(
+    final controller = StreamController();
+
+    late Network network;
+
+    network = await Network.make(
       config.networkBindHost,
       config.networkBindPort,
+      genesisBlockId,
       RpcServer(
         () => consensus.adoptions,
         blockStore.getOrRaise,
       ),
+      (peer) => unawaited(
+        network.outboundPeers.containsKey(peer)
+            ? Future.value()
+            : _peerBlockStream(peer, network, blockStore)
+                .forEach(controller.add),
+      ),
     );
 
-    return Blockchain(
-        config, clock, blockProducer, consensus, blockStore, network);
+    final blockchain = Blockchain(config, clock, blockProducer, consensus,
+        blockStore, network, controller);
+
+    return blockchain;
   }
 
-  Future<void> get run => _candidateBlocks.asyncMap(_processCandidate).drain();
+  Future<void> get run => Future.wait([
+        _candidateBlocks.asyncMap(_processCandidate).drain(),
+      ]);
 
   Stream<Block> get _candidateBlocks =>
       StreamGroup.merge([_locallyProducedBlocks, _remoteBlocks]);
@@ -74,27 +90,42 @@ class Blockchain {
     }));
   }
 
-  Stream<Block> get _remoteBlocks => StreamGroup.merge(config.initialPeers.map(
-      (address) => Stream.fromFuture(network.connectTo(address)).asyncExpand(
-            (peer) => peer
-                .blockIdGossip(BlockIdGossipReq())
-                .map((r) => r.blockId)
-                .asyncMap((id) async =>
-                    {"id": id, "known": await blockStore.contains(id)})
-                .where((e) => !(e["known"] as bool))
-                .map((v) => v["id"] as BlockId)
-                .asyncMap((id) async {
-              final blocks = [
-                (await peer.getBlock(GetBlockReq(blockId: id))).block
-              ];
-              while (!await blockStore.contains(blocks.first.parentHeaderId)) {
-                blocks.add((await peer.getBlock(
+  Stream<Block> get _remoteBlocks => StreamGroup.merge(
+      config.initialPeers.map((p) => _peerBlockStream(p, network, blockStore)));
+
+  static Stream<Block> _peerBlockStream(
+      String address, Network network, Store<BlockId, Block> blockStore) {
+    print("Connecting to peer=$address");
+
+    return Stream.fromFuture(network.connectTo(address)).asyncExpand(
+      (peer) => peer
+          .blockIdGossip(BlockIdGossipReq())
+          .map((r) => r.blockId)
+          .map((id) {
+            print("Remote peer notified blockId=${id.show}");
+            return id;
+          })
+          .asyncMap(
+              (id) async => {"id": id, "known": await blockStore.contains(id)})
+          .where((e) => !(e["known"] as bool))
+          .map((v) => v["id"] as BlockId)
+          .asyncMap((id) async {
+            final blocks = [
+              (await peer.getBlock(GetBlockReq(blockId: id))).block
+            ];
+            while (!await blockStore.contains(blocks.first.parentHeaderId)) {
+              blocks.insert(
+                0,
+                (await peer.getBlock(
                         GetBlockReq(blockId: blocks.first.parentHeaderId)))
-                    .block);
-              }
-              return blocks;
-            }).asyncExpand(Stream.fromIterable),
-          )));
+                    .block,
+              );
+            }
+            return blocks;
+          })
+          .asyncExpand(Stream.fromIterable),
+    );
+  }
 
   Future<Block?> _processCandidate(Block newBlock) async {
     final newBlockId = newBlock.id;
@@ -105,6 +136,7 @@ class Blockchain {
     );
     if (preferredHeadId == newBlockId) {
       await consensus.adopt(newBlockId);
+      print("Adopted blockId=${newBlockId.show}");
       return newBlock;
     }
   }

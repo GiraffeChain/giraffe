@@ -29,7 +29,7 @@ class ConsensusImpl extends Consensus {
     else if (b.height > a.height)
       return chainBHead;
     else if (a.slot < b.slot)
-      return chainBHead;
+      return chainAHead;
     else if (b.slot < a.slot)
       return chainBHead;
     else

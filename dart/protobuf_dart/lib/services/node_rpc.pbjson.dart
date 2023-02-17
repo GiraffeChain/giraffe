@@ -8,6 +8,24 @@
 import 'dart:core' as $core;
 import 'dart:convert' as $convert;
 import 'dart:typed_data' as $typed_data;
+@$core.Deprecated('Use handshakeReqDescriptor instead')
+const HandshakeReq$json = const {
+  '1': 'HandshakeReq',
+  '2': const [
+    const {'1': 'genesisBlockId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'genesisBlockId'},
+    const {'1': 'p2pAddress', '3': 2, '4': 1, '5': 9, '10': 'p2pAddress'},
+  ],
+};
+
+/// Descriptor for `HandshakeReq`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List handshakeReqDescriptor = $convert.base64Decode('CgxIYW5kc2hha2VSZXESRgoOZ2VuZXNpc0Jsb2NrSWQYASABKAsyHi5jb20uYmxvY2tjaGFpbi5tb2RlbHMuQmxvY2tJZFIOZ2VuZXNpc0Jsb2NrSWQSHgoKcDJwQWRkcmVzcxgCIAEoCVIKcDJwQWRkcmVzcw==');
+@$core.Deprecated('Use handshakeResDescriptor instead')
+const HandshakeRes$json = const {
+  '1': 'HandshakeRes',
+};
+
+/// Descriptor for `HandshakeRes`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List handshakeResDescriptor = $convert.base64Decode('CgxIYW5kc2hha2VSZXM=');
 @$core.Deprecated('Use broadcastTransactionReqDescriptor instead')
 const BroadcastTransactionReq$json = const {
   '1': 'BroadcastTransactionReq',

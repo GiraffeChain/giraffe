@@ -14,6 +14,11 @@ import 'node_rpc.pb.dart' as $0;
 export 'node_rpc.pb.dart';
 
 class NodeRpcClient extends $grpc.Client {
+  static final _$handshake =
+      $grpc.ClientMethod<$0.HandshakeReq, $0.HandshakeRes>(
+          '/com.blockchain.services.NodeRpc/Handshake',
+          ($0.HandshakeReq value) => value.writeToBuffer(),
+          ($core.List<$core.int> value) => $0.HandshakeRes.fromBuffer(value));
   static final _$broadcastTransaction = $grpc.ClientMethod<
           $0.BroadcastTransactionReq, $0.BroadcastTransactionRes>(
       '/com.blockchain.services.NodeRpc/BroadcastTransaction',
@@ -47,6 +52,11 @@ class NodeRpcClient extends $grpc.Client {
       {$grpc.CallOptions? options,
       $core.Iterable<$grpc.ClientInterceptor>? interceptors})
       : super(channel, options: options, interceptors: interceptors);
+
+  $grpc.ResponseFuture<$0.HandshakeRes> handshake($0.HandshakeReq request,
+      {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$handshake, request, options: options);
+  }
 
   $grpc.ResponseFuture<$0.BroadcastTransactionRes> broadcastTransaction(
       $0.BroadcastTransactionReq request,
@@ -86,6 +96,13 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
   $core.String get $name => 'com.blockchain.services.NodeRpc';
 
   NodeRpcServiceBase() {
+    $addMethod($grpc.ServiceMethod<$0.HandshakeReq, $0.HandshakeRes>(
+        'Handshake',
+        handshake_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.HandshakeReq.fromBuffer(value),
+        ($0.HandshakeRes value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.BroadcastTransactionReq,
             $0.BroadcastTransactionRes>(
         'BroadcastTransaction',
@@ -127,6 +144,11 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
         ($0.TransactionIdGossipRes value) => value.writeToBuffer()));
   }
 
+  $async.Future<$0.HandshakeRes> handshake_Pre(
+      $grpc.ServiceCall call, $async.Future<$0.HandshakeReq> request) async {
+    return handshake(call, await request);
+  }
+
   $async.Future<$0.BroadcastTransactionRes> broadcastTransaction_Pre(
       $grpc.ServiceCall call,
       $async.Future<$0.BroadcastTransactionReq> request) async {
@@ -154,6 +176,8 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
     yield* transactionIdGossip(call, await request);
   }
 
+  $async.Future<$0.HandshakeRes> handshake(
+      $grpc.ServiceCall call, $0.HandshakeReq request);
   $async.Future<$0.BroadcastTransactionRes> broadcastTransaction(
       $grpc.ServiceCall call, $0.BroadcastTransactionReq request);
   $async.Future<$0.GetBlockRes> getBlock(

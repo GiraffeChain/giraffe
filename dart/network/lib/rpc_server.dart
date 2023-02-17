@@ -41,4 +41,9 @@ class RpcServer extends NodeRpcServiceBase {
     // TODO: implement transactionIdGossip
     throw UnimplementedError();
   }
+
+  @override
+  Future<HandshakeRes> handshake(ServiceCall call, HandshakeReq request) {
+    return Future.value(HandshakeRes());
+  }
 }

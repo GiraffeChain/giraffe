@@ -1,17 +1,35 @@
-import 'package:blockchain_network/rpc_server.dart';
+import 'package:blockchain_network/authenticated_rpc.dart';
+import 'package:blockchain_protobuf/models/block.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
 
 class Network {
   final Server _server;
+  final String localAddress;
+  final BlockId genesisBlockId;
+  final Set<String> inboundPeers;
+  final Map<String, NodeRpcClient> outboundPeers;
 
-  Network(this._server);
+  Network(this._server, this.localAddress, this.genesisBlockId,
+      this.inboundPeers, this.outboundPeers);
 
   static Future<Network> make(
-      String host, int port, RpcServer implementation) async {
-    final server = Server([implementation]);
+      String host,
+      int port,
+      BlockId genesisBlockId,
+      NodeRpcServiceBase implementation,
+      void Function(String) inboundPeer) async {
+    final Set<String> inboundPeers = Set();
+    final authenticatedImplementation = AuthenticatedGrpcServer(
+      implementation,
+      (peer) {
+        inboundPeers.add(peer);
+        inboundPeer(peer);
+      },
+    );
+    final server = Server([authenticatedImplementation]);
     await server.serve(address: host, port: port);
-    return Network(server);
+    return Network(server, "${host}:${port}", genesisBlockId, inboundPeers, {});
   }
 
   Future<void> close() {
@@ -25,6 +43,12 @@ class Network {
     final channel = ClientChannel(host,
         port: port,
         options: ChannelOptions(credentials: ChannelCredentials.insecure()));
-    return NodeRpcClient(channel);
+    final client = AuthenticatedRpcClient(channel, localAddress);
+
+    outboundPeers[address] = client;
+
+    await client.handshake(
+        HandshakeReq(genesisBlockId: genesisBlockId, p2pAddress: localAddress));
+    return client;
   }
 }
