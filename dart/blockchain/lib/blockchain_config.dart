@@ -1,8 +1,13 @@
 class BlockchainConfig {
-  final String networkBindHost;
-  final int networkBindPort;
-  final DateTime genesisTimestamp;
+  String networkBindHost;
+  int networkBindPort;
+  DateTime genesisTimestamp;
+  List<String> initialPeers;
 
   BlockchainConfig(
-      this.networkBindHost, this.networkBindPort, this.genesisTimestamp);
+    this.networkBindHost,
+    this.networkBindPort,
+    this.genesisTimestamp,
+    this.initialPeers,
+  );
 }

@@ -9,6 +9,10 @@ abstract class Store<Key, Value> {
     final maybe = await get(key);
     return maybe!;
   }
+
+  Future<bool> contains(Key key) async {
+    return (await get(key)) != null;
+  }
 }
 
 class InMemoryStore<Key, Value> extends Store<Key, Value> {
