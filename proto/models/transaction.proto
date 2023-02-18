@@ -13,8 +13,11 @@ message TransactionInput {
 }
 
 message TransactionOutput {
-    Challenge spendChallenge = 1;
-    Value value = 2;
+    Value value = 1;
+    oneof constraint {
+        Challenge spendChallenge = 2;
+        Donation donation = 3;
+    }
 }
 
 message Value {
@@ -26,7 +29,9 @@ message Value {
 
 
     message Coin {
-        uint64 quantity = 1;
+        string quantity = 1;
+        // Owning "Coin" allows you a proportional vote for who can spend the next epoch's donation pool
+        Challenge donationChallengeVote = 2;
     }
 
     message Data {
@@ -46,4 +51,8 @@ message TransactionOutputReference {
 
 message Challenge {
     string script = 1;
+}
+
+message Donation {
+    bytes from = 1;
 }

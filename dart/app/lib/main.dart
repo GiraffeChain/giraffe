@@ -1,6 +1,5 @@
 import 'package:blockchain/blockchain_config.dart';
 import 'package:blockchain_app/blockchain_widget.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -65,6 +64,7 @@ class _BlockchainHomePageState extends State<BlockchainHomePage> {
         if (value == null || value.isEmpty) {
           return 'Enter a hostname';
         }
+        return null;
       },
       onChanged: (host) => setState(() => _config.networkBindHost = host),
     );
@@ -76,6 +76,7 @@ class _BlockchainHomePageState extends State<BlockchainHomePage> {
         if (value == null || value.isEmpty || int.tryParse(value) == null) {
           return 'Invalid port';
         }
+        return null;
       },
       onChanged: (port) =>
           setState(() => _config.networkBindPort = int.parse(port)),

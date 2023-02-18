@@ -7,7 +7,6 @@
 
 import 'dart:core' as $core;
 
-import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 class Transaction extends $pb.GeneratedMessage {
@@ -116,24 +115,41 @@ class TransactionInput extends $pb.GeneratedMessage {
   $core.List<$core.List<$core.int>> get challengeArguments => $_getList(1);
 }
 
+enum TransactionOutput_Constraint {
+  spendChallenge, 
+  donation, 
+  notSet
+}
+
 class TransactionOutput extends $pb.GeneratedMessage {
+  static const $core.Map<$core.int, TransactionOutput_Constraint> _TransactionOutput_ConstraintByTag = {
+    2 : TransactionOutput_Constraint.spendChallenge,
+    3 : TransactionOutput_Constraint.donation,
+    0 : TransactionOutput_Constraint.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'TransactionOutput', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..aOM<Challenge>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'spendChallenge', protoName: 'spendChallenge', subBuilder: Challenge.create)
-    ..aOM<Value>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'value', subBuilder: Value.create)
+    ..oo(0, [2, 3])
+    ..aOM<Value>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'value', subBuilder: Value.create)
+    ..aOM<Challenge>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'spendChallenge', protoName: 'spendChallenge', subBuilder: Challenge.create)
+    ..aOM<Donation>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'donation', subBuilder: Donation.create)
     ..hasRequiredFields = false
   ;
 
   TransactionOutput._() : super();
   factory TransactionOutput({
-    Challenge? spendChallenge,
     Value? value,
+    Challenge? spendChallenge,
+    Donation? donation,
   }) {
     final _result = create();
+    if (value != null) {
+      _result.value = value;
+    }
     if (spendChallenge != null) {
       _result.spendChallenge = spendChallenge;
     }
-    if (value != null) {
-      _result.value = value;
+    if (donation != null) {
+      _result.donation = donation;
     }
     return _result;
   }
@@ -158,42 +174,61 @@ class TransactionOutput extends $pb.GeneratedMessage {
   static TransactionOutput getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<TransactionOutput>(create);
   static TransactionOutput? _defaultInstance;
 
+  TransactionOutput_Constraint whichConstraint() => _TransactionOutput_ConstraintByTag[$_whichOneof(0)]!;
+  void clearConstraint() => clearField($_whichOneof(0));
+
   @$pb.TagNumber(1)
-  Challenge get spendChallenge => $_getN(0);
+  Value get value => $_getN(0);
   @$pb.TagNumber(1)
-  set spendChallenge(Challenge v) { setField(1, v); }
+  set value(Value v) { setField(1, v); }
   @$pb.TagNumber(1)
-  $core.bool hasSpendChallenge() => $_has(0);
+  $core.bool hasValue() => $_has(0);
   @$pb.TagNumber(1)
-  void clearSpendChallenge() => clearField(1);
+  void clearValue() => clearField(1);
   @$pb.TagNumber(1)
-  Challenge ensureSpendChallenge() => $_ensure(0);
+  Value ensureValue() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  Value get value => $_getN(1);
+  Challenge get spendChallenge => $_getN(1);
   @$pb.TagNumber(2)
-  set value(Value v) { setField(2, v); }
+  set spendChallenge(Challenge v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasValue() => $_has(1);
+  $core.bool hasSpendChallenge() => $_has(1);
   @$pb.TagNumber(2)
-  void clearValue() => clearField(2);
+  void clearSpendChallenge() => clearField(2);
   @$pb.TagNumber(2)
-  Value ensureValue() => $_ensure(1);
+  Challenge ensureSpendChallenge() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  Donation get donation => $_getN(2);
+  @$pb.TagNumber(3)
+  set donation(Donation v) { setField(3, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasDonation() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDonation() => clearField(3);
+  @$pb.TagNumber(3)
+  Donation ensureDonation() => $_ensure(2);
 }
 
 class Value_Coin extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Value.Coin', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'quantity', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'quantity')
+    ..aOM<Challenge>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'donationChallengeVote', protoName: 'donationChallengeVote', subBuilder: Challenge.create)
     ..hasRequiredFields = false
   ;
 
   Value_Coin._() : super();
   factory Value_Coin({
-    $fixnum.Int64? quantity,
+    $core.String? quantity,
+    Challenge? donationChallengeVote,
   }) {
     final _result = create();
     if (quantity != null) {
       _result.quantity = quantity;
+    }
+    if (donationChallengeVote != null) {
+      _result.donationChallengeVote = donationChallengeVote;
     }
     return _result;
   }
@@ -219,13 +254,24 @@ class Value_Coin extends $pb.GeneratedMessage {
   static Value_Coin? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $fixnum.Int64 get quantity => $_getI64(0);
+  $core.String get quantity => $_getSZ(0);
   @$pb.TagNumber(1)
-  set quantity($fixnum.Int64 v) { $_setInt64(0, v); }
+  set quantity($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasQuantity() => $_has(0);
   @$pb.TagNumber(1)
   void clearQuantity() => clearField(1);
+
+  @$pb.TagNumber(2)
+  Challenge get donationChallengeVote => $_getN(1);
+  @$pb.TagNumber(2)
+  set donationChallengeVote(Challenge v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasDonationChallengeVote() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDonationChallengeVote() => clearField(2);
+  @$pb.TagNumber(2)
+  Challenge ensureDonationChallengeVote() => $_ensure(1);
 }
 
 class Value_Data extends $pb.GeneratedMessage {
@@ -524,5 +570,52 @@ class Challenge extends $pb.GeneratedMessage {
   $core.bool hasScript() => $_has(0);
   @$pb.TagNumber(1)
   void clearScript() => clearField(1);
+}
+
+class Donation extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Donation', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'from', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  Donation._() : super();
+  factory Donation({
+    $core.List<$core.int>? from,
+  }) {
+    final _result = create();
+    if (from != null) {
+      _result.from = from;
+    }
+    return _result;
+  }
+  factory Donation.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Donation.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Donation clone() => Donation()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Donation copyWith(void Function(Donation) updates) => super.copyWith((message) => updates(message as Donation)) as Donation; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static Donation create() => Donation._();
+  Donation createEmptyInstance() => create();
+  static $pb.PbList<Donation> createRepeated() => $pb.PbList<Donation>();
+  @$core.pragma('dart2js:noInline')
+  static Donation getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Donation>(create);
+  static Donation? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get from => $_getN(0);
+  @$pb.TagNumber(1)
+  set from($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasFrom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFrom() => clearField(1);
 }
 

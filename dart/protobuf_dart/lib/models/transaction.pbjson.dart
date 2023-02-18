@@ -34,13 +34,17 @@ final $typed_data.Uint8List transactionInputDescriptor = $convert.base64Decode('
 const TransactionOutput$json = const {
   '1': 'TransactionOutput',
   '2': const [
-    const {'1': 'spendChallenge', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Challenge', '10': 'spendChallenge'},
-    const {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Value', '10': 'value'},
+    const {'1': 'value', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Value', '10': 'value'},
+    const {'1': 'spendChallenge', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Challenge', '9': 0, '10': 'spendChallenge'},
+    const {'1': 'donation', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.Donation', '9': 0, '10': 'donation'},
+  ],
+  '8': const [
+    const {'1': 'constraint'},
   ],
 };
 
 /// Descriptor for `TransactionOutput`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List transactionOutputDescriptor = $convert.base64Decode('ChFUcmFuc2FjdGlvbk91dHB1dBJICg5zcGVuZENoYWxsZW5nZRgBIAEoCzIgLmNvbS5ibG9ja2NoYWluLm1vZGVscy5DaGFsbGVuZ2VSDnNwZW5kQ2hhbGxlbmdlEjIKBXZhbHVlGAIgASgLMhwuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlUgV2YWx1ZQ==');
+final $typed_data.Uint8List transactionOutputDescriptor = $convert.base64Decode('ChFUcmFuc2FjdGlvbk91dHB1dBIyCgV2YWx1ZRgBIAEoCzIcLmNvbS5ibG9ja2NoYWluLm1vZGVscy5WYWx1ZVIFdmFsdWUSSgoOc3BlbmRDaGFsbGVuZ2UYAiABKAsyIC5jb20uYmxvY2tjaGFpbi5tb2RlbHMuQ2hhbGxlbmdlSABSDnNwZW5kQ2hhbGxlbmdlEj0KCGRvbmF0aW9uGAMgASgLMh8uY29tLmJsb2NrY2hhaW4ubW9kZWxzLkRvbmF0aW9uSABSCGRvbmF0aW9uQgwKCmNvbnN0cmFpbnQ=');
 @$core.Deprecated('Use valueDescriptor instead')
 const Value$json = const {
   '1': 'Value',
@@ -58,7 +62,8 @@ const Value$json = const {
 const Value_Coin$json = const {
   '1': 'Coin',
   '2': const [
-    const {'1': 'quantity', '3': 1, '4': 1, '5': 4, '10': 'quantity'},
+    const {'1': 'quantity', '3': 1, '4': 1, '5': 9, '10': 'quantity'},
+    const {'1': 'donationChallengeVote', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Challenge', '10': 'donationChallengeVote'},
   ],
 };
 
@@ -72,7 +77,7 @@ const Value_Data$json = const {
 };
 
 /// Descriptor for `Value`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List valueDescriptor = $convert.base64Decode('CgVWYWx1ZRI3CgRjb2luGAEgASgLMiEuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlLkNvaW5IAFIEY29pbhI3CgRkYXRhGAIgASgLMiEuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlLkRhdGFIAFIEZGF0YRoiCgRDb2luEhoKCHF1YW50aXR5GAEgASgEUghxdWFudGl0eRo4CgREYXRhEhoKCGRhdGFUeXBlGAEgASgJUghkYXRhVHlwZRIUCgVieXRlcxgCIAEoDFIFYnl0ZXNCBwoFdmFsdWU=');
+final $typed_data.Uint8List valueDescriptor = $convert.base64Decode('CgVWYWx1ZRI3CgRjb2luGAEgASgLMiEuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlLkNvaW5IAFIEY29pbhI3CgRkYXRhGAIgASgLMiEuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlLkRhdGFIAFIEZGF0YRp6CgRDb2luEhoKCHF1YW50aXR5GAEgASgJUghxdWFudGl0eRJWChVkb25hdGlvbkNoYWxsZW5nZVZvdGUYAiABKAsyIC5jb20uYmxvY2tjaGFpbi5tb2RlbHMuQ2hhbGxlbmdlUhVkb25hdGlvbkNoYWxsZW5nZVZvdGUaOAoERGF0YRIaCghkYXRhVHlwZRgBIAEoCVIIZGF0YVR5cGUSFAoFYnl0ZXMYAiABKAxSBWJ5dGVzQgcKBXZhbHVl');
 @$core.Deprecated('Use transactionIdDescriptor instead')
 const TransactionId$json = const {
   '1': 'TransactionId',
@@ -104,3 +109,13 @@ const Challenge$json = const {
 
 /// Descriptor for `Challenge`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List challengeDescriptor = $convert.base64Decode('CglDaGFsbGVuZ2USFgoGc2NyaXB0GAEgASgJUgZzY3JpcHQ=');
+@$core.Deprecated('Use donationDescriptor instead')
+const Donation$json = const {
+  '1': 'Donation',
+  '2': const [
+    const {'1': 'from', '3': 1, '4': 1, '5': 12, '10': 'from'},
+  ],
+};
+
+/// Descriptor for `Donation`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List donationDescriptor = $convert.base64Decode('CghEb25hdGlvbhISCgRmcm9tGAEgASgMUgRmcm9t');

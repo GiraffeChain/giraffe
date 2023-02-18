@@ -16,4 +16,3 @@ message Block {
     bytes proof = 5;
     repeated TransactionId transactionIds = 6;
 }
-

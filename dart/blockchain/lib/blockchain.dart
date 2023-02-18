@@ -15,6 +15,8 @@ import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:async/async.dart' show CancelableOperation, StreamGroup;
 
+import 'genesis.dart';
+
 class Blockchain {
   final BlockchainConfig config;
   final BlockchainClock clock;
@@ -30,7 +32,7 @@ class Blockchain {
   static Future<Blockchain> make(BlockchainConfig config) async {
     final genesisTimestamp =
         Int64(config.genesisTimestamp.millisecondsSinceEpoch);
-    final genesisBlock = Block()..timestamp = genesisTimestamp;
+    final genesisBlock = genesis(genesisTimestamp, []);
     final genesisBlockId = genesisBlock.id;
     final clock =
         BlockchainClock(genesisTimestamp, Duration(milliseconds: 500));
