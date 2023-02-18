@@ -22,7 +22,7 @@ class Blockchain {
   final Consensus consensus;
   final Store<BlockId, Block> blockStore;
   final Network network;
-  final StreamController remoteBlocksController;
+  final StreamController<Block> remoteBlocksController;
 
   Blockchain(this.config, this.clock, this.blockProducer, this.consensus,
       this.blockStore, this.network, this.remoteBlocksController);
@@ -33,13 +33,13 @@ class Blockchain {
     final genesisBlock = Block()..timestamp = genesisTimestamp;
     final genesisBlockId = genesisBlock.id;
     final clock =
-        BlockchainClock(genesisTimestamp, Duration(milliseconds: 250));
+        BlockchainClock(genesisTimestamp, Duration(milliseconds: 500));
     final blockProducer = BlockProducerImpl(clock);
     final blockStore = InMemoryStore<BlockId, Block>();
     await blockStore.set(genesisBlockId, genesisBlock);
     final consensus = ConsensusImpl(genesisBlockId, blockStore.getOrRaise);
 
-    final controller = StreamController();
+    final controller = StreamController<Block>();
 
     late Network network;
 
@@ -66,32 +66,39 @@ class Blockchain {
   }
 
   Future<void> get run => Future.wait([
-        _candidateBlocks.asyncMap(_processCandidate).drain(),
+        _locallyProducedBlocks.asyncMap(_processCandidate).drain(),
+        _remoteBlocks.asyncMap(_processCandidate).drain(),
       ]);
-
-  Stream<Block> get _candidateBlocks =>
-      StreamGroup.merge([_locallyProducedBlocks, _remoteBlocks]);
 
   Stream<Block> get _locallyProducedBlocks {
     CancelableOperation<void>? currentOperation;
+    void Function(Block, EventSink<Block>) updateOperation = (block, sink) =>
+        currentOperation = CancelableOperation.fromFuture(
+            blockProducer.produceBlock(block).then(sink.add));
+
     return StreamGroup.merge(
             [Stream.fromFuture(consensus.currentHead), consensus.adoptions])
         .asyncMap(blockStore.getOrRaise)
-        .transform(StreamTransformer.fromHandlers(handleData: (block, sink) {
-      if (currentOperation != null) {
-        currentOperation?.cancel().then((v) {
-          currentOperation = CancelableOperation.fromFuture(
-              blockProducer.produceBlock(block).then(sink.add));
-        });
-      } else {
-        currentOperation = CancelableOperation.fromFuture(
-            blockProducer.produceBlock(block).then(sink.add));
-      }
-    }));
+        .transform(
+      StreamTransformer.fromHandlers(
+          handleData: (Block block, EventSink<Block> sink) {
+        if (currentOperation != null) {
+          currentOperation?.cancel();
+          updateOperation(block, sink);
+        } else {
+          updateOperation(block, sink);
+        }
+      }),
+    ).map((block) {
+      print("Minted blockId=${block.id.show}");
+      return block;
+    });
   }
 
   Stream<Block> get _remoteBlocks => StreamGroup.merge(
-      config.initialPeers.map((p) => _peerBlockStream(p, network, blockStore)));
+        [remoteBlocksController.stream]..addAll(config.initialPeers
+            .map((p) => _peerBlockStream(p, network, blockStore))),
+      );
 
   static Stream<Block> _peerBlockStream(
       String address, Network network, Store<BlockId, Block> blockStore) {
@@ -139,5 +146,6 @@ class Blockchain {
       print("Adopted blockId=${newBlockId.show}");
       return newBlock;
     }
+    return null;
   }
 }
