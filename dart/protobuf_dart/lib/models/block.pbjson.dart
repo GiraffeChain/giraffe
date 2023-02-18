@@ -33,3 +33,18 @@ const Block$json = const {
 
 /// Descriptor for `Block`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List blockDescriptor = $convert.base64Decode('CgVCbG9jaxJGCg5wYXJlbnRIZWFkZXJJZBgBIAEoCzIeLmNvbS5ibG9ja2NoYWluLm1vZGVscy5CbG9ja0lkUg5wYXJlbnRIZWFkZXJJZBIcCgl0aW1lc3RhbXAYAiABKARSCXRpbWVzdGFtcBIWCgZoZWlnaHQYAyABKARSBmhlaWdodBISCgRzbG90GAQgASgEUgRzbG90EhQKBXByb29mGAUgASgMUgVwcm9vZhJMCg50cmFuc2FjdGlvbklkcxgGIAMoCzIkLmNvbS5ibG9ja2NoYWluLm1vZGVscy5UcmFuc2FjdGlvbklkUg50cmFuc2FjdGlvbklkcw==');
+@$core.Deprecated('Use fullBlockDescriptor instead')
+const FullBlock$json = const {
+  '1': 'FullBlock',
+  '2': const [
+    const {'1': 'parentHeaderId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'parentHeaderId'},
+    const {'1': 'timestamp', '3': 2, '4': 1, '5': 4, '10': 'timestamp'},
+    const {'1': 'height', '3': 3, '4': 1, '5': 4, '10': 'height'},
+    const {'1': 'slot', '3': 4, '4': 1, '5': 4, '10': 'slot'},
+    const {'1': 'proof', '3': 5, '4': 1, '5': 12, '10': 'proof'},
+    const {'1': 'transactions', '3': 6, '4': 3, '5': 11, '6': '.com.blockchain.models.Transaction', '10': 'transactions'},
+  ],
+};
+
+/// Descriptor for `FullBlock`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fullBlockDescriptor = $convert.base64Decode('CglGdWxsQmxvY2sSRgoOcGFyZW50SGVhZGVySWQYASABKAsyHi5jb20uYmxvY2tjaGFpbi5tb2RlbHMuQmxvY2tJZFIOcGFyZW50SGVhZGVySWQSHAoJdGltZXN0YW1wGAIgASgEUgl0aW1lc3RhbXASFgoGaGVpZ2h0GAMgASgEUgZoZWlnaHQSEgoEc2xvdBgEIAEoBFIEc2xvdBIUCgVwcm9vZhgFIAEoDFIFcHJvb2YSRgoMdHJhbnNhY3Rpb25zGAYgAygLMiIuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uUgx0cmFuc2FjdGlvbnM=');

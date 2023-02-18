@@ -9,13 +9,14 @@ message Transaction {
 
 message TransactionInput {
     TransactionOutputReference spentTransactionOutput = 1;
-    repeated bytes challengeArguments = 2;
+    Challenge challenge = 2;
+    repeated bytes challengeArguments = 3;
 }
 
 message TransactionOutput {
     Value value = 1;
     oneof constraint {
-        Challenge spendChallenge = 2;
+        ChallengeHash spendChallengeHash = 2;
         Donation donation = 3;
     }
 }
@@ -47,6 +48,10 @@ message TransactionId {
 message TransactionOutputReference {
     TransactionId transactionId = 1;
     uint32 index = 2;
+}
+
+message ChallengeHash {
+    bytes hash = 1;
 }
 
 message Challenge {

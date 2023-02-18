@@ -61,18 +61,23 @@ class Transaction extends $pb.GeneratedMessage {
 class TransactionInput extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'TransactionInput', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
     ..aOM<TransactionOutputReference>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'spentTransactionOutput', protoName: 'spentTransactionOutput', subBuilder: TransactionOutputReference.create)
-    ..p<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'challengeArguments', $pb.PbFieldType.PY, protoName: 'challengeArguments')
+    ..aOM<Challenge>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'challenge', subBuilder: Challenge.create)
+    ..p<$core.List<$core.int>>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'challengeArguments', $pb.PbFieldType.PY, protoName: 'challengeArguments')
     ..hasRequiredFields = false
   ;
 
   TransactionInput._() : super();
   factory TransactionInput({
     TransactionOutputReference? spentTransactionOutput,
+    Challenge? challenge,
     $core.Iterable<$core.List<$core.int>>? challengeArguments,
   }) {
     final _result = create();
     if (spentTransactionOutput != null) {
       _result.spentTransactionOutput = spentTransactionOutput;
+    }
+    if (challenge != null) {
+      _result.challenge = challenge;
     }
     if (challengeArguments != null) {
       _result.challengeArguments.addAll(challengeArguments);
@@ -112,25 +117,36 @@ class TransactionInput extends $pb.GeneratedMessage {
   TransactionOutputReference ensureSpentTransactionOutput() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $core.List<$core.List<$core.int>> get challengeArguments => $_getList(1);
+  Challenge get challenge => $_getN(1);
+  @$pb.TagNumber(2)
+  set challenge(Challenge v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasChallenge() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearChallenge() => clearField(2);
+  @$pb.TagNumber(2)
+  Challenge ensureChallenge() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.List<$core.int>> get challengeArguments => $_getList(2);
 }
 
 enum TransactionOutput_Constraint {
-  spendChallenge, 
+  spendChallengeHash, 
   donation, 
   notSet
 }
 
 class TransactionOutput extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, TransactionOutput_Constraint> _TransactionOutput_ConstraintByTag = {
-    2 : TransactionOutput_Constraint.spendChallenge,
+    2 : TransactionOutput_Constraint.spendChallengeHash,
     3 : TransactionOutput_Constraint.donation,
     0 : TransactionOutput_Constraint.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'TransactionOutput', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
     ..oo(0, [2, 3])
     ..aOM<Value>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'value', subBuilder: Value.create)
-    ..aOM<Challenge>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'spendChallenge', protoName: 'spendChallenge', subBuilder: Challenge.create)
+    ..aOM<ChallengeHash>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'spendChallengeHash', protoName: 'spendChallengeHash', subBuilder: ChallengeHash.create)
     ..aOM<Donation>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'donation', subBuilder: Donation.create)
     ..hasRequiredFields = false
   ;
@@ -138,15 +154,15 @@ class TransactionOutput extends $pb.GeneratedMessage {
   TransactionOutput._() : super();
   factory TransactionOutput({
     Value? value,
-    Challenge? spendChallenge,
+    ChallengeHash? spendChallengeHash,
     Donation? donation,
   }) {
     final _result = create();
     if (value != null) {
       _result.value = value;
     }
-    if (spendChallenge != null) {
-      _result.spendChallenge = spendChallenge;
+    if (spendChallengeHash != null) {
+      _result.spendChallengeHash = spendChallengeHash;
     }
     if (donation != null) {
       _result.donation = donation;
@@ -189,15 +205,15 @@ class TransactionOutput extends $pb.GeneratedMessage {
   Value ensureValue() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  Challenge get spendChallenge => $_getN(1);
+  ChallengeHash get spendChallengeHash => $_getN(1);
   @$pb.TagNumber(2)
-  set spendChallenge(Challenge v) { setField(2, v); }
+  set spendChallengeHash(ChallengeHash v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasSpendChallenge() => $_has(1);
+  $core.bool hasSpendChallengeHash() => $_has(1);
   @$pb.TagNumber(2)
-  void clearSpendChallenge() => clearField(2);
+  void clearSpendChallengeHash() => clearField(2);
   @$pb.TagNumber(2)
-  Challenge ensureSpendChallenge() => $_ensure(1);
+  ChallengeHash ensureSpendChallengeHash() => $_ensure(1);
 
   @$pb.TagNumber(3)
   Donation get donation => $_getN(2);
@@ -523,6 +539,53 @@ class TransactionOutputReference extends $pb.GeneratedMessage {
   $core.bool hasIndex() => $_has(1);
   @$pb.TagNumber(2)
   void clearIndex() => clearField(2);
+}
+
+class ChallengeHash extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'ChallengeHash', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'hash', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  ChallengeHash._() : super();
+  factory ChallengeHash({
+    $core.List<$core.int>? hash,
+  }) {
+    final _result = create();
+    if (hash != null) {
+      _result.hash = hash;
+    }
+    return _result;
+  }
+  factory ChallengeHash.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ChallengeHash.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ChallengeHash clone() => ChallengeHash()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ChallengeHash copyWith(void Function(ChallengeHash) updates) => super.copyWith((message) => updates(message as ChallengeHash)) as ChallengeHash; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static ChallengeHash create() => ChallengeHash._();
+  ChallengeHash createEmptyInstance() => create();
+  static $pb.PbList<ChallengeHash> createRepeated() => $pb.PbList<ChallengeHash>();
+  @$core.pragma('dart2js:noInline')
+  static ChallengeHash getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ChallengeHash>(create);
+  static ChallengeHash? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get hash => $_getN(0);
+  @$pb.TagNumber(1)
+  set hash($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasHash() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearHash() => clearField(1);
 }
 
 class Challenge extends $pb.GeneratedMessage {

@@ -24,18 +24,19 @@ const TransactionInput$json = const {
   '1': 'TransactionInput',
   '2': const [
     const {'1': 'spentTransactionOutput', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionOutputReference', '10': 'spentTransactionOutput'},
-    const {'1': 'challengeArguments', '3': 2, '4': 3, '5': 12, '10': 'challengeArguments'},
+    const {'1': 'challenge', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Challenge', '10': 'challenge'},
+    const {'1': 'challengeArguments', '3': 3, '4': 3, '5': 12, '10': 'challengeArguments'},
   ],
 };
 
 /// Descriptor for `TransactionInput`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List transactionInputDescriptor = $convert.base64Decode('ChBUcmFuc2FjdGlvbklucHV0EmkKFnNwZW50VHJhbnNhY3Rpb25PdXRwdXQYASABKAsyMS5jb20uYmxvY2tjaGFpbi5tb2RlbHMuVHJhbnNhY3Rpb25PdXRwdXRSZWZlcmVuY2VSFnNwZW50VHJhbnNhY3Rpb25PdXRwdXQSLgoSY2hhbGxlbmdlQXJndW1lbnRzGAIgAygMUhJjaGFsbGVuZ2VBcmd1bWVudHM=');
+final $typed_data.Uint8List transactionInputDescriptor = $convert.base64Decode('ChBUcmFuc2FjdGlvbklucHV0EmkKFnNwZW50VHJhbnNhY3Rpb25PdXRwdXQYASABKAsyMS5jb20uYmxvY2tjaGFpbi5tb2RlbHMuVHJhbnNhY3Rpb25PdXRwdXRSZWZlcmVuY2VSFnNwZW50VHJhbnNhY3Rpb25PdXRwdXQSPgoJY2hhbGxlbmdlGAIgASgLMiAuY29tLmJsb2NrY2hhaW4ubW9kZWxzLkNoYWxsZW5nZVIJY2hhbGxlbmdlEi4KEmNoYWxsZW5nZUFyZ3VtZW50cxgDIAMoDFISY2hhbGxlbmdlQXJndW1lbnRz');
 @$core.Deprecated('Use transactionOutputDescriptor instead')
 const TransactionOutput$json = const {
   '1': 'TransactionOutput',
   '2': const [
     const {'1': 'value', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Value', '10': 'value'},
-    const {'1': 'spendChallenge', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Challenge', '9': 0, '10': 'spendChallenge'},
+    const {'1': 'spendChallengeHash', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.ChallengeHash', '9': 0, '10': 'spendChallengeHash'},
     const {'1': 'donation', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.Donation', '9': 0, '10': 'donation'},
   ],
   '8': const [
@@ -44,7 +45,7 @@ const TransactionOutput$json = const {
 };
 
 /// Descriptor for `TransactionOutput`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List transactionOutputDescriptor = $convert.base64Decode('ChFUcmFuc2FjdGlvbk91dHB1dBIyCgV2YWx1ZRgBIAEoCzIcLmNvbS5ibG9ja2NoYWluLm1vZGVscy5WYWx1ZVIFdmFsdWUSSgoOc3BlbmRDaGFsbGVuZ2UYAiABKAsyIC5jb20uYmxvY2tjaGFpbi5tb2RlbHMuQ2hhbGxlbmdlSABSDnNwZW5kQ2hhbGxlbmdlEj0KCGRvbmF0aW9uGAMgASgLMh8uY29tLmJsb2NrY2hhaW4ubW9kZWxzLkRvbmF0aW9uSABSCGRvbmF0aW9uQgwKCmNvbnN0cmFpbnQ=');
+final $typed_data.Uint8List transactionOutputDescriptor = $convert.base64Decode('ChFUcmFuc2FjdGlvbk91dHB1dBIyCgV2YWx1ZRgBIAEoCzIcLmNvbS5ibG9ja2NoYWluLm1vZGVscy5WYWx1ZVIFdmFsdWUSVgoSc3BlbmRDaGFsbGVuZ2VIYXNoGAIgASgLMiQuY29tLmJsb2NrY2hhaW4ubW9kZWxzLkNoYWxsZW5nZUhhc2hIAFISc3BlbmRDaGFsbGVuZ2VIYXNoEj0KCGRvbmF0aW9uGAMgASgLMh8uY29tLmJsb2NrY2hhaW4ubW9kZWxzLkRvbmF0aW9uSABSCGRvbmF0aW9uQgwKCmNvbnN0cmFpbnQ=');
 @$core.Deprecated('Use valueDescriptor instead')
 const Value$json = const {
   '1': 'Value',
@@ -99,6 +100,16 @@ const TransactionOutputReference$json = const {
 
 /// Descriptor for `TransactionOutputReference`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionOutputReferenceDescriptor = $convert.base64Decode('ChpUcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZRJKCg10cmFuc2FjdGlvbklkGAEgASgLMiQuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uSWRSDXRyYW5zYWN0aW9uSWQSFAoFaW5kZXgYAiABKA1SBWluZGV4');
+@$core.Deprecated('Use challengeHashDescriptor instead')
+const ChallengeHash$json = const {
+  '1': 'ChallengeHash',
+  '2': const [
+    const {'1': 'hash', '3': 1, '4': 1, '5': 12, '10': 'hash'},
+  ],
+};
+
+/// Descriptor for `ChallengeHash`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List challengeHashDescriptor = $convert.base64Decode('Cg1DaGFsbGVuZ2VIYXNoEhIKBGhhc2gYASABKAxSBGhhc2g=');
 @$core.Deprecated('Use challengeDescriptor instead')
 const Challenge$json = const {
   '1': 'Challenge',

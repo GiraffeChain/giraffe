@@ -1,4 +1,5 @@
 import 'package:blockchain_ledger/epoch_ledger.dart';
+import 'package:blockchain_ledger/impl/ops.dart';
 import 'package:blockchain_protobuf/models/transaction.pb.dart';
 
 typedef Address = List<int>;
@@ -9,7 +10,12 @@ class DonationsEpochLedger extends EpochLedger<DonationsMap> {
   final Future<TransactionOutput> Function(TransactionOutputReference)
       getTransactionOutput;
 
-  DonationsEpochLedger(this.getTransactionOutput);
+  DonationsEpochLedger(
+    super.n1State,
+    super.n2State,
+    super.nEpoch,
+    this.getTransactionOutput,
+  );
 
   @override
   Future<DonationsMap> apply(
@@ -48,29 +54,35 @@ class DonationsEpochLedger extends EpochLedger<DonationsMap> {
   }
 }
 
-typedef DonationChallengeVotes = Map<Challenge, BigInt>;
+typedef RecipientChallengeVotes = Map<Challenge, BigInt>;
 
-class DonationVotesLedger extends EpochLedger<DonationChallengeVotes> {
+class RecipientVotesLedger extends EpochLedger<RecipientChallengeVotes> {
   final Future<TransactionOutput> Function(TransactionOutputReference)
       getTransactionOutput;
 
-  DonationVotesLedger(this.getTransactionOutput);
+  RecipientVotesLedger(
+    super.n1State,
+    super.n2State,
+    super.nEpoch,
+    this.getTransactionOutput,
+  );
+
   @override
-  Future<DonationChallengeVotes> apply(DonationChallengeVotes previousState,
+  Future<RecipientChallengeVotes> apply(RecipientChallengeVotes previousState,
           Stream<Transaction> transactions) =>
       transactions
           .asyncMap((tx) => donationVotesOf(tx, getTransactionOutput))
-          .fold<DonationChallengeVotes>(Map.of(previousState),
+          .fold<RecipientChallengeVotes>(Map.of(previousState),
               (base, donations) => _mergeBigIntMaps(base, donations));
 
   @override
-  Future<DonationChallengeVotes> get init => Future.value({});
+  Future<RecipientChallengeVotes> get init => Future.value({});
 
-  Future<DonationChallengeVotes> donationVotesOf(
+  Future<RecipientChallengeVotes> donationVotesOf(
       Transaction transaction,
       Future<TransactionOutput> Function(TransactionOutputReference)
           getTransactionOutput) async {
-    final DonationChallengeVotes values = {};
+    final RecipientChallengeVotes values = {};
 
     final spentOutputs = await Future.wait(transaction.inputs
         .map((input) => getTransactionOutput(input.spentTransactionOutput)));
@@ -96,8 +108,4 @@ Map<Key, BigInt> _mergeBigIntMaps<Key>(Map<Key, BigInt> a, Map<Key, BigInt> b) {
     a1[key] = (a1[key] ?? BigInt.from(0)) + value;
   });
   return a1;
-}
-
-extension CoinBigIntOps on Value_Coin {
-  BigInt get quantityNum => BigInt.parse(quantity);
 }

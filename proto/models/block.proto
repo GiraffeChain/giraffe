@@ -16,3 +16,12 @@ message Block {
     bytes proof = 5;
     repeated TransactionId transactionIds = 6;
 }
+
+message FullBlock {
+    BlockId parentHeaderId = 1;
+    uint64 timestamp = 2;
+    uint64 height = 3;
+    uint64 slot = 4;
+    bytes proof = 5;
+    repeated Transaction transactions = 6;
+}

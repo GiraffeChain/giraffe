@@ -27,6 +27,6 @@ class BlockProducerImpl extends BlockProducer {
   }
 
   _nextEligibility(Int64 parentSlot) {
-    return parentSlot + Random().nextInt(10);
+    return parentSlot + 1 + Random().nextInt(9);
   }
 }
