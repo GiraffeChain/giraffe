@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:blockchain_protobuf/models/transaction.pb.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 
 abstract class Mempool {
   Future<List<TransactionId>> get get;

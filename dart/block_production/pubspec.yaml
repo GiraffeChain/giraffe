@@ -10,6 +10,7 @@ environment:
 
 
 dependencies:
+  ipsum: ^1.0.1
   blockchain_protobuf:
     path: ../protobuf_dart
   blockchain_common:

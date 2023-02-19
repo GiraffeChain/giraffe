@@ -1,7 +1,7 @@
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_ledger/impl/ops.dart';
 import 'package:blockchain_ledger/ledger.dart';
-import 'package:blockchain_protobuf/models/transaction.pb.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'dart:convert' show utf8;
 import 'package:crypto/crypto.dart';
 
@@ -16,9 +16,7 @@ class UtxoLedger extends Ledger {
 
   @override
   Future<void> apply(Transaction transaction) async {
-    transaction.inputs
-        .map((i) => i.spentTransactionOutput)
-        .forEach((reference) {
+    transaction.inputs.map((i) => i.reference).forEach((reference) {
       final previous = _utxos[reference.transactionId]!;
       previous.remove(reference.index);
       if (previous.isEmpty) {
@@ -29,10 +27,7 @@ class UtxoLedger extends Ledger {
     final newUtxos = Set<int>();
 
     for (var i = 0; i < transaction.outputs.length; i++) {
-      // Exclude donations
-      if (transaction.outputs[i].hasSpendChallengeHash()) {
-        newUtxos.add(i);
-      }
+      newUtxos.add(i);
     }
     _utxos[transaction.id] = newUtxos;
   }
@@ -41,9 +36,7 @@ class UtxoLedger extends Ledger {
   Future<void> remove(Transaction transaction) async {
     _utxos.remove(transaction.id);
 
-    transaction.inputs
-        .map((i) => i.spentTransactionOutput)
-        .forEach((reference) {
+    transaction.inputs.map((i) => i.reference).forEach((reference) {
       final previous = _utxos[reference.transactionId] ?? Set<int>();
       previous.add(reference.index);
       _utxos[reference.transactionId] = previous;
@@ -53,7 +46,7 @@ class UtxoLedger extends Ledger {
   @override
   Future<List<String>> validate(Transaction transaction) async {
     final spentOutputReferences =
-        transaction.inputs.map((i) => i.spentTransactionOutput).toList();
+        transaction.inputs.map((i) => i.reference).toList();
 
     if (spentOutputReferences.length != spentOutputReferences.toSet().length) {
       return ["Transaction attempts to double-spend"];
@@ -68,16 +61,16 @@ class UtxoLedger extends Ledger {
     }
 
     final spentOutputs = await Stream.fromIterable(transaction.inputs)
-        .map((i) => i.spentTransactionOutput)
+        .map((i) => i.reference)
         .asyncMap(_fetchTransactionOutput)
         .toList();
 
     for (int i = 0; i < transaction.inputs.length; i++) {
       final input = transaction.inputs[i];
-      final reference = input.spentTransactionOutput;
+      final reference = input.reference;
       final output = transaction.outputs[i];
       final expectedHash = sha256.convert(utf8.encode(input.challenge.script));
-      if (!(output.spendChallengeHash.hash == expectedHash.bytes)) {
+      if (!(output.account.id == expectedHash.bytes)) {
         return [
           "Challenge for id=${reference.transactionId.show} index=${reference.index} was incorrect"
         ];

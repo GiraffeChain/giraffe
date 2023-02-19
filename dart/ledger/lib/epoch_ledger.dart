@@ -1,4 +1,4 @@
-import 'package:blockchain_protobuf/models/transaction.pb.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 
 abstract class EpochLedger<State> {
   State n1State;

@@ -24,6 +24,7 @@ dependencies:
   blockchain_network:
     path: ../network
   fixnum:
+  graphview: ^1.1.1
   flutter:
     sdk: flutter
 

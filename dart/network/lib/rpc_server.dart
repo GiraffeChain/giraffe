@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:blockchain_protobuf/models/block.pb.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:grpc/src/server/call.dart';
 
