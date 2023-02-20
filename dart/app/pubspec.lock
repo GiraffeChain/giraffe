@@ -228,7 +228,7 @@ packages:
     source: hosted
     version: "4.0.2"
   ipsum:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: ipsum
       sha256: be6b6397e32cf54903f8f6eee414c8a06fb239763e945acae1a9bdeaa01d81c1

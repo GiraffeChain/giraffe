@@ -13,7 +13,6 @@ import 'package:blockchain_network/rpc_server.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:async/async.dart' show CancelableOperation, StreamGroup;
 import 'package:blockchain_ledger/impl/utxo_ledger.dart';
 import 'genesis.dart';
 
@@ -30,6 +29,7 @@ class Blockchain {
   final StreamController<BlockId> _newBlocksController;
   final StreamController<BlockId> _adoptionsController;
   BlockId _headId;
+  Set<BlockId> _headIds;
 
   Blockchain(
     this.config,
@@ -44,6 +44,7 @@ class Blockchain {
     this._newBlocksController,
     this._adoptionsController,
     this._headId,
+    this._headIds,
   );
 
   static Future<Blockchain> make(BlockchainConfig config) async {
@@ -68,8 +69,10 @@ class Blockchain {
     genesisBlock.transactions
         .forEach((transaction) async => await ledger.apply(transaction));
 
-    final newBlocksController = StreamController<BlockId>();
-    final adoptionsController = StreamController<BlockId>();
+    final StreamController<BlockId> newBlocksController =
+        StreamController.broadcast();
+    final StreamController<BlockId> adoptionsController =
+        StreamController.broadcast();
 
     late Network network;
     late Blockchain blockchain;
@@ -102,19 +105,19 @@ class Blockchain {
         0.1);
 
     blockchain = Blockchain(
-      config,
-      clock,
-      consensusValidator,
-      chainSelection,
-      ledger,
-      blockStore,
-      transactionStore,
-      network,
-      blockProducer,
-      newBlocksController,
-      adoptionsController,
-      genesisBlockId,
-    );
+        config,
+        clock,
+        consensusValidator,
+        chainSelection,
+        ledger,
+        blockStore,
+        transactionStore,
+        network,
+        blockProducer,
+        newBlocksController,
+        adoptionsController,
+        genesisBlockId,
+        Set()..add(genesisBlockId));
 
     return blockchain;
   }
@@ -122,6 +125,7 @@ class Blockchain {
   Future<void> get run => Future.wait([_handleInitialPeers]);
 
   BlockId get headId => _headId;
+  Set<BlockId> get headIds => Set.of(_headIds);
   Stream<BlockId> get newBlocks => _newBlocksController.stream;
   Stream<BlockId> get adoptions => _adoptionsController.stream;
 
@@ -175,14 +179,12 @@ class Blockchain {
                       proof: block.proof,
                       transactions:
                           await Stream.fromIterable(block.transactionIds)
-                              .asyncMap((id) async {
-                        final localTx = await transactionStore.get(id);
-                        if (localTx != null) return localTx;
-
-                        return (await peer.getTransaction(
-                                GetTransactionReq(transactionId: id)))
-                            .transaction;
-                      }).toList(),
+                              .asyncMap((id) async =>
+                                  (await transactionStore.get(id)) ??
+                                  (await peer.getTransaction(
+                                          GetTransactionReq(transactionId: id)))
+                                      .transaction)
+                              .toList(),
                     ))
                 .toList();
             return fullBlocks;
@@ -223,6 +225,31 @@ class Blockchain {
         await transactionStore.set(id, transaction);
       }
     }
+    _newBlocksController.add(newBlockId);
+    _headIds.remove(newBlock.parentHeaderId);
+    _headIds.add(newBlockId);
     return [];
+  }
+}
+
+extension BlockIdTraceOps on BlockId {
+  Stream<BlockId> idHistory(Blockchain blockchain) async* {
+    Block currentBlock = await blockchain.blockStore.getOrRaise(this);
+    yield this;
+    while (currentBlock.height > 1) {
+      yield currentBlock.parentHeaderId;
+      currentBlock =
+          await blockchain.blockStore.getOrRaise(currentBlock.parentHeaderId);
+    }
+  }
+
+  Stream<Block> blockHistory(Blockchain blockchain) async* {
+    Block currentBlock = await blockchain.blockStore.getOrRaise(this);
+    yield currentBlock;
+    while (currentBlock.height > 1) {
+      currentBlock =
+          await blockchain.blockStore.getOrRaise(currentBlock.parentHeaderId);
+      yield currentBlock;
+    }
   }
 }

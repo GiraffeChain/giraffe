@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:async/async.dart' show StreamGroup;
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/blockchain_config.dart';
-import 'package:blockchain_app/widgets/block_create_screen.dart';
 import 'package:blockchain_app/widgets/block_screen.dart';
 import 'package:blockchain_app/widgets/block_tree.dart';
+import 'package:blockchain_app/widgets/create_block_fab.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
@@ -48,30 +50,14 @@ class BlockchainWidget extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text("Blockchain")),
         body: _graphView,
-        floatingActionButton: _newBlockButton(context),
-      );
-
-  _newBlockButton(BuildContext context) => FloatingActionButton(
-        child: const Icon(Icons.create_rounded),
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-              builder: (context) => BlockCreateScreen(
-                    blockchain: blockchain,
-                    onSubmit: (newFullBlock) => blockchain
-                        .validateAndSave(newFullBlock)
-                        .then((errors) async {
-                      if (errors.isEmpty) {
-                        await blockchain.assignScore(newFullBlock.id, 1.0);
-                      }
-                    }),
-                  )),
-        ),
+        floatingActionButton: newBlockFab(context, blockchain, null),
       );
 
   Stream<List<Block>> _accumulateBlocksStream(Blockchain blockchain) =>
-      blockchain.adoptions
-          .asyncMap(blockchain.blockStore.getOrRaise)
-          .transform(StreamTransformer.fromBind((inStream) {
+      StreamGroup.merge([
+        blockchain.headId.blockHistory(blockchain).take(5),
+        blockchain.newBlocks.asyncMap(blockchain.blockStore.getOrRaise)
+      ]).transform(StreamTransformer.fromBind((inStream) {
         final List<Block> state = [];
         return inStream.map((block) {
           state.add(block);
@@ -119,14 +105,8 @@ class BlockchainWidget extends StatelessWidget {
         builder: (context, snapshot) => snapshot.hasData
             ? BlockTree(
                 key: UniqueKey(),
-                blockTreeNodes: List.unmodifiable(
-                    snapshot.data!.map((block) => BlockTreeNode(
-                          block.id,
-                          block.parentHeaderId,
-                          5,
-                          () => Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => BlockScreen(block: block))),
-                        ))))
+                blockchain: blockchain,
+              )
             : const Text("No blocks yet"),
       );
 }

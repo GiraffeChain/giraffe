@@ -2,15 +2,21 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain_app/blockchain_widget.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
+import 'package:ipsum/ipsum.dart';
 
 class BlockCreateScreen extends StatelessWidget {
+  final BlockId? targetHead;
   final Blockchain blockchain;
   final void Function(FullBlock) onSubmit;
 
   const BlockCreateScreen(
-      {super.key, required this.blockchain, required this.onSubmit});
+      {super.key,
+      this.targetHead,
+      required this.blockchain,
+      required this.onSubmit});
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -21,14 +27,15 @@ class BlockCreateScreen extends StatelessWidget {
               ? BlockCreateScreenLoaded(
                   blockchain: blockchain,
                   onSubmit: onSubmit,
-                  parentBlocks: snapshot.data!)
+                  parentBlocks: snapshot.data!,
+                )
               : const Text("Loading"),
         ),
       );
 
   Future<List<Block>> get _prefixBlocks async {
     final currentHead =
-        await blockchain.blockStore.getOrRaise(blockchain.headId);
+        await blockchain.blockStore.getOrRaise(targetHead ?? blockchain.headId);
     final blocks = [currentHead];
     while (blocks.first.height > 1 && blocks.length < 5) {
       blocks.insert(
@@ -90,32 +97,37 @@ class _BlockCreateScreenLoadedState extends State<BlockCreateScreenLoaded> {
   }
 
   Widget _input(BuildContext context) => Padding(
-        padding: EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(32.0),
         child: TextFormField(
           maxLines: 4,
-          decoration: InputDecoration(hintText: "Continue the story here..."),
-          onSaved: (newValue) {
-            unawaited(
-              widget.blockchain.blockProducer
-                  .produceBlock(
-                      widget.parentBlocks.last, utf8.encode(newValue!))
-                  .then((block) async => FullBlock(
-                      parentHeaderId: block.parentHeaderId,
-                      timestamp: block.timestamp,
-                      height: block.height,
-                      proof: block.proof,
-                      transactions:
-                          await Stream.fromIterable(block.transactionIds)
-                              .asyncMap(
-                                  widget.blockchain.transactionStore.getOrRaise)
-                              .toList(),
-                      reward: block.reward))
-                  .then(widget.onSubmit),
-            );
-            Navigator.of(context).pop();
-          },
+          decoration:
+              const InputDecoration(hintText: "Continue the story here..."),
+          onSaved: (newValue) => _onInputSaved(context, newValue!),
+          initialValue: Ipsum().sentences(1),
         ),
       );
+
+  _onInputSaved(BuildContext context, String newValue) {
+    unawaited(
+      widget.blockchain.blockProducer
+          .produceBlock(widget.parentBlocks.last, utf8.encode(newValue))
+          .then((block) async => FullBlock(
+              parentHeaderId: block.parentHeaderId,
+              timestamp: block.timestamp,
+              height: block.height,
+              proof: block.proof,
+              transactions: await Stream.fromIterable(block.transactionIds)
+                  .asyncMap(widget.blockchain.transactionStore.getOrRaise)
+                  .toList(),
+              reward: block.reward))
+          .then(widget.onSubmit),
+    );
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+            builder: (context) =>
+                BlockchainWidget(blockchain: widget.blockchain)),
+        (_) => false);
+  }
 
   Widget get _submit => TextButton.icon(
         onPressed: () {
@@ -124,7 +136,7 @@ class _BlockCreateScreenLoadedState extends State<BlockCreateScreenLoaded> {
             form.save();
           }
         },
-        icon: const Icon(Icons.launch),
-        label: const Text("Launch"),
+        icon: const Icon(Icons.add_box),
+        label: const Text("Create"),
       );
 }

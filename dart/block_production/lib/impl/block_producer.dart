@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_codecs/codecs.dart';
@@ -12,7 +11,6 @@ class BlockProducer {
   BlockProducer(this.rewardsAccount, this.packBlock);
 
   Future<Block> produceBlock(Block parent, List<int> proof) async {
-    await Future.delayed(Duration(milliseconds: Random().nextInt(5000)));
     final transactions = await packBlock(parent);
     return Block()
       ..parentHeaderId = parent.id
