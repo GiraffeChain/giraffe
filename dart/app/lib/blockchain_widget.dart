@@ -1,22 +1,23 @@
 import 'dart:async';
 
+import 'package:async/async.dart' show StreamGroup;
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/blockchain_config.dart';
-import 'package:blockchain_codecs/codecs.dart';
-import 'package:blockchain_protobuf/models/block.pb.dart';
-import 'package:fixnum/fixnum.dart';
+import 'package:blockchain_app/widgets/block_tree.dart';
+import 'package:blockchain_app/widgets/create_block_fab.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
 
-class BlockchainWidget extends StatefulWidget {
+class BlockchainLoaderWidget extends StatefulWidget {
   final BlockchainConfig config;
 
-  const BlockchainWidget({super.key, required this.config});
+  const BlockchainLoaderWidget({super.key, required this.config});
 
   @override
-  State<StatefulWidget> createState() => _BlockchainWidgetState();
+  State<StatefulWidget> createState() => _BlockchainLoaderWidgetState();
 }
 
-class _BlockchainWidgetState extends State<BlockchainWidget> {
+class _BlockchainLoaderWidgetState extends State<BlockchainLoaderWidget> {
   late final Future<Blockchain> _blockchain;
   late final Future<void> _completion;
 
@@ -29,52 +30,45 @@ class _BlockchainWidgetState extends State<BlockchainWidget> {
 
   @override
   Widget build(BuildContext context) => FutureBuilder(
-        future: _blockchain,
-        builder: (context, snapshot) => snapshot.hasData
-            ? _accumulateBlocksStream(snapshot.data!)
-            : const Text("Loading..."),
+      future: _blockchain,
+      builder: (context, snapshot) => snapshot.hasData
+          ? BlockchainWidget(blockchain: snapshot.data!)
+          : _loading);
+
+  static const _loading = Scaffold(body: Center(child: Text("Loading")));
+}
+
+class BlockchainWidget extends StatelessWidget {
+  final Blockchain blockchain;
+
+  const BlockchainWidget({super.key, required this.blockchain});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text("Blockchain")),
+        body: _graphView,
+        floatingActionButton: newBlockFab(context, blockchain, null),
       );
 
-  _accumulateBlocksStream(Blockchain blockchain) => StreamBuilder(
-        stream: blockchain.consensus.adoptions
-            .asyncMap(blockchain.blockStore.getOrRaise)
-            .transform(StreamTransformer.fromBind((inStream) {
-          final List<Block> state = [];
-          return inStream.map((block) {
-            state.add(block);
-            return List.of(state).reversed.toList();
-          });
-        })),
+  Stream<List<Block>> _accumulateBlocksStream(Blockchain blockchain) =>
+      StreamGroup.merge([
+        blockchain.headId.blockHistory(blockchain).take(5),
+        blockchain.newBlocks.asyncMap(blockchain.blockStore.getOrRaise)
+      ]).transform(StreamTransformer.fromBind((inStream) {
+        final List<Block> state = [];
+        return inStream.map((block) {
+          state.add(block);
+          return List.of(state);
+        });
+      }));
+
+  Widget get _graphView => StreamBuilder(
+        stream: _accumulateBlocksStream(blockchain),
         builder: (context, snapshot) => snapshot.hasData
-            ? ListView.builder(
-                itemBuilder: (context, index) => _tile(snapshot.data![index]),
-                itemCount: snapshot.data!.length,
+            ? BlockTree(
+                key: UniqueKey(),
+                blockchain: blockchain,
               )
             : const Text("No blocks yet"),
       );
-
-  Widget _tile(Block block) {
-    final id = block.id;
-    BigInt bigInt = BigInt.zero;
-    for (final byte in id.bytes.take(4)) {
-      bigInt = (bigInt << 8) | BigInt.from(byte & 0xff);
-    }
-    final smallInt = bigInt.toInt();
-    final color = Color(smallInt);
-    return ListTile(
-      leading: Icon(
-        Icons.square,
-        color: color,
-      ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text(id.show, textAlign: TextAlign.start),
-          Text("Height: ${block.height}"),
-          Text("Slot: ${block.slot}")
-        ],
-      ),
-    );
-  }
 }

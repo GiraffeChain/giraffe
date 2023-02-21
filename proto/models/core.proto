@@ -2,23 +2,48 @@ syntax = "proto3";
 
 package com.blockchain.models;
 
+message BlockId {
+    bytes bytes = 1;
+}
+
+message Block {
+    BlockId parentHeaderId = 1;
+    uint64 timestamp = 2;
+    uint64 height = 3;
+    bytes proof = 4;
+    repeated TransactionId transactionIds = 7;
+    TransactionOutput reward = 8;
+}
+
+message FullBlock {
+    BlockId parentHeaderId = 1;
+    uint64 timestamp = 2;
+    uint64 height = 3;
+    bytes proof = 4;
+    repeated Transaction transactions = 7;
+    TransactionOutput reward = 8;
+}
+
+
 message Transaction {
     repeated TransactionInput inputs = 1;
     repeated TransactionOutput outputs = 2;
+    repeated RewardInput rewardInputs = 3;
 }
 
 message TransactionInput {
-    TransactionOutputReference spentTransactionOutput = 1;
+    TransactionOutputReference reference = 1;
     Challenge challenge = 2;
     repeated bytes challengeArguments = 3;
 }
 
 message TransactionOutput {
     Value value = 1;
-    oneof constraint {
-        ChallengeHash spendChallengeHash = 2;
-        Donation donation = 3;
-    }
+    Account account = 2;
+}
+
+message RewardInput {
+    BlockId blockId = 1;
 }
 
 message Value {
@@ -31,8 +56,6 @@ message Value {
 
     message Coin {
         string quantity = 1;
-        // Owning "Coin" allows you a proportional vote for who can spend the next epoch's donation pool
-        Challenge donationChallengeVote = 2;
     }
 
     message Data {
@@ -50,14 +73,10 @@ message TransactionOutputReference {
     uint32 index = 2;
 }
 
-message ChallengeHash {
-    bytes hash = 1;
+message Account {
+    bytes id = 1;
 }
 
 message Challenge {
     string script = 1;
-}
-
-message Donation {
-    bytes from = 1;
 }

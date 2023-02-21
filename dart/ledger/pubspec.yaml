@@ -11,10 +11,13 @@ environment:
 
 dependencies:
   crypto: ^3.0.2
+  bit_array:
   blockchain_protobuf:
     path: ../protobuf_dart
   blockchain_codecs:
     path: ../codecs
+  blockchain_common:
+    path: ../common
 
 dev_dependencies:
   test: ^1.22.1

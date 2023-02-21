@@ -49,10 +49,25 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  bit_array:
+    dependency: "direct main"
+    description:
+      name: bit_array
+      sha256: "127c01ebb740e6dd076f5d42aa39049cf847baee39a7e63fb499b1895581dba6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   blockchain_codecs:
     dependency: "direct main"
     description:
       path: "../codecs"
+      relative: true
+    source: path
+    version: "2.0.0+1"
+  blockchain_common:
+    dependency: "direct main"
+    description:
+      path: "../common"
       relative: true
     source: path
     version: "2.0.0+1"

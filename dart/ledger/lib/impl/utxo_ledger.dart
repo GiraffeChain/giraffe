@@ -1,7 +1,10 @@
+import 'package:bit_array/bit_array.dart';
 import 'package:blockchain_codecs/codecs.dart';
+import 'package:blockchain_common/store.dart';
 import 'package:blockchain_ledger/impl/ops.dart';
+import 'package:blockchain_ledger/impl/transaction_syntax_validation.dart';
 import 'package:blockchain_ledger/ledger.dart';
-import 'package:blockchain_protobuf/models/transaction.pb.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'dart:convert' show utf8;
 import 'package:crypto/crypto.dart';
 
@@ -9,58 +12,49 @@ class UtxoLedger extends Ledger {
   final Future<TransactionOutput> Function(TransactionOutputReference)
       _fetchTransactionOutput;
 
-  // Hold the UTxO Set in-memory
-  Map<TransactionId, Set<int>> _utxos;
+  Store<TransactionId, BitArray> _txos;
 
-  UtxoLedger(this._fetchTransactionOutput, this._utxos);
+  UtxoLedger(this._fetchTransactionOutput, this._txos);
 
   @override
   Future<void> apply(Transaction transaction) async {
-    transaction.inputs
-        .map((i) => i.spentTransactionOutput)
-        .forEach((reference) {
-      final previous = _utxos[reference.transactionId]!;
-      previous.remove(reference.index);
-      if (previous.isEmpty) {
-        _utxos.remove(reference.transactionId);
-      }
-    });
+    for (final input in transaction.inputs) {
+      final reference = input.reference;
+      final previous = await _txos.getOrRaise(reference.transactionId);
+      previous[reference.index] = false;
+    }
 
-    final newUtxos = Set<int>();
+    final newUtxos = BitArray(transaction.outputs.length);
 
     for (var i = 0; i < transaction.outputs.length; i++) {
-      // Exclude donations
-      if (transaction.outputs[i].hasSpendChallengeHash()) {
-        newUtxos.add(i);
-      }
+      newUtxos[i] = true;
     }
-    _utxos[transaction.id] = newUtxos;
+    _txos.set(transaction.id, newUtxos);
   }
 
   @override
   Future<void> remove(Transaction transaction) async {
-    _utxos.remove(transaction.id);
-
-    transaction.inputs
-        .map((i) => i.spentTransactionOutput)
-        .forEach((reference) {
-      final previous = _utxos[reference.transactionId] ?? Set<int>();
-      previous.add(reference.index);
-      _utxos[reference.transactionId] = previous;
-    });
+    await _txos.delete(transaction.id);
+    for (final input in transaction.inputs) {
+      final reference = input.reference;
+      final previous = await _txos.getOrRaise(reference.transactionId);
+      previous[reference.index] = true;
+      await _txos.set(reference.transactionId, previous);
+    }
   }
 
   @override
   Future<List<String>> validate(Transaction transaction) async {
-    final spentOutputReferences =
-        transaction.inputs.map((i) => i.spentTransactionOutput).toList();
-
-    if (spentOutputReferences.length != spentOutputReferences.toSet().length) {
-      return ["Transaction attempts to double-spend"];
+    final syntaxValidationErrors = validateTransactionSyntax(transaction);
+    if (syntaxValidationErrors.isNotEmpty) {
+      return syntaxValidationErrors;
     }
 
+    final spentOutputReferences =
+        transaction.inputs.map((i) => i.reference).toList();
+
     for (final reference in spentOutputReferences) {
-      if (!txoIsSpendable(reference)) {
+      if (!(await txoIsSpendable(reference))) {
         return [
           "Transaction Output id=${reference.transactionId.show} index=${reference.index} is not spendable"
         ];
@@ -68,16 +62,16 @@ class UtxoLedger extends Ledger {
     }
 
     final spentOutputs = await Stream.fromIterable(transaction.inputs)
-        .map((i) => i.spentTransactionOutput)
+        .map((i) => i.reference)
         .asyncMap(_fetchTransactionOutput)
         .toList();
 
     for (int i = 0; i < transaction.inputs.length; i++) {
       final input = transaction.inputs[i];
-      final reference = input.spentTransactionOutput;
+      final reference = input.reference;
       final output = transaction.outputs[i];
       final expectedHash = sha256.convert(utf8.encode(input.challenge.script));
-      if (!(output.spendChallengeHash.hash == expectedHash.bytes)) {
+      if (!(output.account.id == expectedHash.bytes)) {
         return [
           "Challenge for id=${reference.transactionId.show} index=${reference.index} was incorrect"
         ];
@@ -107,10 +101,14 @@ class UtxoLedger extends Ledger {
     return [];
   }
 
-  bool txoIsSpendable(TransactionOutputReference reference) =>
-      _utxos[reference.transactionId]?.contains(reference.index) ?? false;
-
-  Map<TransactionId, Set<int>> get utxos => _utxos;
+  Future<bool> txoIsSpendable(TransactionOutputReference reference) async {
+    final indices = await _txos.get(reference.transactionId);
+    if (indices == null)
+      return false;
+    else {
+      return indices[reference.index];
+    }
+  }
 
   Future<bool> executeScript(String script, List<List<int>> arguments) async {
     // TODO

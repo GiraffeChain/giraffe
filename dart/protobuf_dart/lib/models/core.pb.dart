@@ -1,18 +1,297 @@
 ///
 //  Generated code. Do not modify.
-//  source: models/transaction.proto
+//  source: models/core.proto
 //
 // @dart = 2.12
 // ignore_for_file: annotate_overrides,camel_case_types,constant_identifier_names,directives_ordering,library_prefixes,non_constant_identifier_names,prefer_final_fields,return_of_invalid_type,unnecessary_const,unnecessary_import,unnecessary_this,unused_import,unused_shown_name
 
 import 'dart:core' as $core;
 
+import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
+
+class BlockId extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'BlockId', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'bytes', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  BlockId._() : super();
+  factory BlockId({
+    $core.List<$core.int>? bytes,
+  }) {
+    final _result = create();
+    if (bytes != null) {
+      _result.bytes = bytes;
+    }
+    return _result;
+  }
+  factory BlockId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory BlockId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  BlockId clone() => BlockId()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  BlockId copyWith(void Function(BlockId) updates) => super.copyWith((message) => updates(message as BlockId)) as BlockId; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static BlockId create() => BlockId._();
+  BlockId createEmptyInstance() => create();
+  static $pb.PbList<BlockId> createRepeated() => $pb.PbList<BlockId>();
+  @$core.pragma('dart2js:noInline')
+  static BlockId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockId>(create);
+  static BlockId? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get bytes => $_getN(0);
+  @$pb.TagNumber(1)
+  set bytes($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasBytes() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBytes() => clearField(1);
+}
+
+class Block extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Block', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..aOM<BlockId>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'parentHeaderId', protoName: 'parentHeaderId', subBuilder: BlockId.create)
+    ..a<$fixnum.Int64>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestamp', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'proof', $pb.PbFieldType.OY)
+    ..pc<TransactionId>(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'transactionIds', $pb.PbFieldType.PM, protoName: 'transactionIds', subBuilder: TransactionId.create)
+    ..aOM<TransactionOutput>(8, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'reward', subBuilder: TransactionOutput.create)
+    ..hasRequiredFields = false
+  ;
+
+  Block._() : super();
+  factory Block({
+    BlockId? parentHeaderId,
+    $fixnum.Int64? timestamp,
+    $fixnum.Int64? height,
+    $core.List<$core.int>? proof,
+    $core.Iterable<TransactionId>? transactionIds,
+    TransactionOutput? reward,
+  }) {
+    final _result = create();
+    if (parentHeaderId != null) {
+      _result.parentHeaderId = parentHeaderId;
+    }
+    if (timestamp != null) {
+      _result.timestamp = timestamp;
+    }
+    if (height != null) {
+      _result.height = height;
+    }
+    if (proof != null) {
+      _result.proof = proof;
+    }
+    if (transactionIds != null) {
+      _result.transactionIds.addAll(transactionIds);
+    }
+    if (reward != null) {
+      _result.reward = reward;
+    }
+    return _result;
+  }
+  factory Block.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Block.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Block clone() => Block()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Block copyWith(void Function(Block) updates) => super.copyWith((message) => updates(message as Block)) as Block; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static Block create() => Block._();
+  Block createEmptyInstance() => create();
+  static $pb.PbList<Block> createRepeated() => $pb.PbList<Block>();
+  @$core.pragma('dart2js:noInline')
+  static Block getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Block>(create);
+  static Block? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  BlockId get parentHeaderId => $_getN(0);
+  @$pb.TagNumber(1)
+  set parentHeaderId(BlockId v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasParentHeaderId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearParentHeaderId() => clearField(1);
+  @$pb.TagNumber(1)
+  BlockId ensureParentHeaderId() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get timestamp => $_getI64(1);
+  @$pb.TagNumber(2)
+  set timestamp($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasTimestamp() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTimestamp() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get height => $_getI64(2);
+  @$pb.TagNumber(3)
+  set height($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasHeight() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearHeight() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get proof => $_getN(3);
+  @$pb.TagNumber(4)
+  set proof($core.List<$core.int> v) { $_setBytes(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasProof() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProof() => clearField(4);
+
+  @$pb.TagNumber(7)
+  $core.List<TransactionId> get transactionIds => $_getList(4);
+
+  @$pb.TagNumber(8)
+  TransactionOutput get reward => $_getN(5);
+  @$pb.TagNumber(8)
+  set reward(TransactionOutput v) { setField(8, v); }
+  @$pb.TagNumber(8)
+  $core.bool hasReward() => $_has(5);
+  @$pb.TagNumber(8)
+  void clearReward() => clearField(8);
+  @$pb.TagNumber(8)
+  TransactionOutput ensureReward() => $_ensure(5);
+}
+
+class FullBlock extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'FullBlock', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..aOM<BlockId>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'parentHeaderId', protoName: 'parentHeaderId', subBuilder: BlockId.create)
+    ..a<$fixnum.Int64>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestamp', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'proof', $pb.PbFieldType.OY)
+    ..pc<Transaction>(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'transactions', $pb.PbFieldType.PM, subBuilder: Transaction.create)
+    ..aOM<TransactionOutput>(8, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'reward', subBuilder: TransactionOutput.create)
+    ..hasRequiredFields = false
+  ;
+
+  FullBlock._() : super();
+  factory FullBlock({
+    BlockId? parentHeaderId,
+    $fixnum.Int64? timestamp,
+    $fixnum.Int64? height,
+    $core.List<$core.int>? proof,
+    $core.Iterable<Transaction>? transactions,
+    TransactionOutput? reward,
+  }) {
+    final _result = create();
+    if (parentHeaderId != null) {
+      _result.parentHeaderId = parentHeaderId;
+    }
+    if (timestamp != null) {
+      _result.timestamp = timestamp;
+    }
+    if (height != null) {
+      _result.height = height;
+    }
+    if (proof != null) {
+      _result.proof = proof;
+    }
+    if (transactions != null) {
+      _result.transactions.addAll(transactions);
+    }
+    if (reward != null) {
+      _result.reward = reward;
+    }
+    return _result;
+  }
+  factory FullBlock.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory FullBlock.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  FullBlock clone() => FullBlock()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  FullBlock copyWith(void Function(FullBlock) updates) => super.copyWith((message) => updates(message as FullBlock)) as FullBlock; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static FullBlock create() => FullBlock._();
+  FullBlock createEmptyInstance() => create();
+  static $pb.PbList<FullBlock> createRepeated() => $pb.PbList<FullBlock>();
+  @$core.pragma('dart2js:noInline')
+  static FullBlock getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FullBlock>(create);
+  static FullBlock? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  BlockId get parentHeaderId => $_getN(0);
+  @$pb.TagNumber(1)
+  set parentHeaderId(BlockId v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasParentHeaderId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearParentHeaderId() => clearField(1);
+  @$pb.TagNumber(1)
+  BlockId ensureParentHeaderId() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get timestamp => $_getI64(1);
+  @$pb.TagNumber(2)
+  set timestamp($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasTimestamp() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTimestamp() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get height => $_getI64(2);
+  @$pb.TagNumber(3)
+  set height($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasHeight() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearHeight() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get proof => $_getN(3);
+  @$pb.TagNumber(4)
+  set proof($core.List<$core.int> v) { $_setBytes(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasProof() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearProof() => clearField(4);
+
+  @$pb.TagNumber(7)
+  $core.List<Transaction> get transactions => $_getList(4);
+
+  @$pb.TagNumber(8)
+  TransactionOutput get reward => $_getN(5);
+  @$pb.TagNumber(8)
+  set reward(TransactionOutput v) { setField(8, v); }
+  @$pb.TagNumber(8)
+  $core.bool hasReward() => $_has(5);
+  @$pb.TagNumber(8)
+  void clearReward() => clearField(8);
+  @$pb.TagNumber(8)
+  TransactionOutput ensureReward() => $_ensure(5);
+}
 
 class Transaction extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Transaction', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
     ..pc<TransactionInput>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'inputs', $pb.PbFieldType.PM, subBuilder: TransactionInput.create)
     ..pc<TransactionOutput>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'outputs', $pb.PbFieldType.PM, subBuilder: TransactionOutput.create)
+    ..pc<RewardInput>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'rewardInputs', $pb.PbFieldType.PM, protoName: 'rewardInputs', subBuilder: RewardInput.create)
     ..hasRequiredFields = false
   ;
 
@@ -20,6 +299,7 @@ class Transaction extends $pb.GeneratedMessage {
   factory Transaction({
     $core.Iterable<TransactionInput>? inputs,
     $core.Iterable<TransactionOutput>? outputs,
+    $core.Iterable<RewardInput>? rewardInputs,
   }) {
     final _result = create();
     if (inputs != null) {
@@ -27,6 +307,9 @@ class Transaction extends $pb.GeneratedMessage {
     }
     if (outputs != null) {
       _result.outputs.addAll(outputs);
+    }
+    if (rewardInputs != null) {
+      _result.rewardInputs.addAll(rewardInputs);
     }
     return _result;
   }
@@ -56,11 +339,14 @@ class Transaction extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(2)
   $core.List<TransactionOutput> get outputs => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.List<RewardInput> get rewardInputs => $_getList(2);
 }
 
 class TransactionInput extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'TransactionInput', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..aOM<TransactionOutputReference>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'spentTransactionOutput', protoName: 'spentTransactionOutput', subBuilder: TransactionOutputReference.create)
+    ..aOM<TransactionOutputReference>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'reference', subBuilder: TransactionOutputReference.create)
     ..aOM<Challenge>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'challenge', subBuilder: Challenge.create)
     ..p<$core.List<$core.int>>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'challengeArguments', $pb.PbFieldType.PY, protoName: 'challengeArguments')
     ..hasRequiredFields = false
@@ -68,13 +354,13 @@ class TransactionInput extends $pb.GeneratedMessage {
 
   TransactionInput._() : super();
   factory TransactionInput({
-    TransactionOutputReference? spentTransactionOutput,
+    TransactionOutputReference? reference,
     Challenge? challenge,
     $core.Iterable<$core.List<$core.int>>? challengeArguments,
   }) {
     final _result = create();
-    if (spentTransactionOutput != null) {
-      _result.spentTransactionOutput = spentTransactionOutput;
+    if (reference != null) {
+      _result.reference = reference;
     }
     if (challenge != null) {
       _result.challenge = challenge;
@@ -106,15 +392,15 @@ class TransactionInput extends $pb.GeneratedMessage {
   static TransactionInput? _defaultInstance;
 
   @$pb.TagNumber(1)
-  TransactionOutputReference get spentTransactionOutput => $_getN(0);
+  TransactionOutputReference get reference => $_getN(0);
   @$pb.TagNumber(1)
-  set spentTransactionOutput(TransactionOutputReference v) { setField(1, v); }
+  set reference(TransactionOutputReference v) { setField(1, v); }
   @$pb.TagNumber(1)
-  $core.bool hasSpentTransactionOutput() => $_has(0);
+  $core.bool hasReference() => $_has(0);
   @$pb.TagNumber(1)
-  void clearSpentTransactionOutput() => clearField(1);
+  void clearReference() => clearField(1);
   @$pb.TagNumber(1)
-  TransactionOutputReference ensureSpentTransactionOutput() => $_ensure(0);
+  TransactionOutputReference ensureReference() => $_ensure(0);
 
   @$pb.TagNumber(2)
   Challenge get challenge => $_getN(1);
@@ -131,41 +417,24 @@ class TransactionInput extends $pb.GeneratedMessage {
   $core.List<$core.List<$core.int>> get challengeArguments => $_getList(2);
 }
 
-enum TransactionOutput_Constraint {
-  spendChallengeHash, 
-  donation, 
-  notSet
-}
-
 class TransactionOutput extends $pb.GeneratedMessage {
-  static const $core.Map<$core.int, TransactionOutput_Constraint> _TransactionOutput_ConstraintByTag = {
-    2 : TransactionOutput_Constraint.spendChallengeHash,
-    3 : TransactionOutput_Constraint.donation,
-    0 : TransactionOutput_Constraint.notSet
-  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'TransactionOutput', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..oo(0, [2, 3])
     ..aOM<Value>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'value', subBuilder: Value.create)
-    ..aOM<ChallengeHash>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'spendChallengeHash', protoName: 'spendChallengeHash', subBuilder: ChallengeHash.create)
-    ..aOM<Donation>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'donation', subBuilder: Donation.create)
+    ..aOM<Account>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'account', subBuilder: Account.create)
     ..hasRequiredFields = false
   ;
 
   TransactionOutput._() : super();
   factory TransactionOutput({
     Value? value,
-    ChallengeHash? spendChallengeHash,
-    Donation? donation,
+    Account? account,
   }) {
     final _result = create();
     if (value != null) {
       _result.value = value;
     }
-    if (spendChallengeHash != null) {
-      _result.spendChallengeHash = spendChallengeHash;
-    }
-    if (donation != null) {
-      _result.donation = donation;
+    if (account != null) {
+      _result.account = account;
     }
     return _result;
   }
@@ -190,9 +459,6 @@ class TransactionOutput extends $pb.GeneratedMessage {
   static TransactionOutput getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<TransactionOutput>(create);
   static TransactionOutput? _defaultInstance;
 
-  TransactionOutput_Constraint whichConstraint() => _TransactionOutput_ConstraintByTag[$_whichOneof(0)]!;
-  void clearConstraint() => clearField($_whichOneof(0));
-
   @$pb.TagNumber(1)
   Value get value => $_getN(0);
   @$pb.TagNumber(1)
@@ -205,46 +471,79 @@ class TransactionOutput extends $pb.GeneratedMessage {
   Value ensureValue() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  ChallengeHash get spendChallengeHash => $_getN(1);
+  Account get account => $_getN(1);
   @$pb.TagNumber(2)
-  set spendChallengeHash(ChallengeHash v) { setField(2, v); }
+  set account(Account v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasSpendChallengeHash() => $_has(1);
+  $core.bool hasAccount() => $_has(1);
   @$pb.TagNumber(2)
-  void clearSpendChallengeHash() => clearField(2);
+  void clearAccount() => clearField(2);
   @$pb.TagNumber(2)
-  ChallengeHash ensureSpendChallengeHash() => $_ensure(1);
+  Account ensureAccount() => $_ensure(1);
+}
 
-  @$pb.TagNumber(3)
-  Donation get donation => $_getN(2);
-  @$pb.TagNumber(3)
-  set donation(Donation v) { setField(3, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasDonation() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearDonation() => clearField(3);
-  @$pb.TagNumber(3)
-  Donation ensureDonation() => $_ensure(2);
+class RewardInput extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'RewardInput', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..aOM<BlockId>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'blockId', protoName: 'blockId', subBuilder: BlockId.create)
+    ..hasRequiredFields = false
+  ;
+
+  RewardInput._() : super();
+  factory RewardInput({
+    BlockId? blockId,
+  }) {
+    final _result = create();
+    if (blockId != null) {
+      _result.blockId = blockId;
+    }
+    return _result;
+  }
+  factory RewardInput.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RewardInput.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  RewardInput clone() => RewardInput()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  RewardInput copyWith(void Function(RewardInput) updates) => super.copyWith((message) => updates(message as RewardInput)) as RewardInput; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static RewardInput create() => RewardInput._();
+  RewardInput createEmptyInstance() => create();
+  static $pb.PbList<RewardInput> createRepeated() => $pb.PbList<RewardInput>();
+  @$core.pragma('dart2js:noInline')
+  static RewardInput getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RewardInput>(create);
+  static RewardInput? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  BlockId get blockId => $_getN(0);
+  @$pb.TagNumber(1)
+  set blockId(BlockId v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasBlockId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBlockId() => clearField(1);
+  @$pb.TagNumber(1)
+  BlockId ensureBlockId() => $_ensure(0);
 }
 
 class Value_Coin extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Value.Coin', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
     ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'quantity')
-    ..aOM<Challenge>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'donationChallengeVote', protoName: 'donationChallengeVote', subBuilder: Challenge.create)
     ..hasRequiredFields = false
   ;
 
   Value_Coin._() : super();
   factory Value_Coin({
     $core.String? quantity,
-    Challenge? donationChallengeVote,
   }) {
     final _result = create();
     if (quantity != null) {
       _result.quantity = quantity;
-    }
-    if (donationChallengeVote != null) {
-      _result.donationChallengeVote = donationChallengeVote;
     }
     return _result;
   }
@@ -277,17 +576,6 @@ class Value_Coin extends $pb.GeneratedMessage {
   $core.bool hasQuantity() => $_has(0);
   @$pb.TagNumber(1)
   void clearQuantity() => clearField(1);
-
-  @$pb.TagNumber(2)
-  Challenge get donationChallengeVote => $_getN(1);
-  @$pb.TagNumber(2)
-  set donationChallengeVote(Challenge v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasDonationChallengeVote() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearDonationChallengeVote() => clearField(2);
-  @$pb.TagNumber(2)
-  Challenge ensureDonationChallengeVote() => $_ensure(1);
 }
 
 class Value_Data extends $pb.GeneratedMessage {
@@ -541,51 +829,51 @@ class TransactionOutputReference extends $pb.GeneratedMessage {
   void clearIndex() => clearField(2);
 }
 
-class ChallengeHash extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'ChallengeHash', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'hash', $pb.PbFieldType.OY)
+class Account extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Account', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'id', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
 
-  ChallengeHash._() : super();
-  factory ChallengeHash({
-    $core.List<$core.int>? hash,
+  Account._() : super();
+  factory Account({
+    $core.List<$core.int>? id,
   }) {
     final _result = create();
-    if (hash != null) {
-      _result.hash = hash;
+    if (id != null) {
+      _result.id = id;
     }
     return _result;
   }
-  factory ChallengeHash.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory ChallengeHash.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory Account.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Account.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  ChallengeHash clone() => ChallengeHash()..mergeFromMessage(this);
+  Account clone() => Account()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  ChallengeHash copyWith(void Function(ChallengeHash) updates) => super.copyWith((message) => updates(message as ChallengeHash)) as ChallengeHash; // ignore: deprecated_member_use
+  Account copyWith(void Function(Account) updates) => super.copyWith((message) => updates(message as Account)) as Account; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
   @$core.pragma('dart2js:noInline')
-  static ChallengeHash create() => ChallengeHash._();
-  ChallengeHash createEmptyInstance() => create();
-  static $pb.PbList<ChallengeHash> createRepeated() => $pb.PbList<ChallengeHash>();
+  static Account create() => Account._();
+  Account createEmptyInstance() => create();
+  static $pb.PbList<Account> createRepeated() => $pb.PbList<Account>();
   @$core.pragma('dart2js:noInline')
-  static ChallengeHash getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ChallengeHash>(create);
-  static ChallengeHash? _defaultInstance;
+  static Account getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Account>(create);
+  static Account? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get hash => $_getN(0);
+  $core.List<$core.int> get id => $_getN(0);
   @$pb.TagNumber(1)
-  set hash($core.List<$core.int> v) { $_setBytes(0, v); }
+  set id($core.List<$core.int> v) { $_setBytes(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasHash() => $_has(0);
+  $core.bool hasId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearHash() => clearField(1);
+  void clearId() => clearField(1);
 }
 
 class Challenge extends $pb.GeneratedMessage {
@@ -633,52 +921,5 @@ class Challenge extends $pb.GeneratedMessage {
   $core.bool hasScript() => $_has(0);
   @$pb.TagNumber(1)
   void clearScript() => clearField(1);
-}
-
-class Donation extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Donation', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'from', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false
-  ;
-
-  Donation._() : super();
-  factory Donation({
-    $core.List<$core.int>? from,
-  }) {
-    final _result = create();
-    if (from != null) {
-      _result.from = from;
-    }
-    return _result;
-  }
-  factory Donation.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Donation.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  Donation clone() => Donation()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Donation copyWith(void Function(Donation) updates) => super.copyWith((message) => updates(message as Donation)) as Donation; // ignore: deprecated_member_use
-  $pb.BuilderInfo get info_ => _i;
-  @$core.pragma('dart2js:noInline')
-  static Donation create() => Donation._();
-  Donation createEmptyInstance() => create();
-  static $pb.PbList<Donation> createRepeated() => $pb.PbList<Donation>();
-  @$core.pragma('dart2js:noInline')
-  static Donation getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Donation>(create);
-  static Donation? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.List<$core.int> get from => $_getN(0);
-  @$pb.TagNumber(1)
-  set from($core.List<$core.int> v) { $_setBytes(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasFrom() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearFrom() => clearField(1);
 }
 

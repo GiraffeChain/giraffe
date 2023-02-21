@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:blockchain_protobuf/models/block.pb.dart';
-import 'package:blockchain_protobuf/models/transaction.pb.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:crypto/crypto.dart';
 
 import 'package:bs58/bs58.dart';
@@ -15,7 +14,6 @@ extension BlockCodecOps on Block {
     bytes.addAll(parentHeaderId.bytes);
     bytes.addAll(timestamp.toBytes());
     bytes.addAll(height.toBytes());
-    bytes.addAll(slot.toBytes());
     bytes.addAll(proof);
     transactionIds.forEach((id) => bytes.addAll(id.bytes));
     return bytes;
@@ -27,7 +25,6 @@ extension FullBlockCodecOps on FullBlock {
       parentHeaderId: parentHeaderId,
       timestamp: timestamp,
       height: height,
-      slot: slot,
       proof: proof,
       transactionIds: transactions.map((t) => t.id));
 
@@ -48,7 +45,7 @@ extension TransactionCodecOps on Transaction {
 extension TransactionInputCodecOps on TransactionInput {
   List<int> get encodeV1 {
     final bytes = <int>[];
-    bytes.addAll(spentTransactionOutput.encodeV1);
+    bytes.addAll(reference.encodeV1);
     bytes.addAll(challenge.encodeV1);
     challengeArguments.forEach(bytes.addAll);
     return bytes;
@@ -59,13 +56,7 @@ extension TransactionOutputCodecOps on TransactionOutput {
   List<int> get encodeV1 {
     final bytes = <int>[];
     bytes.addAll(value.encodeV1);
-    if (hasSpendChallengeHash()) {
-      bytes.add(0);
-      bytes.addAll(spendChallengeHash.encodeV1);
-    } else {
-      bytes.add(1);
-      bytes.addAll(donation.encodeV1);
-    }
+    bytes.addAll(account.encodeV1);
 
     return bytes;
   }
@@ -86,7 +77,6 @@ extension ValueCodecOps on Value {
     if (hasCoin()) {
       bytes.add(0);
       bytes.addAll(utf8.encode(coin.quantity));
-      bytes.addAll(coin.donationChallengeVote.encodeV1);
     } else {
       bytes.add(1);
       bytes.addAll(utf8.encode(data.dataType));
@@ -96,10 +86,10 @@ extension ValueCodecOps on Value {
   }
 }
 
-extension ChallengeHashCodecOps on ChallengeHash {
+extension AccountCodecOps on Account {
   List<int> get encodeV1 {
     final bytes = <int>[];
-    bytes.addAll(hash);
+    bytes.addAll(id);
     return bytes;
   }
 }
@@ -108,14 +98,6 @@ extension ChallengeCodecOps on Challenge {
   List<int> get encodeV1 {
     final bytes = <int>[];
     bytes.addAll(utf8.encode(script));
-    return bytes;
-  }
-}
-
-extension DonationCodecOps on Donation {
-  List<int> get encodeV1 {
-    final bytes = <int>[];
-    bytes.addAll(from);
     return bytes;
   }
 }

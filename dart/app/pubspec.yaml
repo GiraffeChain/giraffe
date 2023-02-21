@@ -24,6 +24,12 @@ dependencies:
   blockchain_network:
     path: ../network
   fixnum:
+  ipsum:
+  painter:
+  fpdart:
+  bit_array:
+  async:
+  graphview: ^1.1.1
   flutter:
     sdk: flutter
 

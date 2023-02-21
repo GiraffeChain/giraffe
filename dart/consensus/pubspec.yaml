@@ -10,8 +10,12 @@ environment:
 
 
 dependencies:
+  fpdart:
+  crypto:
   blockchain_protobuf:
     path: ../protobuf_dart
+  blockchain_common:
+    path: ../common
 
 dev_dependencies:
   test: ^1.22.1

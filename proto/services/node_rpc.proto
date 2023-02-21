@@ -2,8 +2,7 @@ syntax = "proto3";
 
 package com.blockchain.services;
 
-import 'models/transaction.proto';
-import 'models/block.proto';
+import 'models/core.proto';
 
 service NodeRpc {
     rpc Handshake (HandshakeReq) returns (HandshakeRes);
