@@ -10,7 +10,7 @@ packages:
     source: hosted
     version: "3.3.6"
   async:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: async
       sha256: bfe67ef28df125b7dddcea62755991f807aa39a2492a23e1550161692950bbe0
@@ -25,6 +25,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  bit_array:
+    dependency: "direct main"
+    description:
+      name: bit_array
+      sha256: "127c01ebb740e6dd076f5d42aa39049cf847baee39a7e63fb499b1895581dba6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   blockchain:
     dependency: "direct main"
     description:
@@ -172,7 +180,7 @@ packages:
     source: sdk
     version: "0.0.0"
   fpdart:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: fpdart
       sha256: "19db038cf3bb49bfe28b2a0b363ce84cf2e6a0f471a93ae09271cfef03dae935"
@@ -275,6 +283,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.8.0"
+  painter:
+    dependency: "direct main"
+    description:
+      name: painter
+      sha256: "8919468e313a5d8ded41ee1e6db8dec72dd85359174b7866feef8fbc82c603cc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   path:
     dependency: transitive
     description:
@@ -370,4 +386,4 @@ packages:
     version: "2.1.4"
 sdks:
   dart: ">=2.19.2 <3.0.0"
-  flutter: ">=1.17.0"
+  flutter: ">=2.0.0"

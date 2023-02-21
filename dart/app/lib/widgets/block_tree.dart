@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:blockchain/blockchain.dart';
-import 'package:blockchain_app/widgets/block_screen.dart';
+import 'package:blockchain_app/widgets/bitmap_editor.dart';
+import 'package:blockchain_app/widgets/block_view_screen.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
@@ -68,7 +68,7 @@ class _BlockTreeState extends State<BlockTree> {
       }
       for (final block in blocks) {
         if (nodes.containsKey(block.parentHeaderId)) {
-          _graph.addEdge(nodes[block.id]!, nodes[block.parentHeaderId!]!);
+          _graph.addEdge(nodes[block.id]!, nodes[block.parentHeaderId]!);
         }
       }
     });
@@ -104,7 +104,16 @@ class _BlockTreeState extends State<BlockTree> {
       ),
       child: InkWell(
         onTap: () => _onPressed(context, node.key!.value),
-        child: Text(_blockProofText(block)),
+        child: SizedBox(
+            width: 128,
+            height: 128,
+            child: block.height > 1
+                ? BitMapRender(bitMap: decodeBitMap(block.proof))
+                : const Center(
+                    child: Text(
+                    "Genesis",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ))),
       ),
     );
   }
@@ -112,10 +121,8 @@ class _BlockTreeState extends State<BlockTree> {
   _onPressed(BuildContext context, BlockId id) {
     Navigator.of(context).push(MaterialPageRoute(
         builder: (context) =>
-            BlockScreen(blockchain: widget.blockchain, blockId: id)));
+            BlockViewScreen(blockchain: widget.blockchain, blockId: id)));
   }
-
-  _blockProofText(Block block) => utf8.decode(block.proof);
 }
 
 class BlockTreeNode {

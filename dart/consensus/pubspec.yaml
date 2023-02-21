@@ -11,6 +11,7 @@ environment:
 
 dependencies:
   fpdart:
+  crypto:
   blockchain_protobuf:
     path: ../protobuf_dart
   blockchain_common:

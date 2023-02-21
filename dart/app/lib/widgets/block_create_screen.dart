@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain_app/blockchain_widget.dart';
+import 'package:blockchain_app/widgets/bitmap_editor.dart';
+import 'package:blockchain_codecs/codecs.dart';
+import 'package:blockchain_consensus/impl/words.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
-import 'package:ipsum/ipsum.dart';
 
 class BlockCreateScreen extends StatelessWidget {
   final BlockId? targetHead;
@@ -22,7 +23,10 @@ class BlockCreateScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text("Create Block")),
         body: FutureBuilder(
-          future: _prefixBlocks,
+          future: (targetHead ?? blockchain.headId)
+              .blockHistory(blockchain)
+              .take(5)
+              .toList(),
           builder: (context, snapshot) => snapshot.hasData
               ? BlockCreateScreenLoaded(
                   blockchain: blockchain,
@@ -32,19 +36,6 @@ class BlockCreateScreen extends StatelessWidget {
               : const Text("Loading"),
         ),
       );
-
-  Future<List<Block>> get _prefixBlocks async {
-    final currentHead =
-        await blockchain.blockStore.getOrRaise(targetHead ?? blockchain.headId);
-    final blocks = [currentHead];
-    while (blocks.first.height > 1 && blocks.length < 5) {
-      blocks.insert(
-        0,
-        await (blockchain.blockStore.getOrRaise(blocks.first.parentHeaderId)),
-      );
-    }
-    return blocks;
-  }
 }
 
 class BlockCreateScreenLoaded extends StatefulWidget {
@@ -59,58 +50,53 @@ class BlockCreateScreenLoaded extends StatefulWidget {
       required this.parentBlocks});
 
   @override
-  State<StatefulWidget> createState() => _BlockCreateScreenLoadedState();
+  State<StatefulWidget> createState() => _BlockCreateScreenLoadedState2();
 }
 
-class _BlockCreateScreenLoadedState extends State<BlockCreateScreenLoaded> {
-  final _formKey = GlobalKey<FormState>();
-
+class _BlockCreateScreenLoadedState2 extends State<BlockCreateScreenLoaded> {
   @override
-  Widget build(BuildContext context) => Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text("Prompt ",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              _prefix,
-              style: const TextStyle(fontStyle: FontStyle.italic),
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Column(
+          children: [
+            Row(
+              children: pseudoRandomWords(
+                widget.parentBlocks.first.parentHeaderId,
+                widget.parentBlocks.first.reward.account,
+              ).map((t) => Text(t)).toList(),
             ),
-          ),
-          _input(context),
-          _submit
-        ],
-      ));
-
-  String get _prefix {
-    final storyPrefix = widget.parentBlocks
-        .map((block) => block.proof)
-        .map(utf8.decode)
-        .join(" ");
-
-    return "...$storyPrefix";
+            SizedBox(
+              height: 128,
+              child: BitMapRender(
+                bitMap: widget.parentBlocks.first.height > 1
+                    ? decodeBitMap(widget.parentBlocks.first.proof)
+                    : emptyBitMap,
+                changes: const Stream.empty(),
+              ),
+            ),
+            Row(
+              children: pseudoRandomWords(widget.parentBlocks.first.id,
+                      widget.blockchain.blockProducer.rewardsAccount)
+                  .map((t) => Text(t))
+                  .toList(),
+            ),
+          ],
+        ),
+        Expanded(
+            child: BitmapEditorWithToolbar(
+          bitmap: emptyBitMap,
+          onSaved: (bitMap) => _onInputSaved(context, bitMap),
+        ))
+      ],
+    );
   }
 
-  Widget _input(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: TextFormField(
-          maxLines: 4,
-          decoration:
-              const InputDecoration(hintText: "Continue the story here..."),
-          onSaved: (newValue) => _onInputSaved(context, newValue!),
-          initialValue: Ipsum().sentences(1),
-        ),
-      );
-
-  _onInputSaved(BuildContext context, String newValue) {
+  _onInputSaved(BuildContext context, BitMap bitmap) {
+    final proof = encodeBitMap(bitmap);
     unawaited(
       widget.blockchain.blockProducer
-          .produceBlock(widget.parentBlocks.last, utf8.encode(newValue))
+          .produceBlock(widget.parentBlocks.first, proof)
           .then((block) async => FullBlock(
               parentHeaderId: block.parentHeaderId,
               timestamp: block.timestamp,
@@ -128,15 +114,4 @@ class _BlockCreateScreenLoadedState extends State<BlockCreateScreenLoaded> {
                 BlockchainWidget(blockchain: widget.blockchain)),
         (_) => false);
   }
-
-  Widget get _submit => TextButton.icon(
-        onPressed: () {
-          final form = _formKey.currentState!;
-          if (form.validate()) {
-            form.save();
-          }
-        },
-        icon: const Icon(Icons.add_box),
-        label: const Text("Create"),
-      );
 }

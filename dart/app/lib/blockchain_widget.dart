@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:async/async.dart' show StreamGroup;
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/blockchain_config.dart';
-import 'package:blockchain_app/widgets/block_screen.dart';
 import 'package:blockchain_app/widgets/block_tree.dart';
 import 'package:blockchain_app/widgets/create_block_fab.dart';
-import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
 
@@ -64,41 +61,6 @@ class BlockchainWidget extends StatelessWidget {
           return List.of(state);
         });
       }));
-
-  Widget get _listView => StreamBuilder(
-        stream:
-            _accumulateBlocksStream(blockchain).map((l) => l.reversed.toList()),
-        builder: (context, snapshot) => snapshot.hasData
-            ? ListView.builder(
-                itemBuilder: (context, index) => _tile(snapshot.data![index]),
-                itemCount: snapshot.data!.length,
-              )
-            : const Text("No blocks yet"),
-      );
-
-  Widget _tile(Block block) {
-    final id = block.id;
-    BigInt bigInt = BigInt.zero;
-    for (final byte in id.bytes.take(4)) {
-      bigInt = (bigInt << 8) | BigInt.from(byte & 0xff);
-    }
-    final smallInt = bigInt.toInt();
-    final color = Color(smallInt);
-    return ListTile(
-      leading: Icon(
-        Icons.square,
-        color: color,
-      ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text(id.show, textAlign: TextAlign.start),
-          Text("Height: ${block.height}")
-        ],
-      ),
-    );
-  }
 
   Widget get _graphView => StreamBuilder(
         stream: _accumulateBlocksStream(blockchain),

@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:bit_array/bit_array.dart';
 import 'package:blockchain/blockchain_config.dart';
 import 'package:blockchain_block_production/impl/block_producer.dart';
 import 'package:blockchain_codecs/codecs.dart';
@@ -7,6 +9,8 @@ import 'package:blockchain_consensus/impl/chain_selection.dart';
 import 'package:blockchain_consensus/impl/consensus_validator.dart';
 import 'package:blockchain_common/blockchain_clock.dart';
 import 'package:blockchain_common/store.dart';
+import 'package:blockchain_ledger/impl/mempool.dart';
+import 'package:blockchain_ledger/impl/transaction_syntax_validation.dart';
 import 'package:blockchain_ledger/ledger.dart';
 import 'package:blockchain_network/network.dart';
 import 'package:blockchain_network/rpc_server.dart';
@@ -65,14 +69,27 @@ class Blockchain {
             .get(reference.transactionId)
             .then((t) => t!.outputs[reference.index]);
 
-    final ledger = UtxoLedger(fetchTransactionOutput, {});
+    final txoStore = InMemoryStore<TransactionId, BitArray>();
+
+    final ledger = UtxoLedger(fetchTransactionOutput, txoStore);
     genesisBlock.transactions
         .forEach((transaction) async => await ledger.apply(transaction));
 
     final StreamController<BlockId> newBlocksController =
         StreamController.broadcast();
-    final StreamController<BlockId> adoptionsController =
+    final StreamController<BlockId> blockGossipController =
         StreamController.broadcast();
+    final StreamController<TransactionId> transactionGossipController =
+        StreamController.broadcast();
+
+    final Mempool mempool = Mempool();
+
+    Future<void> processTransaction(Transaction transaction) async {
+      final syntaxErrors = validateTransactionSyntax(transaction);
+      if (syntaxErrors.isNotEmpty) {
+        await mempool.add(transaction);
+      }
+    }
 
     late Network network;
     late Blockchain blockchain;
@@ -82,9 +99,11 @@ class Blockchain {
       config.networkBindPort,
       genesisBlockId,
       RpcServer(
-        () => adoptionsController.stream,
-        blockStore.getOrRaise,
-      ),
+          () => blockGossipController.stream,
+          () => transactionGossipController.stream,
+          blockStore.getOrRaise,
+          transactionStore.getOrRaise,
+          processTransaction),
       (peer) => unawaited(
         network.outboundPeers.containsKey(peer)
             ? Future.value()
@@ -93,16 +112,22 @@ class Blockchain {
       ),
     );
 
+    final random = Random();
+
+    final rewardsAccount = Account(
+        id: List.filled(32, 0).map((_) => random.nextInt(256)).toList());
+
     final blockProducer =
-        BlockProducer(Account(), (parent) => Future.value([]));
+        BlockProducer(rewardsAccount, (parent) => Future.value([]));
 
     final chainSelectionScoreStore = InMemoryStore<BlockId, double>();
     await chainSelectionScoreStore.set(genesisBlockId, 1);
     final chainSelection = ScoreBasedChainSelection(
-        genesisBlockId,
-        chainSelectionScoreStore,
-        (id) => blockStore.getOrRaise(id).then((b) => b.parentHeaderId),
-        0.1);
+      genesisBlockId,
+      chainSelectionScoreStore,
+      (id) => blockStore.getOrRaise(id).then((b) => b.parentHeaderId),
+      0.1,
+    );
 
     blockchain = Blockchain(
         config,
@@ -115,7 +140,7 @@ class Blockchain {
         network,
         blockProducer,
         newBlocksController,
-        adoptionsController,
+        blockGossipController,
         genesisBlockId,
         Set()..add(genesisBlockId));
 

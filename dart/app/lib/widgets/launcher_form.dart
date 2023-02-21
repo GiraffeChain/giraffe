@@ -13,7 +13,11 @@ class LauncherForm extends StatefulWidget {
 class _LauncherFormState extends State<LauncherForm> {
   final _configFormKey = GlobalKey<FormState>();
   final _config = BlockchainConfig(
-      "localhost", 9555, DateTime.fromMillisecondsSinceEpoch(0), []);
+    "localhost",
+    9555,
+    DateTime.fromMillisecondsSinceEpoch(0),
+    [],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +51,10 @@ class _LauncherFormState extends State<LauncherForm> {
           _config.initialPeers.isEmpty ? null : _config.initialPeers.join(","),
       decoration:
           const InputDecoration(hintText: "Initial peers (comma-separated)"),
-      validator: (value) {},
+      validator: (value) {
+        // TODO
+        return null;
+      },
       onChanged: (peers) =>
           setState(() => _config.initialPeers = peers.split(',')),
     );
@@ -61,6 +68,7 @@ class _LauncherFormState extends State<LauncherForm> {
             return "Invalid timestamp";
           }
         }
+        return null;
       },
       onChanged: (timestamp) => setState(() {
         final maybeInt = int.tryParse(timestamp);

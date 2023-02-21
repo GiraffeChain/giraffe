@@ -1,16 +1,15 @@
-import 'dart:convert';
-
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain_app/widgets/bitmap_editor.dart';
 import 'package:blockchain_app/widgets/create_block_fab.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
 
-class BlockScreen extends StatelessWidget {
+class BlockViewScreen extends StatelessWidget {
   final Blockchain blockchain;
   final BlockId blockId;
 
-  const BlockScreen(
+  const BlockViewScreen(
       {super.key, required this.blockchain, required this.blockId});
 
   @override
@@ -44,7 +43,12 @@ class BlockScreen extends StatelessWidget {
                     style: const TextStyle(fontStyle: FontStyle.italic)),
               ]),
             ),
-            Text(utf8.decode(history.first.proof))
+            history.first.height > 1
+                ? Expanded(
+                    child:
+                        BitMapRender(bitMap: decodeBitMap(history.first.proof)),
+                  )
+                : const Text("Genesis")
           ],
         ),
         floatingActionButton:

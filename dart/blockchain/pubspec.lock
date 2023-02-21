@@ -49,6 +49,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  bit_array:
+    dependency: "direct main"
+    description:
+      name: bit_array
+      sha256: "127c01ebb740e6dd076f5d42aa39049cf847baee39a7e63fb499b1895581dba6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   blockchain_block_production:
     dependency: "direct main"
     description:
@@ -162,6 +170,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+  fpdart:
+    dependency: transitive
+    description:
+      name: fpdart
+      sha256: "19db038cf3bb49bfe28b2a0b363ce84cf2e6a0f471a93ae09271cfef03dae935"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0"
   frontend_server_client:
     dependency: transitive
     description:
@@ -234,6 +250,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
+  ipsum:
+    dependency: transitive
+    description:
+      name: ipsum
+      sha256: be6b6397e32cf54903f8f6eee414c8a06fb239763e945acae1a9bdeaa01d81c1
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   js:
     dependency: transitive
     description:
