@@ -98,9 +98,8 @@ const Value$json = const {
   '1': 'Value',
   '2': const [
     const {'1': 'coin', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Value.Coin', '9': 0, '10': 'coin'},
-    const {'1': 'data', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Value.Data', '9': 0, '10': 'data'},
   ],
-  '3': const [Value_Coin$json, Value_Data$json],
+  '3': const [Value_Coin$json],
   '8': const [
     const {'1': 'value'},
   ],
@@ -114,17 +113,8 @@ const Value_Coin$json = const {
   ],
 };
 
-@$core.Deprecated('Use valueDescriptor instead')
-const Value_Data$json = const {
-  '1': 'Data',
-  '2': const [
-    const {'1': 'dataType', '3': 1, '4': 1, '5': 9, '10': 'dataType'},
-    const {'1': 'bytes', '3': 2, '4': 1, '5': 12, '10': 'bytes'},
-  ],
-};
-
 /// Descriptor for `Value`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List valueDescriptor = $convert.base64Decode('CgVWYWx1ZRI3CgRjb2luGAEgASgLMiEuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlLkNvaW5IAFIEY29pbhI3CgRkYXRhGAIgASgLMiEuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlLkRhdGFIAFIEZGF0YRoiCgRDb2luEhoKCHF1YW50aXR5GAEgASgJUghxdWFudGl0eRo4CgREYXRhEhoKCGRhdGFUeXBlGAEgASgJUghkYXRhVHlwZRIUCgVieXRlcxgCIAEoDFIFYnl0ZXNCBwoFdmFsdWU=');
+final $typed_data.Uint8List valueDescriptor = $convert.base64Decode('CgVWYWx1ZRI3CgRjb2luGAEgASgLMiEuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlLkNvaW5IAFIEY29pbhoiCgRDb2luEhoKCHF1YW50aXR5GAEgASgJUghxdWFudGl0eUIHCgV2YWx1ZQ==');
 @$core.Deprecated('Use transactionIdDescriptor instead')
 const TransactionId$json = const {
   '1': 'TransactionId',

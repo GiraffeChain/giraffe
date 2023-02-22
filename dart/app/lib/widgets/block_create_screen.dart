@@ -108,10 +108,6 @@ class _BlockCreateScreenLoadedState2 extends State<BlockCreateScreenLoaded> {
               reward: block.reward))
           .then(widget.onSubmit),
     );
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-            builder: (context) =>
-                BlockchainWidget(blockchain: widget.blockchain)),
-        (_) => false);
+    Navigator.of(context).pop();
   }
 }

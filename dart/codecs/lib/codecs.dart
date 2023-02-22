@@ -77,10 +77,6 @@ extension ValueCodecOps on Value {
     if (hasCoin()) {
       bytes.add(0);
       bytes.addAll(utf8.encode(coin.quantity));
-    } else {
-      bytes.add(1);
-      bytes.addAll(utf8.encode(data.dataType));
-      bytes.addAll(data.bytes);
     }
     return bytes;
   }

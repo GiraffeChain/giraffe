@@ -578,97 +578,29 @@ class Value_Coin extends $pb.GeneratedMessage {
   void clearQuantity() => clearField(1);
 }
 
-class Value_Data extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Value.Data', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'dataType', protoName: 'dataType')
-    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'bytes', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false
-  ;
-
-  Value_Data._() : super();
-  factory Value_Data({
-    $core.String? dataType,
-    $core.List<$core.int>? bytes,
-  }) {
-    final _result = create();
-    if (dataType != null) {
-      _result.dataType = dataType;
-    }
-    if (bytes != null) {
-      _result.bytes = bytes;
-    }
-    return _result;
-  }
-  factory Value_Data.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Value_Data.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  Value_Data clone() => Value_Data()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Value_Data copyWith(void Function(Value_Data) updates) => super.copyWith((message) => updates(message as Value_Data)) as Value_Data; // ignore: deprecated_member_use
-  $pb.BuilderInfo get info_ => _i;
-  @$core.pragma('dart2js:noInline')
-  static Value_Data create() => Value_Data._();
-  Value_Data createEmptyInstance() => create();
-  static $pb.PbList<Value_Data> createRepeated() => $pb.PbList<Value_Data>();
-  @$core.pragma('dart2js:noInline')
-  static Value_Data getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Value_Data>(create);
-  static Value_Data? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get dataType => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set dataType($core.String v) { $_setString(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasDataType() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearDataType() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.List<$core.int> get bytes => $_getN(1);
-  @$pb.TagNumber(2)
-  set bytes($core.List<$core.int> v) { $_setBytes(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasBytes() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearBytes() => clearField(2);
-}
-
 enum Value_Value {
   coin, 
-  data, 
   notSet
 }
 
 class Value extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, Value_Value> _Value_ValueByTag = {
     1 : Value_Value.coin,
-    2 : Value_Value.data,
     0 : Value_Value.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Value', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..oo(0, [1, 2])
+    ..oo(0, [1])
     ..aOM<Value_Coin>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'coin', subBuilder: Value_Coin.create)
-    ..aOM<Value_Data>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'data', subBuilder: Value_Data.create)
     ..hasRequiredFields = false
   ;
 
   Value._() : super();
   factory Value({
     Value_Coin? coin,
-    Value_Data? data,
   }) {
     final _result = create();
     if (coin != null) {
       _result.coin = coin;
-    }
-    if (data != null) {
-      _result.data = data;
     }
     return _result;
   }
@@ -706,17 +638,6 @@ class Value extends $pb.GeneratedMessage {
   void clearCoin() => clearField(1);
   @$pb.TagNumber(1)
   Value_Coin ensureCoin() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  Value_Data get data => $_getN(1);
-  @$pb.TagNumber(2)
-  set data(Value_Data v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasData() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearData() => clearField(2);
-  @$pb.TagNumber(2)
-  Value_Data ensureData() => $_ensure(1);
 }
 
 class TransactionId extends $pb.GeneratedMessage {

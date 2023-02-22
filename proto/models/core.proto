@@ -50,17 +50,11 @@ message Value {
 
     oneof value {
         Coin coin = 1;
-        Data data = 2;
     }
 
 
     message Coin {
         string quantity = 1;
-    }
-
-    message Data {
-        string dataType = 1;
-        bytes bytes = 2;
     }
 }
 

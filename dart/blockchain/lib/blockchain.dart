@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:async/async.dart' show CancelableOperation;
 import 'package:bit_array/bit_array.dart';
 import 'package:blockchain/blockchain_config.dart';
 import 'package:blockchain_block_production/impl/block_producer.dart';
@@ -32,6 +33,7 @@ class Blockchain {
   final BlockProducer blockProducer;
   final StreamController<BlockId> _newBlocksController;
   final StreamController<BlockId> _adoptionsController;
+  late final CancelableOperation _run;
   BlockId _headId;
   Set<BlockId> _headIds;
 
@@ -60,8 +62,6 @@ class Blockchain {
     final blockStore = InMemoryStore<BlockId, Block>();
     await blockStore.set(genesisBlockId, genesisBlock.block);
     final transactionStore = InMemoryStore<TransactionId, Transaction>();
-    genesisBlock.transactions.forEach((transaction) async =>
-        await transactionStore.set(transaction.id, transaction));
     final consensusValidator = ConsensusValidator(blockStore.getOrRaise);
 
     final fetchTransactionOutput = (TransactionOutputReference reference) =>
@@ -72,8 +72,10 @@ class Blockchain {
     final txoStore = InMemoryStore<TransactionId, BitArray>();
 
     final ledger = UtxoLedger(fetchTransactionOutput, txoStore);
-    genesisBlock.transactions
-        .forEach((transaction) async => await ledger.apply(transaction));
+    for (final transaction in genesisBlock.transactions) {
+      await transactionStore.set(transaction.id, transaction);
+      await ledger.apply(transaction);
+    }
 
     final StreamController<BlockId> newBlocksController =
         StreamController.broadcast();
@@ -99,11 +101,12 @@ class Blockchain {
       config.networkBindPort,
       genesisBlockId,
       RpcServer(
-          () => blockGossipController.stream,
-          () => transactionGossipController.stream,
-          blockStore.getOrRaise,
-          transactionStore.getOrRaise,
-          processTransaction),
+        () => blockGossipController.stream,
+        () => transactionGossipController.stream,
+        blockStore.getOrRaise,
+        transactionStore.getOrRaise,
+        processTransaction,
+      ),
       (peer) => unawaited(
         network.outboundPeers.containsKey(peer)
             ? Future.value()
@@ -130,24 +133,34 @@ class Blockchain {
     );
 
     blockchain = Blockchain(
-        config,
-        clock,
-        consensusValidator,
-        chainSelection,
-        ledger,
-        blockStore,
-        transactionStore,
-        network,
-        blockProducer,
-        newBlocksController,
-        blockGossipController,
-        genesisBlockId,
-        Set()..add(genesisBlockId));
+      config,
+      clock,
+      consensusValidator,
+      chainSelection,
+      ledger,
+      blockStore,
+      transactionStore,
+      network,
+      blockProducer,
+      newBlocksController,
+      blockGossipController,
+      genesisBlockId,
+      Set()..add(genesisBlockId),
+    );
 
     return blockchain;
   }
 
-  Future<void> get run => Future.wait([_handleInitialPeers]);
+  void run() {
+    _run = CancelableOperation.fromFuture(Future.wait([_handleInitialPeers]));
+  }
+
+  Future<void> close() async {
+    await network.close();
+    await _run.cancel();
+    await _adoptionsController.close();
+    await _newBlocksController.close();
+  }
 
   BlockId get headId => _headId;
   Set<BlockId> get headIds => Set.of(_headIds);

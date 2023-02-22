@@ -19,21 +19,29 @@ class BlockchainLoaderWidget extends StatefulWidget {
 
 class _BlockchainLoaderWidgetState extends State<BlockchainLoaderWidget> {
   late final Future<Blockchain> _blockchain;
-  late final Future<void> _completion;
 
   @override
   void initState() {
     super.initState();
-    _blockchain = Blockchain.make(widget.config);
-    _completion = _blockchain.then((b) => b.run);
+    _blockchain = Blockchain.make(widget.config).then((b) {
+      b.run();
+      return b;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _blockchain.then((b) => b.close());
   }
 
   @override
   Widget build(BuildContext context) => FutureBuilder(
-      future: _blockchain,
-      builder: (context, snapshot) => snapshot.hasData
-          ? BlockchainWidget(blockchain: snapshot.data!)
-          : _loading);
+        future: _blockchain,
+        builder: (context, snapshot) => snapshot.hasData
+            ? BlockchainWidget(blockchain: snapshot.data!)
+            : _loading,
+      );
 
   static const _loading = Scaffold(body: Center(child: Text("Loading")));
 }
