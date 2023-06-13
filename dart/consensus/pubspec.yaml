@@ -12,10 +12,14 @@ environment:
 dependencies:
   fpdart:
   crypto:
+  rational:
+  hashlib:
   blockchain_protobuf:
     path: ../protobuf_dart
   blockchain_common:
     path: ../common
+  blockchain_crypto:
+    path: ../crypto
 
 dev_dependencies:
   test: ^1.22.1
