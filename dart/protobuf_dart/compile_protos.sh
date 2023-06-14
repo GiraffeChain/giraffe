@@ -10,8 +10,14 @@ cp --parents `find -name \*.proto*` dart/protobuf_dart/tmp/protobuf
 cd dart/protobuf_dart
 
 mkdir -p ./lib || true
-cd ./tmp/protobuf/proto
 
+# Compile the "google well-known type" protos
+cd ./tmp/protobuf/external_proto
+protoc \
+    --dart_out=grpc:../../../lib \
+    $(find ./google -name '*.proto')
+
+cd ../proto
 protoc \
     --dart_out=grpc:../../../lib \
     -I . \

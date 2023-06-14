@@ -2,64 +2,166 @@ syntax = "proto3";
 
 package com.blockchain.models;
 
+import "validate/validate.proto";
+
 message BlockId {
-    bytes bytes = 1;
+    bytes value = 1;
 }
 
-message Block {
-    BlockId parentHeaderId = 1;
-    uint64 timestamp = 2;
-    uint64 height = 3;
-    bytes proof = 4;
-    repeated TransactionId transactionIds = 7;
-    TransactionOutput reward = 8;
+// Captures a block producer's consensus-commitment to a new block
+message BlockHeader {
+  // The ID of _this_ block header.  This value is optional and its contents are not included in the signable or identifiable data.  Clients which _can_ verify
+  // this value should verify this value, but some clients may not be able to or need to, in which case this field acts as a convenience.
+  BlockId headerId = 12;
+  // The parent block's ID.  Each header builds from a single parent.
+  BlockId parentHeaderId = 1 [(validate.rules).message.required = true];
+  // The slot of the parent block
+  uint64 parentSlot = 2;
+  // The commitment/accumulator of the block body
+  // length = 32
+  bytes txRoot = 3 [(validate.rules).bytes.len = 32];
+  // A fuzzy search for addresses associated with this block
+  // length = 256
+  bytes bloomFilter = 4[(validate.rules).bytes.len = 256];
+  // The UTC UNIX timestamp (ms) when the block was created
+  uint64 timestamp = 5;
+  // The 1-based index of this block in the blockchain
+  uint64 height = 6;
+  // The time-slot in which the block producer created the block
+  uint64 slot = 7;
+  // A certificate indicating that the block producer was eligible to make this block
+  EligibilityCertificate eligibilityCertificate = 8 [(validate.rules).message.required = true];
+  // A certificate indicating the operator's commitment to this block
+  OperationalCertificate operationalCertificate = 9 [(validate.rules).message.required = true];
+  // Optional metadata stamped by the operator.  Must be latin-1 encoded, and must be at most 32 bytes in length.
+  // optional
+  bytes metadata = 10 [(validate.rules).bytes.max_len = 32];
+  // The operator's staking address
+  StakingAddress address = 11 [(validate.rules).message.required = true];
 }
 
-message FullBlock {
-    BlockId parentHeaderId = 1;
-    uint64 timestamp = 2;
-    uint64 height = 3;
-    bytes proof = 4;
-    repeated Transaction transactions = 7;
-    TransactionOutput reward = 8;
+// A certificate proving the operator's election
+message EligibilityCertificate {
+    // Signs `eta ++ slot` using the `vrfSK`
+    bytes vrfSig = 1 [(validate.rules).bytes.len = 80];
+    // The VRF VK
+    bytes vrfVK = 2 [(validate.rules).bytes.len = 32];
+    // Hash of the operator's `threshold`
+    // routine = blake2b256
+    // length = 32
+    bytes thresholdEvidence = 3 [(validate.rules).bytes.len = 32];
+    // The epoch's randomness
+    // length = 32
+    bytes eta = 4 [(validate.rules).bytes.len = 32];
+  }
+
+// A certificate which commits an operator to a linear key, which is then used to sign the block
+message OperationalCertificate {
+    // The KES VK of the parent key (forward-secure) (hour+minute hands)
+    VerificationKeyKesProduct parentVK = 1 [(validate.rules).message.required = true];
+    // Signs the `childVK` using the `parentSK`
+    SignatureKesProduct parentSignature = 2 [(validate.rules).message.required = true];
+    // The linear VK
+    bytes childVK = 3 [(validate.rules).bytes.len = 32];
+    // The signature of the block
+    bytes childSignature = 4 [(validate.rules).bytes.len = 64];
+  }
+  
+  message VerificationKeyKesProduct {
+      // length = 32
+      bytes value = 1 [(validate.rules).bytes.len = 32];
+      uint32 step = 2;
+  }
+  
+  message SignatureKesSum {
+      bytes verificationKey = 1 [(validate.rules).bytes.len = 32];
+      bytes signature = 2 [(validate.rules).bytes.len = 64];
+      // item length = 32
+      repeated bytes witness = 3 [(validate.rules).repeated.items.bytes.len = 32];
+  }
+  
+  message SignatureKesProduct {
+      SignatureKesSum superSignature = 1 [(validate.rules).message.required = true];
+      SignatureKesSum subSignature = 2 [(validate.rules).message.required = true];
+      // length = 32
+      bytes subRoot = 3 [(validate.rules).bytes.len = 32];
+  }
+
+
+// Represents a "mini" block header, containing just a subset of its data needed to quickly inspect consensus characteristics of a block
+message SlotData {
+    // The slot ID corresponding to "this" block
+    SlotId slotId = 1 [(validate.rules).message.required = true];
+    // The slot ID corresponding to "this" block's parent
+    SlotId parentSlotId = 2 [(validate.rules).message.required = true];
+    // The "rho" corresponding to "this" block
+    // length = 64
+    bytes rho = 3 [(validate.rules).bytes.len = 64];
+    // The "eta" corresponding to "this" block
+    // length = 32
+    bytes eta = 4 [(validate.rules).bytes.len = 32];
+    // The height of "this" block
+    uint64 height = 5;
 }
 
+// A glorified tuple
+message SlotId {
+    // The slot in which a block was created
+    uint64 slot = 1;
+    // The ID of the block
+    BlockId blockId = 2 [(validate.rules).message.required = true];
+}
+
+message StakingAddress {
+    bytes value = 1 [(validate.rules).bytes.len = 32];
+}
+
+// Captures the ordering of transaction IDs within a block
+message BlockBody {
+    // A list of Transaction IDs included in this block
+    repeated TransactionId transactionIds = 1;
+  }
+  
+  // Captures the ordering of transactions (not just IDs) within a block
+  message FullBlockBody {
+    // A list of Transactions included in this block
+    repeated Transaction transactions = 1;
+  }
+  
+  // Captures the header and all transactions in a block
+  message Block {
+    // The block's header
+    BlockHeader header = 1 [(validate.rules).message.required = true];
+    // The block's body
+    BlockBody body = 2 [(validate.rules).message.required = true];
+  }
+  
+  // Captures the header and all transactions in a block
+  message FullBlock {
+    // The block's header
+    BlockHeader header = 1 [(validate.rules).message.required = true];
+    // The block's full body
+    FullBlockBody fullBody = 2 [(validate.rules).message.required = true];
+  }
+
+// Represents the identifier of a Transction.  It is constructed from the evidence of the signable bytes of the Transaction.
+message TransactionId {
+    // The evidence of the Transaction's signable bytes
+    // length = 32
+    bytes value = 1;
+}
 
 message Transaction {
     repeated TransactionInput inputs = 1;
     repeated TransactionOutput outputs = 2;
-    repeated RewardInput rewardInputs = 3;
+    TransactionSchedule schedule = 3;
 }
 
 message TransactionInput {
     TransactionOutputReference reference = 1;
-    Challenge challenge = 2;
-    repeated bytes challengeArguments = 3;
-}
-
-message TransactionOutput {
-    Value value = 1;
-    Account account = 2;
-}
-
-message RewardInput {
-    BlockId blockId = 1;
-}
-
-message Value {
-
-    oneof value {
-        Coin coin = 1;
-    }
-
-
-    message Coin {
-        string quantity = 1;
-    }
-}
-
-message TransactionId {
-    bytes bytes = 1;
+    Lock lock = 2;
+    Key key = 3;
+    Value value = 4;
 }
 
 message TransactionOutputReference {
@@ -67,10 +169,62 @@ message TransactionOutputReference {
     uint32 index = 2;
 }
 
-message Account {
-    bytes id = 1;
+message TransactionOutput {
+    LockAddress lockAddress = 1;
+    Value value = 2;
 }
 
-message Challenge {
-    string script = 1;
+message TransactionSchedule {
+    uint64 minSlot = 1;
+    uint64 maxSlot = 2;
+    uint64 timestamp = 3;
+}
+
+message Value {
+    oneof value {
+        PaymentToken paymentToken = 1;
+        StakingToken stakingToken = 2;
+    }
+}
+
+message PaymentToken {
+    uint64 quantity = 1 [(validate.rules).message.required = true];
+}
+
+message StakingToken {
+    uint64 quantity = 1 [(validate.rules).message.required = true];
+    // Optional.  If not provided, this token will not be used for staking purposes.
+    StakingRegistration registration = 2;
+}
+
+// A proof-of-stake registration
+message StakingRegistration {
+    SignatureKesProduct registration = 1 [(validate.rules).message.required = true];
+    StakingAddress stakingAddress = 2 [(validate.rules).message.required = true];
+}
+
+message LockAddress {
+    bytes value = 1;
+}
+
+message Lock {
+
+    oneof value {
+        Ed25519 ed25519 = 1;
+    }
+
+    message Ed25519 {
+        bytes vk = 1;
+    }
+}
+
+message Key {
+
+    oneof value {
+        Ed25519 ed25519 = 1;
+    }
+
+    message Ed25519 {
+        bytes signature = 1;
+    }
 }
