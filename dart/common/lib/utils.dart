@@ -1,4 +1,6 @@
 import 'dart:typed_data';
+import 'package:blockchain_common/models/unsigned.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
 // Source: https://github.com/dart-lang/sdk/issues/32803#issuecomment-1228291047
@@ -34,4 +36,23 @@ extension ListIntOps on List<int> {
     }
     return _bigInt;
   }
+}
+
+extension BlockHeaderOps on BlockHeader {
+  UnsignedBlockHeader get unsigned => UnsignedBlockHeader(
+        parentHeaderId,
+        parentSlot,
+        txRoot,
+        bloomFilter,
+        timestamp,
+        height,
+        slot,
+        eligibilityCertificate,
+        PartialOperationalCertificate(
+            operationalCertificate.parentVK,
+            operationalCertificate.parentSignature,
+            operationalCertificate.childVK),
+        metadata,
+        address,
+      );
 }

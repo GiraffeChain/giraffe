@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 
+import 'package:blockchain_common/models/common.dart';
 import 'package:blockchain_common/utils.dart';
+import 'package:blockchain_consensus/algebras/leader_election_validation_algebra.dart';
+import 'package:blockchain_consensus/models/vrf_config.dart';
 import 'package:blockchain_consensus/numeric_utils.dart';
 import 'package:blockchain_consensus/utils.dart';
 import 'package:blockchain_crypto/utils.dart';
@@ -8,17 +11,19 @@ import 'package:fpdart/fpdart.dart';
 import 'package:rational/rational.dart';
 import 'package:fixnum/fixnum.dart';
 
-class LeaderElectionValidation {
+class LeaderElectionValidation extends LeaderElectionValidationAlgebra {
   final VrfConfig config;
   DComputeImpl _compute;
 
   LeaderElectionValidation(this.config, this._compute);
 
+  @override
   Future<Rational> getThreshold(Rational relativeStake, Int64 slotDiff) =>
       _compute((t) => _getThreshold(t.first.first, t.first.second, t.second),
           Tuple2(Tuple2(relativeStake, slotDiff), config));
 
-  Future<bool> isSlotLeaderForThreshold(Rational threshold, Uint8List rho) =>
+  @override
+  Future<bool> isSlotLeaderForThreshold(Rational threshold, Rho rho) =>
       _compute((t) => _isSlotLeaderForThreshold(t.first, t.second),
           Tuple2(threshold, rho));
 }
@@ -49,8 +54,7 @@ Future<Rational> _getThreshold(
   }
 }
 
-Future<bool> _isSlotLeaderForThreshold(
-    Rational threshold, Uint8List rho) async {
+Future<bool> _isSlotLeaderForThreshold(Rational threshold, Rho rho) async {
   final testRhoHashBytes = rho.rhoTestHash;
   final numeratorBytes = Int8List(65)
     ..[0] = 0x00
@@ -58,18 +62,4 @@ Future<bool> _isSlotLeaderForThreshold(
   final numerator = numeratorBytes.toBigInt;
   final test = Rational(numerator, NormalizationConstant);
   return threshold > test;
-}
-
-class VrfConfig {
-  final int lddCutoff;
-  final int precision;
-  final Rational baselineDifficulty;
-  final Rational amplitude;
-
-  VrfConfig({
-    required this.lddCutoff,
-    required this.precision,
-    required this.baselineDifficulty,
-    required this.amplitude,
-  });
 }

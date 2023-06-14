@@ -1,107 +1,112 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:blockchain_common/models/unsigned.dart';
+import 'package:blockchain_common/utils.dart';
+import 'package:blockchain_crypto/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:crypto/crypto.dart';
+import 'package:fast_base58/fast_base58.dart';
+import 'package:fpdart/fpdart.dart';
 
-import 'package:bs58/bs58.dart';
+import 'package:fixnum/fixnum.dart';
 
-extension BlockCodecOps on Block {
-  BlockId get id => BlockId(bytes: sha256.convert(encodeV1).bytes);
-
-  List<int> get encodeV1 {
-    List<int> bytes = [];
-    bytes.addAll(parentHeaderId.bytes);
-    bytes.addAll(timestamp.toBytes());
-    bytes.addAll(height.toBytes());
-    bytes.addAll(proof);
-    transactionIds.forEach((id) => bytes.addAll(id.bytes));
-    return bytes;
-  }
+extension BlockHeaderCodecs on BlockHeader {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(parentHeaderId.value)
+    ..addAll(parentSlot.toBytes())
+    ..addAll(txRoot)
+    ..addAll(bloomFilter)
+    ..addAll(timestamp.immutableBytes)
+    ..addAll(height.immutableBytes)
+    ..addAll(slot.immutableBytes)
+    ..addAll(eligibilityCertificate.immutableBytes)
+    ..addAll(operationalCertificate.immutableBytes)
+    ..addAll(metadata)
+    ..addAll(address.value);
+  Future<BlockId> get id async =>
+      BlockId(value: Uint8List.fromList(await immutableBytes.hash256));
 }
 
-extension FullBlockCodecOps on FullBlock {
-  Block get block => Block(
-      parentHeaderId: parentHeaderId,
-      timestamp: timestamp,
-      height: height,
-      proof: proof,
-      transactionIds: transactions.map((t) => t.id));
-
-  BlockId get id => block.id;
+extension UnsignedBlockHeaderCodecs on UnsignedBlockHeader {
+  List<int> get signableBytes => <int>[]
+    ..addAll(parentHeaderId.value)
+    ..addAll(parentSlot.toBytes())
+    ..addAll(txRoot)
+    ..addAll(bloomFilter)
+    ..addAll(timestamp.immutableBytes)
+    ..addAll(height.immutableBytes)
+    ..addAll(slot.immutableBytes)
+    ..addAll(eligibilityCertificate.immutableBytes)
+    ..addAll(partialOperationalCertificate.immutableBytes)
+    ..addAll(metadata)
+    ..addAll(address.value);
 }
 
-extension TransactionCodecOps on Transaction {
-  TransactionId get id => TransactionId(bytes: sha256.convert(encodeV1).bytes);
-
-  List<int> get encodeV1 {
-    final bytes = <int>[];
-    inputs.map((i) => i.encodeV1).forEach(bytes.addAll);
-    outputs.map((i) => i.encodeV1).forEach(bytes.addAll);
-    return bytes;
-  }
+extension EligibilityCertificateCodecs on EligibilityCertificate {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(vrfSig)
+    ..addAll(vrfVK)
+    ..addAll(thresholdEvidence)
+    ..addAll(eta);
 }
 
-extension TransactionInputCodecOps on TransactionInput {
-  List<int> get encodeV1 {
-    final bytes = <int>[];
-    bytes.addAll(reference.encodeV1);
-    bytes.addAll(challenge.encodeV1);
-    challengeArguments.forEach(bytes.addAll);
-    return bytes;
-  }
+extension PartialOperationalCertificateCodecs on PartialOperationalCertificate {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(parentVK.immutableBytes)
+    ..addAll(parentSignature.immutableBytes)
+    ..addAll(childVK);
 }
 
-extension TransactionOutputCodecOps on TransactionOutput {
-  List<int> get encodeV1 {
-    final bytes = <int>[];
-    bytes.addAll(value.encodeV1);
-    bytes.addAll(account.encodeV1);
-
-    return bytes;
-  }
+extension OperationalCertificateCodecs on OperationalCertificate {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(parentVK.immutableBytes)
+    ..addAll(parentSignature.immutableBytes)
+    ..addAll(childVK)
+    ..addAll(childSignature);
 }
 
-extension TransactionOutputReferenceCodecOps on TransactionOutputReference {
-  List<int> get encodeV1 {
-    final bytes = <int>[];
-    bytes.addAll(transactionId.bytes);
-    bytes.addAll((ByteData(4)..setInt32(0, index)).buffer.asUint8List());
-    return bytes;
-  }
+extension VerificationKeyKesProductCodecs on VerificationKeyKesProduct {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(value)
+    ..addAll(step.immutableBytes);
 }
 
-extension ValueCodecOps on Value {
-  List<int> get encodeV1 {
-    final bytes = <int>[];
-    if (hasCoin()) {
-      bytes.add(0);
-      bytes.addAll(utf8.encode(coin.quantity));
-    }
-    return bytes;
-  }
+extension IterableCodecs<T> on Iterable<T> {
+  List<int> immutableBytes(List<int> Function(T) encodeItem) => <int>[]
+    ..addAll(length.immutableBytes)
+    ..addAll(flatMap((t) => encodeItem(t)));
 }
 
-extension AccountCodecOps on Account {
-  List<int> get encodeV1 {
-    final bytes = <int>[];
-    bytes.addAll(id);
-    return bytes;
-  }
+extension SignatureKesSumCodecs on SignatureKesSum {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(verificationKey)
+    ..addAll(signature)
+    ..addAll(witness.immutableBytes((t) => t));
 }
 
-extension ChallengeCodecOps on Challenge {
-  List<int> get encodeV1 {
-    final bytes = <int>[];
-    bytes.addAll(utf8.encode(script));
-    return bytes;
-  }
+extension SignatureKesProductCodecs on SignatureKesProduct {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(superSignature.immutableBytes)
+    ..addAll(subSignature.immutableBytes)
+    ..addAll(subRoot);
 }
 
-extension BlockIdShowOps on BlockId {
-  String get show => base58.encode(Uint8List.fromList(bytes));
+extension IntCodecs on int {
+  List<int> get immutableBytes => BigInt.from(this).bytes;
 }
 
-extension TransactionIdShowOps on TransactionId {
-  String get show => base58.encode(Uint8List.fromList(bytes));
+extension Int64Codecs on Int64 {
+  List<int> get immutableBytes => toBigInt.bytes;
+}
+
+extension Int128Codecs on List<int> {
+  String get base58 => Base58Encode(Uint8List.fromList(this));
+  String get show => base58;
+}
+
+extension BlockIdCodecs on BlockId {
+  String get show => this.value.base58;
+}
+
+extension TransactionIdCodecs on TransactionId {
+  String get show => this.value.base58;
 }
