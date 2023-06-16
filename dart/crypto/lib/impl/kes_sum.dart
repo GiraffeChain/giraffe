@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import 'package:blockchain_crypto/ed25519.dart';
 import 'package:blockchain_crypto/impl/kes_helper.dart';
 import 'package:blockchain_crypto/utils.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 
 /**
  * Credit to Aaron Schutza
@@ -29,13 +29,13 @@ class KesSum {
           return loop(keyTree.left, [List.of(keyTree.witnessRight)]..addAll(W));
       } else if (keyTree is KesSigningLeaf) {
         return SignatureKesSum(
-            vk: Uint8List.fromList(keyTree.vk),
+            verificationKey: Uint8List.fromList(keyTree.vk),
             signature:
                 Uint8List.fromList(await ed25519.sign(message, keyTree.sk)),
             witness: W.map(Uint8List.fromList).toList());
       } else {
         return SignatureKesSum(
-            vk: Uint8List(32),
+            verificationKey: Uint8List(32),
             signature: Uint8List(64),
             witness: [Uint8List(0)]);
       }
@@ -48,9 +48,9 @@ class KesSum {
       VerificationKeyKesSum vk) async {
     bool leftGoing(int level) => ((vk.step ~/ kesHelper.exp(level)) % 2) == 0;
     Future<bool> emptyWitness() async =>
-        vk.value.sameElements(await kesHelper.hash(signature.vk));
+        vk.value.sameElements(await kesHelper.hash(signature.verificationKey));
     Future<bool> singleWitness(List<int> witness) async {
-      final hashVkSign = await kesHelper.hash(signature.vk);
+      final hashVkSign = await kesHelper.hash(signature.verificationKey);
       if (leftGoing(0)) {
         return vk.value
             .sameElements(await kesHelper.hash(hashVkSign + witness));
@@ -86,15 +86,15 @@ class KesSum {
       else if (W.length == 1)
         return singleWitness(W.first);
       else if (leftGoing(0))
-        return multiWitness(
-            W.sublist(1), await kesHelper.hash(signature.vk), W.first, 1);
+        return multiWitness(W.sublist(1),
+            await kesHelper.hash(signature.verificationKey), W.first, 1);
       else
-        return multiWitness(
-            W.sublist(1), W.first, await kesHelper.hash(signature.vk), 1);
+        return multiWitness(W.sublist(1), W.first,
+            await kesHelper.hash(signature.verificationKey), 1);
     }
 
-    final ed25519Verification =
-        await ed25519.verify(signature.signature, message, signature.vk);
+    final ed25519Verification = await ed25519.verify(
+        signature.signature, message, signature.verificationKey);
     if (!ed25519Verification) return false;
 
     final merkleVerification = await verifyMerkle(signature.witness);
@@ -355,28 +355,28 @@ class KeyPairKesSum {
   }
 }
 
-class SignatureKesSum {
-  final Uint8List vk;
-  final Uint8List signature;
-  final List<Uint8List> witness;
+// class SignatureKesSum {
+//   final Uint8List vk;
+//   final Uint8List signature;
+//   final List<Uint8List> witness;
 
-  SignatureKesSum({
-    required this.vk,
-    required this.signature,
-    required this.witness,
-  });
+//   SignatureKesSum({
+//     required this.vk,
+//     required this.signature,
+//     required this.witness,
+//   });
 
-  @override
-  int get hashCode => Object.hash(vk, signature, witness);
+//   @override
+//   int get hashCode => Object.hash(vk, signature, witness);
 
-  @override
-  bool operator ==(Object other) {
-    if (other is SignatureKesSum) {
-      return vk.sameElements(other.vk) &&
-          signature.sameElements(other.signature) &&
-          witness.length == other.witness.length &&
-          witness.zip(other.witness).all((t) => t.first.sameElements(t.second));
-    }
-    return false;
-  }
-}
+//   @override
+//   bool operator ==(Object other) {
+//     if (other is SignatureKesSum) {
+//       return vk.sameElements(other.vk) &&
+//           signature.sameElements(other.signature) &&
+//           witness.length == other.witness.length &&
+//           witness.zip(other.witness).all((t) => t.first.sameElements(t.second));
+//     }
+//     return false;
+//   }
+// }

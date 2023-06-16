@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:blockchain_crypto/impl/kes_helper.dart';
 import 'package:blockchain_crypto/impl/kes_sum.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -43,10 +44,14 @@ class KesProductImpl extends KesProduct {
     final superVerification = await kesSum.verify(
         signature.superSignature,
         signature.subRoot,
-        VerificationKeyKesSum(value: vk.value, step: keyTimeSup));
+        VerificationKeyKesSum(
+            value: Uint8List.fromList(vk.value), step: keyTimeSup));
     if (!superVerification) return false;
-    final subVerification = await kesSum.verify(signature.subSignature, message,
-        VerificationKeyKesSum(value: signature.subRoot, step: keyTimeSub));
+    final subVerification = await kesSum.verify(
+        signature.subSignature,
+        message,
+        VerificationKeyKesSum(
+            value: Uint8List.fromList(signature.subRoot), step: keyTimeSub));
     return subVerification;
   }
 
@@ -273,7 +278,7 @@ class SecretKeyKesProduct {
 
   List<int> _encodeSignature(SignatureKesSum signature) {
     return [
-      ...signature.vk,
+      ...signature.verificationKey,
       ...signature.signature,
       ...Int64(signature.witness.length).toBytes(),
       ...signature.witness.flatMap((t) => t)
@@ -311,8 +316,8 @@ class SecretKeyKesProduct {
       return Uint8List.fromList(bytes.sublist(cursor, cursor += 32));
     });
 
-    final kesSignature =
-        SignatureKesSum(vk: vk, signature: signature, witness: witness);
+    final kesSignature = SignatureKesSum(
+        verificationKey: vk, signature: signature, witness: witness);
     return Tuple2(kesSignature, bytes.sublist(cursor));
   }
 
@@ -374,45 +379,45 @@ class KesProudctIsolated extends KesProduct {
       _compute(_generateVerificationKey, sk);
 }
 
-class VerificationKeyKesProduct {
-  final Uint8List value;
-  final int step;
+// class VerificationKeyKesProduct {
+//   final Uint8List value;
+//   final int step;
 
-  VerificationKeyKesProduct({required this.value, required this.step});
+//   VerificationKeyKesProduct({required this.value, required this.step});
 
-  @override
-  int get hashCode => Object.hash(value, step);
+//   @override
+//   int get hashCode => Object.hash(value, step);
 
-  @override
-  bool operator ==(Object other) {
-    if (other is VerificationKeyKesProduct) {
-      return value.sameElements(other.value) && step == other.step;
-    }
-    return false;
-  }
-}
+//   @override
+//   bool operator ==(Object other) {
+//     if (other is VerificationKeyKesProduct) {
+//       return value.sameElements(other.value) && step == other.step;
+//     }
+//     return false;
+//   }
+// }
 
-class SignatureKesProduct {
-  final SignatureKesSum superSignature;
-  final SignatureKesSum subSignature;
-  final Uint8List subRoot;
+// class SignatureKesProduct {
+//   final SignatureKesSum superSignature;
+//   final SignatureKesSum subSignature;
+//   final Uint8List subRoot;
 
-  SignatureKesProduct({
-    required this.superSignature,
-    required this.subSignature,
-    required this.subRoot,
-  });
+//   SignatureKesProduct({
+//     required this.superSignature,
+//     required this.subSignature,
+//     required this.subRoot,
+//   });
 
-  @override
-  int get hashCode => Object.hash(superSignature, subSignature, subRoot);
+//   @override
+//   int get hashCode => Object.hash(superSignature, subSignature, subRoot);
 
-  @override
-  bool operator ==(Object other) {
-    if (other is SignatureKesProduct) {
-      return superSignature == other.superSignature &&
-          subSignature == other.subSignature &&
-          subRoot.sameElements(other.subRoot);
-    }
-    return false;
-  }
-}
+//   @override
+//   bool operator ==(Object other) {
+//     if (other is SignatureKesProduct) {
+//       return superSignature == other.superSignature &&
+//           subSignature == other.subSignature &&
+//           subRoot.sameElements(other.subRoot);
+//     }
+//     return false;
+//   }
+// }

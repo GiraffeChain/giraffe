@@ -4,15 +4,15 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.19.2 <3.0.0'
+  sdk: ^3.0.0
 
 dependencies:
   blockchain:
     path: ../blockchain
   blockchain_codecs:
     path: ../codecs
-  blockchain_block_production:
-    path: ../block_production
+  blockchain_minting:
+    path: ../minting
   blockchain_consensus:
     path: ../consensus
   blockchain_ledger:

@@ -1,4 +1,5 @@
 import 'package:blockchain_crypto/impl/kes_sum.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:test/test.dart';
 
@@ -24,8 +25,9 @@ void main() {
                   .hexStringToBytes,
           step: specIn_time);
       final specOut_sig_0 = SignatureKesSum(
-          vk: ("bfb3bd77c3195566c00779a8a3be98e48687efb9fe0703fef255188abe3e8c86"
-              .hexStringToBytes),
+          verificationKey:
+              ("bfb3bd77c3195566c00779a8a3be98e48687efb9fe0703fef255188abe3e8c86"
+                  .hexStringToBytes),
           signature:
               ("97ed7c65fce2ede533ab5476e43e2f627d3dbf2d6f0d8baeb971e7392c291fb10c4ec2b9103b7df5052fb4f7c7df0906d2c14b22770749781f85e95654e30e0b"
                   .hexStringToBytes),
@@ -42,8 +44,9 @@ void main() {
                 .hexStringToBytes
           ]);
       final specOut_sig_1 = SignatureKesSum(
-          vk: ("2c3893ffb5eaa06b10baab53e2302103210465f4b02a947756040606c6047920"
-              .hexStringToBytes),
+          verificationKey:
+              ("2c3893ffb5eaa06b10baab53e2302103210465f4b02a947756040606c6047920"
+                  .hexStringToBytes),
           signature:
               ("dd689f98054fb4d85c747a808a196434051a67a52e51c405d49c6153f767ef8586669525a9ebde5a4d5395c220c48fae29e6088a9e8419b38b9189eb9a78d206"
                   .hexStringToBytes),
@@ -60,8 +63,9 @@ void main() {
                 .hexStringToBytes
           ]);
       final specOut_sig_2 = SignatureKesSum(
-          vk: ("d43476ed2380b1b96902bfaec96c1f675ad113bd55d86b506c9a26895a69b496"
-              .hexStringToBytes),
+          verificationKey:
+              ("d43476ed2380b1b96902bfaec96c1f675ad113bd55d86b506c9a26895a69b496"
+                  .hexStringToBytes),
           signature:
               ("cfd4e8a463ee8c32ca3781edeaefc4673b98631ad0b4ddfcf69baf2a5c6749734dea5401395e3c27063d1d44f13f911a7a2b738fd7bdb359ce7b4b99f8b8f90b"
                   .hexStringToBytes),
@@ -78,8 +82,9 @@ void main() {
                 .hexStringToBytes
           ]);
       final specOut_sig_3 = SignatureKesSum(
-          vk: ("decaf6e8f7f6c767b096775950d8f551b47f3975d5ec196d41f521850722d2c2"
-              .hexStringToBytes),
+          verificationKey:
+              ("decaf6e8f7f6c767b096775950d8f551b47f3975d5ec196d41f521850722d2c2"
+                  .hexStringToBytes),
           signature:
               ("c1e8335f8a5667138839f331310b930fddcdd61cf801a4337949e6e9470bec6ca087d26737f5641aa7ff7951abd1ed5fd5bee610763c0ea24aff7ef9dfc37809"
                   .hexStringToBytes),

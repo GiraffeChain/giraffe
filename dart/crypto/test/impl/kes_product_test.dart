@@ -4,6 +4,7 @@ import 'package:blockchain_crypto/impl/kes_product.dart';
 import 'package:blockchain_crypto/impl/kes_sum.dart';
 import 'package:blockchain_crypto/kes.dart';
 import 'package:blockchain_crypto/utils.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:test/test.dart';
@@ -71,8 +72,9 @@ void main() {
             "d82ab9526323833262ac56f65860f38faa433ff6129c24f033e6ea786fd6db6b"
                 .hexStringToBytes,
         subSignature: SignatureKesSum(
-            vk: "9077780e7a816f81b2be94b9cbed9248db8ce03545819387496047c6ad251f09"
-                .hexStringToBytes,
+            verificationKey:
+                "9077780e7a816f81b2be94b9cbed9248db8ce03545819387496047c6ad251f09"
+                    .hexStringToBytes,
             signature:
                 "cb7af65595938758f60009dbc7312c87baef3f8f88a6babc01e392538ec331ef20766992bc91b52bedd4a2f021bbd9e10f6cd8548dd9048e56b9579cf975fe06"
                     .hexStringToBytes,
@@ -110,8 +112,9 @@ void main() {
 
       final specOut_sig_0 = SignatureKesProduct(
           superSignature: SignatureKesSum(
-              vk: ("d1a38e6db07062c9c58036c537d1c999b6fc8b60c51feeede25afda66ee36395"
-                  .hexStringToBytes),
+              verificationKey:
+                  ("d1a38e6db07062c9c58036c537d1c999b6fc8b60c51feeede25afda66ee36395"
+                      .hexStringToBytes),
               signature:
                   ("e23e79815bf3faa96c786a2e7a22379b0f14d578aec4b2d31c225bd145dfc0b7041fd4a4dfff26f5214a168eccd9f416fdaeba6cf15784cc7451562550904109"
                       .hexStringToBytes),
@@ -120,8 +123,9 @@ void main() {
                     .hexStringToBytes
               ]),
           subSignature: SignatureKesSum(
-              vk: ("1747b2fffbeccefa8a855bb28af7f7e8937bc5e24972bf49a9ad1cf26168ef54"
-                  .hexStringToBytes),
+              verificationKey:
+                  ("1747b2fffbeccefa8a855bb28af7f7e8937bc5e24972bf49a9ad1cf26168ef54"
+                      .hexStringToBytes),
               signature:
                   ("4b6fb021e285e7f7408c3c80bd8217e8edcb5623e02f12956d32d9412caa1e995dd1400e3a638280aeba1aed909be2021c48d63dd966be1b52012b5ad392740b"
                       .hexStringToBytes),
@@ -135,8 +139,9 @@ void main() {
 
       final specOut_sig_1 = SignatureKesProduct(
           superSignature: SignatureKesSum(
-              vk: ("d1a38e6db07062c9c58036c537d1c999b6fc8b60c51feeede25afda66ee36395"
-                  .hexStringToBytes),
+              verificationKey:
+                  ("d1a38e6db07062c9c58036c537d1c999b6fc8b60c51feeede25afda66ee36395"
+                      .hexStringToBytes),
               signature:
                   ("e23e79815bf3faa96c786a2e7a22379b0f14d578aec4b2d31c225bd145dfc0b7041fd4a4dfff26f5214a168eccd9f416fdaeba6cf15784cc7451562550904109"
                       .hexStringToBytes),
@@ -145,8 +150,9 @@ void main() {
                     .hexStringToBytes
               ]),
           subSignature: SignatureKesSum(
-              vk: ("d21551b12cf35d9b6022742352d6d5574b4f07f2cbab7f4cff25e43028b46aba"
-                  .hexStringToBytes),
+              verificationKey:
+                  ("d21551b12cf35d9b6022742352d6d5574b4f07f2cbab7f4cff25e43028b46aba"
+                      .hexStringToBytes),
               signature:
                   ("0517a4e29b8196ddfc1761fa2224b70cfc1b1b80b96faed4826a0aee80dfb1da770fe310fdf5cd596f5ad34920e6eff15fe02d5fa4fbae79e2d3db1fee68cb02"
                       .hexStringToBytes),
@@ -160,8 +166,9 @@ void main() {
 
       final specOut_sig_2 = SignatureKesProduct(
           superSignature: SignatureKesSum(
-              vk: "4e66fe180d5cd03c1593d2295cb21e4fbbca8d0c5fe7dbf3372a9ee6f9f1f8ae"
-                  .hexStringToBytes,
+              verificationKey:
+                  "4e66fe180d5cd03c1593d2295cb21e4fbbca8d0c5fe7dbf3372a9ee6f9f1f8ae"
+                      .hexStringToBytes,
               signature:
                   "e69d7a6ae2164e20487400d4fb10d96a2fdb37501462bb5baf7a3cc0682f7eae95aab47c5eb6a9772a77768627a36641a47c92baca75cdde404e9bfae0301d02"
                       .hexStringToBytes,
@@ -170,8 +177,9 @@ void main() {
                     .hexStringToBytes
               ]),
           subSignature: SignatureKesSum(
-              vk: "ec4a9f15574d260f9c41b0c847c08237a3f590e21bd9267bc72f25d1476ba338"
-                  .hexStringToBytes,
+              verificationKey:
+                  "ec4a9f15574d260f9c41b0c847c08237a3f590e21bd9267bc72f25d1476ba338"
+                      .hexStringToBytes,
               signature:
                   "7851eac4378709e78f8fc0cf17ddc7b6883670a31d1fb5fdd45b1f3a656988cd60d13c7b93095f9ce4b0e5c48dd79282761e542bfa187ff7c09619af5c7ef305"
                       .hexStringToBytes,
@@ -185,8 +193,9 @@ void main() {
 
       final specOut_sig_3 = SignatureKesProduct(
           superSignature: SignatureKesSum(
-              vk: "4e66fe180d5cd03c1593d2295cb21e4fbbca8d0c5fe7dbf3372a9ee6f9f1f8ae"
-                  .hexStringToBytes,
+              verificationKey:
+                  "4e66fe180d5cd03c1593d2295cb21e4fbbca8d0c5fe7dbf3372a9ee6f9f1f8ae"
+                      .hexStringToBytes,
               signature:
                   "e69d7a6ae2164e20487400d4fb10d96a2fdb37501462bb5baf7a3cc0682f7eae95aab47c5eb6a9772a77768627a36641a47c92baca75cdde404e9bfae0301d02"
                       .hexStringToBytes,
@@ -195,8 +204,9 @@ void main() {
                     .hexStringToBytes
               ]),
           subSignature: SignatureKesSum(
-              vk: "be533ba32cdc053b51218abc6ce3ebe66a9c0aa6f8be97930d9abe0b370d264e"
-                  .hexStringToBytes,
+              verificationKey:
+                  "be533ba32cdc053b51218abc6ce3ebe66a9c0aa6f8be97930d9abe0b370d264e"
+                      .hexStringToBytes,
               signature:
                   "1fd2812b224d955f2444d1d8988704c83cee284c1f023b4f9696ef2d0c19db69c75379e3a470658c67cb308dcc72f3c2e89825be9363cae3e0c91020f495e90f"
                       .hexStringToBytes,

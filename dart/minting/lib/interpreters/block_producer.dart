@@ -76,8 +76,7 @@ class BlockProducer extends BlockProducerAlgebra {
               ));
           if (maybeHeader != null) {
             final headerId = await maybeHeader.id;
-            final transactionIds =
-                await Future.wait(bodyOpt.transactions.map((tx) => tx.id));
+            final transactionIds = bodyOpt.transactions.map((tx) => tx.id);
             log.info(
                 "Produced block id=${headerId.show} height=${maybeHeader.height} slot=${maybeHeader.slot} parentId=${maybeHeader.parentHeaderId.show} transactionIds=[${transactionIds.map((i) => i.show).join(",")}]");
             return FullBlock(header: maybeHeader, fullBody: bodyOpt);

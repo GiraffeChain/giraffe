@@ -95,7 +95,7 @@ extension IntCodecs on int {
 }
 
 extension Int64Codecs on Int64 {
-  List<int> get immutableBytes => toBigInt.bytes;
+  Uint8List get immutableBytes => toBigInt.bytes;
 }
 
 extension Int128Codecs on List<int> {
@@ -109,4 +109,24 @@ extension BlockIdCodecs on BlockId {
 
 extension TransactionIdCodecs on TransactionId {
   String get show => this.value.base58;
+}
+
+extension TransactionCodecs on Transaction {
+  Uint8List get immutableBytes {
+    throw UnimplementedError();
+  }
+
+  TransactionId get id {
+    throw UnimplementedError();
+  }
+}
+
+extension LockCodecs on Lock {
+  Uint8List get immutableBytes {
+    throw UnimplementedError();
+  }
+
+  TransactionId get address {
+    throw UnimplementedError();
+  }
 }
