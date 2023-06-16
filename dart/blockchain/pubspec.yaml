@@ -3,30 +3,34 @@ description: Blockchain
 
 publish_to: 'none'
 
-version: 2.0.0+1
+version: 1.0.0+1
 
 environment:
-  sdk: ">=2.17.0-266.8.beta <3.0.0"
-
+  sdk: ^3.0.0
 
 dependencies:
+  args: ^2.3.1
+  integral_isolates: ^0.3.0+2
+  async:
+  rxdart:
   fixnum:
-  bit_array:
-  blockchain_network:
-    path: ../network
+  fpdart:
+  rational:
+  cryptography:
+  logging:
   blockchain_protobuf:
     path: ../protobuf_dart
-  blockchain_codecs:
-    path: ../codecs
-  blockchain_block_production:
-    path: ../block_production
+  blockchain_minting:
+    path: ../minting
   blockchain_consensus:
     path: ../consensus
-  blockchain_ledger:
-    path: ../ledger
   blockchain_common:
     path: ../common
-
-
-dev_dependencies:
-  test: ^1.22.1
+  blockchain_codecs:
+    path: ../codecs
+  blockchain_ledger:
+    path: ../ledger
+  blockchain_crypto:
+    path: ../crypto
+dev_dependencies:    
+  build_runner: ^2.3.3

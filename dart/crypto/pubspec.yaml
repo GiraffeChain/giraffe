@@ -13,7 +13,7 @@ dependencies:
   cryptography: ^2.5.0
   hashlib: ^1.8.1
   fpdart: ^0.3.0
-  collection: ^1.17.2
+  collection: ^1.17.1
   fixnum: ^1.1.0
   blockchain_protobuf:
     path: ../protobuf_dart

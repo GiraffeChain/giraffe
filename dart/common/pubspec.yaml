@@ -13,7 +13,7 @@ environment:
 dependencies:
   fpdart: ^0.3.0
   fixnum:
-  collection: ^1.17.2
+  collection: ^1.17.1
   mutex: ^3.0.1
   blockchain_protobuf:
     path: ../protobuf_dart

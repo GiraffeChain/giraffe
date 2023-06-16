@@ -126,7 +126,7 @@ extension LockCodecs on Lock {
     throw UnimplementedError();
   }
 
-  TransactionId get address {
+  LockAddress get address {
     throw UnimplementedError();
   }
 }

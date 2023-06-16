@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:async/async.dart' show StreamGroup;
 import 'package:blockchain/blockchain.dart';
-import 'package:blockchain/blockchain_config.dart';
+import 'package:blockchain/config.dart';
 import 'package:blockchain_app/widgets/block_tree.dart';
 import 'package:blockchain_app/widgets/create_block_fab.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';

@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_ledger/algebras/body_authorization_validation_algebra.dart';
 import 'package:blockchain_ledger/algebras/body_semantic_validation_algebra.dart';
 import 'package:blockchain_ledger/algebras/body_syntax_validation_algebra.dart';
@@ -78,8 +79,8 @@ class BlockPacker extends BlockPackerAlgebra {
       BodyAuthorizationValidationAlgebra bodyAuthorizationValidation) {
     final log = Logger("BlockPacker.Validator");
     return (context) async {
-      final proposedBody = BlockBody(
-          transactionIds: await Future.wait(context.prefix.map((t) => t.id)));
+      final proposedBody =
+          BlockBody(transactionIds: context.prefix.map((t) => t.id));
       final errors = <String>[];
 
       errors.addAll(await bodySyntaxValidation.validate(proposedBody));
