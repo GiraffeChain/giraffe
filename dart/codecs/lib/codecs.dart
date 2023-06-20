@@ -8,6 +8,15 @@ import 'package:fast_base58/fast_base58.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:fixnum/fixnum.dart';
+import 'package:hashlib/hashlib.dart';
+
+extension ListCodec<T> on List<T> {
+  List<int> immutableBytes(List<int> Function(T) encodeT) {
+    final result = <int>[]..addAll(Int32(length).toBytes());
+    for (final t in this) result.addAll(encodeT(t));
+    return result;
+  }
+}
 
 extension BlockHeaderCodecs on BlockHeader {
   List<int> get immutableBytes => <int>[]
@@ -23,7 +32,7 @@ extension BlockHeaderCodecs on BlockHeader {
     ..addAll(metadata)
     ..addAll(address.value);
   Future<BlockId> get id async =>
-      BlockId(value: Uint8List.fromList(await immutableBytes.hash256));
+      BlockId()..value = Uint8List.fromList(await immutableBytes.hash256);
 }
 
 extension UnsignedBlockHeaderCodecs on UnsignedBlockHeader {
@@ -112,21 +121,81 @@ extension TransactionIdCodecs on TransactionId {
 }
 
 extension TransactionCodecs on Transaction {
-  Uint8List get immutableBytes {
-    throw UnimplementedError();
-  }
+  List<int> get immutableBytes => inputs.immutableBytes((i) => i.immutableBytes)
+    ..addAll(outputs.immutableBytes((o) => o.immutableBytes))
+    ..addAll(schedule.immutableBytes);
 
-  TransactionId get id {
-    throw UnimplementedError();
+  TransactionId get id =>
+      TransactionId()..value = blake2b256.convert(immutableBytes).bytes;
+}
+
+extension TransactionInputCodecs on TransactionInput {
+  List<int> get immutableBytes => lock.immutableBytes
+    ..addAll(key.immutableBytes)
+    ..addAll(value.immutableBytes);
+}
+
+extension TransactionOutputCodecs on TransactionOutput {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(lockAddress.immutableBytes)
+    ..addAll(value.immutableBytes);
+}
+
+extension TransactionScheduleCodecs on TransactionSchedule {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(minSlot.toBytes())
+    ..addAll(maxSlot.toBytes())
+    ..addAll(timestamp.toBytes());
+}
+
+extension KeyCodecs on Key {
+  List<int> get immutableBytes {
+    if (hasEd25519())
+      return ed25519.signature;
+    else
+      throw ArgumentError("Invalid Key");
   }
 }
 
+extension ValueCodecs on Value {
+  List<int> get immutableBytes {
+    if (hasPaymentToken())
+      return paymentToken.immutableBytes;
+    else if (hasStakingToken())
+      return stakingToken.immutableBytes;
+    else
+      throw ArgumentError("Invalid Value");
+  }
+}
+
+extension PaymentTokenCodecs on PaymentToken {
+  List<int> get immutableBytes => quantity.toBytes();
+}
+
+extension StakingTokenCodecs on StakingToken {
+  List<int> get immutableBytes {
+    final base = quantity.toBytes();
+    // TODO if(hasRegistration())
+    return base;
+  }
+}
+
+extension LockAddressCodecs on LockAddress {
+  List<int> get immutableBytes => value;
+}
+
 extension LockCodecs on Lock {
-  Uint8List get immutableBytes {
-    throw UnimplementedError();
+  List<int> get immutableBytes {
+    if (hasEd25519())
+      return ed25519.immutableBytes;
+    else
+      throw ArgumentError("Invalid Lock");
   }
 
-  LockAddress get address {
-    throw UnimplementedError();
-  }
+  LockAddress get address =>
+      LockAddress()..value = blake2b256.convert(immutableBytes).bytes;
+}
+
+extension Lock_Ed25519Codecs on Lock_Ed25519 {
+  List<int> get immutableBytes => vk;
 }

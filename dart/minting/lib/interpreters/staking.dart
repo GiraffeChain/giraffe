@@ -55,28 +55,26 @@ class Staking extends StakingAlgebra {
       final cryptoKeyPair = await cryptoEd25519.Ed25519KeyPair(
           operationalKeyOutOpt.childKeyPair.sk,
           operationalKeyOutOpt.childKeyPair.vk);
-      final operationalCertificate = OperationalCertificate(
-        parentVK: operationalKeyOutOpt.parentVK,
-        parentSignature: operationalKeyOutOpt.parentSignature,
-        childVK: operationalKeyOutOpt.childKeyPair.vk,
-        childSignature: await cryptoEd25519.ed25519.signKeyPair(
+      final operationalCertificate = OperationalCertificate()
+        ..parentVK = operationalKeyOutOpt.parentVK
+        ..parentSignature = operationalKeyOutOpt.parentSignature
+        ..childVK = operationalKeyOutOpt.childKeyPair.vk
+        ..childSignature = await cryptoEd25519.ed25519.signKeyPair(
           messageToSign,
           cryptoKeyPair,
-        ),
-      );
-      final header = BlockHeader(
-        parentHeaderId: unsignedHeader.parentHeaderId,
-        parentSlot: unsignedHeader.parentSlot,
-        txRoot: unsignedHeader.txRoot,
-        bloomFilter: unsignedHeader.bloomFilter,
-        timestamp: unsignedHeader.timestamp,
-        height: unsignedHeader.height,
-        slot: unsignedHeader.slot,
-        eligibilityCertificate: unsignedHeader.eligibilityCertificate,
-        operationalCertificate: operationalCertificate,
-        metadata: unsignedHeader.metadata,
-        address: unsignedHeader.address,
-      );
+        );
+      final header = BlockHeader()
+        ..parentHeaderId = unsignedHeader.parentHeaderId
+        ..parentSlot = unsignedHeader.parentSlot
+        ..txRoot = unsignedHeader.txRoot
+        ..bloomFilter = unsignedHeader.bloomFilter
+        ..timestamp = unsignedHeader.timestamp
+        ..height = unsignedHeader.height
+        ..slot = unsignedHeader.slot
+        ..eligibilityCertificate = unsignedHeader.eligibilityCertificate
+        ..operationalCertificate = operationalCertificate
+        ..metadata = unsignedHeader.metadata
+        ..address = unsignedHeader.address;
       return header;
     }
     return null;
@@ -97,11 +95,11 @@ class Staking extends StakingAlgebra {
     if (isLeader) {
       final evidence = threshold.thresholdEvidence;
       final testProof = await vrfCalculator.proofForSlot(slot, eta);
-      final cert = EligibilityCertificate(
-          vrfSig: testProof,
-          vrfVK: vkVrf,
-          thresholdEvidence: evidence,
-          eta: eta);
+      final cert = EligibilityCertificate()
+        ..vrfSig = testProof
+        ..vrfVK = vkVrf
+        ..thresholdEvidence = evidence
+        ..eta = eta;
       return VrfHit(cert, slot, threshold);
     }
     return null;

@@ -145,8 +145,8 @@ class Blockchain {
         await currentEventIdGetterSetters.consensusData.get(),
         parentChildTree,
         currentEventIdGetterSetters.consensusData.set,
-        ConsensusData(dataStores.operatorStakes, dataStores.activeStake,
-            dataStores.registrations),
+        ConsensusData(dataStores.activeStake, dataStores.inactiveStake,
+            dataStores.activeStakers),
         dataStores.bodies.getOrRaise,
         dataStores.transactions.getOrRaise);
 
@@ -243,11 +243,16 @@ class Blockchain {
   Future<void> processBlock(FullBlock block) async {
     final id = await block.header.id;
 
-    final body = BlockBody(transactionIds: [
-      for (final transaction in block.fullBody.transactions)
-        await transaction.id
-    ]);
-    await validateBlock(id, Block(header: block.header, body: body));
+    final body = BlockBody()
+      ..transactionIds.addAll([
+        for (final transaction in block.fullBody.transactions)
+          await transaction.id
+      ]);
+    await validateBlock(
+        id,
+        Block()
+          ..header = block.header
+          ..body = body);
     await dataStores.bodies.put(id, body);
     if (await chainSelection.select(id, await localChain.currentHead) == id) {
       log.info("Adopting id=${id.show}");
@@ -294,9 +299,9 @@ class Blockchain {
           for (final id in body.transactionIds)
             await dataStores.transactions.getOrRaise(id)
         ];
-        final fullBlock = FullBlock(
-            header: header,
-            fullBody: FullBlockBody(transactions: transactions));
+        final fullBlock = FullBlock()
+          ..header = header
+          ..fullBody = (FullBlockBody()..transactions.addAll(transactions));
         return fullBlock;
       });
 }

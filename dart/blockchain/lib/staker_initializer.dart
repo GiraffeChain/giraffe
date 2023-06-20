@@ -44,23 +44,29 @@ class StakerInitializer {
       );
 
   StakingAddress get stakingAddress =>
-      StakingAddress(value: operatorKeyPair.vk);
+      StakingAddress()..value = operatorKeyPair.vk;
 
-  Lock get spendingLock => Lock(ed25519: Lock_Ed25519(vk: spendingKeyPair.vk));
+  Lock get spendingLock =>
+      Lock()..ed25519 = (Lock_Ed25519()..vk = spendingKeyPair.vk);
 
   LockAddress get lockAddress => spendingLock.address;
 
   Future<List<TransactionOutput>> genesisOutputs(Int64 stake) async {
-    final spendingValue = Value(paymentToken: PaymentToken(quantity: stake));
-    final registrationValue = Value(
-        stakingToken: StakingToken(
-            quantity: stake,
-            registration: StakingRegistration(
-                registration: await registration,
-                stakingAddress: stakingAddress)));
+    final spendingValue = Value()
+      ..paymentToken = (PaymentToken()..quantity = stake);
+    final registrationValue = Value()
+      ..stakingToken = (StakingToken()
+        ..quantity = stake
+        ..registration = (StakingRegistration()
+          ..signature = await registration
+          ..stakingAddress = stakingAddress));
     return [
-      TransactionOutput(lockAddress: lockAddress, value: spendingValue),
-      TransactionOutput(lockAddress: lockAddress, value: registrationValue)
+      TransactionOutput()
+        ..lockAddress = lockAddress
+        ..value = spendingValue,
+      TransactionOutput()
+        ..lockAddress = lockAddress
+        ..value = registrationValue
     ];
   }
 }

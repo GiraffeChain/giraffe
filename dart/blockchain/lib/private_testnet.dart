@@ -27,16 +27,14 @@ class PrivateTestnet {
       List<StakerInitializer> stakers, List<Int64> stakes) async {
     assert(stakers.length == stakes.length);
     final outputs = [
-      TransactionOutput(
-        lockAddress: Lock(
-                ed25519: Lock_Ed25519(
-                    vk: (await ed25519.generateKeyPairFromSeed(Uint8List(32)))
-                        .vk))
-            .address,
-        value: Value(
-          paymentToken: PaymentToken(quantity: Int64(10000000)),
-        ),
-      ),
+      TransactionOutput()
+        ..lockAddress = (Lock()
+              ..ed25519 = (Lock_Ed25519()
+                ..vk =
+                    (await ed25519.generateKeyPairFromSeed(Uint8List(32))).vk))
+            .address
+        ..value = (Value()
+          ..paymentToken = (PaymentToken()..quantity = Int64(10000000))),
     ];
     for (int i = 0; i < stakers.length; i++) {
       final staker = stakers[i];

@@ -255,7 +255,7 @@ packages:
     source: hosted
     version: "3.1.0"
   hashlib:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: hashlib
       sha256: bbc6f28f2b145d0469d812c0f3d0d0a10e2d9d1ea4d57748977c7552d3acd653

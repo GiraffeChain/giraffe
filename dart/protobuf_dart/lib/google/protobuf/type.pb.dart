@@ -1,64 +1,40 @@
-///
+//
 //  Generated code. Do not modify.
 //  source: google/protobuf/type.proto
 //
 // @dart = 2.12
-// ignore_for_file: annotate_overrides,camel_case_types,constant_identifier_names,directives_ordering,library_prefixes,non_constant_identifier_names,prefer_final_fields,return_of_invalid_type,unnecessary_const,unnecessary_import,unnecessary_this,unused_import,unused_shown_name
+
+// ignore_for_file: annotate_overrides, camel_case_types
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'source_context.pb.dart' as $0;
 import 'any.pb.dart' as $1;
-
+import 'source_context.pb.dart' as $0;
 import 'type.pbenum.dart';
 
 export 'type.pbenum.dart';
 
 class Type extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Type', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'google.protobuf'), createEmptyInstance: create)
-    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'name')
-    ..pc<Field>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'fields', $pb.PbFieldType.PM, subBuilder: Field.create)
-    ..pPS(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'oneofs')
-    ..pc<Option>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
-    ..aOM<$0.SourceContext>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'sourceContext', subBuilder: $0.SourceContext.create)
-    ..e<Syntax>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: Syntax.SYNTAX_PROTO2, valueOf: Syntax.valueOf, enumValues: Syntax.values)
+  factory Type() => create();
+  Type._() : super();
+  factory Type.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Type.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Type', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..pc<Field>(2, _omitFieldNames ? '' : 'fields', $pb.PbFieldType.PM, subBuilder: Field.create)
+    ..pPS(3, _omitFieldNames ? '' : 'oneofs')
+    ..pc<Option>(4, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
+    ..aOM<$0.SourceContext>(5, _omitFieldNames ? '' : 'sourceContext', subBuilder: $0.SourceContext.create)
+    ..e<Syntax>(6, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: Syntax.SYNTAX_PROTO2, valueOf: Syntax.valueOf, enumValues: Syntax.values)
     ..hasRequiredFields = false
   ;
 
-  Type._() : super();
-  factory Type({
-    $core.String? name,
-    $core.Iterable<Field>? fields,
-    $core.Iterable<$core.String>? oneofs,
-    $core.Iterable<Option>? options,
-    $0.SourceContext? sourceContext,
-    Syntax? syntax,
-  }) {
-    final _result = create();
-    if (name != null) {
-      _result.name = name;
-    }
-    if (fields != null) {
-      _result.fields.addAll(fields);
-    }
-    if (oneofs != null) {
-      _result.oneofs.addAll(oneofs);
-    }
-    if (options != null) {
-      _result.options.addAll(options);
-    }
-    if (sourceContext != null) {
-      _result.sourceContext = sourceContext;
-    }
-    if (syntax != null) {
-      _result.syntax = syntax;
-    }
-    return _result;
-  }
-  factory Type.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Type.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -68,8 +44,10 @@ class Type extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Type copyWith(void Function(Type) updates) => super.copyWith((message) => updates(message as Type)) as Type; // ignore: deprecated_member_use
+  Type copyWith(void Function(Type) updates) => super.copyWith((message) => updates(message as Type)) as Type;
+
   $pb.BuilderInfo get info_ => _i;
+
   @$core.pragma('dart2js:noInline')
   static Type create() => Type._();
   Type createEmptyInstance() => create();
@@ -118,68 +96,25 @@ class Type extends $pb.GeneratedMessage {
 }
 
 class Field extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Field', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'google.protobuf'), createEmptyInstance: create)
-    ..e<Field_Kind>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'kind', $pb.PbFieldType.OE, defaultOrMaker: Field_Kind.TYPE_UNKNOWN, valueOf: Field_Kind.valueOf, enumValues: Field_Kind.values)
-    ..e<Field_Cardinality>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'cardinality', $pb.PbFieldType.OE, defaultOrMaker: Field_Cardinality.CARDINALITY_UNKNOWN, valueOf: Field_Cardinality.valueOf, enumValues: Field_Cardinality.values)
-    ..a<$core.int>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'number', $pb.PbFieldType.O3)
-    ..aOS(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'name')
-    ..aOS(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'typeUrl')
-    ..a<$core.int>(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'oneofIndex', $pb.PbFieldType.O3)
-    ..aOB(8, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'packed')
-    ..pc<Option>(9, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
-    ..aOS(10, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'jsonName')
-    ..aOS(11, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'defaultValue')
+  factory Field() => create();
+  Field._() : super();
+  factory Field.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Field.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Field', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+    ..e<Field_Kind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE, defaultOrMaker: Field_Kind.TYPE_UNKNOWN, valueOf: Field_Kind.valueOf, enumValues: Field_Kind.values)
+    ..e<Field_Cardinality>(2, _omitFieldNames ? '' : 'cardinality', $pb.PbFieldType.OE, defaultOrMaker: Field_Cardinality.CARDINALITY_UNKNOWN, valueOf: Field_Cardinality.valueOf, enumValues: Field_Cardinality.values)
+    ..a<$core.int>(3, _omitFieldNames ? '' : 'number', $pb.PbFieldType.O3)
+    ..aOS(4, _omitFieldNames ? '' : 'name')
+    ..aOS(6, _omitFieldNames ? '' : 'typeUrl')
+    ..a<$core.int>(7, _omitFieldNames ? '' : 'oneofIndex', $pb.PbFieldType.O3)
+    ..aOB(8, _omitFieldNames ? '' : 'packed')
+    ..pc<Option>(9, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
+    ..aOS(10, _omitFieldNames ? '' : 'jsonName')
+    ..aOS(11, _omitFieldNames ? '' : 'defaultValue')
     ..hasRequiredFields = false
   ;
 
-  Field._() : super();
-  factory Field({
-    Field_Kind? kind,
-    Field_Cardinality? cardinality,
-    $core.int? number,
-    $core.String? name,
-    $core.String? typeUrl,
-    $core.int? oneofIndex,
-    $core.bool? packed,
-    $core.Iterable<Option>? options,
-    $core.String? jsonName,
-    $core.String? defaultValue,
-  }) {
-    final _result = create();
-    if (kind != null) {
-      _result.kind = kind;
-    }
-    if (cardinality != null) {
-      _result.cardinality = cardinality;
-    }
-    if (number != null) {
-      _result.number = number;
-    }
-    if (name != null) {
-      _result.name = name;
-    }
-    if (typeUrl != null) {
-      _result.typeUrl = typeUrl;
-    }
-    if (oneofIndex != null) {
-      _result.oneofIndex = oneofIndex;
-    }
-    if (packed != null) {
-      _result.packed = packed;
-    }
-    if (options != null) {
-      _result.options.addAll(options);
-    }
-    if (jsonName != null) {
-      _result.jsonName = jsonName;
-    }
-    if (defaultValue != null) {
-      _result.defaultValue = defaultValue;
-    }
-    return _result;
-  }
-  factory Field.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Field.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -189,8 +124,10 @@ class Field extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Field copyWith(void Function(Field) updates) => super.copyWith((message) => updates(message as Field)) as Field; // ignore: deprecated_member_use
+  Field copyWith(void Function(Field) updates) => super.copyWith((message) => updates(message as Field)) as Field;
+
   $pb.BuilderInfo get info_ => _i;
+
   @$core.pragma('dart2js:noInline')
   static Field create() => Field._();
   Field createEmptyInstance() => create();
@@ -285,43 +222,20 @@ class Field extends $pb.GeneratedMessage {
 }
 
 class Enum extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Enum', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'google.protobuf'), createEmptyInstance: create)
-    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'name')
-    ..pc<EnumValue>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'enumvalue', $pb.PbFieldType.PM, subBuilder: EnumValue.create)
-    ..pc<Option>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
-    ..aOM<$0.SourceContext>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'sourceContext', subBuilder: $0.SourceContext.create)
-    ..e<Syntax>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: Syntax.SYNTAX_PROTO2, valueOf: Syntax.valueOf, enumValues: Syntax.values)
+  factory Enum() => create();
+  Enum._() : super();
+  factory Enum.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Enum.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Enum', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..pc<EnumValue>(2, _omitFieldNames ? '' : 'enumvalue', $pb.PbFieldType.PM, subBuilder: EnumValue.create)
+    ..pc<Option>(3, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
+    ..aOM<$0.SourceContext>(4, _omitFieldNames ? '' : 'sourceContext', subBuilder: $0.SourceContext.create)
+    ..e<Syntax>(5, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: Syntax.SYNTAX_PROTO2, valueOf: Syntax.valueOf, enumValues: Syntax.values)
     ..hasRequiredFields = false
   ;
 
-  Enum._() : super();
-  factory Enum({
-    $core.String? name,
-    $core.Iterable<EnumValue>? enumvalue,
-    $core.Iterable<Option>? options,
-    $0.SourceContext? sourceContext,
-    Syntax? syntax,
-  }) {
-    final _result = create();
-    if (name != null) {
-      _result.name = name;
-    }
-    if (enumvalue != null) {
-      _result.enumvalue.addAll(enumvalue);
-    }
-    if (options != null) {
-      _result.options.addAll(options);
-    }
-    if (sourceContext != null) {
-      _result.sourceContext = sourceContext;
-    }
-    if (syntax != null) {
-      _result.syntax = syntax;
-    }
-    return _result;
-  }
-  factory Enum.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Enum.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -331,8 +245,10 @@ class Enum extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Enum copyWith(void Function(Enum) updates) => super.copyWith((message) => updates(message as Enum)) as Enum; // ignore: deprecated_member_use
+  Enum copyWith(void Function(Enum) updates) => super.copyWith((message) => updates(message as Enum)) as Enum;
+
   $pb.BuilderInfo get info_ => _i;
+
   @$core.pragma('dart2js:noInline')
   static Enum create() => Enum._();
   Enum createEmptyInstance() => create();
@@ -378,33 +294,18 @@ class Enum extends $pb.GeneratedMessage {
 }
 
 class EnumValue extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'EnumValue', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'google.protobuf'), createEmptyInstance: create)
-    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'name')
-    ..a<$core.int>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'number', $pb.PbFieldType.O3)
-    ..pc<Option>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
+  factory EnumValue() => create();
+  EnumValue._() : super();
+  factory EnumValue.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory EnumValue.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EnumValue', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..a<$core.int>(2, _omitFieldNames ? '' : 'number', $pb.PbFieldType.O3)
+    ..pc<Option>(3, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: Option.create)
     ..hasRequiredFields = false
   ;
 
-  EnumValue._() : super();
-  factory EnumValue({
-    $core.String? name,
-    $core.int? number,
-    $core.Iterable<Option>? options,
-  }) {
-    final _result = create();
-    if (name != null) {
-      _result.name = name;
-    }
-    if (number != null) {
-      _result.number = number;
-    }
-    if (options != null) {
-      _result.options.addAll(options);
-    }
-    return _result;
-  }
-  factory EnumValue.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory EnumValue.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -414,8 +315,10 @@ class EnumValue extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  EnumValue copyWith(void Function(EnumValue) updates) => super.copyWith((message) => updates(message as EnumValue)) as EnumValue; // ignore: deprecated_member_use
+  EnumValue copyWith(void Function(EnumValue) updates) => super.copyWith((message) => updates(message as EnumValue)) as EnumValue;
+
   $pb.BuilderInfo get info_ => _i;
+
   @$core.pragma('dart2js:noInline')
   static EnumValue create() => EnumValue._();
   EnumValue createEmptyInstance() => create();
@@ -447,28 +350,17 @@ class EnumValue extends $pb.GeneratedMessage {
 }
 
 class Option extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Option', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'google.protobuf'), createEmptyInstance: create)
-    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'name')
-    ..aOM<$1.Any>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'value', subBuilder: $1.Any.create)
+  factory Option() => create();
+  Option._() : super();
+  factory Option.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Option.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Option', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..aOM<$1.Any>(2, _omitFieldNames ? '' : 'value', subBuilder: $1.Any.create)
     ..hasRequiredFields = false
   ;
 
-  Option._() : super();
-  factory Option({
-    $core.String? name,
-    $1.Any? value,
-  }) {
-    final _result = create();
-    if (name != null) {
-      _result.name = name;
-    }
-    if (value != null) {
-      _result.value = value;
-    }
-    return _result;
-  }
-  factory Option.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Option.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -478,8 +370,10 @@ class Option extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Option copyWith(void Function(Option) updates) => super.copyWith((message) => updates(message as Option)) as Option; // ignore: deprecated_member_use
+  Option copyWith(void Function(Option) updates) => super.copyWith((message) => updates(message as Option)) as Option;
+
   $pb.BuilderInfo get info_ => _i;
+
   @$core.pragma('dart2js:noInline')
   static Option create() => Option._();
   Option createEmptyInstance() => create();
@@ -509,3 +403,6 @@ class Option extends $pb.GeneratedMessage {
   $1.Any ensureValue() => $_ensure(1);
 }
 
+
+const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

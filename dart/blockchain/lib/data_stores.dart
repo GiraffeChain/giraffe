@@ -15,9 +15,9 @@ class DataStores {
   final StoreAlgebra<TransactionId, Transaction> transactions;
   final StoreAlgebra<TransactionId, List<int>> spendableBoxIds;
   final StoreAlgebra<Int64, BlockId> epochBoundaries;
-  final StoreAlgebra<StakingAddress, BigInt> operatorStakes;
-  final StoreAlgebra<void, BigInt> activeStake;
-  final StoreAlgebra<StakingAddress, SignatureKesProduct> registrations;
+  final StoreAlgebra<void, Int64> activeStake;
+  final StoreAlgebra<void, Int64> inactiveStake;
+  final StoreAlgebra<StakingAddress, ActiveStaker> activeStakers;
   final StoreAlgebra<Int64, BlockId> blockHeightTree;
 
   DataStores({
@@ -29,9 +29,9 @@ class DataStores {
     required this.transactions,
     required this.spendableBoxIds,
     required this.epochBoundaries,
-    required this.operatorStakes,
     required this.activeStake,
-    required this.registrations,
+    required this.inactiveStake,
+    required this.activeStakers,
     required this.blockHeightTree,
   });
 
@@ -47,9 +47,9 @@ class DataStores {
       transactions: makeDb(),
       spendableBoxIds: makeDb(),
       epochBoundaries: makeDb(),
-      operatorStakes: makeDb(),
       activeStake: makeDb(),
-      registrations: makeDb(),
+      inactiveStake: makeDb(),
+      activeStakers: makeDb(),
       blockHeightTree: makeDb(),
     );
 
@@ -72,19 +72,23 @@ class DataStores {
     await stores.headers.put(genesisBlockId, genesisBlock.header);
     await stores.bodies.put(
         genesisBlockId,
-        BlockBody(
-          transactionIds: [
-            for (final transaction in genesisBlock.fullBody.transactions)
-              await transaction.id
-          ],
-        ));
+        BlockBody()
+          ..transactionIds.addAll(
+            [
+              for (final transaction in genesisBlock.fullBody.transactions)
+                await transaction.id
+            ],
+          ));
     for (final transaction in genesisBlock.fullBody.transactions) {
       await stores.transactions.put(await transaction.id, transaction);
     }
     await stores.blockHeightTree
         .put(Int64(0), genesisBlock.header.parentHeaderId);
     if (!await stores.activeStake.contains("")) {
-      await stores.activeStake.put("", BigInt.from(0));
+      await stores.activeStake.put("", Int64.ZERO);
+    }
+    if (!await stores.inactiveStake.contains("")) {
+      await stores.inactiveStake.put("", Int64.ZERO);
     }
     return stores;
   }

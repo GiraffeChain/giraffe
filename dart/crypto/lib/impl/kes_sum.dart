@@ -28,16 +28,16 @@ class KesSum {
         else
           return loop(keyTree.left, [List.of(keyTree.witnessRight)]..addAll(W));
       } else if (keyTree is KesSigningLeaf) {
-        return SignatureKesSum(
-            verificationKey: Uint8List.fromList(keyTree.vk),
-            signature:
-                Uint8List.fromList(await ed25519.sign(message, keyTree.sk)),
-            witness: W.map(Uint8List.fromList).toList());
+        return SignatureKesSum()
+          ..verificationKey = Uint8List.fromList(keyTree.vk)
+          ..signature =
+              Uint8List.fromList(await ed25519.sign(message, keyTree.sk))
+          ..witness.addAll(W.map(Uint8List.fromList).toList());
       } else {
-        return SignatureKesSum(
-            verificationKey: Uint8List(32),
-            signature: Uint8List(64),
-            witness: [Uint8List(0)]);
+        return SignatureKesSum()
+          ..verificationKey = Uint8List(32)
+          ..signature = Uint8List(64)
+          ..witness.addAll([Uint8List(0)]);
       }
     }
 

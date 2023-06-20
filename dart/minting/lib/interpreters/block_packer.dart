@@ -79,8 +79,8 @@ class BlockPacker extends BlockPackerAlgebra {
       BodyAuthorizationValidationAlgebra bodyAuthorizationValidation) {
     final log = Logger("BlockPacker.Validator");
     return (context) async {
-      final proposedBody =
-          BlockBody(transactionIds: context.prefix.map((t) => t.id));
+      final proposedBody = BlockBody()
+        ..transactionIds.addAll(context.prefix.map((t) => t.id));
       final errors = <String>[];
 
       errors.addAll(await bodySyntaxValidation.validate(proposedBody));

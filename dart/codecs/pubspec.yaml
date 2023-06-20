@@ -14,6 +14,7 @@ dependencies:
   cryptography: ^2.0.5
   fpdart: ^0.3.0
   fast_base58: ^0.2.1
+  hashlib: ^1.8.1
   blockchain_common:
     path: ../common
   blockchain_crypto:

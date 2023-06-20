@@ -79,7 +79,9 @@ class BlockProducer extends BlockProducerAlgebra {
             final transactionIds = bodyOpt.transactions.map((tx) => tx.id);
             log.info(
                 "Produced block id=${headerId.show} height=${maybeHeader.height} slot=${maybeHeader.slot} parentId=${maybeHeader.parentHeaderId.show} transactionIds=[${transactionIds.map((i) => i.show).join(",")}]");
-            return FullBlock(header: maybeHeader, fullBody: bodyOpt);
+            return FullBlock()
+              ..header = maybeHeader
+              ..fullBody = bodyOpt;
           } else {
             log.warning("Failed to produce block at next slot=${nextHit.slot}");
           }

@@ -23,11 +23,14 @@ extension RatioOps on Rational {
 }
 
 extension BlockHeaderOps on BlockHeader {
-  Future<SlotData> get slotData async => SlotData(
-        slotId: SlotId(blockId: await id, slot: slot),
-        parentSlotId: SlotId(blockId: parentHeaderId, slot: parentSlot),
-        rho: await ed25519Vrf.proofToHash(eligibilityCertificate.vrfSig),
-        eta: eligibilityCertificate.eta,
-        height: height,
-      );
+  Future<SlotData> get slotData async => SlotData()
+    ..slotId = (SlotId()
+      ..blockId = await id
+      ..slot = slot)
+    ..parentSlotId = (SlotId()
+      ..blockId = parentHeaderId
+      ..slot = parentSlot)
+    ..rho = await ed25519Vrf.proofToHash(eligibilityCertificate.vrfSig)
+    ..eta = eligibilityCertificate.eta
+    ..height = height;
 }

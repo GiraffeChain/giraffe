@@ -132,8 +132,9 @@ class StateAugmentation {
         transaction.inputs.map((i) => i.reference).toSet();
     final transactionId = await transaction.id;
     final transactionNewBoxIds = transaction.outputs
-        .mapWithIndex((t, index) => TransactionOutputReference(
-            index: index, transactionId: transactionId))
+        .mapWithIndex((t, index) => TransactionOutputReference()
+          ..index = index
+          ..transactionId = transactionId)
         .toSet();
 
     transactionNewBoxIds.addAll(newBoxIds);

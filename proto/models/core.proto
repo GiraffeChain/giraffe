@@ -199,8 +199,16 @@ message StakingToken {
 
 // A proof-of-stake registration
 message StakingRegistration {
-    SignatureKesProduct registration = 1 [(validate.rules).message.required = true];
+    SignatureKesProduct signature = 1 [(validate.rules).message.required = true];
     StakingAddress stakingAddress = 2 [(validate.rules).message.required = true];
+}
+
+// An active, registered participate in the consensus protocol, for a particular epoch.
+message ActiveStaker {
+    // the staker's registration
+    StakingRegistration registration = 1 [(validate.rules).message.required = true];
+    // the quantity of staked tokens for the epoch
+    int64 quantity = 3 [(validate.rules).message.required = true];
 }
 
 message LockAddress {

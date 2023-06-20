@@ -85,7 +85,9 @@ class BlockHeaderValidation extends BlockHeadervalidationAlgebra {
 
   Future<List<String>> _vrfVerification(BlockHeader header) async {
     final expectedEta = await etaInterpreter.etaToBe(
-        SlotId(slot: header.parentSlot, blockId: header.parentHeaderId),
+        SlotId()
+          ..slot = header.parentSlot
+          ..blockId = header.parentHeaderId,
         header.slot);
     if (!expectedEta.sameElements(header.eligibilityCertificate.eta))
       return ["InvalidEligibilityCertificateEta"];
@@ -115,18 +117,19 @@ class BlockHeaderValidation extends BlockHeadervalidationAlgebra {
   }
 
   Future<List<String>> _registrationVerification(BlockHeader header) async {
-    final commitment = await consensusValidationState.operatorRegistration(
+    final staker = await consensusValidationState.staker(
         await header.id, header.slot, header.address);
-    if (commitment == null) return ["Unregistered"];
+    if (staker == null) return ["Unregistered"];
     final message =
         await (header.eligibilityCertificate.vrfVK + header.address.value)
             .hash256;
 
     final verificationResult = await kesProduct.verify(
-        commitment,
+        staker.registration.signature,
         message,
-        VerificationKeyKesProduct(
-            value: header.operationalCertificate.parentVK.value, step: 0));
+        VerificationKeyKesProduct()
+          ..value = header.operationalCertificate.parentVK.value
+          ..step = 0);
     if (!verificationResult) return ["RegistrationCommitmentMismatch"];
     return [];
   }

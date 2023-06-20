@@ -5,7 +5,6 @@ import 'package:blockchain_consensus/algebras/consensus_validation_state_algebra
 import 'package:blockchain_consensus/interpreters/consensus_data_event_sourced_state.dart';
 import 'package:blockchain_consensus/interpreters/epoch_boundaries.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:rational/rational.dart';
 import 'package:fixnum/fixnum.dart';
 
 class ConsensusValidationState extends ConsensusValidationStateAlgebra {
@@ -19,23 +18,15 @@ class ConsensusValidationState extends ConsensusValidationStateAlgebra {
       this.consensusDataState, this.clock);
 
   @override
-  Future<SignatureKesProduct?> operatorRegistration(
+  Future<Int64> totalActiveStake(BlockId currentBlockId, Slot slot) =>
+      _useStateAtTargetBoundary(
+          currentBlockId, slot, (p0) => p0.totalActiveStake.getOrRaise(""));
+
+  @override
+  Future<ActiveStaker?> staker(
           BlockId currentBlockId, Int64 slot, StakingAddress address) =>
       _useStateAtTargetBoundary(
           currentBlockId, slot, (t) => t.registrations.get(address));
-
-  @override
-  Future<Rational?> operatorRelativeStake(
-          BlockId currentBlockId, Int64 slot, StakingAddress address) =>
-      _useStateAtTargetBoundary(currentBlockId, slot, (consensusData) async {
-        final maybeStake = await consensusData.operatorStakes.get(address);
-        if (maybeStake != null) {
-          final totalStake =
-              await consensusData.totalActiveStake.getOrRaise("");
-          return Rational(maybeStake, totalStake);
-        }
-        return null;
-      });
 
   Future<Res> _useStateAtTargetBoundary<Res>(BlockId currentBlockId, Slot slot,
       Future<Res> Function(ConsensusData) f) async {

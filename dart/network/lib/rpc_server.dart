@@ -22,7 +22,7 @@ class RpcServer extends NodeRpcServiceBase {
   @override
   Stream<BlockIdGossipRes> blockIdGossip(
       ServiceCall call, BlockIdGossipReq request) {
-    return _blockIdGossip().map((id) => BlockIdGossipRes(blockId: id));
+    return _blockIdGossip().map((id) => BlockIdGossipRes()..blockId = id);
   }
 
   @override
@@ -35,21 +35,24 @@ class RpcServer extends NodeRpcServiceBase {
   @override
   Future<GetBlockRes> getBlock(ServiceCall call, GetBlockReq request) async {
     final maybeBlock = await _fetchBlock(request.blockId);
-    return GetBlockRes(block: maybeBlock);
+    if (maybeBlock != null) return GetBlockRes()..block = maybeBlock;
+    return GetBlockRes();
   }
 
   @override
   Future<GetTransactionRes> getTransaction(
       ServiceCall call, GetTransactionReq request) async {
     final maybeTransaction = await _fetchTransaction(request.transactionId);
-    return GetTransactionRes(transaction: maybeTransaction);
+    if (maybeTransaction != null)
+      return GetTransactionRes()..transaction = maybeTransaction;
+    return GetTransactionRes();
   }
 
   @override
   Stream<TransactionIdGossipRes> transactionIdGossip(
           ServiceCall call, TransactionIdGossipReq request) =>
       _transactionIdGossip()
-          .map((id) => TransactionIdGossipRes(transactionId: id));
+          .map((id) => TransactionIdGossipRes()..transactionId = id);
 
   @override
   Future<HandshakeRes> handshake(ServiceCall call, HandshakeReq request) {

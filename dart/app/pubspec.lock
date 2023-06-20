@@ -25,14 +25,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
-  bit_array:
-    dependency: "direct main"
-    description:
-      name: bit_array
-      sha256: "127c01ebb740e6dd076f5d42aa39049cf847baee39a7e63fb499b1895581dba6"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.0"
   blockchain:
     dependency: "direct main"
     description:
@@ -48,47 +40,40 @@ packages:
     source: path
     version: "1.0.0+1"
   blockchain_common:
-    dependency: "direct main"
+    dependency: transitive
     description:
       path: "../common"
       relative: true
     source: path
     version: "1.0.0+1"
   blockchain_consensus:
-    dependency: "direct main"
+    dependency: transitive
     description:
       path: "../consensus"
       relative: true
     source: path
     version: "1.0.0+1"
   blockchain_crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       path: "../crypto"
       relative: true
     source: path
     version: "1.0.0+1"
   blockchain_ledger:
-    dependency: "direct main"
+    dependency: transitive
     description:
       path: "../ledger"
       relative: true
     source: path
     version: "1.0.0+1"
   blockchain_minting:
-    dependency: "direct main"
+    dependency: transitive
     description:
       path: "../minting"
       relative: true
     source: path
     version: "1.0.0+1"
-  blockchain_network:
-    dependency: "direct main"
-    description:
-      path: "../network"
-      relative: true
-    source: path
-    version: "2.0.0+1"
   blockchain_protobuf:
     dependency: "direct main"
     description:
@@ -145,13 +130,21 @@ packages:
     source: hosted
     version: "3.0.3"
   cryptography:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: cryptography
       sha256: df156c5109286340817d21fa7b62f9140f17915077127dd70f8bd7a2a0997a35
       url: "https://pub.dev"
     source: hosted
     version: "2.5.0"
+  cryptography_flutter:
+    dependency: "direct main"
+    description:
+      name: cryptography_flutter
+      sha256: a66ce021e0b600688c2d51b0594cb156ee677ce9bfbc981b62219ad577dd302e
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
   fake_async:
     dependency: transitive
     description:
@@ -169,7 +162,7 @@ packages:
     source: hosted
     version: "0.2.1"
   fixnum:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: fixnum
       sha256: "25517a4deb0c03aa0f32fd12db525856438902d9c16536311e76cdc57b31d7d1"
@@ -181,6 +174,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_background:
+    dependency: "direct main"
+    description:
+      name: flutter_background
+      sha256: "035c31a738509d67ee70bbf174e5aa7db462c371e838ec8259700c5c4e7ca17f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -195,7 +196,7 @@ packages:
     source: sdk
     version: "0.0.0"
   fpdart:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: fpdart
       sha256: f198825b5682cd1c992dbbd0b3995e46f730be0b5addfc6d6e9ef9655911e98c
@@ -210,14 +211,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
-  graphview:
-    dependency: "direct main"
-    description:
-      name: graphview
-      sha256: bdba183583b23c30c71edea09ad5f0beef612572d3e39e855467a925bd08392f
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.0"
   grpc:
     dependency: transitive
     description:
@@ -267,21 +260,13 @@ packages:
     source: hosted
     version: "4.0.2"
   integral_isolates:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: integral_isolates
       sha256: "969ada03ae9f125bd5e631afacca47ea1d00f134778884152527f643d47b03a4"
       url: "https://pub.dev"
     source: hosted
     version: "0.3.0+2"
-  ipsum:
-    dependency: "direct main"
-    description:
-      name: ipsum
-      sha256: be6b6397e32cf54903f8f6eee414c8a06fb239763e945acae1a9bdeaa01d81c1
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
   js:
     dependency: transitive
     description:
@@ -299,7 +284,7 @@ packages:
     source: hosted
     version: "2.1.1"
   logging:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: logging
       sha256: "623a88c9594aa774443aa3eb2d41807a48486b5613e67599fb4c41c0ad47c340"
@@ -338,14 +323,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
-  painter:
-    dependency: "direct main"
-    description:
-      name: painter
-      sha256: "8919468e313a5d8ded41ee1e6db8dec72dd85359174b7866feef8fbc82c603cc"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.0"
   path:
     dependency: transitive
     description:
@@ -354,6 +331,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.8.3"
+  plugin_platform_interface:
+    dependency: transitive
+    description:
+      name: plugin_platform_interface
+      sha256: "6a2128648c854906c53fa8e33986fc0247a1116122f9534dd20e3ab9e16a32bc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.4"
   pointycastle:
     dependency: transitive
     description:
@@ -457,4 +442,4 @@ packages:
     version: "2.1.4"
 sdks:
   dart: ">=3.0.0 <4.0.0"
-  flutter: ">=2.0.0"
+  flutter: ">=3.7.0"

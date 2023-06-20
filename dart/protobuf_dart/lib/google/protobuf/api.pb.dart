@@ -1,67 +1,39 @@
-///
+//
 //  Generated code. Do not modify.
 //  source: google/protobuf/api.proto
 //
 // @dart = 2.12
-// ignore_for_file: annotate_overrides,camel_case_types,constant_identifier_names,directives_ordering,library_prefixes,non_constant_identifier_names,prefer_final_fields,return_of_invalid_type,unnecessary_const,unnecessary_import,unnecessary_this,unused_import,unused_shown_name
+
+// ignore_for_file: annotate_overrides, camel_case_types
+// ignore_for_file: constant_identifier_names, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_final_fields
+// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'type.pb.dart' as $2;
 import 'source_context.pb.dart' as $0;
-
+import 'type.pb.dart' as $2;
 import 'type.pbenum.dart' as $2;
 
 class Api extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Api', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'google.protobuf'), createEmptyInstance: create)
-    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'name')
-    ..pc<Method>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'methods', $pb.PbFieldType.PM, subBuilder: Method.create)
-    ..pc<$2.Option>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'options', $pb.PbFieldType.PM, subBuilder: $2.Option.create)
-    ..aOS(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'version')
-    ..aOM<$0.SourceContext>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'sourceContext', subBuilder: $0.SourceContext.create)
-    ..pc<Mixin>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'mixins', $pb.PbFieldType.PM, subBuilder: Mixin.create)
-    ..e<$2.Syntax>(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: $2.Syntax.SYNTAX_PROTO2, valueOf: $2.Syntax.valueOf, enumValues: $2.Syntax.values)
+  factory Api() => create();
+  Api._() : super();
+  factory Api.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Api.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Api', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..pc<Method>(2, _omitFieldNames ? '' : 'methods', $pb.PbFieldType.PM, subBuilder: Method.create)
+    ..pc<$2.Option>(3, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: $2.Option.create)
+    ..aOS(4, _omitFieldNames ? '' : 'version')
+    ..aOM<$0.SourceContext>(5, _omitFieldNames ? '' : 'sourceContext', subBuilder: $0.SourceContext.create)
+    ..pc<Mixin>(6, _omitFieldNames ? '' : 'mixins', $pb.PbFieldType.PM, subBuilder: Mixin.create)
+    ..e<$2.Syntax>(7, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: $2.Syntax.SYNTAX_PROTO2, valueOf: $2.Syntax.valueOf, enumValues: $2.Syntax.values)
     ..hasRequiredFields = false
   ;
 
-  Api._() : super();
-  factory Api({
-    $core.String? name,
-    $core.Iterable<Method>? methods,
-    $core.Iterable<$2.Option>? options,
-    $core.String? version,
-    $0.SourceContext? sourceContext,
-    $core.Iterable<Mixin>? mixins,
-    $2.Syntax? syntax,
-  }) {
-    final _result = create();
-    if (name != null) {
-      _result.name = name;
-    }
-    if (methods != null) {
-      _result.methods.addAll(methods);
-    }
-    if (options != null) {
-      _result.options.addAll(options);
-    }
-    if (version != null) {
-      _result.version = version;
-    }
-    if (sourceContext != null) {
-      _result.sourceContext = sourceContext;
-    }
-    if (mixins != null) {
-      _result.mixins.addAll(mixins);
-    }
-    if (syntax != null) {
-      _result.syntax = syntax;
-    }
-    return _result;
-  }
-  factory Api.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Api.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -71,8 +43,10 @@ class Api extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Api copyWith(void Function(Api) updates) => super.copyWith((message) => updates(message as Api)) as Api; // ignore: deprecated_member_use
+  Api copyWith(void Function(Api) updates) => super.copyWith((message) => updates(message as Api)) as Api;
+
   $pb.BuilderInfo get info_ => _i;
+
   @$core.pragma('dart2js:noInline')
   static Api create() => Api._();
   Api createEmptyInstance() => create();
@@ -130,53 +104,22 @@ class Api extends $pb.GeneratedMessage {
 }
 
 class Method extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Method', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'google.protobuf'), createEmptyInstance: create)
-    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'name')
-    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'requestTypeUrl')
-    ..aOB(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'requestStreaming')
-    ..aOS(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'responseTypeUrl')
-    ..aOB(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'responseStreaming')
-    ..pc<$2.Option>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'options', $pb.PbFieldType.PM, subBuilder: $2.Option.create)
-    ..e<$2.Syntax>(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: $2.Syntax.SYNTAX_PROTO2, valueOf: $2.Syntax.valueOf, enumValues: $2.Syntax.values)
+  factory Method() => create();
+  Method._() : super();
+  factory Method.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Method.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Method', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..aOS(2, _omitFieldNames ? '' : 'requestTypeUrl')
+    ..aOB(3, _omitFieldNames ? '' : 'requestStreaming')
+    ..aOS(4, _omitFieldNames ? '' : 'responseTypeUrl')
+    ..aOB(5, _omitFieldNames ? '' : 'responseStreaming')
+    ..pc<$2.Option>(6, _omitFieldNames ? '' : 'options', $pb.PbFieldType.PM, subBuilder: $2.Option.create)
+    ..e<$2.Syntax>(7, _omitFieldNames ? '' : 'syntax', $pb.PbFieldType.OE, defaultOrMaker: $2.Syntax.SYNTAX_PROTO2, valueOf: $2.Syntax.valueOf, enumValues: $2.Syntax.values)
     ..hasRequiredFields = false
   ;
 
-  Method._() : super();
-  factory Method({
-    $core.String? name,
-    $core.String? requestTypeUrl,
-    $core.bool? requestStreaming,
-    $core.String? responseTypeUrl,
-    $core.bool? responseStreaming,
-    $core.Iterable<$2.Option>? options,
-    $2.Syntax? syntax,
-  }) {
-    final _result = create();
-    if (name != null) {
-      _result.name = name;
-    }
-    if (requestTypeUrl != null) {
-      _result.requestTypeUrl = requestTypeUrl;
-    }
-    if (requestStreaming != null) {
-      _result.requestStreaming = requestStreaming;
-    }
-    if (responseTypeUrl != null) {
-      _result.responseTypeUrl = responseTypeUrl;
-    }
-    if (responseStreaming != null) {
-      _result.responseStreaming = responseStreaming;
-    }
-    if (options != null) {
-      _result.options.addAll(options);
-    }
-    if (syntax != null) {
-      _result.syntax = syntax;
-    }
-    return _result;
-  }
-  factory Method.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Method.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -186,8 +129,10 @@ class Method extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Method copyWith(void Function(Method) updates) => super.copyWith((message) => updates(message as Method)) as Method; // ignore: deprecated_member_use
+  Method copyWith(void Function(Method) updates) => super.copyWith((message) => updates(message as Method)) as Method;
+
   $pb.BuilderInfo get info_ => _i;
+
   @$core.pragma('dart2js:noInline')
   static Method create() => Method._();
   Method createEmptyInstance() => create();
@@ -255,28 +200,17 @@ class Method extends $pb.GeneratedMessage {
 }
 
 class Mixin extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'Mixin', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'google.protobuf'), createEmptyInstance: create)
-    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'name')
-    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'root')
+  factory Mixin() => create();
+  Mixin._() : super();
+  factory Mixin.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Mixin.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Mixin', package: const $pb.PackageName(_omitMessageNames ? '' : 'google.protobuf'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..aOS(2, _omitFieldNames ? '' : 'root')
     ..hasRequiredFields = false
   ;
 
-  Mixin._() : super();
-  factory Mixin({
-    $core.String? name,
-    $core.String? root,
-  }) {
-    final _result = create();
-    if (name != null) {
-      _result.name = name;
-    }
-    if (root != null) {
-      _result.root = root;
-    }
-    return _result;
-  }
-  factory Mixin.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Mixin.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -286,8 +220,10 @@ class Mixin extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Mixin copyWith(void Function(Mixin) updates) => super.copyWith((message) => updates(message as Mixin)) as Mixin; // ignore: deprecated_member_use
+  Mixin copyWith(void Function(Mixin) updates) => super.copyWith((message) => updates(message as Mixin)) as Mixin;
+
   $pb.BuilderInfo get info_ => _i;
+
   @$core.pragma('dart2js:noInline')
   static Mixin create() => Mixin._();
   Mixin createEmptyInstance() => create();
@@ -315,3 +251,6 @@ class Mixin extends $pb.GeneratedMessage {
   void clearRoot() => clearField(2);
 }
 
+
+const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

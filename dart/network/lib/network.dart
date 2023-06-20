@@ -47,8 +47,9 @@ class Network {
 
     outboundPeers[address] = client;
 
-    await client.handshake(
-        HandshakeReq(genesisBlockId: genesisBlockId, p2pAddress: localAddress));
+    await client.handshake(HandshakeReq()
+      ..genesisBlockId = genesisBlockId
+      ..p2pAddress = localAddress);
     return client;
   }
 }

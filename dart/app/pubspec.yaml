@@ -7,29 +7,20 @@ environment:
   sdk: ^3.0.0
 
 dependencies:
+  cryptography: ^2.5.0
+  cryptography_flutter: ^2.3.0
+  logging:
+  async:
+  integral_isolates: ^0.3.0+2
+  flutter_background: ^1.2.0
   blockchain:
     path: ../blockchain
   blockchain_codecs:
     path: ../codecs
-  blockchain_minting:
-    path: ../minting
-  blockchain_consensus:
-    path: ../consensus
-  blockchain_ledger:
-    path: ../ledger
+  blockchain_crypto:
+    path: ../crypto
   blockchain_protobuf:
     path: ../protobuf_dart
-  blockchain_common:
-    path: ../common
-  blockchain_network:
-    path: ../network
-  fixnum:
-  ipsum:
-  painter:
-  fpdart:
-  bit_array:
-  async:
-  graphview: ^1.1.1
   flutter:
     sdk: flutter
 
@@ -40,3 +31,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/

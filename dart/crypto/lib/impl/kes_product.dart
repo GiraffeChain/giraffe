@@ -30,10 +30,10 @@ class KesProductImpl extends KesProduct {
 
   Future<SignatureKesProduct> sign(
       SecretKeyKesProduct sk, List<int> message) async {
-    return SignatureKesProduct(
-        superSignature: sk.subSignature,
-        subSignature: await kesSum.sign(sk.subTree, message),
-        subRoot: (await kesSum.generateVerificationKey(sk.subTree)).value);
+    return SignatureKesProduct()
+      ..superSignature = sk.subSignature
+      ..subSignature = await kesSum.sign(sk.subTree, message)
+      ..subRoot = (await kesSum.generateVerificationKey(sk.subTree)).value;
   }
 
   Future<bool> verify(SignatureKesProduct signature, List<int> message,
@@ -142,14 +142,17 @@ class KesProductImpl extends KesProduct {
       SecretKeyKesProduct sk) async {
     final superTree = sk.superTree;
     if (superTree is KesMerkleNode) {
-      return VerificationKeyKesProduct(
-          value: await kesHelper.witness(sk.superTree),
-          step: await getCurrentStep(sk));
+      return VerificationKeyKesProduct()
+        ..value = await kesHelper.witness(sk.superTree)
+        ..step = await getCurrentStep(sk);
     } else if (superTree is KesSigningLeaf) {
-      return VerificationKeyKesProduct(
-          value: await kesHelper.witness(sk.superTree), step: 0);
+      return VerificationKeyKesProduct()
+        ..value = await kesHelper.witness(sk.superTree)
+        ..step = 0;
     } else {
-      return VerificationKeyKesProduct(value: Uint8List(32), step: 0);
+      return VerificationKeyKesProduct()
+        ..value = Uint8List(32)
+        ..step = 0;
     }
   }
 
@@ -316,8 +319,10 @@ class SecretKeyKesProduct {
       return Uint8List.fromList(bytes.sublist(cursor, cursor += 32));
     });
 
-    final kesSignature = SignatureKesSum(
-        verificationKey: vk, signature: signature, witness: witness);
+    final kesSignature = SignatureKesSum()
+      ..verificationKey = vk
+      ..signature = signature
+      ..witness.addAll(witness);
     return Tuple2(kesSignature, bytes.sublist(cursor));
   }
 
