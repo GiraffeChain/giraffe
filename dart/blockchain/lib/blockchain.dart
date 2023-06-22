@@ -7,6 +7,7 @@ import 'package:blockchain/validators.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_common/algebras/clock_algebra.dart';
 import 'package:blockchain_common/algebras/parent_child_tree_algebra.dart';
+import 'package:blockchain_common/interpreters/block_height_tree.dart';
 import 'package:blockchain_common/interpreters/clock.dart';
 import 'package:blockchain_common/interpreters/parent_child_tree.dart';
 import 'package:blockchain_consensus/algebras/consensus_validation_state_algebra.dart';
@@ -170,8 +171,17 @@ class Blockchain {
 
     log.info("Preparing LocalChain");
 
-    final localChain =
-        LocalChain(await currentEventIdGetterSetters.canonicalHead.get());
+    final blockHeightTree = BlockHeightTree(
+        dataStores.blockHeightTree,
+        await currentEventIdGetterSetters.blockHeightTree.get(),
+        dataStores.slotData,
+        parentChildTree,
+        currentEventIdGetterSetters.blockHeightTree.set);
+
+    final localChain = LocalChain(
+        await currentEventIdGetterSetters.canonicalHead.get(),
+        blockHeightTree,
+        (id) async => (await dataStores.slotData.getOrRaise(id)).height);
 
     final chainSelection = ChainSelection(dataStores.slotData.getOrRaise);
 
@@ -292,7 +302,7 @@ class Blockchain {
     unawaited(blockProducer.blocks.asyncMap(processBlock).drain());
   }
 
-  Stream<FullBlock> get blocks => localChain.adoptions.asyncMap((id) async {
+  Stream<FullBlock> get newBlocks => localChain.adoptions.asyncMap((id) async {
         final header = await dataStores.headers.getOrRaise(id);
         final body = await dataStores.bodies.getOrRaise(id);
         final transactions = [

@@ -11,6 +11,7 @@ dependencies:
   cryptography: ^2.5.0
   cryptography_flutter: ^2.3.0
   logging:
+  fixnum:
   async:
   integral_isolates: ^0.3.0+2
   flutter_background: ^1.2.0
@@ -22,6 +23,8 @@ dependencies:
     path: ../crypto
   blockchain_protobuf:
     path: ../protobuf_dart
+  blockchain_wallet:
+    path: ../wallet
   flutter:
     sdk: flutter
 

@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain_app/widgets/transact.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:im_animations/im_animations.dart';
 
@@ -18,9 +20,65 @@ class BlockchainPage extends StatefulWidget {
 
 class _BlockchainPageState extends State<BlockchainPage> {
   @override
-  Widget build(BuildContext context) {
-    return LatestBlockView(blockchain: widget.blockchain);
+  Widget build(BuildContext context) => DefaultTabController(
+        length: 2,
+        child: Scaffold(
+            appBar: _appBar(context),
+            body: Container(
+                constraints: const BoxConstraints.expand(),
+                decoration: const BoxDecoration(
+                    image: DecorationImage(
+                        image: AssetImage("assets/images/fractal7.png"),
+                        fit: BoxFit.none)),
+                child: _tabBarView(context))),
+      );
+
+  _tabBar(BuildContext context) {
+    return const TabBar(tabs: [
+      Tab(icon: Icon(Icons.square_outlined)),
+      Tab(icon: Icon(Icons.wallet))
+    ]);
   }
+
+  _tabBarView(BuildContext context) {
+    return TabBarView(children: [
+      LatestBlockView(blockchain: widget.blockchain),
+      Expanded(child: TransactView())
+    ]);
+  }
+
+  static const _metadataTextStyle =
+      TextStyle(fontSize: 12, fontWeight: FontWeight.bold);
+
+  AppBar _appBar(BuildContext context) {
+    final slotTicker = _slotText;
+    return AppBar(
+      title: StreamBuilder(
+        stream: widget.blockchain.newBlocks
+            .map((b) => b.header)
+            .asyncMap((header) async => [
+                  const VerticalDivider(),
+                  Text((await header.id).show, style: _metadataTextStyle),
+                  const VerticalDivider(),
+                  Text("Height: ${header.height}", style: _metadataTextStyle)
+                ]),
+        builder: (context, snapshot) => Row(children: <Widget>[
+          const Text("Blockchain"),
+          ...?snapshot.data,
+          slotTicker
+        ]),
+      ),
+      bottom: _tabBar(context),
+    );
+  }
+
+  get _slotText => StreamBuilder(
+      stream: widget.blockchain.clock.slots,
+      builder: (context, snapshot) => Row(children: [
+            const VerticalDivider(),
+            Text("Slot: ${snapshot.data ?? Int64.ZERO}",
+                style: _metadataTextStyle),
+          ]));
 }
 
 class LatestBlockView extends StatelessWidget {

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:blockchain_common/models/common.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -20,5 +21,14 @@ abstract class ClockAlgebra {
   Tuple2<Int64, Int64> epochRange(Int64 epoch) {
     final spe = slotsPerEpoch;
     return Tuple2(epoch * spe, (epoch + 1) * spe - 1);
+  }
+
+  Stream<Slot> get slots async* {
+    var s = globalSlot;
+    while (true) {
+      await delayedUntilSlot(s);
+      yield s;
+      s++;
+    }
   }
 }

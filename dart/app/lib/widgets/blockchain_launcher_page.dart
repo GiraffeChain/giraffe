@@ -45,16 +45,16 @@ class _BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-      body: Container(
-          constraints: const BoxConstraints.expand(),
-          decoration: const BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage("assets/images/fractal2.png"),
-                  fit: BoxFit.cover)),
-          child: (blockchain != null)
-              ? BlockchainPage(blockchain: blockchain!)
-              : loading));
+  Widget build(BuildContext context) => blockchain == null
+      ? Scaffold(
+          body: Container(
+              constraints: const BoxConstraints.expand(),
+              decoration: const BoxDecoration(
+                  image: DecorationImage(
+                      image: AssetImage("assets/images/fractal2.png"),
+                      fit: BoxFit.cover)),
+              child: loading))
+      : BlockchainPage(blockchain: blockchain!);
 
   Widget get loading => const Center(
         child: CircularProgressIndicator(color: Colors.white),
