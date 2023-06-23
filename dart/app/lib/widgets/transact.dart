@@ -4,9 +4,11 @@ import 'dart:convert';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_wallet/wallet.dart';
+import 'package:fast_base58/fast_base58.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart' show FpdartOnMutableIterable, Tuple2;
+import 'package:flutter/services.dart';
 
 class TransactView extends StatefulWidget {
   final Wallet wallet;
@@ -80,7 +82,7 @@ class TransactViewState extends State<TransactView> {
     }
 
     for (final e in _newOutputEntries) {
-      final lockAddress = LockAddress()..value = base64Decode(e.second);
+      final lockAddress = LockAddress()..value = Base58Decode(e.second);
       final value = Value()
         ..paymentToken = (PaymentToken()..quantity = Int64.parseInt(e.first));
       final output = TransactionOutput()
@@ -140,6 +142,7 @@ class TransactOutputsTile extends StatefulWidget {
 }
 
 class _TransactOutputsTileState extends State<TransactOutputsTile> {
+  // (quantity, address)
   final List<Tuple2<String, String>> _entries = [];
 
   @override
@@ -187,11 +190,11 @@ class _TransactOutputsTileState extends State<TransactOutputsTile> {
       cells: [
         DataCell(TextFormField(
           initialValue: entry.first,
-          onSaved: (value) => _updateEntryQuantity(index, value ?? ""),
+          onChanged: (value) => _updateEntryQuantity(index, value ?? ""),
         )),
         DataCell(TextFormField(
           initialValue: entry.second,
-          onSaved: (value) => _updateEntryAddress(index, value ?? ""),
+          onChanged: (value) => _updateEntryAddress(index, value ?? ""),
         )),
         DataCell(
           IconButton(
@@ -205,20 +208,23 @@ class _TransactOutputsTileState extends State<TransactOutputsTile> {
 
   _updateEntryQuantity(int index, String value) {
     setState(() {
-      setState(() => _entries[index] = _entries[index].copyWith(value2: value));
+      _entries[index] = _entries[index].copyWith(value1: value);
       widget.onEntriesChanged(_entries);
     });
   }
 
   _updateEntryAddress(int index, String value) {
     setState(() {
-      setState(() => _entries[index] = _entries[index].copyWith(value1: value));
+      _entries[index] = _entries[index].copyWith(value2: value);
       widget.onEntriesChanged(_entries);
     });
   }
 
   _addEntry() {
-    setState(() => _entries.add(const Tuple2("100", "")));
+    setState(() {
+      _entries.add(const Tuple2("100", ""));
+      widget.onEntriesChanged(_entries);
+    });
   }
 
   _deleteEntry(int index) {
@@ -261,8 +267,14 @@ class _TransactInputsTileState extends State<TransactInputsTile> {
       cells: [
         DataCell(Text("${entry.value.value.paymentToken.quantity}",
             style: const TextStyle(fontSize: 12))),
-        DataCell(Text(entry.value.lockAddress.show,
-            style: const TextStyle(fontSize: 12))),
+        DataCell(TextButton(
+          onPressed: () {
+            Clipboard.setData(
+                ClipboardData(text: entry.value.lockAddress.show));
+          },
+          child: Text(entry.value.lockAddress.show,
+              style: const TextStyle(fontSize: 12)),
+        )),
         DataCell(Checkbox(
             value: _selectedOutputs.contains(entry.key),
             onChanged: (newValue) =>

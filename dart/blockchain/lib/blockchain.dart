@@ -34,7 +34,9 @@ import 'package:blockchain_minting/interpreters/operational_key_maker.dart';
 import 'package:blockchain_minting/interpreters/staking.dart';
 import 'package:blockchain_minting/interpreters/vrf_calculator.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/streams.dart';
 
@@ -50,6 +52,7 @@ class Blockchain {
   final Validators validators;
   final BlockProducerAlgebra blockProducer;
   final MempoolAlgebra mempool;
+  final WalletESS walletESS;
 
   final log = Logger("Blockchain");
 
@@ -65,6 +68,7 @@ class Blockchain {
     this.validators,
     this.blockProducer,
     this.mempool,
+    this.walletESS,
   );
 
   static Future<Blockchain> init(
@@ -235,6 +239,17 @@ class Blockchain {
               validators.bodySemantic, validators.bodyAuthorization)),
     );
 
+    log.info("Initializing Wallet ESS");
+    final wallet = Wallet.empty();
+    await wallet.addPrivateGenesisKey();
+    final walletESS = WalletEventSourcedState.make(
+      wallet,
+      dataStores.bodies.getOrRaise,
+      dataStores.transactions.getOrRaise,
+      parentChildTree,
+      genesisBlock.header.parentHeaderId,
+    );
+
     log.info("Blockchain Initialized");
 
     final blockchain = Blockchain(
@@ -249,6 +264,7 @@ class Blockchain {
       validators,
       blockProducer,
       mempool,
+      walletESS,
     );
 
     return blockchain;
@@ -318,4 +334,46 @@ class Blockchain {
           ..fullBody = (FullBlockBody()..transactions.addAll(transactions));
         return fullBlock;
       });
+
+  Stream<TraversalStep> get traversal {
+    BlockId? lastId = null;
+    return localChain.adoptions
+        .asyncExpand((id) => (lastId == null)
+            ? Stream.value(TraversalStep_Applied(id))
+            : traversalBetween(lastId!, id))
+        .map((step) {
+      lastId = step.blockId;
+      return step;
+    });
+  }
+
+  Stream<TraversalStep> get traversalFromGenesis =>
+      Stream.fromFuture(localChain.blockIdAtHeight(Int64(1)))
+          .asyncExpand((genesisId) => Stream.fromFuture(localChain.currentHead)
+              .asyncExpand((head) => traversalBetween(genesisId!, head)))
+          .concatWith([traversal]);
+
+  Stream<TraversalStep> traversalBetween(BlockId a, BlockId b) =>
+      Stream.fromFuture(parentChildTree.findCommmonAncestor(a, b)).expand(
+          (unapplyApply) => <TraversalStep>[]
+            ..addAll(unapplyApply.first.tail
+                .toNullable()!
+                .map((id) => TraversalStep_Unapplied(id)))
+            ..addAll(unapplyApply.second.tail
+                .toNullable()!
+                .map((id) => TraversalStep_Applied(id))));
+}
+
+abstract class TraversalStep {
+  final BlockId blockId;
+
+  TraversalStep(this.blockId);
+}
+
+class TraversalStep_Applied extends TraversalStep {
+  TraversalStep_Applied(super.blockId);
+}
+
+class TraversalStep_Unapplied extends TraversalStep {
+  TraversalStep_Unapplied(super.blockId);
 }

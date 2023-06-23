@@ -12,6 +12,7 @@ environment:
 dependencies:
   fixnum:
   fpdart:
+  collection:
   blockchain_protobuf:
     path: ../protobuf_dart
   blockchain_common:

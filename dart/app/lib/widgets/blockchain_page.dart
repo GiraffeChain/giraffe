@@ -9,6 +9,7 @@ import 'package:blockchain_wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:im_animations/im_animations.dart';
+import 'package:rxdart/rxdart.dart';
 
 class BlockchainPage extends StatefulWidget {
   final Blockchain blockchain;
@@ -44,24 +45,10 @@ class _BlockchainPageState extends State<BlockchainPage> {
   _tabBarView(BuildContext context) {
     return TabBarView(children: [
       LatestBlockView(blockchain: widget.blockchain),
-      FutureBuilder(
-        future: Wallet.initFromGenesis(
-            Stream.fromFuture(widget.blockchain.localChain.currentHead)
-                .asyncMap(widget.blockchain.dataStores.slotData.getOrRaise)
-                .asyncExpand((head) => Stream.fromIterable(
-                    Iterable.generate(head.height.toInt(), (idx) => idx + 1)))
-                .asyncMap((height) async {
-          final id = (await widget.blockchain.localChain
-              .blockIdAtHeight(Int64(height)))!;
-          final header =
-              await widget.blockchain.dataStores.headers.getOrRaise(id);
-          final body = await widget.blockchain.dataStores.bodies.getOrRaise(id);
-          final transactions = await Future.wait(body.transactionIds
-              .map((widget.blockchain.dataStores.transactions.getOrRaise)));
-          return FullBlock()
-            ..header = header
-            ..fullBody = (FullBlockBody()..transactions.addAll(transactions));
-        })),
+      StreamBuilder(
+        stream: Stream.fromFuture(widget.blockchain.localChain.currentHead)
+            .concatWith([widget.blockchain.localChain.adoptions]).asyncMap(
+                (id) => widget.blockchain.walletESS.stateAt(id)),
         builder: (context, snapshot) => snapshot.hasData
             ? TransactView(
                 wallet: snapshot.data!,

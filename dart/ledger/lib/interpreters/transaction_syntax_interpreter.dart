@@ -1,5 +1,4 @@
 import 'package:blockchain_codecs/codecs.dart';
-import 'package:blockchain_common/utils.dart';
 import 'package:blockchain_ledger/algebras/transaction_syntax_verifier.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:collection/collection.dart';
@@ -102,9 +101,9 @@ class TransactionSyntaxInterpreter extends TransactionSyntaxVerifier {
     }
     for (final output in transaction.outputs) {
       if (output.value.hasPaymentToken()) {
-        paymentTokenBalance -= output.value.paymentToken.quantity.toBigInt;
+        paymentTokenBalance -= output.value.paymentToken.quantity;
       } else if (output.value.hasStakingToken()) {
-        stakingTokenBalance -= output.value.stakingToken.quantity.toBigInt;
+        stakingTokenBalance -= output.value.stakingToken.quantity;
       }
     }
     if (paymentTokenBalance < Int64.ZERO || stakingTokenBalance < Int64.ZERO) {

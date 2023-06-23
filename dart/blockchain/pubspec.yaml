@@ -32,5 +32,7 @@ dependencies:
     path: ../ledger
   blockchain_crypto:
     path: ../crypto
+  blockchain_wallet:
+    path: ../wallet
 dev_dependencies:    
   build_runner: ^2.3.3
