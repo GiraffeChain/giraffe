@@ -130,7 +130,8 @@ extension TransactionCodecs on Transaction {
 }
 
 extension TransactionInputCodecs on TransactionInput {
-  List<int> get immutableBytes => lock.immutableBytes
+  List<int> get immutableBytes => <int>[]
+    ..addAll(lock.immutableBytes)
     ..addAll(key.immutableBytes)
     ..addAll(value.immutableBytes);
 }
@@ -182,6 +183,8 @@ extension StakingTokenCodecs on StakingToken {
 
 extension LockAddressCodecs on LockAddress {
   List<int> get immutableBytes => value;
+
+  String get show => this.value.base58;
 }
 
 extension LockCodecs on Lock {

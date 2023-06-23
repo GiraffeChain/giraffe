@@ -31,7 +31,7 @@ class BlockchainGenesis {
     int? localStakerIndex,
   })  : timestamp = timestamp ??
             Int64(DateTime.now()
-                .add(Duration(seconds: 10))
+                .add(Duration(seconds: 5))
                 .millisecondsSinceEpoch),
         stakerCount = stakerCount ?? 1,
         stakes = stakes ??
@@ -75,8 +75,8 @@ class BlockchainConsensus {
         slotDuration = slotDuration ?? Duration(milliseconds: 1000),
         forwardBiastedSlotWindow = forwardBiastedSlotWindow ?? Int64(50),
         operationalPeriodsPerEpoch = operationalPeriodsPerEpoch ?? Int64(2),
-        kesKeyHours = kesKeyHours ?? 9,
-        kesKeyMinutes = kesKeyMinutes ?? 9;
+        kesKeyHours = kesKeyHours ?? 7,
+        kesKeyMinutes = kesKeyMinutes ?? 7;
 
   int get chainSelectionSWindow =>
       (Rational(chainSelectionKLookback.toBigInt, BigInt.from(4)) *

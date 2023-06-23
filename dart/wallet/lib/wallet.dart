@@ -13,29 +13,46 @@ class Wallet {
   final Map<LockAddress, Signer> signers;
 
   Wallet(
-      {this.spendableOutputs = const {},
-      this.locks = const {},
-      this.signers = const {}});
+      {required this.spendableOutputs,
+      required this.locks,
+      required this.signers});
 
-  void applyTransaction(Transaction transaction) {
-    transaction.inputs.forEach((i) => spendableOutputs.remove(i));
+  factory Wallet.empty() {
+    return Wallet(spendableOutputs: {}, locks: {}, signers: {});
+  }
+
+  bool applyTransaction(Transaction transaction) {
+    var modified = false;
+    for (final input in transaction.inputs) {
+      if (spendableOutputs.remove(input.reference) != null) modified = true;
+    }
     final txId = transaction.id;
     transaction.outputs.mapWithIndex((t, index) {
       final lock = locks[t.lockAddress];
       if (lock != null) {
         spendableOutputs[TransactionOutputReference()
           ..transactionId = txId
-          ..index = index];
+          ..index = index] = t;
+        modified = true;
       }
     });
+    return modified;
   }
 
   static Future<Wallet> initFromGenesis(Stream<FullBlock> blocks) async {
     final genesisKeyPair = await ed25519.generateKeyPairFromSeed(Uint8List(32));
     final lock = Lock()..ed25519 = (Lock_Ed25519()..vk = genesisKeyPair.vk);
     final lockAddress = lock.address;
-    final Signer signer = (tx) => Future.value(tx);
-    final wallet = Wallet();
+    // TODO
+    final Signer signer = (tx) async {
+      for (final input in tx.inputs) {
+        if (input.lock == lock)
+          input.key =
+              (Key()..ed25519 = (Key_Ed25519()..signature = Uint8List(64)));
+      }
+      return tx;
+    };
+    final wallet = Wallet.empty();
     wallet.locks[lockAddress] = lock;
     wallet.signers[lockAddress] = signer;
     await blocks

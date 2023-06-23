@@ -23,6 +23,7 @@ import 'package:blockchain_consensus/models/vrf_config.dart';
 import 'package:blockchain_consensus/utils.dart';
 import 'package:blockchain_crypto/kes.dart';
 import 'package:blockchain_crypto/utils.dart';
+import 'package:blockchain_ledger/algebras/mempool_algebra.dart';
 import 'package:blockchain_ledger/interpreters/mempool.dart';
 import 'package:blockchain_ledger/models/body_validation_context.dart';
 import 'package:blockchain_minting/algebras/block_producer_algebra.dart';
@@ -48,6 +49,7 @@ class Blockchain {
   final ChainSelection chainSelection;
   final Validators validators;
   final BlockProducerAlgebra blockProducer;
+  final MempoolAlgebra mempool;
 
   final log = Logger("Blockchain");
 
@@ -62,6 +64,7 @@ class Blockchain {
     this.chainSelection,
     this.validators,
     this.blockProducer,
+    this.mempool,
   );
 
   static Future<Blockchain> init(
@@ -245,6 +248,7 @@ class Blockchain {
       chainSelection,
       validators,
       blockProducer,
+      mempool,
     );
 
     return blockchain;

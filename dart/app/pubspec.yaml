@@ -13,6 +13,7 @@ dependencies:
   logging:
   fixnum:
   async:
+  fpdart:
   integral_isolates: ^0.3.0+2
   flutter_background: ^1.2.0
   blockchain:

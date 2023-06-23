@@ -5,6 +5,7 @@ import 'package:blockchain/blockchain.dart';
 import 'package:blockchain_app/widgets/transact.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:im_animations/im_animations.dart';
@@ -35,15 +36,43 @@ class _BlockchainPageState extends State<BlockchainPage> {
 
   _tabBar(BuildContext context) {
     return const TabBar(tabs: [
-      Tab(icon: Icon(Icons.square_outlined)),
-      Tab(icon: Icon(Icons.wallet))
+      Tab(icon: Icon(Icons.square_outlined), child: Text("Chain")),
+      Tab(icon: Icon(Icons.send), child: Text("Send")),
     ]);
   }
 
   _tabBarView(BuildContext context) {
     return TabBarView(children: [
       LatestBlockView(blockchain: widget.blockchain),
-      Expanded(child: TransactView())
+      FutureBuilder(
+        future: Wallet.initFromGenesis(
+            Stream.fromFuture(widget.blockchain.localChain.currentHead)
+                .asyncMap(widget.blockchain.dataStores.slotData.getOrRaise)
+                .asyncExpand((head) => Stream.fromIterable(
+                    Iterable.generate(head.height.toInt(), (idx) => idx + 1)))
+                .asyncMap((height) async {
+          final id = (await widget.blockchain.localChain
+              .blockIdAtHeight(Int64(height)))!;
+          final header =
+              await widget.blockchain.dataStores.headers.getOrRaise(id);
+          final body = await widget.blockchain.dataStores.bodies.getOrRaise(id);
+          final transactions = await Future.wait(body.transactionIds
+              .map((widget.blockchain.dataStores.transactions.getOrRaise)));
+          return FullBlock()
+            ..header = header
+            ..fullBody = (FullBlockBody()..transactions.addAll(transactions));
+        })),
+        builder: (context, snapshot) => snapshot.hasData
+            ? TransactView(
+                wallet: snapshot.data!,
+                processTransaction: (tx) async {
+                  await widget.blockchain.dataStores.transactions
+                      .put(tx.id, tx);
+                  await widget.blockchain.mempool.add(tx.id);
+                },
+              )
+            : const CircularProgressIndicator(),
+      )
     ]);
   }
 

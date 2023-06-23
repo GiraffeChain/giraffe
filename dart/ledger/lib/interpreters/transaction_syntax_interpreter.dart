@@ -107,8 +107,7 @@ class TransactionSyntaxInterpreter extends TransactionSyntaxVerifier {
         stakingTokenBalance -= output.value.stakingToken.quantity.toBigInt;
       }
     }
-    if (paymentTokenBalance < BigInt.zero ||
-        stakingTokenBalance < BigInt.zero) {
+    if (paymentTokenBalance < Int64.ZERO || stakingTokenBalance < Int64.ZERO) {
       return ["InsufficientFunds"];
     }
     return [];
