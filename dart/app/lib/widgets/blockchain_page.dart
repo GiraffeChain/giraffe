@@ -5,7 +5,6 @@ import 'package:blockchain/blockchain.dart';
 import 'package:blockchain_app/widgets/transact.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:blockchain_wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:im_animations/im_animations.dart';
@@ -79,9 +78,8 @@ class _BlockchainPageState extends State<BlockchainPage> {
                   Text("Height: ${header.height}", style: _metadataTextStyle)
                 ]),
         builder: (context, snapshot) => Row(children: <Widget>[
-          const Text("Blockchain"),
+          slotTicker,
           ...?snapshot.data,
-          slotTicker
         ]),
       ),
       bottom: _tabBar(context),

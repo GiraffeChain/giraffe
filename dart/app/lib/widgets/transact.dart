@@ -50,11 +50,6 @@ class TransactViewState extends State<TransactView> {
                       body: TransactOutputsTile(
                           onEntriesChanged: (entries) =>
                               _newOutputEntries = entries)),
-                  ExpansionPanelRadio(
-                      value: "Schedule",
-                      headerBuilder: (context, isExpanded) =>
-                          const ListTile(title: Text("Schedule")),
-                      body: TransactScheduleTile()),
                 ]),
               ),
             ),
@@ -113,22 +108,6 @@ class TransactViewState extends State<TransactView> {
       _selectedInputs = {};
       _newOutputEntries = [];
     });
-  }
-}
-
-class TransactScheduleTile extends StatefulWidget {
-  TransactScheduleTile({
-    super.key,
-  });
-
-  @override
-  State<TransactScheduleTile> createState() => _TransactScheduleTileState();
-}
-
-class _TransactScheduleTileState extends State<TransactScheduleTile> {
-  @override
-  Widget build(BuildContext context) {
-    return const ListTile(title: Text("TODO"));
   }
 }
 
