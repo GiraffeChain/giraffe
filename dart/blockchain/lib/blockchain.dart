@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:blockchain/config.dart';
 import 'package:blockchain/data_stores.dart';
@@ -33,6 +35,8 @@ import 'package:blockchain_minting/interpreters/in_memory_secure_store.dart';
 import 'package:blockchain_minting/interpreters/operational_key_maker.dart';
 import 'package:blockchain_minting/interpreters/staking.dart';
 import 'package:blockchain_minting/interpreters/vrf_calculator.dart';
+import 'package:blockchain_network/blockchain_p2p_handler.dart';
+import 'package:blockchain_network/p2p_server.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
@@ -52,6 +56,7 @@ class Blockchain {
   final Validators validators;
   final BlockProducerAlgebra blockProducer;
   final MempoolAlgebra mempool;
+  final P2PServer p2pServer;
   final WalletESS walletESS;
 
   final log = Logger("Blockchain");
@@ -68,6 +73,7 @@ class Blockchain {
     this.validators,
     this.blockProducer,
     this.mempool,
+    this.p2pServer,
     this.walletESS,
   );
 
@@ -241,6 +247,26 @@ class Blockchain {
       blockPacker,
     );
 
+    log.info("Preparing P2P Network");
+
+    final secureRandom = Random.secure();
+    final p2pId = List.generate(32, (_) => secureRandom.nextInt(255));
+    final p2pServer = P2PServer(
+        Uint8List.fromList(p2pId),
+        config.p2p.bindHost,
+        config.p2p.bindPort,
+        Stream.fromIterable(config.p2p.knownPeers),
+        (socket) => BlockchainDataGossipHandler(
+              socket: socket,
+              blockIdNotified: (BlockId) {},
+              fetchLocalBlockBody: dataStores.bodies.get,
+              fetchLocalHeader: dataStores.headers.get,
+              fetchLocalTransaction: dataStores.transactions.get,
+              transactionIdNotified: (TransactionId) {},
+            ));
+
+    await p2pServer.start();
+
     log.info("Initializing Wallet ESS");
     final wallet = Wallet.empty();
     await wallet.addPrivateGenesisKey();
@@ -266,6 +292,7 @@ class Blockchain {
       validators,
       blockProducer,
       mempool,
+      p2pServer,
       walletESS,
     );
 

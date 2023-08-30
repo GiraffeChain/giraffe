@@ -83,6 +83,13 @@ packages:
       relative: true
     source: path
     version: "1.0.0+1"
+  blockchain_network:
+    dependency: "direct main"
+    description:
+      path: "../network"
+      relative: true
+    source: path
+    version: "2.0.0+1"
   blockchain_protobuf:
     dependency: "direct main"
     description:
@@ -177,6 +184,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
+  clock:
+    dependency: transitive
+    description:
+      name: clock
+      sha256: cb6d7f03e1de671e34607e909a7213e31d7752be4fb66a86d29fe1eb14bfb5cf
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   code_builder:
     dependency: transitive
     description:
@@ -293,10 +308,10 @@ packages:
     dependency: transitive
     description:
       name: grpc
-      sha256: "4e9bff1ebb4ff370cf471b1ab85007b408ade867dcc34b551eee7ee7da573002"
+      sha256: "220ffb2218288f4e7dea487242e08b9c6277596d9b6f3f10ba50be96771a032d"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.2"
+    version: "3.2.3"
   hashlib:
     dependency: transitive
     description:
@@ -317,10 +332,10 @@ packages:
     dependency: transitive
     description:
       name: http2
-      sha256: "58805ebc6513eed3b98ee0a455a8357e61d187bf2e0fdc1e53120770f78de258"
+      sha256: "38db0c4aa9f1cd238a5d2e86aa0cc7cc91c77e0c6c94ba64bbe85e4ff732a952"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.1"
+    version: "2.2.0"
   http_multi_server:
     dependency: transitive
     description:
@@ -445,10 +460,10 @@ packages:
     dependency: transitive
     description:
       name: protobuf
-      sha256: "4034a02b7e231e7e60bff30a8ac13a7347abfdac0798595fae0b90a3f0afe759"
+      sha256: "68645b24e0716782e58948f8467fd42a880f255096a821f9e7d0ec625b00c84d"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   pub_semver:
     dependency: transitive
     description:

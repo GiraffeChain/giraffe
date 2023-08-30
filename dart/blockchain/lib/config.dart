@@ -5,15 +5,15 @@ import 'package:rational/rational.dart';
 class BlockchainConfig {
   final BlockchainGenesis genesis;
   final BlockchainConsensus consensus;
-  final BlockchainRpc rpc;
+  final BlockchainP2P p2p;
 
   BlockchainConfig(
       {BlockchainGenesis? genesis,
       BlockchainConsensus? consensus,
-      BlockchainRpc? rpc})
+      BlockchainP2P? p2p})
       : genesis = genesis ?? BlockchainGenesis(),
         consensus = consensus ?? BlockchainConsensus(),
-        rpc = rpc ?? BlockchainRpc();
+        p2p = p2p ?? BlockchainP2P();
 
   static final BlockchainConfig defaultConfig = BlockchainConfig();
 }
@@ -90,13 +90,13 @@ class BlockchainConsensus {
       epochLength ~/ operationalPeriodsPerEpoch;
 }
 
-class BlockchainRpc {
-  final bool enable;
+class BlockchainP2P {
   final String bindHost;
   final int bindPort;
+  final List<String> knownPeers;
 
-  BlockchainRpc({bool? enable, String? bindHost, int? bindPort})
-      : enable = enable ?? true,
-        bindHost = bindHost ?? "0.0.0.0",
-        bindPort = bindPort ?? 9084;
+  BlockchainP2P({String? bindHost, int? bindPort, List<String>? knownPeers})
+      : bindHost = bindHost ?? "0.0.0.0",
+        bindPort = bindPort ?? 2023,
+        knownPeers = knownPeers ?? [];
 }

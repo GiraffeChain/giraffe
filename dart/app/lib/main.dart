@@ -45,27 +45,23 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // home: BlockchainWidgetTester(),
-      home: _home,
+      home: _home(context),
       onGenerateRoute: FluroRouter.appRouter.generator,
     );
   }
 
-  get _home => Scaffold(
-        body: Container(
-            constraints: const BoxConstraints.expand(),
-            child: Center(child: Builder(builder: launchButton))),
+  Widget _home(BuildContext context) => Scaffold(
+        body: SizedBox.fromSize(
+          size: Size(500, 500),
+          child: BlockchainConfigForm(
+            onSubmit: (context, config) => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => BlockchainLauncherPage(
+                        isolate: _isolate, config: config))),
+          ),
+        ),
       );
-
-  Widget launchButton(BuildContext context) => TextButton(
-      onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => BlockchainLauncherPage(isolate: _isolate))),
-      style: const ButtonStyle(
-          backgroundColor: MaterialStatePropertyAll<Color>(Colors.white),
-          padding: MaterialStatePropertyAll(EdgeInsets.all(40))),
-      child: const Text("Launch"));
 }
 
 initRouter() {

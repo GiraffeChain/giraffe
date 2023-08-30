@@ -32,6 +32,8 @@ dependencies:
     path: ../crypto
   blockchain_protobuf:
     path: ../protobuf_dart
+  blockchain_network:
+    path: ../network
   blockchain_wallet:
     path: ../wallet
   flutter:
