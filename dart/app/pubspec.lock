@@ -210,6 +210,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.0"
+  get_time_ago:
+    dependency: "direct main"
+    description:
+      name: get_time_ago
+      sha256: "114b4ac06c2a2b8dc9ba091f6c46d76587e0be6a29a5ba2e343f243403ee9b15"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.5"
   googleapis_auth:
     dependency: transitive
     description:
@@ -282,6 +290,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.0+2"
+  intl:
+    dependency: "direct main"
+    description:
+      name: intl
+      sha256: "3bc132a9dbce73a7e4a21a17d06e1878839ffbf975568bc875c60537824b0c4d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.18.1"
   js:
     dependency: transitive
     description:

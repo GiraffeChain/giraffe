@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -35,21 +34,16 @@ class TransactViewState extends State<TransactView> {
               child: SingleChildScrollView(
                 child: ExpansionPanelList.radio(children: [
                   ExpansionPanelRadio(
-                      value: "Inputs",
-                      headerBuilder: (context, isExpanded) =>
-                          const ListTile(title: Text("Inputs")),
-                      body: TransactInputsTile(
-                        spendableOutputs: widget.wallet.spendableOutputs,
-                        onSelectionChanged: (entries) =>
-                            _selectedInputs = entries,
-                      )),
+                    value: "Inputs",
+                    headerBuilder: (context, isExpanded) =>
+                        const ListTile(title: Text("Inputs")),
+                    body: _inputsTile(),
+                  ),
                   ExpansionPanelRadio(
                       value: "Outputs",
                       headerBuilder: (context, isExpanded) =>
                           const ListTile(title: Text("Outputs")),
-                      body: TransactOutputsTile(
-                          onEntriesChanged: (entries) =>
-                              _newOutputEntries = entries)),
+                      body: _outputsTile()),
                 ]),
               ),
             ),
@@ -62,6 +56,13 @@ class TransactViewState extends State<TransactView> {
       ),
     );
   }
+
+  Int64 _inputSum() => _selectedInputs
+      .toList()
+      .map((v) => widget.wallet.spendableOutputs[v]!.value)
+      .where((v) => v.hasPaymentToken())
+      .map((v) => v.paymentToken.quantity)
+      .fold(Int64.ZERO, (a, b) => a + b);
 
   Future<Transaction> _createTransaction() async {
     var tx = Transaction();
@@ -109,35 +110,23 @@ class TransactViewState extends State<TransactView> {
       _newOutputEntries = [];
     });
   }
-}
 
-class TransactOutputsTile extends StatefulWidget {
-  final void Function(List<Tuple2<String, String>>) onEntriesChanged;
-
-  TransactOutputsTile({super.key, required this.onEntriesChanged});
-
-  @override
-  State<TransactOutputsTile> createState() => _TransactOutputsTileState();
-}
-
-class _TransactOutputsTileState extends State<TransactOutputsTile> {
-  // (quantity, address)
-  final List<Tuple2<String, String>> _entries = [];
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _outputsTile() {
     return Column(
       children: [
         DataTable(
-          columns: header,
-          rows: _entries.mapWithIndex(_entryRow).toList(),
+          columns: _outputTableHeader,
+          rows: [
+            ..._newOutputEntries.mapWithIndex(_outputEntryRow).toList(),
+            _feeOutputRow()
+          ],
         ),
-        IconButton(onPressed: _addEntry, icon: const Icon(Icons.add))
+        IconButton(onPressed: _addOutputEntry, icon: const Icon(Icons.add))
       ],
     );
   }
 
-  static const header = <DataColumn>[
+  static const _outputTableHeader = <DataColumn>[
     DataColumn(
       label: Expanded(
         child: Text(
@@ -164,83 +153,82 @@ class _TransactOutputsTileState extends State<TransactOutputsTile> {
     ),
   ];
 
-  DataRow _entryRow(Tuple2<String, String> entry, int index) {
+  DataRow _outputEntryRow(Tuple2<String, String> entry, int index) {
     return DataRow(
       cells: [
         DataCell(TextFormField(
           initialValue: entry.first,
-          onChanged: (value) => _updateEntryQuantity(index, value ?? ""),
+          onChanged: (value) => _updateOutputEntryQuantity(index, value),
         )),
         DataCell(TextFormField(
           initialValue: entry.second,
-          onChanged: (value) => _updateEntryAddress(index, value ?? ""),
+          onChanged: (value) => _updateOutputEntryAddress(index, value),
         )),
         DataCell(
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () => _deleteEntry(index),
+            onPressed: () => _deleteOutputEntry(index),
           ),
         ),
       ],
     );
   }
 
-  _updateEntryQuantity(int index, String value) {
+  DataRow _feeOutputRow() {
+    final outputSum = _newOutputEntries
+        .map((t) => Int64.parseInt(t.first))
+        .fold(Int64.ZERO, (a, b) => a + b);
+    final fee = _inputSum() - outputSum;
+
+    return DataRow(cells: [
+      DataCell(Text(fee.toString())),
+      const DataCell(Text("Transaction Fee")),
+      const DataCell(IconButton(
+        icon: Icon(Icons.cancel),
+        onPressed: null,
+      )),
+    ]);
+  }
+
+  _updateOutputEntryQuantity(int index, String value) {
     setState(() {
-      _entries[index] = _entries[index].copyWith(value1: value);
-      widget.onEntriesChanged(_entries);
+      _newOutputEntries[index] =
+          _newOutputEntries[index].copyWith(value1: value);
     });
   }
 
-  _updateEntryAddress(int index, String value) {
+  _updateOutputEntryAddress(int index, String value) {
     setState(() {
-      _entries[index] = _entries[index].copyWith(value2: value);
-      widget.onEntriesChanged(_entries);
+      _newOutputEntries[index] =
+          _newOutputEntries[index].copyWith(value2: value);
     });
   }
 
-  _addEntry() {
+  _addOutputEntry() {
     setState(() {
-      _entries.add(const Tuple2("100", ""));
-      widget.onEntriesChanged(_entries);
+      _newOutputEntries.add(const Tuple2("100", ""));
     });
   }
 
-  _deleteEntry(int index) {
+  _deleteOutputEntry(int index) {
     setState(() {
-      _entries.removeAt(index);
-      widget.onEntriesChanged(_entries);
+      _newOutputEntries.removeAt(index);
     });
   }
-}
 
-class TransactInputsTile extends StatefulWidget {
-  final Map<TransactionOutputReference, TransactionOutput> spendableOutputs;
-  final void Function(Set<TransactionOutputReference>) onSelectionChanged;
-  const TransactInputsTile({
-    super.key,
-    required this.spendableOutputs,
-    required this.onSelectionChanged,
-  });
-
-  @override
-  State<TransactInputsTile> createState() => _TransactInputsTileState();
-}
-
-class _TransactInputsTileState extends State<TransactInputsTile> {
-  final _selectedOutputs = <TransactionOutputReference>{};
-  @override
-  Widget build(BuildContext context) {
+  Widget _inputsTile() {
     return Container(
-        child: widget.spendableOutputs.isEmpty
+        child: widget.wallet.spendableOutputs.isEmpty
             ? const Text("Empty wallet")
             : DataTable(
                 columns: header,
-                rows: widget.spendableOutputs.entries.map(entryRow).toList(),
+                rows: widget.wallet.spendableOutputs.entries
+                    .map(_inputEntryRow)
+                    .toList(),
               ));
   }
 
-  DataRow entryRow(
+  DataRow _inputEntryRow(
       MapEntry<TransactionOutputReference, TransactionOutput> entry) {
     return DataRow(
       cells: [
@@ -255,21 +243,20 @@ class _TransactInputsTileState extends State<TransactInputsTile> {
               style: const TextStyle(fontSize: 12)),
         )),
         DataCell(Checkbox(
-            value: _selectedOutputs.contains(entry.key),
+            value: _selectedInputs.contains(entry.key),
             onChanged: (newValue) =>
-                _updateEntry(entry.key, newValue ?? false))),
+                _updateInputEntry(entry.key, newValue ?? false))),
       ],
     );
   }
 
-  _updateEntry(TransactionOutputReference ref, bool retain) {
+  _updateInputEntry(TransactionOutputReference ref, bool retain) {
     setState(() {
       if (retain) {
-        _selectedOutputs.add(ref);
+        _selectedInputs.add(ref);
       } else {
-        _selectedOutputs.remove(ref);
+        _selectedInputs.remove(ref);
       }
-      widget.onSelectionChanged(_selectedOutputs);
     });
   }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain_app/widgets/block_page.dart';
 import 'package:blockchain_app/widgets/transact.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -43,7 +44,7 @@ class _BlockchainPageState extends State<BlockchainPage> {
 
   _tabBarView(BuildContext context) {
     return TabBarView(children: [
-      LatestBlockView(blockchain: widget.blockchain),
+      LiveBlocksView(blockchain: widget.blockchain),
       StreamBuilder(
         stream: Stream.fromFuture(widget.blockchain.localChain.currentHead)
             .concatWith([widget.blockchain.localChain.adoptions]).asyncMap(
@@ -135,16 +136,18 @@ class LiveBlocksView extends StatelessWidget {
         });
       }));
 
-  Widget _blocksView(List<FullBlock> blocks) => ColorSonar(
+  Widget _sonarBlocksView(List<FullBlock> blocks) => ColorSonar(
         contentAreaRadius: 480,
-        child: SizedBox(
-          width: 500,
-          child: ListView.separated(
-            itemCount: blocks.length,
-            itemBuilder: (context, index) => BlockCard(block: blocks[index]),
-            separatorBuilder: (BuildContext context, int index) =>
-                const Divider(),
-          ),
+        child: _blocksView(blocks),
+      );
+
+  Widget _blocksView(List<FullBlock> blocks) => SizedBox(
+        width: 500,
+        child: ListView.separated(
+          itemCount: blocks.length,
+          itemBuilder: (context, index) => BlockCard(block: blocks[index]),
+          separatorBuilder: (BuildContext context, int index) =>
+              const Divider(),
         ),
       );
 }
@@ -170,22 +173,26 @@ class BlockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FutureBuilder(
-                future: block.header.id,
-                builder: (context, snapshot) =>
-                    Text(snapshot.data?.show ?? "")),
-            Text("Height: ${block.header.height}"),
-            Text("Slot: ${block.header.slot}"),
-            Text("Timestamp: ${block.header.timestamp}"),
-            Text("Transactions: ${block.fullBody.transactions.length}"),
-          ],
+    return GestureDetector(
+      onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (context) => BlockPage(block: block))),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FutureBuilder(
+                  future: block.header.id,
+                  builder: (context, snapshot) =>
+                      Text(snapshot.data?.show ?? "")),
+              Text("Height: ${block.header.height}"),
+              Text("Slot: ${block.header.slot}"),
+              Text("Timestamp: ${block.header.timestamp}"),
+              Text("Transactions: ${block.fullBody.transactions.length}"),
+            ],
+          ),
         ),
       ),
     );

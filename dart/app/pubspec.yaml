@@ -18,6 +18,8 @@ dependencies:
   fast_base58: ^0.2.1
   integral_isolates: ^0.3.0+2
   flutter_background: ^1.2.0
+  intl: ^0.18.1
+  get_time_ago: ^1.2.5
   blockchain:
     path: ../blockchain
   blockchain_codecs:
