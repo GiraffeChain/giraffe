@@ -25,6 +25,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
+  bit_array:
+    dependency: "direct main"
+    description:
+      name: bit_array
+      sha256: "127c01ebb740e6dd076f5d42aa39049cf847baee39a7e63fb499b1895581dba6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   blockchain:
     dependency: "direct main"
     description:
@@ -40,7 +48,7 @@ packages:
     source: path
     version: "1.0.0+1"
   blockchain_common:
-    dependency: transitive
+    dependency: "direct main"
     description:
       path: "../common"
       relative: true
@@ -176,6 +184,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+  fluro:
+    dependency: "direct main"
+    description:
+      name: fluro
+      sha256: "24d07d0b285b213ec2045b83e85d076185fa5c23651e44dae0ac6755784b97d0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.5"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -274,14 +290,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
-  im_animations:
-    dependency: "direct main"
-    description:
-      name: im_animations
-      sha256: f50d4c89b7a90deabfa1b685060c1ed846457f00394b854efefb75ca49598d54
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.2"
   integral_isolates:
     dependency: "direct main"
     description:
@@ -354,6 +362,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
+  nested:
+    dependency: transitive
+    description:
+      name: nested
+      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   path:
     dependency: transitive
     description:
@@ -386,6 +402,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  provider:
+    dependency: "direct main"
+    description:
+      name: provider
+      sha256: cdbe7530b12ecd9eb455bdaa2fcb8d4dad22e80b8afb4798b41479d5ce26847f
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.5"
   rational:
     dependency: transitive
     description:

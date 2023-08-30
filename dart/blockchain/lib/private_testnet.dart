@@ -26,23 +26,23 @@ class PrivateTestnet {
   static Future<GenesisConfig> config(Int64 timestamp,
       List<StakerInitializer> stakers, List<Int64> stakes) async {
     assert(stakers.length == stakes.length);
-    final outputs = [
-      TransactionOutput()
-        ..lockAddress = (Lock()
-              ..ed25519 = (Lock_Ed25519()
-                ..vk =
-                    (await ed25519.generateKeyPairFromSeed(Uint8List(32))).vk))
-            .address
-        ..value = (Value()
-          ..paymentToken = (PaymentToken()..quantity = Int64(10000000))),
+    final transactions = [
+      Transaction()
+        ..outputs.add(TransactionOutput()
+          ..lockAddress = (Lock()
+                ..ed25519 = (Lock_Ed25519()
+                  ..vk = (await ed25519.generateKeyPairFromSeed(Uint8List(32)))
+                      .vk))
+              .address
+          ..value = (Value()..quantity = Int64(10000000))),
     ];
     for (int i = 0; i < stakers.length; i++) {
       final staker = stakers[i];
       final stake = stakes[i];
-      final genesisOutputs = await staker.genesisOutputs(stake);
-      outputs.addAll(genesisOutputs);
+      transactions.addAll(await staker.genesisTransactions(stake));
     }
 
-    return GenesisConfig(timestamp, outputs, GenesisConfig.DefaultEtaPrefix);
+    return GenesisConfig(
+        timestamp, transactions, GenesisConfig.DefaultEtaPrefix);
   }
 }

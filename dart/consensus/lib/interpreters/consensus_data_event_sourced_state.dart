@@ -36,24 +36,18 @@ Future<ConsensusData> Function(ConsensusData, BlockId) _applyBlock(
     Future<Transaction> Function(TransactionId) fetchTransaction) {
   List<ActiveStaker> removedStakersOf(Transaction transaction) =>
       transaction.inputs
-          .where((i) =>
-              i.hasValue() &&
-              i.value.hasStakingToken() &&
-              i.value.stakingToken.hasRegistration())
+          .where((i) => i.hasValue() && i.value.hasRegistration())
           .map((i) => ActiveStaker()
-            ..registration = i.value.stakingToken.registration
-            ..quantity = i.value.stakingToken.quantity)
+            ..registration = i.value.registration
+            ..quantity = i.value.quantity)
           .toList();
 
   List<ActiveStaker> addedStakersOf(Transaction transaction) =>
       transaction.outputs
-          .where((i) =>
-              i.hasValue() &&
-              i.value.hasStakingToken() &&
-              i.value.stakingToken.hasRegistration())
+          .where((i) => i.hasValue() && i.value.hasRegistration())
           .map((i) => ActiveStaker()
-            ..registration = i.value.stakingToken.registration
-            ..quantity = i.value.stakingToken.quantity)
+            ..registration = i.value.registration
+            ..quantity = i.value.quantity)
           .toList();
 
   Future<ConsensusData> apply(ConsensusData state, BlockId blockId) async {
@@ -93,24 +87,18 @@ Future<ConsensusData> Function(ConsensusData, BlockId) _unapplyBlock(
     Future<Transaction> Function(TransactionId) fetchTransaction) {
   List<ActiveStaker> removedStakersOf(Transaction transaction) =>
       transaction.inputs.reversed
-          .where((i) =>
-              i.hasValue() &&
-              i.value.hasStakingToken() &&
-              i.value.stakingToken.hasRegistration())
+          .where((i) => i.hasValue() && i.value.hasRegistration())
           .map((i) => ActiveStaker()
-            ..registration = i.value.stakingToken.registration
-            ..quantity = i.value.stakingToken.quantity)
+            ..registration = i.value.registration
+            ..quantity = i.value.quantity)
           .toList();
 
   List<ActiveStaker> addedStakersOf(Transaction transaction) =>
       transaction.outputs.reversed
-          .where((i) =>
-              i.hasValue() &&
-              i.value.hasStakingToken() &&
-              i.value.stakingToken.hasRegistration())
+          .where((i) => i.hasValue() && i.value.hasRegistration())
           .map((i) => ActiveStaker()
-            ..registration = i.value.stakingToken.registration
-            ..quantity = i.value.stakingToken.quantity)
+            ..registration = i.value.registration
+            ..quantity = i.value.quantity)
           .toList();
   Future<ConsensusData> f(ConsensusData state, BlockId blockId) async {
     final body = await fetchBlockBody(blockId);
@@ -145,11 +133,11 @@ Future<ConsensusData> Function(ConsensusData, BlockId) _unapplyBlock(
 }
 
 Int64 _activeQuantityOf(Iterable<Value> values) => values
-    .where((v) => v.hasStakingToken() && v.stakingToken.hasRegistration())
-    .map((v) => v.stakingToken.quantity)
+    .where((v) => v.hasRegistration())
+    .map((v) => v.quantity)
     .fold(Int64.ZERO, (a, b) => a + b);
 
 Int64 _inactiveQuantityOf(Iterable<Value> values) => values
-    .where((v) => v.hasStakingToken() && !v.stakingToken.hasRegistration())
-    .map((v) => v.stakingToken.quantity)
+    .where((v) => v.hasRegistration())
+    .map((v) => v.quantity)
     .fold(Int64.ZERO, (a, b) => a + b);

@@ -1,9 +1,14 @@
 import 'dart:io';
 
 import 'package:blockchain/isolate_pool.dart';
+import 'package:blockchain_app/widgets/block_page.dart';
 import 'package:blockchain_app/widgets/blockchain_launcher_page.dart';
+import 'package:blockchain_app/widgets/blockchain_page.dart';
+import 'package:blockchain_app/widgets/transaction_page.dart';
+import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_crypto/kes.dart' as kes;
 import 'package:blockchain_crypto/utils.dart';
+import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:blockchain_crypto/ed25519.dart' as ed25519;
@@ -28,6 +33,8 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
+  initRouter();
+
   runApp(const MainApp());
 }
 
@@ -38,17 +45,17 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Container(
-            constraints: const BoxConstraints.expand(),
-            decoration: const BoxDecoration(
-                image: DecorationImage(
-                    image: AssetImage("assets/images/fractal2.png"),
-                    fit: BoxFit.cover)),
-            child: Center(child: Builder(builder: launchButton))),
-      ),
+      // home: BlockchainWidgetTester(),
+      home: _home,
+      onGenerateRoute: FluroRouter.appRouter.generator,
     );
   }
+
+  get _home => Scaffold(
+        body: Container(
+            constraints: const BoxConstraints.expand(),
+            child: Center(child: Builder(builder: launchButton))),
+      );
 
   Widget launchButton(BuildContext context) => TextButton(
       onPressed: () => Navigator.push(
@@ -59,4 +66,18 @@ class MainApp extends StatelessWidget {
           backgroundColor: MaterialStatePropertyAll<Color>(Colors.white),
           padding: MaterialStatePropertyAll(EdgeInsets.all(40))),
       child: const Text("Launch"));
+}
+
+initRouter() {
+  FluroRouter.appRouter.define("/",
+      handler:
+          Handler(handlerFunc: (context, params) => const BlockchainPage()));
+  FluroRouter.appRouter.define("/blocks/:id",
+      handler: Handler(
+          handlerFunc: (context, params) =>
+              UnloadedBlockPage(id: decodeBlockId(params["id"]![0]))));
+  FluroRouter.appRouter.define("/transactions/:id",
+      handler: Handler(
+          handlerFunc: (context, params) => UnloadedTransactionPage(
+              id: decodeTransactionId(params["id"]![0]))));
 }

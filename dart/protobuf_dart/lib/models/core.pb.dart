@@ -957,7 +957,6 @@ class Transaction extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Transaction', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
     ..pc<TransactionInput>(1, _omitFieldNames ? '' : 'inputs', $pb.PbFieldType.PM, subBuilder: TransactionInput.create)
     ..pc<TransactionOutput>(2, _omitFieldNames ? '' : 'outputs', $pb.PbFieldType.PM, subBuilder: TransactionOutput.create)
-    ..aOM<TransactionSchedule>(3, _omitFieldNames ? '' : 'schedule', subBuilder: TransactionSchedule.create)
     ..hasRequiredFields = false
   ;
 
@@ -987,17 +986,6 @@ class Transaction extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(2)
   $core.List<TransactionOutput> get outputs => $_getList(1);
-
-  @$pb.TagNumber(3)
-  TransactionSchedule get schedule => $_getN(2);
-  @$pb.TagNumber(3)
-  set schedule(TransactionSchedule v) { setField(3, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasSchedule() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearSchedule() => clearField(3);
-  @$pb.TagNumber(3)
-  TransactionSchedule ensureSchedule() => $_ensure(2);
 }
 
 class TransactionInput extends $pb.GeneratedMessage {
@@ -1190,89 +1178,15 @@ class TransactionOutput extends $pb.GeneratedMessage {
   Value ensureValue() => $_ensure(1);
 }
 
-class TransactionSchedule extends $pb.GeneratedMessage {
-  factory TransactionSchedule() => create();
-  TransactionSchedule._() : super();
-  factory TransactionSchedule.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory TransactionSchedule.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionSchedule', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'minSlot', $pb.PbFieldType.OU6, protoName: 'minSlot', defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'maxSlot', $pb.PbFieldType.OU6, protoName: 'maxSlot', defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'timestamp', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  TransactionSchedule clone() => TransactionSchedule()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  TransactionSchedule copyWith(void Function(TransactionSchedule) updates) => super.copyWith((message) => updates(message as TransactionSchedule)) as TransactionSchedule;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static TransactionSchedule create() => TransactionSchedule._();
-  TransactionSchedule createEmptyInstance() => create();
-  static $pb.PbList<TransactionSchedule> createRepeated() => $pb.PbList<TransactionSchedule>();
-  @$core.pragma('dart2js:noInline')
-  static TransactionSchedule getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<TransactionSchedule>(create);
-  static TransactionSchedule? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $fixnum.Int64 get minSlot => $_getI64(0);
-  @$pb.TagNumber(1)
-  set minSlot($fixnum.Int64 v) { $_setInt64(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasMinSlot() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMinSlot() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $fixnum.Int64 get maxSlot => $_getI64(1);
-  @$pb.TagNumber(2)
-  set maxSlot($fixnum.Int64 v) { $_setInt64(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasMaxSlot() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearMaxSlot() => clearField(2);
-
-  @$pb.TagNumber(3)
-  $fixnum.Int64 get timestamp => $_getI64(2);
-  @$pb.TagNumber(3)
-  set timestamp($fixnum.Int64 v) { $_setInt64(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasTimestamp() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearTimestamp() => clearField(3);
-}
-
-enum Value_Value {
-  paymentToken, 
-  stakingToken, 
-  notSet
-}
-
 class Value extends $pb.GeneratedMessage {
   factory Value() => create();
   Value._() : super();
   factory Value.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Value.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static const $core.Map<$core.int, Value_Value> _Value_ValueByTag = {
-    1 : Value_Value.paymentToken,
-    2 : Value_Value.stakingToken,
-    0 : Value_Value.notSet
-  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Value', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..oo(0, [1, 2])
-    ..aOM<PaymentToken>(1, _omitFieldNames ? '' : 'paymentToken', protoName: 'paymentToken', subBuilder: PaymentToken.create)
-    ..aOM<StakingToken>(2, _omitFieldNames ? '' : 'stakingToken', protoName: 'stakingToken', subBuilder: StakingToken.create)
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'quantity', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<StakingRegistration>(2, _omitFieldNames ? '' : 'registration', subBuilder: StakingRegistration.create)
     ..hasRequiredFields = false
   ;
 
@@ -1296,107 +1210,6 @@ class Value extends $pb.GeneratedMessage {
   @$core.pragma('dart2js:noInline')
   static Value getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Value>(create);
   static Value? _defaultInstance;
-
-  Value_Value whichValue() => _Value_ValueByTag[$_whichOneof(0)]!;
-  void clearValue() => clearField($_whichOneof(0));
-
-  @$pb.TagNumber(1)
-  PaymentToken get paymentToken => $_getN(0);
-  @$pb.TagNumber(1)
-  set paymentToken(PaymentToken v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasPaymentToken() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearPaymentToken() => clearField(1);
-  @$pb.TagNumber(1)
-  PaymentToken ensurePaymentToken() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  StakingToken get stakingToken => $_getN(1);
-  @$pb.TagNumber(2)
-  set stakingToken(StakingToken v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasStakingToken() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearStakingToken() => clearField(2);
-  @$pb.TagNumber(2)
-  StakingToken ensureStakingToken() => $_ensure(1);
-}
-
-class PaymentToken extends $pb.GeneratedMessage {
-  factory PaymentToken() => create();
-  PaymentToken._() : super();
-  factory PaymentToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory PaymentToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PaymentToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'quantity', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  PaymentToken clone() => PaymentToken()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  PaymentToken copyWith(void Function(PaymentToken) updates) => super.copyWith((message) => updates(message as PaymentToken)) as PaymentToken;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PaymentToken create() => PaymentToken._();
-  PaymentToken createEmptyInstance() => create();
-  static $pb.PbList<PaymentToken> createRepeated() => $pb.PbList<PaymentToken>();
-  @$core.pragma('dart2js:noInline')
-  static PaymentToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PaymentToken>(create);
-  static PaymentToken? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $fixnum.Int64 get quantity => $_getI64(0);
-  @$pb.TagNumber(1)
-  set quantity($fixnum.Int64 v) { $_setInt64(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasQuantity() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearQuantity() => clearField(1);
-}
-
-class StakingToken extends $pb.GeneratedMessage {
-  factory StakingToken() => create();
-  StakingToken._() : super();
-  factory StakingToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory StakingToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StakingToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'quantity', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOM<StakingRegistration>(2, _omitFieldNames ? '' : 'registration', subBuilder: StakingRegistration.create)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  StakingToken clone() => StakingToken()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  StakingToken copyWith(void Function(StakingToken) updates) => super.copyWith((message) => updates(message as StakingToken)) as StakingToken;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static StakingToken create() => StakingToken._();
-  StakingToken createEmptyInstance() => create();
-  static $pb.PbList<StakingToken> createRepeated() => $pb.PbList<StakingToken>();
-  @$core.pragma('dart2js:noInline')
-  static StakingToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StakingToken>(create);
-  static StakingToken? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get quantity => $_getI64(0);

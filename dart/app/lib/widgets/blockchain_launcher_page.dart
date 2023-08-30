@@ -3,11 +3,12 @@ import 'dart:io';
 
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/config.dart';
-import 'package:blockchain_app/widgets/blockchain_page.dart';
 import 'package:blockchain_crypto/utils.dart';
+import 'package:fluro/fluro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background/flutter_background.dart';
+import 'package:provider/provider.dart';
 
 class BlockchainLauncherPage extends StatefulWidget {
   final DComputeImpl isolate;
@@ -15,27 +16,16 @@ class BlockchainLauncherPage extends StatefulWidget {
   const BlockchainLauncherPage({super.key, required this.isolate});
 
   @override
-  _BlockchainLauncherPageState createState() => _BlockchainLauncherPageState();
+  BlockchainLauncherPageState createState() => BlockchainLauncherPageState();
 }
 
-class _BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
-  Blockchain? blockchain;
-
-  @override
-  void initState() {
-    super.initState();
-
-    Future<void> launch() async {
-      await _flutterBackgroundInit();
-      final blockchain = await Blockchain.init(
-          BlockchainConfig(rpc: BlockchainRpc(enable: !kIsWeb)),
-          widget.isolate);
-      blockchain.run();
-      setState(() => this.blockchain = blockchain);
-      return;
-    }
-
-    unawaited(launch());
+class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
+  Future<Blockchain> launch() async {
+    await _flutterBackgroundInit();
+    final blockchain = await Blockchain.init(
+        BlockchainConfig(rpc: BlockchainRpc(enable: !kIsWeb)), widget.isolate);
+    blockchain.run();
+    return blockchain;
   }
 
   @override
@@ -45,20 +35,23 @@ class _BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
   }
 
   @override
-  Widget build(BuildContext context) => blockchain == null
-      ? Scaffold(
-          body: Container(
-              constraints: const BoxConstraints.expand(),
-              decoration: const BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage("assets/images/fractal2.png"),
-                      fit: BoxFit.cover)),
-              child: loading))
-      : BlockchainPage(blockchain: blockchain!);
+  Widget build(BuildContext context) => FutureBuilder(
+      future: launch(),
+      builder: (context, snapshot) => snapshot.hasData
+          ? MultiProvider(
+              providers: [Provider.value(value: snapshot.data!)],
+              child: Navigator(
+                initialRoute: '/',
+                onGenerateRoute: FluroRouter.appRouter.generator,
+              ))
+          : loading);
 
-  Widget get loading => const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
+  Widget get loading => Scaffold(
+      body: Container(
+          constraints: const BoxConstraints.expand(),
+          child: const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          )));
 }
 
 _flutterBackgroundInit() async {

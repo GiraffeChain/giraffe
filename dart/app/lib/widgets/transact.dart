@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_wallet/wallet.dart';
-import 'package:fast_base58/fast_base58.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart' show FpdartOnMutableIterable, Tuple2;
@@ -26,7 +25,7 @@ class TransactViewState extends State<TransactView> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(80),
+      padding: const EdgeInsets.all(8),
       child: Card(
         child: Column(
           children: [
@@ -60,8 +59,7 @@ class TransactViewState extends State<TransactView> {
   Int64 _inputSum() => _selectedInputs
       .toList()
       .map((v) => widget.wallet.spendableOutputs[v]!.value)
-      .where((v) => v.hasPaymentToken())
-      .map((v) => v.paymentToken.quantity)
+      .map((v) => v.quantity)
       .fold(Int64.ZERO, (a, b) => a + b);
 
   Future<Transaction> _createTransaction() async {
@@ -78,21 +76,13 @@ class TransactViewState extends State<TransactView> {
     }
 
     for (final e in _newOutputEntries) {
-      final lockAddress = LockAddress()..value = Base58Decode(e.second);
-      final value = Value()
-        ..paymentToken = (PaymentToken()..quantity = Int64.parseInt(e.first));
+      final lockAddress = decodeLockAddress(e.second);
+      final value = Value()..quantity = Int64.parseInt(e.first);
       final output = TransactionOutput()
         ..lockAddress = lockAddress
         ..value = value;
       tx.outputs.add(output);
     }
-
-    final schedule = TransactionSchedule()
-      ..maxSlot = Int64.MAX_VALUE
-      ..timestamp = Int64(DateTime.now().millisecondsSinceEpoch);
-
-    tx.schedule = schedule;
-
     for (final ref in _selectedInputs.toList()) {
       final output = widget.wallet.spendableOutputs[ref]!;
       final signer = widget.wallet.signers[output.lockAddress]!;
@@ -232,7 +222,7 @@ class TransactViewState extends State<TransactView> {
       MapEntry<TransactionOutputReference, TransactionOutput> entry) {
     return DataRow(
       cells: [
-        DataCell(Text("${entry.value.value.paymentToken.quantity}",
+        DataCell(Text("${entry.value.value.quantity}",
             style: const TextStyle(fontSize: 12))),
         DataCell(TextButton(
           onPressed: () {

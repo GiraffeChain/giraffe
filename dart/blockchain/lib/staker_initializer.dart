@@ -38,10 +38,15 @@ class StakerInitializer {
     );
   }
 
-  Future<SignatureKesProduct> get registration async => kesProduct.sign(
+  Future<SignatureKesProduct> get registrationSignature async =>
+      kesProduct.sign(
         kesKeyPair.sk,
         await (vrfKeyPair.vk + operatorKeyPair.vk).hash256,
       );
+
+  Future<StakingRegistration> get registration async => StakingRegistration()
+    ..signature = await registrationSignature
+    ..stakingAddress = stakingAddress;
 
   StakingAddress get stakingAddress =>
       StakingAddress()..value = operatorKeyPair.vk;
@@ -51,22 +56,14 @@ class StakerInitializer {
 
   LockAddress get lockAddress => spendingLock.address;
 
-  Future<List<TransactionOutput>> genesisOutputs(Int64 stake) async {
-    final spendingValue = Value()
-      ..paymentToken = (PaymentToken()..quantity = stake);
-    final registrationValue = Value()
-      ..stakingToken = (StakingToken()
-        ..quantity = stake
-        ..registration = (StakingRegistration()
-          ..signature = await registration
-          ..stakingAddress = stakingAddress));
+  Future<List<Transaction>> genesisTransactions(Int64 stake) async {
     return [
-      TransactionOutput()
-        ..lockAddress = lockAddress
-        ..value = spendingValue,
-      TransactionOutput()
-        ..lockAddress = lockAddress
-        ..value = registrationValue
+      Transaction()
+        ..outputs.add(TransactionOutput()
+          ..lockAddress = lockAddress
+          ..value = (Value()
+            ..quantity = stake
+            ..registration = await registration))
     ];
   }
 }

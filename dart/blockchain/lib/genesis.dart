@@ -8,19 +8,19 @@ import 'package:fixnum/fixnum.dart';
 
 class GenesisConfig {
   final Int64 timestamp;
-  final List<TransactionOutput> outputs;
+  final List<Transaction> transactions;
   final List<int> etaPrefix;
 
-  GenesisConfig(this.timestamp, this.outputs, this.etaPrefix);
+  GenesisConfig(this.timestamp, this.transactions, this.etaPrefix);
 
   static final DefaultEtaPrefix = utf8.encode("genesis");
 
   Future<FullBlock> get block async {
-    final transaction = Transaction()
-      ..outputs.addAll(outputs)
-      ..schedule = (TransactionSchedule()..timestamp = timestamp);
-    final transactions = [transaction];
-    final eta = await (etaPrefix + ((await transaction.id).value)).hash256;
+    final eta = await (etaPrefix +
+            transactions
+                .map((t) => t.id.value)
+                .fold(Uint8List(0), (a, b) => a + b))
+        .hash256;
     final eligibilityCertificate = EligibilityCertificate()
       ..vrfSig = _emptyBytes(80)
       ..vrfVK = _emptyBytes(32)

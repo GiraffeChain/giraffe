@@ -75,8 +75,8 @@ class BlockchainConsensus {
         slotDuration = slotDuration ?? Duration(milliseconds: 1000),
         forwardBiastedSlotWindow = forwardBiastedSlotWindow ?? Int64(50),
         operationalPeriodsPerEpoch = operationalPeriodsPerEpoch ?? Int64(2),
-        kesKeyHours = kesKeyHours ?? 7,
-        kesKeyMinutes = kesKeyMinutes ?? 7;
+        kesKeyHours = kesKeyHours ?? 4,
+        kesKeyMinutes = kesKeyMinutes ?? 4;
 
   int get chainSelectionSWindow =>
       (Rational(chainSelectionKLookback.toBigInt, BigInt.from(4)) *

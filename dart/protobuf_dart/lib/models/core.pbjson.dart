@@ -266,7 +266,6 @@ const Transaction$json = {
   '2': [
     {'1': 'inputs', '3': 1, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionInput', '10': 'inputs'},
     {'1': 'outputs', '3': 2, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionOutput', '10': 'outputs'},
-    {'1': 'schedule', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionSchedule', '10': 'schedule'},
   ],
 };
 
@@ -274,8 +273,7 @@ const Transaction$json = {
 final $typed_data.Uint8List transactionDescriptor = $convert.base64Decode(
     'CgtUcmFuc2FjdGlvbhI/CgZpbnB1dHMYASADKAsyJy5jb20uYmxvY2tjaGFpbi5tb2RlbHMuVH'
     'JhbnNhY3Rpb25JbnB1dFIGaW5wdXRzEkIKB291dHB1dHMYAiADKAsyKC5jb20uYmxvY2tjaGFp'
-    'bi5tb2RlbHMuVHJhbnNhY3Rpb25PdXRwdXRSB291dHB1dHMSRgoIc2NoZWR1bGUYAyABKAsyKi'
-    '5jb20uYmxvY2tjaGFpbi5tb2RlbHMuVHJhbnNhY3Rpb25TY2hlZHVsZVIIc2NoZWR1bGU=');
+    'bi5tb2RlbHMuVHJhbnNhY3Rpb25PdXRwdXRSB291dHB1dHM=');
 
 @$core.Deprecated('Use transactionInputDescriptor instead')
 const TransactionInput$json = {
@@ -326,66 +324,20 @@ final $typed_data.Uint8List transactionOutputDescriptor = $convert.base64Decode(
     'luLm1vZGVscy5Mb2NrQWRkcmVzc1ILbG9ja0FkZHJlc3MSMgoFdmFsdWUYAiABKAsyHC5jb20u'
     'YmxvY2tjaGFpbi5tb2RlbHMuVmFsdWVSBXZhbHVl');
 
-@$core.Deprecated('Use transactionScheduleDescriptor instead')
-const TransactionSchedule$json = {
-  '1': 'TransactionSchedule',
-  '2': [
-    {'1': 'minSlot', '3': 1, '4': 1, '5': 4, '10': 'minSlot'},
-    {'1': 'maxSlot', '3': 2, '4': 1, '5': 4, '10': 'maxSlot'},
-    {'1': 'timestamp', '3': 3, '4': 1, '5': 4, '10': 'timestamp'},
-  ],
-};
-
-/// Descriptor for `TransactionSchedule`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List transactionScheduleDescriptor = $convert.base64Decode(
-    'ChNUcmFuc2FjdGlvblNjaGVkdWxlEhgKB21pblNsb3QYASABKARSB21pblNsb3QSGAoHbWF4U2'
-    'xvdBgCIAEoBFIHbWF4U2xvdBIcCgl0aW1lc3RhbXAYAyABKARSCXRpbWVzdGFtcA==');
-
 @$core.Deprecated('Use valueDescriptor instead')
 const Value$json = {
   '1': 'Value',
-  '2': [
-    {'1': 'paymentToken', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.PaymentToken', '9': 0, '10': 'paymentToken'},
-    {'1': 'stakingToken', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingToken', '9': 0, '10': 'stakingToken'},
-  ],
-  '8': [
-    {'1': 'value'},
-  ],
-};
-
-/// Descriptor for `Value`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List valueDescriptor = $convert.base64Decode(
-    'CgVWYWx1ZRJJCgxwYXltZW50VG9rZW4YASABKAsyIy5jb20uYmxvY2tjaGFpbi5tb2RlbHMuUG'
-    'F5bWVudFRva2VuSABSDHBheW1lbnRUb2tlbhJJCgxzdGFraW5nVG9rZW4YAiABKAsyIy5jb20u'
-    'YmxvY2tjaGFpbi5tb2RlbHMuU3Rha2luZ1Rva2VuSABSDHN0YWtpbmdUb2tlbkIHCgV2YWx1ZQ'
-    '==');
-
-@$core.Deprecated('Use paymentTokenDescriptor instead')
-const PaymentToken$json = {
-  '1': 'PaymentToken',
-  '2': [
-    {'1': 'quantity', '3': 1, '4': 1, '5': 4, '8': {}, '10': 'quantity'},
-  ],
-};
-
-/// Descriptor for `PaymentToken`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List paymentTokenDescriptor = $convert.base64Decode(
-    'CgxQYXltZW50VG9rZW4SJAoIcXVhbnRpdHkYASABKARCCPpCBYoBAhABUghxdWFudGl0eQ==');
-
-@$core.Deprecated('Use stakingTokenDescriptor instead')
-const StakingToken$json = {
-  '1': 'StakingToken',
   '2': [
     {'1': 'quantity', '3': 1, '4': 1, '5': 4, '8': {}, '10': 'quantity'},
     {'1': 'registration', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingRegistration', '10': 'registration'},
   ],
 };
 
-/// Descriptor for `StakingToken`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List stakingTokenDescriptor = $convert.base64Decode(
-    'CgxTdGFraW5nVG9rZW4SJAoIcXVhbnRpdHkYASABKARCCPpCBYoBAhABUghxdWFudGl0eRJOCg'
-    'xyZWdpc3RyYXRpb24YAiABKAsyKi5jb20uYmxvY2tjaGFpbi5tb2RlbHMuU3Rha2luZ1JlZ2lz'
-    'dHJhdGlvblIMcmVnaXN0cmF0aW9u');
+/// Descriptor for `Value`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List valueDescriptor = $convert.base64Decode(
+    'CgVWYWx1ZRIkCghxdWFudGl0eRgBIAEoBEII+kIFigECEAFSCHF1YW50aXR5Ek4KDHJlZ2lzdH'
+    'JhdGlvbhgCIAEoCzIqLmNvbS5ibG9ja2NoYWluLm1vZGVscy5TdGFraW5nUmVnaXN0cmF0aW9u'
+    'UgxyZWdpc3RyYXRpb24=');
 
 @$core.Deprecated('Use stakingRegistrationDescriptor instead')
 const StakingRegistration$json = {

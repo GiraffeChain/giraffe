@@ -22,8 +22,6 @@ class TransactionSemanticValidation
     }
 
     final errors = <String>[];
-    errors.addAll(_scheduleValidation(transaction, context));
-    if (errors.isNotEmpty) return errors;
     for (final input in transaction.inputs) {
       errors.addAll(await _dataValidation(input, context));
       if (errors.isNotEmpty) return errors;
@@ -31,16 +29,6 @@ class TransactionSemanticValidation
       if (errors.isNotEmpty) return errors;
     }
     return [];
-  }
-
-  List<String> _scheduleValidation(
-      Transaction transaction, TransactionValidationContext context) {
-    final schedule = transaction.schedule;
-    final slot = context.slot;
-    if (slot >= schedule.minSlot && slot <= schedule.maxSlot)
-      return [];
-    else
-      return ["UnsatifiedSchedule"];
   }
 
   Future<List<String>> _dataValidation(

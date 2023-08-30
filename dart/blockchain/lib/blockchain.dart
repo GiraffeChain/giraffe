@@ -223,6 +223,13 @@ class Blockchain {
 
     log.info("Preparing BlockProducer");
 
+    final blockPacker = BlockPacker(
+        mempool,
+        dataStores.transactions.getOrRaise,
+        dataStores.transactions.contains,
+        BlockPacker.makeBodyValidator(validators.bodySyntax,
+            validators.bodySemantic, validators.bodyAuthorization));
+
     final blockProducer = BlockProducer(
       ConcatStream([
         Stream.value(canonicalHeadSlotData).asyncMap(
@@ -231,12 +238,7 @@ class Blockchain {
       ]),
       staker,
       clock,
-      BlockPacker(
-          mempool,
-          dataStores.transactions.getOrRaise,
-          dataStores.transactions.contains,
-          BlockPacker.makeBodyValidator(validators.bodySyntax,
-              validators.bodySemantic, validators.bodyAuthorization)),
+      blockPacker,
     );
 
     log.info("Initializing Wallet ESS");

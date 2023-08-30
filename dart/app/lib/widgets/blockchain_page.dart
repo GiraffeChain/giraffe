@@ -2,25 +2,18 @@ import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:blockchain/blockchain.dart';
-import 'package:blockchain_app/widgets/block_page.dart';
 import 'package:blockchain_app/widgets/transact.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
-import 'package:im_animations/im_animations.dart';
+import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
 
-class BlockchainPage extends StatefulWidget {
-  final Blockchain blockchain;
+class BlockchainPage extends StatelessWidget {
+  const BlockchainPage({super.key});
 
-  const BlockchainPage({super.key, required this.blockchain});
-
-  @override
-  State<StatefulWidget> createState() => _BlockchainPageState();
-}
-
-class _BlockchainPageState extends State<BlockchainPage> {
   @override
   Widget build(BuildContext context) => DefaultTabController(
         length: 2,
@@ -28,10 +21,6 @@ class _BlockchainPageState extends State<BlockchainPage> {
             appBar: _appBar(context),
             body: Container(
                 constraints: const BoxConstraints.expand(),
-                decoration: const BoxDecoration(
-                    image: DecorationImage(
-                        image: AssetImage("assets/images/fractal7.png"),
-                        fit: BoxFit.none)),
                 child: _tabBarView(context))),
       );
 
@@ -43,19 +32,19 @@ class _BlockchainPageState extends State<BlockchainPage> {
   }
 
   _tabBarView(BuildContext context) {
+    final blockchain = context.watch<Blockchain>();
     return TabBarView(children: [
-      LiveBlocksView(blockchain: widget.blockchain),
+      const LiveBlocksView(),
       StreamBuilder(
-        stream: Stream.fromFuture(widget.blockchain.localChain.currentHead)
-            .concatWith([widget.blockchain.localChain.adoptions]).asyncMap(
-                (id) => widget.blockchain.walletESS.stateAt(id)),
+        stream: Stream.fromFuture(blockchain.localChain.currentHead)
+            .concatWith([blockchain.localChain.adoptions]).asyncMap(
+                (id) => blockchain.walletESS.stateAt(id)),
         builder: (context, snapshot) => snapshot.hasData
             ? TransactView(
                 wallet: snapshot.data!,
                 processTransaction: (tx) async {
-                  await widget.blockchain.dataStores.transactions
-                      .put(tx.id, tx);
-                  await widget.blockchain.mempool.add(tx.id);
+                  await blockchain.dataStores.transactions.put(tx.id, tx);
+                  await blockchain.mempool.add(tx.id);
                 },
               )
             : const CircularProgressIndicator(),
@@ -67,14 +56,16 @@ class _BlockchainPageState extends State<BlockchainPage> {
       TextStyle(fontSize: 12, fontWeight: FontWeight.bold);
 
   AppBar _appBar(BuildContext context) {
-    final slotTicker = _slotText;
+    final slotTicker = _slotText(context);
     return AppBar(
       title: StreamBuilder(
-        stream: widget.blockchain.newBlocks
+        stream: context
+            .watch<Blockchain>()
+            .newBlocks
             .map((b) => b.header)
             .asyncMap((header) async => [
                   const VerticalDivider(),
-                  Text((await header.id).show, style: _metadataTextStyle),
+                  Text((header.id).show, style: _metadataTextStyle),
                   const VerticalDivider(),
                   Text("Height: ${header.height}", style: _metadataTextStyle)
                 ]),
@@ -87,8 +78,8 @@ class _BlockchainPageState extends State<BlockchainPage> {
     );
   }
 
-  get _slotText => StreamBuilder(
-      stream: widget.blockchain.clock.slots,
+  _slotText(BuildContext context) => StreamBuilder(
+      stream: context.watch<Blockchain>().clock.slots,
       builder: (context, snapshot) => Row(children: [
             const VerticalDivider(),
             Text("Slot: ${snapshot.data ?? Int64.ZERO}",
@@ -116,30 +107,24 @@ class LatestBlockView extends StatelessWidget {
 }
 
 class LiveBlocksView extends StatelessWidget {
-  final Blockchain blockchain;
-
-  const LiveBlocksView({super.key, required this.blockchain});
+  const LiveBlocksView({super.key});
   @override
   Widget build(BuildContext context) => Center(
         child: StreamBuilder(
-          stream: _accumulateBlocksStream,
+          stream: _accumulateBlocksStream(context),
           builder: (context, snapshot) => _blocksView(snapshot.data ?? []),
         ),
       );
 
-  Stream<List<FullBlock>> get _accumulateBlocksStream =>
-      _fullBlocks(blockchain).transform(StreamTransformer.fromBind((inStream) {
+  Stream<List<FullBlock>> _accumulateBlocksStream(BuildContext context) =>
+      _fullBlocks(context.read<Blockchain>())
+          .transform(StreamTransformer.fromBind((inStream) {
         final List<FullBlock> state = [];
         return inStream.map((block) {
           state.insert(0, block);
           return List.of(state);
         });
       }));
-
-  Widget _sonarBlocksView(List<FullBlock> blocks) => ColorSonar(
-        contentAreaRadius: 480,
-        child: _blocksView(blocks),
-      );
 
   Widget _blocksView(List<FullBlock> blocks) => SizedBox(
         width: 500,
@@ -174,8 +159,8 @@ class BlockCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (context) => BlockPage(block: block))),
+      onTap: () => FluroRouter.appRouter
+          .navigateTo(context, "/blocks/${block.header.id.show}"),
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -183,10 +168,7 @@ class BlockCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              FutureBuilder(
-                  future: block.header.id,
-                  builder: (context, snapshot) =>
-                      Text(snapshot.data?.show ?? "")),
+              Text(block.header.id.show),
               Text("Height: ${block.header.height}"),
               Text("Slot: ${block.header.slot}"),
               Text("Timestamp: ${block.header.timestamp}"),

@@ -31,8 +31,16 @@ extension BlockHeaderCodecs on BlockHeader {
     ..addAll(operationalCertificate.immutableBytes)
     ..addAll(metadata)
     ..addAll(address.value);
-  Future<BlockId> get id async =>
-      BlockId()..value = Uint8List.fromList(await immutableBytes.hash256);
+  BlockId get id =>
+      BlockId()..value = Uint8List.fromList(immutableBytes.hash256);
+}
+
+BlockId decodeBlockId(String input) {
+  if (input.startsWith("b_")) return decodeBlockId(input.substring(2));
+  final decoded = Base58Decode(input);
+  assert(decoded.length == 32);
+  final blockId = BlockId()..value = decoded;
+  return blockId;
 }
 
 extension UnsignedBlockHeaderCodecs on UnsignedBlockHeader {
@@ -113,17 +121,23 @@ extension Int128Codecs on List<int> {
 }
 
 extension BlockIdCodecs on BlockId {
-  String get show => this.value.base58;
+  String get show => "b_${this.value.base58}";
 }
 
 extension TransactionIdCodecs on TransactionId {
-  String get show => this.value.base58;
+  String get show => "t_${this.value.base58}";
+}
+
+TransactionId decodeTransactionId(String input) {
+  if (input.startsWith("t_")) return decodeTransactionId(input.substring(2));
+  final decoded = Base58Decode(input);
+  assert(decoded.length == 32);
+  return TransactionId()..value = decoded;
 }
 
 extension TransactionCodecs on Transaction {
   List<int> get immutableBytes => inputs.immutableBytes((i) => i.immutableBytes)
-    ..addAll(outputs.immutableBytes((o) => o.immutableBytes))
-    ..addAll(schedule.immutableBytes);
+    ..addAll(outputs.immutableBytes((o) => o.immutableBytes));
 
   TransactionId get id =>
       TransactionId()..value = blake2b256.convert(immutableBytes).bytes;
@@ -142,13 +156,6 @@ extension TransactionOutputCodecs on TransactionOutput {
     ..addAll(value.immutableBytes);
 }
 
-extension TransactionScheduleCodecs on TransactionSchedule {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(minSlot.toBytes())
-    ..addAll(maxSlot.toBytes())
-    ..addAll(timestamp.toBytes());
-}
-
 extension KeyCodecs on Key {
   List<int> get immutableBytes {
     if (hasEd25519())
@@ -159,32 +166,22 @@ extension KeyCodecs on Key {
 }
 
 extension ValueCodecs on Value {
-  List<int> get immutableBytes {
-    if (hasPaymentToken())
-      return paymentToken.immutableBytes;
-    else if (hasStakingToken())
-      return stakingToken.immutableBytes;
-    else
-      throw ArgumentError("Invalid Value");
-  }
-}
-
-extension PaymentTokenCodecs on PaymentToken {
-  List<int> get immutableBytes => quantity.toBytes();
-}
-
-extension StakingTokenCodecs on StakingToken {
-  List<int> get immutableBytes {
-    final base = quantity.toBytes();
-    // TODO if(hasRegistration())
-    return base;
-  }
+  // TODO registration
+  List<int> get immutableBytes => <int>[]..addAll(quantity.immutableBytes);
 }
 
 extension LockAddressCodecs on LockAddress {
   List<int> get immutableBytes => value;
 
-  String get show => this.value.base58;
+  String get show => "a_${this.value.base58}";
+}
+
+LockAddress decodeLockAddress(String input) {
+  if (input.startsWith("a_")) return decodeLockAddress(input.substring(2));
+  final decoded = Base58Decode(input);
+  assert(decoded.length == 32);
+  final lockAddress = LockAddress()..value = decoded;
+  return lockAddress;
 }
 
 extension LockCodecs on Lock {

@@ -10,7 +10,6 @@ import 'package:blockchain_ledger/models/transaction_validation_context.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_minting/algebras/block_packer_algebra.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 
 class BlockPacker extends BlockPackerAlgebra {
@@ -48,11 +47,8 @@ class BlockPacker extends BlockPackerAlgebra {
         if (dependenciesExistLocally)
           transactionsWithLocalParents.add(transaction);
       }
-      final sortedTransactions = transactionsWithLocalParents.sortBy(Order.by(
-          (a) => a.schedule.timestamp.toInt(),
-          Order.fromLessThan<int>((a1, a2) => a1 < a2)));
 
-      queue.addAll(sortedTransactions);
+      queue.addAll(transactionsWithLocalParents);
     }
 
     Future<FullBlockBody?> improve(FullBlockBody current) async {

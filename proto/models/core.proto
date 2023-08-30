@@ -154,7 +154,6 @@ message TransactionId {
 message Transaction {
     repeated TransactionInput inputs = 1;
     repeated TransactionOutput outputs = 2;
-    TransactionSchedule schedule = 3;
 }
 
 message TransactionInput {
@@ -174,24 +173,7 @@ message TransactionOutput {
     Value value = 2;
 }
 
-message TransactionSchedule {
-    uint64 minSlot = 1;
-    uint64 maxSlot = 2;
-    uint64 timestamp = 3;
-}
-
 message Value {
-    oneof value {
-        PaymentToken paymentToken = 1;
-        StakingToken stakingToken = 2;
-    }
-}
-
-message PaymentToken {
-    uint64 quantity = 1 [(validate.rules).message.required = true];
-}
-
-message StakingToken {
     uint64 quantity = 1 [(validate.rules).message.required = true];
     // Optional.  If not provided, this token will not be used for staking purposes.
     StakingRegistration registration = 2;

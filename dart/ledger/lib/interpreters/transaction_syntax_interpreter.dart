@@ -21,8 +21,6 @@ class TransactionSyntaxInterpreter extends TransactionSyntaxVerifier {
     nonEmptyInputsValidation,
     distinctInputsValidation,
     maximumOutputsCountValidation,
-    positiveTimestampValidation,
-    scheduleValidation,
     dataLengthValidation,
     positiveOutputValuesValidation,
     sufficientFundsValidation,
@@ -54,21 +52,6 @@ class TransactionSyntaxInterpreter extends TransactionSyntaxVerifier {
     return [];
   }
 
-  static List<String> positiveTimestampValidation(Transaction transaction) {
-    if (transaction.schedule.timestamp < 0) {
-      return ["InvalidTimestamp"];
-    }
-    return [];
-  }
-
-  static List<String> scheduleValidation(Transaction transaction) {
-    final schedule = transaction.schedule;
-    if (schedule.maxSlot < schedule.minSlot || schedule.minSlot < 0) {
-      return ["InvalidSchedule"];
-    }
-    return [];
-  }
-
   static List<String> dataLengthValidation(Transaction transaction) {
     final immutableBytes = transaction.immutableBytes;
     if (immutableBytes.length > MaxDataLength) {
@@ -80,33 +63,20 @@ class TransactionSyntaxInterpreter extends TransactionSyntaxVerifier {
   static List<String> positiveOutputValuesValidation(Transaction transaction) {
     for (final output in transaction.outputs) {
       final value = output.value;
-      if (value.hasPaymentToken()) {
-        if (value.paymentToken.quantity <= 0) return ["NonPositiveOutputValue"];
-      } else if (value.hasStakingToken()) {
-        if (value.stakingToken.quantity <= 0) return ["NonPositiveOutputValue"];
-      }
+      if (value.quantity <= 0) return ["NonPositiveOutputValue"];
     }
     return [];
   }
 
   static List<String> sufficientFundsValidation(Transaction transaction) {
     Int64 paymentTokenBalance = Int64.ZERO;
-    Int64 stakingTokenBalance = Int64.ZERO;
     for (final input in transaction.inputs) {
-      if (input.value.hasPaymentToken()) {
-        paymentTokenBalance += input.value.paymentToken.quantity;
-      } else if (input.value.hasStakingToken()) {
-        stakingTokenBalance += input.value.stakingToken.quantity;
-      }
+      paymentTokenBalance += input.value.quantity;
     }
     for (final output in transaction.outputs) {
-      if (output.value.hasPaymentToken()) {
-        paymentTokenBalance -= output.value.paymentToken.quantity;
-      } else if (output.value.hasStakingToken()) {
-        stakingTokenBalance -= output.value.stakingToken.quantity;
-      }
+      paymentTokenBalance -= output.value.quantity;
     }
-    if (paymentTokenBalance < Int64.ZERO || stakingTokenBalance < Int64.ZERO) {
+    if (paymentTokenBalance < Int64.ZERO) {
       return ["InsufficientFunds"];
     }
     return [];
