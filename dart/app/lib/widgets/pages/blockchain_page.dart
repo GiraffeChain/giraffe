@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:blockchain/blockchain.dart';
-import 'package:blockchain_app/widgets/transact.dart';
+import 'package:blockchain_app/widgets/pages/transact_page.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';

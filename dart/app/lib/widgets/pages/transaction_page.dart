@@ -1,11 +1,10 @@
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain_app/widgets/bitmap_render.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_common/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import 'bitmap_render.dart';
 
 class UnloadedTransactionPage extends StatelessWidget {
   final TransactionId id;

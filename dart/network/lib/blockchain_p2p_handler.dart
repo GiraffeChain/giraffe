@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -6,11 +5,10 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'p2p_server.dart';
 
 class BlockchainDataGossipHandler {
-  final Socket socket;
   late final DataGossipSocketHandler socketHandler;
 
   BlockchainDataGossipHandler({
-    required this.socket,
+    required processor,
     required void Function(BlockId) blockIdNotified,
     required void Function(TransactionId) transactionIdNotified,
     required Future<BlockHeader?> Function(BlockId) fetchLocalHeader,
@@ -54,8 +52,8 @@ class BlockchainDataGossipHandler {
       }
     }
 
-    this.socketHandler =
-        DataGossipSocketHandler(socket, fulfillRequest, notificationReceived);
+    this.socketHandler = DataGossipSocketHandler(
+        processor, fulfillRequest, notificationReceived);
   }
 
   Future<BlockHeader?> requestHeader(BlockId id) async {

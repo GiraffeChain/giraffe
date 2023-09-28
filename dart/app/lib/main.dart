@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:blockchain/isolate_pool.dart';
-import 'package:blockchain_app/widgets/block_page.dart';
-import 'package:blockchain_app/widgets/blockchain_launcher_page.dart';
-import 'package:blockchain_app/widgets/blockchain_page.dart';
-import 'package:blockchain_app/widgets/transaction_page.dart';
+import 'package:blockchain_app/widgets/pages/block_page.dart';
+import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
+import 'package:blockchain_app/widgets/pages/blockchain_page.dart';
+import 'package:blockchain_app/widgets/pages/transaction_page.dart';
 import 'package:blockchain_codecs/codecs.dart';
 import 'package:blockchain_crypto/kes.dart' as kes;
 import 'package:blockchain_crypto/utils.dart';

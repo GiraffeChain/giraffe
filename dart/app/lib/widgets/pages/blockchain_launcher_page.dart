@@ -40,7 +40,12 @@ class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
       future: launch(),
       builder: (context, snapshot) => snapshot.hasData
           ? MultiProvider(
-              providers: [Provider.value(value: snapshot.data!)],
+              providers: [
+                  Provider(
+                    create: (_) => snapshot.data!,
+                    dispose: (_, blockchain) => blockchain.cleanup(),
+                  )
+                ],
               child: Navigator(
                 initialRoute: '/',
                 onGenerateRoute: FluroRouter.appRouter.generator,

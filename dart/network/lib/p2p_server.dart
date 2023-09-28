@@ -30,39 +30,38 @@ class P2PServer {
     }).drain();
   }
 
-  Future<void> stop() async {
+  Future<void> cleanup() async {
     if (_server != null) await _server!.close();
   }
 }
 
-class DataGossipSocketHandler {
+/**
+ * A wrapper around a function which handles a frame (a sequence of bytes).
+ * Once handled, the function returns an optional new FrameReceivedHandler to
+ * process the next message.  If null, the original handler will be used.
+ */
+class FrameReceivedHandler {
+  final FrameReceivedHandler? Function(Uint8List) handler;
+
+  FrameReceivedHandler(this.handler);
+
+  static final unhandled = FrameReceivedHandler((_) => null);
+}
+
+class FramedSocketProcessor {
   final Socket socket;
-  final Future<Data?> Function(DataRequest) fulfillRemoteRequest;
-  final void Function(DataNotification) dataNotificationReceived;
+  FrameReceivedHandler onFrameReceived;
 
-  final _pendingRequests = <DataRequest, Completer<Data?>>{};
-
-  DataGossipSocketHandler(
-      this.socket, this.fulfillRemoteRequest, this.dataNotificationReceived) {
+  FramedSocketProcessor({required this.socket, required this.onFrameReceived}) {
     _processSocket();
   }
 
-  void notifyData(DataNotification notification) {
-    final message = Uint8List.fromList([0, notification.typeByte])
-      ..addAll(notification.id);
-    socket.add(_createSocketFrame(message));
+  void send(List<int> data) {
+    final frame = _createSocketFrame(Uint8List.fromList(data));
+    socket.add(frame);
   }
 
-  Future<Data?> requestData(DataRequest request) {
-    final message = Uint8List.fromList([1, request.typeByte])
-      ..addAll(request.id);
-    socket.add(_createSocketFrame(message));
-    final completer = Completer<Data?>();
-    _pendingRequests[request] = completer;
-    return completer.future;
-  }
-
-  _createSocketFrame(Uint8List bytes) =>
+  Uint8List _createSocketFrame(Uint8List bytes) =>
       _intToBytes(bytes.length)..addAll(bytes);
 
   ParsedSocketFrame? _parseSocketFrame(Uint8List buffer) {
@@ -81,24 +80,55 @@ class DataGossipSocketHandler {
     socket.forEach((data) {
       buffer.addAll(data);
       var maybeFrame = _parseSocketFrame(buffer);
-      if (maybeFrame != null) {
+      while (maybeFrame != null) {
         buffer.clear();
         buffer.addAll(maybeFrame.remaining);
-        _processFrame(maybeFrame);
+        final newHandler = onFrameReceived.handler(maybeFrame.data);
+        onFrameReceived = newHandler ?? onFrameReceived;
         maybeFrame = _parseSocketFrame(buffer);
       }
     });
   }
+}
 
-  void _processFrame(ParsedSocketFrame frame) {
-    switch (frame.data[0]) {
+class DataGossipSocketHandler {
+  final FramedSocketProcessor processor;
+  final Future<Data?> Function(DataRequest) fulfillRemoteRequest;
+  final void Function(DataNotification) dataNotificationReceived;
+
+  final _pendingRequests = <DataRequest, Completer<Data?>>{};
+
+  DataGossipSocketHandler(this.processor, this.fulfillRemoteRequest,
+      this.dataNotificationReceived) {
+    processor.onFrameReceived = FrameReceivedHandler((data) {
+      _processFrame(data);
+      return null;
+    });
+  }
+
+  void notifyData(DataNotification notification) {
+    final message = Uint8List.fromList([0, notification.typeByte])
+      ..addAll(notification.id);
+    processor.send(message);
+  }
+
+  Future<Data?> requestData(DataRequest request) {
+    final message = Uint8List.fromList([1, request.typeByte])
+      ..addAll(request.id);
+    processor.send(message);
+    final completer = Completer<Data?>();
+    _pendingRequests[request] = completer;
+    return completer.future;
+  }
+
+  void _processFrame(Uint8List data) {
+    switch (data[0]) {
       case 0:
-        final notification =
-            DataNotification(frame.data[1], frame.data.sublist(2));
+        final notification = DataNotification(data[1], data.sublist(2));
         dataNotificationReceived(notification);
         break;
       case 1:
-        final request = DataRequest(frame.data[1], frame.data.sublist(2));
+        final request = DataRequest(data[1], data.sublist(2));
         fulfillRemoteRequest(request).then((maybeData) {
           if (maybeData != null) {
             final responseMessage = Uint8List.fromList([maybeData.typeByte])
@@ -106,34 +136,30 @@ class DataGossipSocketHandler {
               ..addAll(maybeData.id)
               ..add(1)
               ..addAll(maybeData.data);
-            final responseFrame = _createSocketFrame(responseMessage);
-            socket.add(responseFrame);
+            processor.send(responseMessage);
           } else {
             final responseMessage = Uint8List.fromList([request.typeByte])
               ..addAll(request.id)
               ..add(0);
-            final responseFrame = _createSocketFrame(responseMessage);
-            socket.add(responseFrame);
+            processor.send(responseMessage);
           }
         });
         break;
       case 3:
-        final typeByte = frame.data[1];
-        final idLength = _bytesToInt(frame.data.sublist(2, 6));
-        final id = frame.data.sublist(6, idLength + 6);
-        final hasData = frame.data[idLength + 6] == 1;
-        final maybeData = hasData
-            ? Data(typeByte, id, frame.data.sublist(idLength + 7))
-            : null;
+        final typeByte = data[1];
+        final idLength = _bytesToInt(data.sublist(2, 6));
+        final id = data.sublist(6, idLength + 6);
+        final hasData = data[idLength + 6] == 1;
+        final maybeData =
+            hasData ? Data(typeByte, id, data.sublist(idLength + 7)) : null;
         _pendingRequests[DataRequest(typeByte, id)]?.complete(maybeData);
         break;
     }
   }
-
-  Uint8List _intToBytes(int value) =>
-      Uint8List.fromList(Int32(value).toBytes());
-  int _bytesToInt(Uint8List bytes) => Int32List.fromList(bytes).first;
 }
+
+Uint8List _intToBytes(int value) => Uint8List.fromList(Int32(value).toBytes());
+int _bytesToInt(Uint8List bytes) => Int32List.fromList(bytes).first;
 
 class ParsedSocketFrame {
   final Uint8List data;

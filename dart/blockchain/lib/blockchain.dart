@@ -61,6 +61,8 @@ class Blockchain {
 
   final log = Logger("Blockchain");
 
+  bool _running = false;
+
   Blockchain(
     this.clock,
     this.dataStores,
@@ -257,7 +259,9 @@ class Blockchain {
         config.p2p.bindPort,
         Stream.fromIterable(config.p2p.knownPeers),
         (socket) => BlockchainDataGossipHandler(
-              socket: socket,
+              processor: FramedSocketProcessor(
+                  socket: socket,
+                  onFrameReceived: FrameReceivedHandler.unhandled),
               blockIdNotified: (BlockId) {},
               fetchLocalBlockBody: dataStores.bodies.get,
               fetchLocalHeader: dataStores.headers.get,
@@ -348,7 +352,16 @@ class Blockchain {
   }
 
   void run() {
-    unawaited(blockProducer.blocks.asyncMap(processBlock).drain());
+    _running = true;
+    unawaited(blockProducer.blocks
+        .takeWhile((_) => _running == true)
+        .asyncMap(processBlock)
+        .drain());
+  }
+
+  Future<void> cleanup() async {
+    _running = false;
+    await p2pServer.cleanup();
   }
 
   Stream<FullBlock> get newBlocks => localChain.adoptions.asyncMap((id) async {

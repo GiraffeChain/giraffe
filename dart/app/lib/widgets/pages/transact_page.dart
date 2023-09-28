@@ -172,7 +172,7 @@ class TransactViewState extends State<TransactView> {
 
     return DataRow(cells: [
       DataCell(Text(fee.toString())),
-      const DataCell(Text("Transaction Fee")),
+      const DataCell(Text("Tip")),
       const DataCell(IconButton(
         icon: Icon(Icons.cancel),
         onPressed: null,
