@@ -32,9 +32,9 @@ class EventTreeState<State, Id> extends EventSourcedStateAlgebra<State, Id> {
       else {
         final applyUnapplyChains =
             await parentChildTree.findCommmonAncestor(currentEventId, eventId);
-        await _unapplyEvents(applyUnapplyChains.first.sublist(1),
-            applyUnapplyChains.first.first);
-        await _applyEvents(applyUnapplyChains.second.sublist(1));
+        await _unapplyEvents(
+            applyUnapplyChains.$1.sublist(1), applyUnapplyChains.$1.first);
+        await _applyEvents(applyUnapplyChains.$2.sublist(1));
       }
       return f(currentState);
     });
@@ -42,11 +42,10 @@ class EventTreeState<State, Id> extends EventSourcedStateAlgebra<State, Id> {
 
   _unapplyEvents(List<Id> eventIds, Id newEventId) async {
     final indexedEventIds =
-        eventIds.mapWithIndex((t, index) => Tuple2(t, index)).toList().reversed;
+        eventIds.mapWithIndex((t, index) => (t, index)).toList().reversed;
     for (final idIndex in indexedEventIds) {
-      final newState = await unapplyEvent(currentState, idIndex.first);
-      final nextEventId =
-          idIndex.second == 0 ? newEventId : eventIds[idIndex.second];
+      final newState = await unapplyEvent(currentState, idIndex.$1);
+      final nextEventId = idIndex.$2 == 0 ? newEventId : eventIds[idIndex.$2];
       currentState = newState;
       currentEventId = nextEventId;
       await currentEventChanged(nextEventId);

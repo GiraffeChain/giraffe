@@ -7,11 +7,11 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0-290.3.beta <4.0.0'
+  sdk: ^3.0.0
 
 
 dependencies:
-  fpdart: ^0.3.0
+  fpdart: ^1.1.0
   fixnum:
   collection: ^1.17.1
   mutex: ^3.0.1

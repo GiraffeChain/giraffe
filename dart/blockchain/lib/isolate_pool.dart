@@ -5,13 +5,13 @@ import 'package:integral_isolates/integral_isolates.dart';
 
 class IsolatePool {
   final int maxIsolates;
-  final List<Isolated> _instances = [];
+  final List<StatefulIsolate> _instances = [];
 
   IsolatePool(this.maxIsolates);
 
-  Isolated getIsolate() {
+  StatefulIsolate getIsolate() {
     if (_instances.length < maxIsolates) {
-      final instance = Isolated();
+      final instance = StatefulIsolate();
       _instances.add(instance);
       return instance;
     } else {

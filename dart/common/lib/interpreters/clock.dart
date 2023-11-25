@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:blockchain_common/algebras/clock_algebra.dart';
-import 'package:fpdart/src/tuple.dart';
 import 'package:fixnum/fixnum.dart';
 
 class Clock extends ClockAlgebra {
@@ -15,7 +14,7 @@ class Clock extends ClockAlgebra {
 
   @override
   Future<void> delayedUntilSlot(Int64 slot) =>
-      delayedUntilTimestamp(slotToTimestamps(slot).first);
+      delayedUntilTimestamp(slotToTimestamps(slot).$1);
 
   @override
   Future<void> delayedUntilTimestamp(Int64 timestamp) => Future.delayed(
@@ -34,10 +33,10 @@ class Clock extends ClockAlgebra {
   Duration get slotLength => _slotLength;
 
   @override
-  Tuple2<Int64, Int64> slotToTimestamps(Int64 slot) {
+  (Int64, Int64) slotToTimestamps(Int64 slot) {
     final first = _genesisTimestamp + (slot * slotLength.inMilliseconds);
     final second = first + (slotLength.inMilliseconds - 1);
-    return Tuple2(first, second);
+    return (first, second);
   }
 
   @override

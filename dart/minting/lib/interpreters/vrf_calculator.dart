@@ -6,7 +6,6 @@ import 'package:blockchain_consensus/models/vrf_config.dart';
 import 'package:blockchain_consensus/models/vrf_argument.dart';
 import 'package:blockchain_crypto/ed25519vrf.dart';
 import 'package:blockchain_minting/algebras/vrf_calculator_algebra.dart';
-import 'package:fpdart/src/tuple.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:rational/rational.dart';
@@ -19,17 +18,16 @@ class VrfCalculator extends VrfCalculatorAlgebra {
 
   final log = Logger("VrfCalculator");
 
-  Map<Tuple2<List<int>, Int64>, List<int>> _vrfProofsCache = {};
-  Map<Tuple2<List<int>, Int64>, List<int>> _rhosCache = {};
+  Map<(List<int>, Int64), List<int>> _vrfProofsCache = {};
+  Map<(List<int>, Int64), List<int>> _rhosCache = {};
 
   VrfCalculator(
       this.skVrf, this.clock, this.leaderElectionValidation, this.vrfConfig);
 
   @override
-  Future<List<Int64>> ineligibleSlots(List<int> eta,
-      Tuple2<Int64, Int64> slotRange, Rational relativeStake) async {
-    var minSlot = slotRange.first;
-    var maxSlot = slotRange.second;
+  Future<List<Int64>> ineligibleSlots(
+      List<int> eta, (Int64, Int64) slotRange, Rational relativeStake) async {
+    final (minSlot, maxSlot) = slotRange;
 
     log.info(
       "Computing ineligible slots for" +
@@ -55,7 +53,7 @@ class VrfCalculator extends VrfCalculatorAlgebra {
 
   @override
   Future<List<int>> proofForSlot(Int64 slot, List<int> eta) async {
-    final key = Tuple2(eta, slot);
+    final key = (eta, slot);
     if (!_vrfProofsCache.containsKey(key)) {
       final arg = VrfArgument(eta, slot);
       final message = arg.signableBytes;
@@ -69,7 +67,7 @@ class VrfCalculator extends VrfCalculatorAlgebra {
 
   @override
   Future<List<int>> rhoForSlot(Int64 slot, List<int> eta) async {
-    final key = Tuple2(eta, slot);
+    final key = (eta, slot);
     if (!_rhosCache.containsKey(key)) {
       final proof = await proofForSlot(slot, eta);
       final rho = await ed25519Vrf.proofToHash(proof);

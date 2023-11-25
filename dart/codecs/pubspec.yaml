@@ -7,12 +7,12 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0-290.3.beta <4.0.0'
+  sdk: ^3.0.0
 
 
 dependencies:
   cryptography: ^2.0.5
-  fpdart: ^0.3.0
+  fpdart: ^1.1.0
   fast_base58: ^0.2.1
   hashlib: ^1.8.1
   blockchain_common:

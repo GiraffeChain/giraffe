@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:hashlib/hashlib.dart';
 
 import 'kes_sum.dart';
@@ -16,10 +15,10 @@ class KesHelper {
 
   int exp(int n) => Int64(pow(2, n).toInt()).toInt32().toInt();
 
-  Future<Tuple2<Uint8List, Uint8List>> prng(List<int> seed) async {
+  Future<(Uint8List, Uint8List)> prng(List<int> seed) async {
     final r1 = await hash([0x00]..addAll(seed));
     final r2 = await hash([0x01]..addAll(seed));
-    return Tuple2(r1, r2);
+    return (r1, r2);
   }
 
   int getTreeHeight(KesBinaryTree tree) {

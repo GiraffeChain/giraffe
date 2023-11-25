@@ -51,7 +51,7 @@ class EtaCalculation extends EtaCalculationAlgebra {
     final epoch = clock.epochOfSlot(twoThirdsBest.slotId.slot);
     final epochRange = clock.epochRange(epoch);
     final epochData = [twoThirdsBest];
-    while (epochData.first.parentSlotId.slot >= epochRange.first) {
+    while (epochData.first.parentSlotId.slot >= epochRange.$1) {
       epochData.insert(
           0, await fetchSlotData(epochData.first.parentSlotId.blockId));
     }

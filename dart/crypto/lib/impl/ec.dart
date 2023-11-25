@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:blockchain_crypto/impl/x25519_field.dart' as x25519Field;
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 
 /*
   Ed25519 is EdDSA instantiated with:
@@ -43,8 +42,8 @@ Table 1: Parameters of Ed25519
  */
 
 final _precomp = _precompute();
-final _precompBaseTable = _precomp.first;
-final _precompBase = _precomp.second;
+final _precompBaseTable = _precomp.$1;
+final _precompBase = _precomp.$2;
 
 int mulAddTo256(Int32List x, Int32List y, Int32List zz) {
   final y_0 = Int64(y[0]) & M;
@@ -496,7 +495,7 @@ void pointSetNeutralExt(PointExt p) {
   x25519Field.zero(p.t);
 }
 
-Tuple2<List<PointExt>, Int32List> _precompute() {
+(List<PointExt>, Int32List) _precompute() {
   // Precomputed table for the base point in verification ladder
   final b = PointExt.create();
   x25519Field.copy(B_x, 0, b.x, 0);
@@ -558,7 +557,7 @@ Tuple2<List<PointExt>, Int32List> _precompute() {
       off += x25519Field.SIZE;
     }
   }
-  return Tuple2(_precompBaseTable, _precompBase);
+  return (_precompBaseTable, _precompBase);
 }
 
 void pruneScalar(Int8List n, int nOff, Int8List r) {

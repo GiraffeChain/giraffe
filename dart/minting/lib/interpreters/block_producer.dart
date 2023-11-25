@@ -64,7 +64,7 @@ class BlockProducer extends BlockProducerAlgebra {
         );
         if (bodyOpt != null) {
           log.info("Constructing block for slot=${nextHit.slot}");
-          final timestamp = clock.slotToTimestamps(nextHit.slot).first;
+          final timestamp = clock.slotToTimestamps(nextHit.slot).$1;
           final maybeHeader = await staker.certifyBlock(
               parentSlotData.slotId,
               nextHit.slot,
@@ -99,7 +99,7 @@ class BlockProducer extends BlockProducerAlgebra {
     final globalSlot = clock.globalSlot;
     if (globalSlot > test) test = globalSlot;
     final exitSlot =
-        clock.epochRange(clock.epochOfSlot(parentSlotId.slot) + 1).second;
+        clock.epochRange(clock.epochOfSlot(parentSlotId.slot) + 1).$2;
     VrfHit? maybeHit;
     while (maybeHit == null && test < exitSlot) {
       maybeHit = await staker.elect(parentSlotId, test);

@@ -52,7 +52,7 @@ class MainApp extends StatelessWidget {
 
   Widget _home(BuildContext context) => Scaffold(
         body: SizedBox.fromSize(
-          size: Size(500, 500),
+          size: const Size(500, 500),
           child: BlockchainConfigForm(
             onSubmit: (context, config) => Navigator.push(
                 context,

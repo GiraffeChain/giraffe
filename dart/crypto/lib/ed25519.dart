@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:blockchain_crypto/impl/ec.dart' as ec;
 import 'package:blockchain_crypto/utils.dart';
 import 'package:cryptography/cryptography.dart' as c;
-import 'package:fpdart/fpdart.dart';
 
 abstract class Ed25519 {
   Future<Ed25519KeyPair> generateKeyPair();
@@ -65,19 +64,18 @@ class Ed25519Isolated extends Ed25519 {
 
   @override
   Future<List<int>> sign(List<int> message, List<int> sk) async =>
-      _compute((t) => _sign(t.first, t.second), Tuple2(message, sk));
+      _compute((t) => _sign(t.$1, t.$2), (message, sk));
 
   @override
   Future<List<int>> signKeyPair(
           List<int> message, Ed25519KeyPair keyPair) async =>
-      _compute(
-          (t) => _signKeyPair(t.first, t.second), Tuple2(message, keyPair));
+      _compute((t) => _signKeyPair(t.$1, t.$2), (message, keyPair));
 
   @override
   Future<bool> verify(
           List<int> signature, List<int> message, List<int> vk) async =>
-      _compute((t) => _verify(t.first.first, t.first.second, t.second),
-          Tuple2(Tuple2(signature, message), vk));
+      _compute(
+          (t) => _verify(t.$1.$1, t.$1.$2, t.$2), ((signature, message), vk));
 }
 
 final _algorithm = c.Ed25519();

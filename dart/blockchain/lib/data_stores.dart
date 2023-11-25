@@ -3,11 +3,10 @@ import 'package:blockchain_common/interpreters/in_memory_store.dart';
 import 'package:blockchain_consensus/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:blockchain_common/algebras/store_algebra.dart';
 
 class DataStores {
-  final StoreAlgebra<BlockId, Tuple2<Int64, BlockId>> parentChildTree;
+  final StoreAlgebra<BlockId, (Int64, BlockId)> parentChildTree;
   final StoreAlgebra<int, BlockId> currentEventIds;
   final StoreAlgebra<BlockId, SlotData> slotData;
   final StoreAlgebra<BlockId, BlockHeader> headers;

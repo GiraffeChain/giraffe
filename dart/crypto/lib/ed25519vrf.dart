@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:blockchain_crypto/impl/ec.dart' as ec;
 import 'package:blockchain_crypto/utils.dart';
 import 'package:cryptography/cryptography.dart';
-import 'package:fpdart/fpdart.dart';
 
 abstract class Ed25519VRF {
   Future<Ed25519VRFKeyPair> generateKeyPair();
@@ -188,7 +187,7 @@ class Ed25519VRFImpl extends Ed25519VRF {
     ec.decodeScalar(zeroScalar, 0, nb);
     ec.scalarMultStraussVar(nb, np, H, HR);
     ec.encodePoint(HR, hash, 0);
-    return Tuple2(HR, hash);
+    return (HR, hash);
   }
 
   _isNeutralPoint(ec.PointExt p) {
@@ -282,10 +281,10 @@ class Ed25519VRFIsolated extends Ed25519VRF {
 
   @override
   Future<Uint8List> sign(List<int> sk, List<int> message) =>
-      _compute((t) => _sign(t.first, t.second), Tuple2(sk, message));
+      _compute((t) => _sign(t.$1, t.$2), (sk, message));
 
   @override
   Future<bool> verify(List<int> signature, List<int> message, List<int> vk) =>
-      _compute((t) => _verify(t.first.first, t.first.second, t.second),
-          Tuple2(Tuple2(signature, message), vk));
+      _compute(
+          (t) => _verify(t.$1.$1, t.$1.$2, t.$2), ((signature, message), vk));
 }
