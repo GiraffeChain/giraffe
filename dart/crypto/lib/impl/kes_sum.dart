@@ -132,9 +132,9 @@ class KesSum {
             Uint8List.fromList(keyPair.sk), Uint8List.fromList(keyPair.vk));
       } else {
         final r = await kesHelper.prng(seed);
-        final left = await seedTree(r.first, height - 1);
-        final right = await seedTree(r.second, height - 1);
-        return KesMerkleNode(r.second, await kesHelper.witness(left),
+        final left = await seedTree(r.$1, height - 1);
+        final right = await seedTree(r.$2, height - 1);
+        return KesMerkleNode(r.$2, await kesHelper.witness(left),
             await kesHelper.witness(right), left, right);
       }
     }

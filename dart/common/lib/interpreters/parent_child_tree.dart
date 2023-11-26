@@ -1,10 +1,9 @@
 import 'package:blockchain_common/algebras/parent_child_tree_algebra.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 
 class ParentChildTree<T> extends ParentChildTreeAlgebra<T> {
-  final Future<Tuple2<Int64, T>?> Function(T) read;
-  final Future<void> Function(T, Tuple2<Int64, T>) write;
+  final Future<(Int64, T)?> Function(T) read;
+  final Future<void> Function(T, (Int64, T)) write;
   final T root;
 
   ParentChildTree(this.read, this.write, this.root);
@@ -12,17 +11,17 @@ class ParentChildTree<T> extends ParentChildTreeAlgebra<T> {
   @override
   Future<void> assocate(T child, T parent) async {
     if (parent == root)
-      await write(child, Tuple2(Int64(1), parent));
+      await write(child, (Int64(1), parent));
     else {
       final heightId = await _readOrRaise(parent);
-      await write(child, Tuple2(heightId.first + 1, parent));
+      await write(child, (heightId.$1 + 1, parent));
     }
   }
 
   @override
-  Future<Tuple2<List<T>, List<T>>> findCommmonAncestor(T a, T b) async {
+  Future<(List<T>, List<T>)> findCommmonAncestor(T a, T b) async {
     if (a == b)
-      return Tuple2([a], [b]);
+      return ([a], [b]);
     else {
       final aHeight = await heightOf(a);
       final bHeight = await heightOf(b);
@@ -33,17 +32,17 @@ class ParentChildTree<T> extends ParentChildTreeAlgebra<T> {
         bChain = [b];
       } else if (aHeight < bHeight) {
         aChain = [a];
-        bChain = (await _traverseBackToHeight([b], bHeight, aHeight)).first;
+        bChain = (await _traverseBackToHeight([b], bHeight, aHeight)).$1;
       } else {
-        aChain = (await _traverseBackToHeight([a], aHeight, bHeight)).first;
+        aChain = (await _traverseBackToHeight([a], aHeight, bHeight)).$1;
         bChain = [b];
       }
 
       while (aChain.first != bChain.first) {
-        aChain.insert(0, (await _readOrRaise(aChain.first)).second);
-        bChain.insert(0, (await _readOrRaise(bChain.first)).second);
+        aChain.insert(0, (await _readOrRaise(aChain.first)).$2);
+        bChain.insert(0, (await _readOrRaise(bChain.first)).$2);
       }
-      return Tuple2(aChain, bChain);
+      return (aChain, bChain);
     }
   }
 
@@ -52,31 +51,31 @@ class ParentChildTree<T> extends ParentChildTreeAlgebra<T> {
     if (t == root)
       return Int64.ZERO;
     else
-      return (await _readOrRaise(t)).first;
+      return (await _readOrRaise(t)).$1;
   }
 
   @override
   Future<T?> parentOf(T t) async {
     if (t == root) return null;
     final v = await read(t);
-    if (v != null) return v.second;
+    if (v != null) return v.$2;
     return null;
   }
 
-  _readOrRaise(T id) async {
+  Future<(Int64, T)> _readOrRaise(T id) async {
     final v = await read(id);
     if (v == null) throw Exception("Element id=$id not found");
     return v;
   }
 
-  Future<Tuple2<List<T>, Int64>> _traverseBackToHeight(
+  Future<(List<T>, Int64)> _traverseBackToHeight(
       List<T> collection, Int64 initialHeight, Int64 targetHeight) async {
     final chain = List.of(collection);
     Int64 height = initialHeight;
     while (height > targetHeight) {
-      chain.insert(0, (await _readOrRaise(chain.first)).second);
+      chain.insert(0, (await _readOrRaise(chain.first)).$2);
       height--;
     }
-    return Tuple2(chain, height);
+    return (chain, height);
   }
 }

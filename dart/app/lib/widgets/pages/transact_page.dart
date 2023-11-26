@@ -5,7 +5,7 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:fpdart/fpdart.dart' show FpdartOnMutableIterable, Tuple2;
+import 'package:fpdart/fpdart.dart' hide State;
 import 'package:flutter/services.dart';
 
 class TransactView extends StatefulWidget {
@@ -20,7 +20,7 @@ class TransactView extends StatefulWidget {
 
 class TransactViewState extends State<TransactView> {
   Set<TransactionOutputReference> _selectedInputs = {};
-  List<Tuple2<String, String>> _newOutputEntries = [];
+  List<(String valueStr, String addressStr)> _newOutputEntries = [];
 
   @override
   Widget build(BuildContext context) {
@@ -76,8 +76,8 @@ class TransactViewState extends State<TransactView> {
     }
 
     for (final e in _newOutputEntries) {
-      final lockAddress = decodeLockAddress(e.second);
-      final value = Value()..quantity = Int64.parseInt(e.first);
+      final lockAddress = decodeLockAddress(e.$2);
+      final value = Value()..quantity = Int64.parseInt(e.$1);
       final output = TransactionOutput()
         ..lockAddress = lockAddress
         ..value = value;
@@ -107,7 +107,7 @@ class TransactViewState extends State<TransactView> {
         DataTable(
           columns: _outputTableHeader,
           rows: [
-            ..._newOutputEntries.mapWithIndex(_outputEntryRow).toList(),
+            ..._newOutputEntries.mapWithIndex(_outputEntryRow),
             _feeOutputRow()
           ],
         ),
@@ -143,15 +143,15 @@ class TransactViewState extends State<TransactView> {
     ),
   ];
 
-  DataRow _outputEntryRow(Tuple2<String, String> entry, int index) {
+  DataRow _outputEntryRow((String, String) entry, int index) {
     return DataRow(
       cells: [
         DataCell(TextFormField(
-          initialValue: entry.first,
+          initialValue: entry.$1,
           onChanged: (value) => _updateOutputEntryQuantity(index, value),
         )),
         DataCell(TextFormField(
-          initialValue: entry.second,
+          initialValue: entry.$2,
           onChanged: (value) => _updateOutputEntryAddress(index, value),
         )),
         DataCell(
@@ -166,7 +166,7 @@ class TransactViewState extends State<TransactView> {
 
   DataRow _feeOutputRow() {
     final outputSum = _newOutputEntries
-        .map((t) => Int64.parseInt(t.first))
+        .map((t) => Int64.parseInt(t.$1))
         .fold(Int64.ZERO, (a, b) => a + b);
     final fee = _inputSum() - outputSum;
 
@@ -182,21 +182,21 @@ class TransactViewState extends State<TransactView> {
 
   _updateOutputEntryQuantity(int index, String value) {
     setState(() {
-      _newOutputEntries[index] =
-          _newOutputEntries[index].copyWith(value1: value);
+      final (_, a) = _newOutputEntries[index];
+      _newOutputEntries[index] = (value, a);
     });
   }
 
   _updateOutputEntryAddress(int index, String value) {
     setState(() {
-      _newOutputEntries[index] =
-          _newOutputEntries[index].copyWith(value2: value);
+      final (v, _) = _newOutputEntries[index];
+      _newOutputEntries[index] = (v, value);
     });
   }
 
   _addOutputEntry() {
     setState(() {
-      _newOutputEntries.add(const Tuple2("100", ""));
+      _newOutputEntries.add(const ("100", ""));
     });
   }
 

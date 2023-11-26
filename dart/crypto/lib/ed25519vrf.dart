@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:blockchain_crypto/impl/ec.dart' as ec;
 import 'package:blockchain_crypto/utils.dart';
 import 'package:cryptography/cryptography.dart';
-import 'package:fpdart/fpdart.dart';
 
 abstract class Ed25519VRF {
   Future<Ed25519VRFKeyPair> generateKeyPair();
@@ -90,7 +89,7 @@ class Ed25519VRFImpl extends Ed25519VRF {
     ec.scalarMultStraussVar(nb, np, Y, B);
     ec.decodeScalar(s, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
-    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.first), C);
+    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.$1), C);
     ec.decodeScalar(c, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
     ec.scalarMultStraussVar(nb, np, gamma, D);
@@ -101,7 +100,7 @@ class Ed25519VRFImpl extends Ed25519VRF {
     ec.pointAddVar2(true, ec.pointCopyAccum(C), ec.pointCopyAccum(D), t);
     ec.scalarMultStraussVar(nb, np, t, V);
     ec.scalarMultStraussVar(nb, np, gamma, g);
-    final cp = await _hashPoints(H.first, g, U, V);
+    final cp = await _hashPoints(H.$1, g, U, V);
     return c.sameElements(cp);
   }
 
@@ -113,16 +112,16 @@ class Ed25519VRFImpl extends Ed25519VRF {
     final gamma = ec.PointAccum.create();
     ec.decodeScalar(x, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
-    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.first), gamma);
-    final k = await _nonceGenerationRFC8032(sk, H.second);
+    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.$1), gamma);
+    final k = await _nonceGenerationRFC8032(sk, H.$2);
     assert(ec.checkScalarVar(k));
     final kB = ec.PointAccum.create();
     final kH = ec.PointAccum.create();
     ec.scalarMultBase(k, kB);
     ec.decodeScalar(k, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
-    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.first), kH);
-    final c = await _hashPoints(H.first, gamma, kB, kH);
+    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.$1), kH);
+    final c = await _hashPoints(H.$1, gamma, kB, kH);
     final s = ec.calculateS(k, c, x);
     final gamma_str = Int8List(ec.POINT_BYTES);
     ec.encodePoint(gamma, gamma_str, 0);
@@ -160,7 +159,8 @@ class Ed25519VRFImpl extends Ed25519VRF {
     return h;
   }
 
-  _hashToCurveTryAndIncrement(Int8List Y, Int8List a) async {
+  Future<(ec.PointAccum, Int8List)> _hashToCurveTryAndIncrement(
+      Int8List Y, Int8List a) async {
     int ctr = 0;
     final hash = Int8List(ec.POINT_BYTES);
     final H = ec.PointExt.create();
@@ -188,7 +188,7 @@ class Ed25519VRFImpl extends Ed25519VRF {
     ec.decodeScalar(zeroScalar, 0, nb);
     ec.scalarMultStraussVar(nb, np, H, HR);
     ec.encodePoint(HR, hash, 0);
-    return Tuple2(HR, hash);
+    return (HR, hash);
   }
 
   _isNeutralPoint(ec.PointExt p) {
@@ -282,10 +282,10 @@ class Ed25519VRFIsolated extends Ed25519VRF {
 
   @override
   Future<Uint8List> sign(List<int> sk, List<int> message) =>
-      _compute((t) => _sign(t.first, t.second), Tuple2(sk, message));
+      _compute((t) => _sign(t.$1, t.$2), (sk, message));
 
   @override
   Future<bool> verify(List<int> signature, List<int> message, List<int> vk) =>
-      _compute((t) => _verify(t.first.first, t.first.second, t.second),
-          Tuple2(Tuple2(signature, message), vk));
+      _compute(
+          (t) => _verify(t.$1.$1, t.$1.$2, t.$2), ((signature, message), vk));
 }

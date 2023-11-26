@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:blockchain/config.dart';
@@ -23,6 +22,7 @@ import 'package:blockchain_consensus/interpreters/leader_election_validation.dar
 import 'package:blockchain_consensus/interpreters/local_chain.dart';
 import 'package:blockchain_consensus/models/vrf_config.dart';
 import 'package:blockchain_consensus/utils.dart';
+import 'package:blockchain_crypto/ed25519.dart';
 import 'package:blockchain_crypto/kes.dart';
 import 'package:blockchain_crypto/utils.dart';
 import 'package:blockchain_ledger/algebras/mempool_algebra.dart';
@@ -35,8 +35,8 @@ import 'package:blockchain_minting/interpreters/in_memory_secure_store.dart';
 import 'package:blockchain_minting/interpreters/operational_key_maker.dart';
 import 'package:blockchain_minting/interpreters/staking.dart';
 import 'package:blockchain_minting/interpreters/vrf_calculator.dart';
-import 'package:blockchain_network/blockchain_p2p_handler.dart';
 import 'package:blockchain_network/p2p_server.dart';
+import 'package:blockchain_network/peers_manager.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
@@ -251,25 +251,25 @@ class Blockchain {
 
     log.info("Preparing P2P Network");
 
-    final secureRandom = Random.secure();
-    final p2pId = List.generate(32, (_) => secureRandom.nextInt(255));
+    final p2pKey = await ed25519.generateKeyPair();
+    final peersManager =
+        PeersManager(p2pKey, Uint8List.fromList(List.generate(32, (i) => i)));
     final p2pServer = P2PServer(
-        Uint8List.fromList(p2pId),
-        config.p2p.bindHost,
-        config.p2p.bindPort,
-        Stream.fromIterable(config.p2p.knownPeers),
-        (socket) => BlockchainDataGossipHandler(
-              processor: FramedSocketProcessor(
-                  socket: socket,
-                  onFrameReceived: FrameReceivedHandler.unhandled),
-              blockIdNotified: (BlockId) {},
-              fetchLocalBlockBody: dataStores.bodies.get,
-              fetchLocalHeader: dataStores.headers.get,
-              fetchLocalTransaction: dataStores.transactions.get,
-              transactionIdNotified: (TransactionId) {},
-            ));
+      config.p2p.bindHost,
+      config.p2p.bindPort,
+      (socket) =>
+          peersManager.handleConnection(socket).onError((error, stackTrace) {
+        log.warning("P2P Connection failure", error, stackTrace);
+        socket.destroy();
+      }),
+    );
 
     await p2pServer.start();
+
+    for (final peer in config.p2p.knownPeers) {
+      final parsed = peer.split(":");
+      p2pServer.connectOutbound(parsed[0], int.parse(parsed[1]));
+    }
 
     log.info("Initializing Wallet ESS");
     final wallet = Wallet.empty();
@@ -398,10 +398,10 @@ class Blockchain {
   Stream<TraversalStep> traversalBetween(BlockId a, BlockId b) =>
       Stream.fromFuture(parentChildTree.findCommmonAncestor(a, b)).expand(
           (unapplyApply) => <TraversalStep>[]
-            ..addAll(unapplyApply.first.tail
+            ..addAll(unapplyApply.$1.tail
                 .toNullable()!
                 .map((id) => TraversalStep_Unapplied(id)))
-            ..addAll(unapplyApply.second.tail
+            ..addAll(unapplyApply.$2.tail
                 .toNullable()!
                 .map((id) => TraversalStep_Applied(id))));
 }

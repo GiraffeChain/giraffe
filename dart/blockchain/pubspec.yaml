@@ -10,7 +10,7 @@ environment:
 
 dependencies:
   args: ^2.3.1
-  integral_isolates: ^0.3.0+2
+  integral_isolates: ^0.4.1
   async:
   rxdart:
   fixnum:

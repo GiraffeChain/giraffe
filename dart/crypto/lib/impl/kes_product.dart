@@ -66,11 +66,12 @@ class KesProductImpl extends KesProduct {
     final newKeyTimeSup = step ~/ totalStepsSub;
     final newKeyTimeSub = step % totalStepsSub;
 
-    getSeed(Tuple2<List<int>, List<int>> seeds, int iter) async {
+    Future<(List<int>, List<int>)> getSeed(
+        (List<int>, List<int>) seeds, int iter) async {
       if (iter < newKeyTimeSup) {
-        final out = getSeed(await kesHelper.prng(seeds.second), iter + 1);
-        kesHelper.overwriteBytes(seeds.first);
-        kesHelper.overwriteBytes(seeds.second);
+        final out = getSeed(await kesHelper.prng(seeds.$2), iter + 1);
+        kesHelper.overwriteBytes(seeds.$1);
+        kesHelper.overwriteBytes(seeds.$2);
         return out;
       } else
         return seeds;
@@ -79,11 +80,11 @@ class KesProductImpl extends KesProduct {
     if (step > keyTime && step < totalSteps) {
       if (keyTimeSup < newKeyTimeSup) {
         kesSum.eraseOldNode(sk.subTree);
-        final seeds = await getSeed(Tuple2([], sk.nextSubSeed), keyTimeSup);
+        final seeds = await getSeed(([], sk.nextSubSeed), keyTimeSup);
         final superScheme = await kesSum.evolveKey(sk.superTree, newKeyTimeSup);
-        final newSubScheme =
-            await kesSum.generateSecretKey(seeds.first, heightSub);
-        kesHelper.overwriteBytes(seeds.first);
+        final newSubScheme = await kesSum.generateSecretKey(
+            Uint8List.fromList(seeds.$1), heightSub);
+        kesHelper.overwriteBytes(seeds.$1);
         final kesVkSub = await kesSum.generateVerificationKey(newSubScheme);
         final kesSigSuper = await kesSum.sign(superScheme, kesVkSub.value);
         final forwardSecureSuperScheme = _eraseLeafSecretKey(superScheme);
@@ -92,7 +93,7 @@ class KesProductImpl extends KesProduct {
         return SecretKeyKesProduct(
           superTree: forwardSecureSuperScheme,
           subTree: updatedSubScheme,
-          nextSubSeed: seeds.second,
+          nextSubSeed: seeds.$2,
           subSignature: kesSigSuper,
           offset: sk.offset, // TODO
         );
@@ -121,18 +122,17 @@ class KesProductImpl extends KesProduct {
   Future<SecretKeyKesProduct> generateSecretKey(
       List<int> seed, TreeHeight height) async {
     final rSuper = await kesHelper.prng(seed);
-    final rSub = await kesHelper.prng(rSuper.second);
-    final superScheme =
-        await kesSum.generateSecretKey(rSuper.first, height.sup);
-    final subScheme = await kesSum.generateSecretKey(rSub.first, height.sub);
+    final rSub = await kesHelper.prng(rSuper.$2);
+    final superScheme = await kesSum.generateSecretKey(rSuper.$1, height.sup);
+    final subScheme = await kesSum.generateSecretKey(rSub.$1, height.sub);
     final kesVkSub = await kesSum.generateVerificationKey(subScheme);
     final kesSigSuper = await kesSum.sign(superScheme, kesVkSub.value);
-    kesHelper.overwriteBytes(rSuper.second);
+    kesHelper.overwriteBytes(rSuper.$2);
     kesHelper.overwriteBytes(seed);
     return SecretKeyKesProduct(
       superTree: superScheme,
       subTree: subScheme,
-      nextSubSeed: rSub.second,
+      nextSubSeed: rSub.$2,
       subSignature: kesSigSuper,
       offset: Int64(0), // TODO
     );
@@ -234,15 +234,15 @@ class SecretKeyKesProduct {
 
   factory SecretKeyKesProduct.decode(Uint8List bytes) {
     final superTreeRes = _decodeTree(bytes);
-    final subTreeRes = _decodeTree(superTreeRes.second);
-    final nextSubSeed = subTreeRes.second.sublist(0, 32);
-    final subSignatureRes = _decodeSignature(subTreeRes.second.sublist(32));
-    final offset = Int64.fromBytes(subSignatureRes.second.sublist(0, 8));
+    final subTreeRes = _decodeTree(superTreeRes.$2);
+    final nextSubSeed = subTreeRes.$2.sublist(0, 32);
+    final subSignatureRes = _decodeSignature(subTreeRes.$2.sublist(32));
+    final offset = Int64.fromBytes(subSignatureRes.$2.sublist(0, 8));
     return SecretKeyKesProduct(
-      superTree: superTreeRes.first,
-      subTree: subTreeRes.first,
+      superTree: superTreeRes.$1,
+      subTree: subTreeRes.$1,
       nextSubSeed: nextSubSeed,
-      subSignature: subSignatureRes.first,
+      subSignature: subSignatureRes.$1,
       offset: offset,
     );
   }
@@ -288,29 +288,29 @@ class SecretKeyKesProduct {
     ];
   }
 
-  static Tuple2<KesBinaryTree, Uint8List> _decodeTree(Uint8List bytes) {
+  static (KesBinaryTree, Uint8List) _decodeTree(Uint8List bytes) {
     int cursor = 1;
     if (bytes[0] == 0x00) {
       final seed = bytes.sublist(cursor, cursor += 32);
       final witnessLeft = bytes.sublist(cursor, cursor += 32);
       final witnessRight = bytes.sublist(cursor, cursor += 32);
       final left = _decodeTree(bytes.sublist(cursor));
-      final right = _decodeTree(left.second);
-      return Tuple2(
-          KesMerkleNode(
-              seed, witnessLeft, witnessRight, left.first, right.first),
-          right.second);
+      final right = _decodeTree(left.$2);
+      return (
+        KesMerkleNode(seed, witnessLeft, witnessRight, left.$1, right.$1),
+        right.$2
+      );
     } else if (bytes[0] == 0x01) {
       final sk = bytes.sublist(cursor, cursor += 32);
       final vk = bytes.sublist(cursor, cursor += 32);
-      return Tuple2(KesSigningLeaf(sk, vk), bytes.sublist(cursor));
+      return (KesSigningLeaf(sk, vk), bytes.sublist(cursor));
     } else if (bytes[0] == 0x02) {
-      return Tuple2(KesEmpty(), bytes.sublist(1));
+      return (KesEmpty(), bytes.sublist(1));
     }
     throw Exception("Decoding Error");
   }
 
-  static Tuple2<SignatureKesSum, List<int>> _decodeSignature(List<int> bytes) {
+  static (SignatureKesSum, List<int>) _decodeSignature(List<int> bytes) {
     int cursor = 0;
     final vk = Uint8List.fromList(bytes.sublist(cursor, cursor += 32));
     final signature = Uint8List.fromList(bytes.sublist(cursor, cursor += 64));
@@ -323,7 +323,7 @@ class SecretKeyKesProduct {
       ..verificationKey = vk
       ..signature = signature
       ..witness.addAll(witness);
-    return Tuple2(kesSignature, bytes.sublist(cursor));
+    return (kesSignature, bytes.sublist(cursor));
   }
 
   static Int64 _parseInt(List<int> bytes) {
@@ -354,10 +354,8 @@ class KesProudctIsolated extends KesProduct {
   @override
   Future<KeyPairKesProduct> generateKeyPair(
           List<int> seed, TreeHeight height, Int64 offset) =>
-      _compute(
-          (args) => _generateKeyPair(
-              args.first.first, args.first.second, args.second),
-          Tuple2(Tuple2(seed, height), offset));
+      _compute((args) => _generateKeyPair(args.$1.$1, args.$1.$2, args.$2),
+          ((seed, height), offset));
 
   @override
   Future<int> getCurrentStep(SecretKeyKesProduct sk) =>
@@ -365,18 +363,17 @@ class KesProudctIsolated extends KesProduct {
 
   @override
   Future<SignatureKesProduct> sign(SecretKeyKesProduct sk, List<int> message) =>
-      _compute((args) => _sign(args.first, args.second), Tuple2(sk, message));
+      _compute((args) => _sign(args.$1, args.$2), (sk, message));
 
   @override
   Future<SecretKeyKesProduct> update(SecretKeyKesProduct sk, int step) =>
-      _compute((args) => _update(args.first, args.second), Tuple2(sk, step));
+      _compute((args) => _update(args.$1, args.$2), (sk, step));
 
   @override
   Future<bool> verify(SignatureKesProduct signature, List<int> message,
           VerificationKeyKesProduct vk) =>
-      _compute(
-          (args) => _verify(args.first.first, args.first.second, args.second),
-          Tuple2(Tuple2(signature, message), vk));
+      _compute((args) => _verify(args.$1.$1, args.$1.$2, args.$2),
+          ((signature, message), vk));
 
   @override
   Future<VerificationKeyKesProduct> generateVerificationKey(

@@ -7,14 +7,14 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0-290.3.beta <4.0.0'
+  sdk: ^3.0.0
 
 
 dependencies:
   fixnum:
   async: ^2.10.0
   rational: ^2.2.2
-  fpdart: ^0.3.0
+  fpdart: ^1.1.0
   hashlib: 
   logging:
   blockchain_protobuf:

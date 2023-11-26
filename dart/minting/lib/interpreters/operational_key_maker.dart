@@ -12,7 +12,6 @@ import 'package:blockchain_minting/algebras/operational_key_maker_algebra.dart';
 import 'package:blockchain_minting/algebras/secure_store_algebra.dart';
 import 'package:blockchain_minting/algebras/vrf_calculator_algebra.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 import 'package:rational/rational.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -141,7 +140,7 @@ class OperationalKeyMaker extends OperationalKeyMakerAlgebra {
         (operationalPeriod + 1) * operationalPeriodLength;
     final ineligibleSlots = await vrfCalculator.ineligibleSlots(
       eta,
-      Tuple2(operationalPeriodSlotMin, operationalPeriodSlotMax),
+      (operationalPeriodSlotMin, operationalPeriodSlotMax),
       relativeStake,
     );
     final slots = List.generate(

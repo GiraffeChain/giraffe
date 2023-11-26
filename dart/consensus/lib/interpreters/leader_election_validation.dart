@@ -7,7 +7,6 @@ import 'package:blockchain_consensus/models/vrf_config.dart';
 import 'package:blockchain_consensus/numeric_utils.dart';
 import 'package:blockchain_consensus/utils.dart';
 import 'package:blockchain_crypto/utils.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:rational/rational.dart';
 import 'package:fixnum/fixnum.dart';
 
@@ -19,22 +18,21 @@ class LeaderElectionValidation extends LeaderElectionValidationAlgebra {
 
   @override
   Future<Rational> getThreshold(Rational relativeStake, Int64 slotDiff) =>
-      _compute((t) => _getThreshold(t.first.first, t.first.second, t.second),
-          Tuple2(Tuple2(relativeStake, slotDiff), config));
+      _compute((t) => _getThreshold(t.$1.$1, t.$1.$2, t.$2),
+          ((relativeStake, slotDiff), config));
 
   @override
   Future<bool> isSlotLeaderForThreshold(Rational threshold, Rho rho) =>
-      _compute((t) => _isSlotLeaderForThreshold(t.first, t.second),
-          Tuple2(threshold, rho));
+      _compute((t) => _isSlotLeaderForThreshold(t.$1, t.$2), (threshold, rho));
 }
 
 final NormalizationConstant = BigInt.from(2).pow(512);
 
-final _thresholdCache = <Tuple2<Rational, Int64>, Rational>{};
+final _thresholdCache = <(Rational, Int64), Rational>{};
 
 Future<Rational> _getThreshold(
     Rational relativeStake, Int64 slotDiff, VrfConfig config) async {
-  final cacheKey = Tuple2(relativeStake, slotDiff);
+  final cacheKey = (relativeStake, slotDiff);
   final previous = _thresholdCache[cacheKey];
   if (previous != null) return previous;
   final difficultyCurve = (slotDiff > config.lddCutoff)
