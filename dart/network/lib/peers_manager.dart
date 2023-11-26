@@ -16,6 +16,7 @@ class PeersManager {
   PeersManager(this.localPeerKeyPair, this.magicBytes);
 
   Future<void> handleConnection(Socket socket) async {
+    log.info("Initializing handshake with ${socket.remoteAddress}");
     final chunkedReader = ChunkedStreamReader(socket);
     final handshakeResult = await handshake(chunkedReader.readBytes,
         (data) async => socket.add(data), localPeerKeyPair, magicBytes);

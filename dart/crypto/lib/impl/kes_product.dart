@@ -66,7 +66,8 @@ class KesProductImpl extends KesProduct {
     final newKeyTimeSup = step ~/ totalStepsSub;
     final newKeyTimeSub = step % totalStepsSub;
 
-    getSeed((List<int>, List<int>) seeds, int iter) async {
+    Future<(List<int>, List<int>)> getSeed(
+        (List<int>, List<int>) seeds, int iter) async {
       if (iter < newKeyTimeSup) {
         final out = getSeed(await kesHelper.prng(seeds.$2), iter + 1);
         kesHelper.overwriteBytes(seeds.$1);
@@ -81,9 +82,9 @@ class KesProductImpl extends KesProduct {
         kesSum.eraseOldNode(sk.subTree);
         final seeds = await getSeed(([], sk.nextSubSeed), keyTimeSup);
         final superScheme = await kesSum.evolveKey(sk.superTree, newKeyTimeSup);
-        final newSubScheme =
-            await kesSum.generateSecretKey(seeds.first, heightSub);
-        kesHelper.overwriteBytes(seeds.first);
+        final newSubScheme = await kesSum.generateSecretKey(
+            Uint8List.fromList(seeds.$1), heightSub);
+        kesHelper.overwriteBytes(seeds.$1);
         final kesVkSub = await kesSum.generateVerificationKey(newSubScheme);
         final kesSigSuper = await kesSum.sign(superScheme, kesVkSub.value);
         final forwardSecureSuperScheme = _eraseLeafSecretKey(superScheme);
@@ -92,7 +93,7 @@ class KesProductImpl extends KesProduct {
         return SecretKeyKesProduct(
           superTree: forwardSecureSuperScheme,
           subTree: updatedSubScheme,
-          nextSubSeed: seeds.second,
+          nextSubSeed: seeds.$2,
           subSignature: kesSigSuper,
           offset: sk.offset, // TODO
         );

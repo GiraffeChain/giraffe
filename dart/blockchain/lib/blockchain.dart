@@ -253,7 +253,7 @@ class Blockchain {
 
     final p2pKey = await ed25519.generateKeyPair();
     final peersManager =
-        PeersManager(p2pKey, Uint8List.fromList([0, 1, 1, 2, 3, 5, 8]));
+        PeersManager(p2pKey, Uint8List.fromList(List.generate(32, (i) => i)));
     final p2pServer = P2PServer(
       config.p2p.bindHost,
       config.p2p.bindPort,

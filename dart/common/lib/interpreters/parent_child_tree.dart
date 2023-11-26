@@ -14,7 +14,7 @@ class ParentChildTree<T> extends ParentChildTreeAlgebra<T> {
       await write(child, (Int64(1), parent));
     else {
       final heightId = await _readOrRaise(parent);
-      await write(child, (heightId.first + 1, parent));
+      await write(child, (heightId.$1 + 1, parent));
     }
   }
 
@@ -39,8 +39,8 @@ class ParentChildTree<T> extends ParentChildTreeAlgebra<T> {
       }
 
       while (aChain.first != bChain.first) {
-        aChain.insert(0, (await _readOrRaise(aChain.first)).second);
-        bChain.insert(0, (await _readOrRaise(bChain.first)).second);
+        aChain.insert(0, (await _readOrRaise(aChain.first)).$2);
+        bChain.insert(0, (await _readOrRaise(bChain.first)).$2);
       }
       return (aChain, bChain);
     }
@@ -51,7 +51,7 @@ class ParentChildTree<T> extends ParentChildTreeAlgebra<T> {
     if (t == root)
       return Int64.ZERO;
     else
-      return (await _readOrRaise(t)).first;
+      return (await _readOrRaise(t)).$1;
   }
 
   @override
@@ -62,7 +62,7 @@ class ParentChildTree<T> extends ParentChildTreeAlgebra<T> {
     return null;
   }
 
-  _readOrRaise(T id) async {
+  Future<(Int64, T)> _readOrRaise(T id) async {
     final v = await read(id);
     if (v == null) throw Exception("Element id=$id not found");
     return v;
@@ -73,7 +73,7 @@ class ParentChildTree<T> extends ParentChildTreeAlgebra<T> {
     final chain = List.of(collection);
     Int64 height = initialHeight;
     while (height > targetHeight) {
-      chain.insert(0, (await _readOrRaise(chain.first)).second);
+      chain.insert(0, (await _readOrRaise(chain.first)).$2);
       height--;
     }
     return (chain, height);

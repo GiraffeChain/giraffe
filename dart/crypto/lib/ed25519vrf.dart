@@ -89,7 +89,7 @@ class Ed25519VRFImpl extends Ed25519VRF {
     ec.scalarMultStraussVar(nb, np, Y, B);
     ec.decodeScalar(s, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
-    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.first), C);
+    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.$1), C);
     ec.decodeScalar(c, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
     ec.scalarMultStraussVar(nb, np, gamma, D);
@@ -100,7 +100,7 @@ class Ed25519VRFImpl extends Ed25519VRF {
     ec.pointAddVar2(true, ec.pointCopyAccum(C), ec.pointCopyAccum(D), t);
     ec.scalarMultStraussVar(nb, np, t, V);
     ec.scalarMultStraussVar(nb, np, gamma, g);
-    final cp = await _hashPoints(H.first, g, U, V);
+    final cp = await _hashPoints(H.$1, g, U, V);
     return c.sameElements(cp);
   }
 
@@ -112,16 +112,16 @@ class Ed25519VRFImpl extends Ed25519VRF {
     final gamma = ec.PointAccum.create();
     ec.decodeScalar(x, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
-    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.first), gamma);
-    final k = await _nonceGenerationRFC8032(sk, H.second);
+    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.$1), gamma);
+    final k = await _nonceGenerationRFC8032(sk, H.$2);
     assert(ec.checkScalarVar(k));
     final kB = ec.PointAccum.create();
     final kH = ec.PointAccum.create();
     ec.scalarMultBase(k, kB);
     ec.decodeScalar(k, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
-    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.first), kH);
-    final c = await _hashPoints(H.first, gamma, kB, kH);
+    ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.$1), kH);
+    final c = await _hashPoints(H.$1, gamma, kB, kH);
     final s = ec.calculateS(k, c, x);
     final gamma_str = Int8List(ec.POINT_BYTES);
     ec.encodePoint(gamma, gamma_str, 0);
@@ -159,7 +159,8 @@ class Ed25519VRFImpl extends Ed25519VRF {
     return h;
   }
 
-  _hashToCurveTryAndIncrement(Int8List Y, Int8List a) async {
+  Future<(ec.PointAccum, Int8List)> _hashToCurveTryAndIncrement(
+      Int8List Y, Int8List a) async {
     int ctr = 0;
     final hash = Int8List(ec.POINT_BYTES);
     final H = ec.PointExt.create();
