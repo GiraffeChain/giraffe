@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:blockchain_codecs/codecs.dart';
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:blockchain_wallet/wallet.dart';
+import 'package:blockchain/wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart' hide State;

@@ -1,4 +1,4 @@
-import 'package:blockchain_common/utils.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rational/rational.dart';
 

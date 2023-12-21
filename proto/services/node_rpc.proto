@@ -5,20 +5,11 @@ package com.blockchain.services;
 import 'models/core.proto';
 
 service NodeRpc {
-    rpc Handshake (HandshakeReq) returns (HandshakeRes);
     rpc BroadcastTransaction (BroadcastTransactionReq) returns (BroadcastTransactionRes);
     rpc GetBlock(GetBlockReq) returns (GetBlockRes);
     rpc GetTransaction(GetTransactionReq) returns (GetTransactionRes);
     rpc BlockIdGossip(BlockIdGossipReq) returns (stream BlockIdGossipRes);
-    rpc TransactionIdGossip(TransactionIdGossipReq) returns (stream TransactionIdGossipRes);
 }
-
-message HandshakeReq {
-    com.blockchain.models.BlockId genesisBlockId = 1;
-    string p2pAddress = 2;
-}
-
-message HandshakeRes {}
 
 message BroadcastTransactionReq {
     com.blockchain.models.Transaction transaction = 1;

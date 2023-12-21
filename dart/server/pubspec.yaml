@@ -1,0 +1,20 @@
+name: blockchain_server
+description: Blockchain server
+
+publish_to: 'none'
+
+version: 2.0.0+1
+
+environment:
+  sdk: ^3.0.0
+
+
+dependencies:
+  logging: ^1.2.0
+  fixnum: ^1.1.0
+  integral_isolates: ^0.4.1
+  blockchain:
+    path: ../blockchain
+
+dev_dependencies:
+  test: ^1.25.0

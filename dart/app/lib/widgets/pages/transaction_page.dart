@@ -1,7 +1,7 @@
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
-import 'package:blockchain_codecs/codecs.dart';
-import 'package:blockchain_common/utils.dart';
+import 'package:blockchain/codecs.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

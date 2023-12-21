@@ -13,93 +13,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../models/core.pb.dart' as $1;
-
-class HandshakeReq extends $pb.GeneratedMessage {
-  factory HandshakeReq() => create();
-  HandshakeReq._() : super();
-  factory HandshakeReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory HandshakeReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'HandshakeReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$1.BlockId>(1, _omitFieldNames ? '' : 'genesisBlockId', protoName: 'genesisBlockId', subBuilder: $1.BlockId.create)
-    ..aOS(2, _omitFieldNames ? '' : 'p2pAddress', protoName: 'p2pAddress')
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  HandshakeReq clone() => HandshakeReq()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  HandshakeReq copyWith(void Function(HandshakeReq) updates) => super.copyWith((message) => updates(message as HandshakeReq)) as HandshakeReq;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static HandshakeReq create() => HandshakeReq._();
-  HandshakeReq createEmptyInstance() => create();
-  static $pb.PbList<HandshakeReq> createRepeated() => $pb.PbList<HandshakeReq>();
-  @$core.pragma('dart2js:noInline')
-  static HandshakeReq getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<HandshakeReq>(create);
-  static HandshakeReq? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $1.BlockId get genesisBlockId => $_getN(0);
-  @$pb.TagNumber(1)
-  set genesisBlockId($1.BlockId v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasGenesisBlockId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearGenesisBlockId() => clearField(1);
-  @$pb.TagNumber(1)
-  $1.BlockId ensureGenesisBlockId() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  $core.String get p2pAddress => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set p2pAddress($core.String v) { $_setString(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasP2pAddress() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearP2pAddress() => clearField(2);
-}
-
-class HandshakeRes extends $pb.GeneratedMessage {
-  factory HandshakeRes() => create();
-  HandshakeRes._() : super();
-  factory HandshakeRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory HandshakeRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'HandshakeRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  HandshakeRes clone() => HandshakeRes()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  HandshakeRes copyWith(void Function(HandshakeRes) updates) => super.copyWith((message) => updates(message as HandshakeRes)) as HandshakeRes;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static HandshakeRes create() => HandshakeRes._();
-  HandshakeRes createEmptyInstance() => create();
-  static $pb.PbList<HandshakeRes> createRepeated() => $pb.PbList<HandshakeRes>();
-  @$core.pragma('dart2js:noInline')
-  static HandshakeRes getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<HandshakeRes>(create);
-  static HandshakeRes? _defaultInstance;
-}
+import '../models/core.pb.dart' as $2;
 
 class BroadcastTransactionReq extends $pb.GeneratedMessage {
   factory BroadcastTransactionReq() => create();
@@ -108,7 +22,7 @@ class BroadcastTransactionReq extends $pb.GeneratedMessage {
   factory BroadcastTransactionReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastTransactionReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$1.Transaction>(1, _omitFieldNames ? '' : 'transaction', subBuilder: $1.Transaction.create)
+    ..aOM<$2.Transaction>(1, _omitFieldNames ? '' : 'transaction', subBuilder: $2.Transaction.create)
     ..hasRequiredFields = false
   ;
 
@@ -134,15 +48,15 @@ class BroadcastTransactionReq extends $pb.GeneratedMessage {
   static BroadcastTransactionReq? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $1.Transaction get transaction => $_getN(0);
+  $2.Transaction get transaction => $_getN(0);
   @$pb.TagNumber(1)
-  set transaction($1.Transaction v) { setField(1, v); }
+  set transaction($2.Transaction v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasTransaction() => $_has(0);
   @$pb.TagNumber(1)
   void clearTransaction() => clearField(1);
   @$pb.TagNumber(1)
-  $1.Transaction ensureTransaction() => $_ensure(0);
+  $2.Transaction ensureTransaction() => $_ensure(0);
 }
 
 class BroadcastTransactionRes extends $pb.GeneratedMessage {
@@ -184,7 +98,7 @@ class GetBlockReq extends $pb.GeneratedMessage {
   factory GetBlockReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$1.BlockId>(1, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: $1.BlockId.create)
+    ..aOM<$2.BlockId>(1, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: $2.BlockId.create)
     ..hasRequiredFields = false
   ;
 
@@ -210,15 +124,15 @@ class GetBlockReq extends $pb.GeneratedMessage {
   static GetBlockReq? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $1.BlockId get blockId => $_getN(0);
+  $2.BlockId get blockId => $_getN(0);
   @$pb.TagNumber(1)
-  set blockId($1.BlockId v) { setField(1, v); }
+  set blockId($2.BlockId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasBlockId() => $_has(0);
   @$pb.TagNumber(1)
   void clearBlockId() => clearField(1);
   @$pb.TagNumber(1)
-  $1.BlockId ensureBlockId() => $_ensure(0);
+  $2.BlockId ensureBlockId() => $_ensure(0);
 }
 
 class GetBlockRes extends $pb.GeneratedMessage {
@@ -228,7 +142,7 @@ class GetBlockRes extends $pb.GeneratedMessage {
   factory GetBlockRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$1.Block>(1, _omitFieldNames ? '' : 'block', subBuilder: $1.Block.create)
+    ..aOM<$2.Block>(1, _omitFieldNames ? '' : 'block', subBuilder: $2.Block.create)
     ..hasRequiredFields = false
   ;
 
@@ -254,15 +168,15 @@ class GetBlockRes extends $pb.GeneratedMessage {
   static GetBlockRes? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $1.Block get block => $_getN(0);
+  $2.Block get block => $_getN(0);
   @$pb.TagNumber(1)
-  set block($1.Block v) { setField(1, v); }
+  set block($2.Block v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasBlock() => $_has(0);
   @$pb.TagNumber(1)
   void clearBlock() => clearField(1);
   @$pb.TagNumber(1)
-  $1.Block ensureBlock() => $_ensure(0);
+  $2.Block ensureBlock() => $_ensure(0);
 }
 
 class GetTransactionReq extends $pb.GeneratedMessage {
@@ -272,7 +186,7 @@ class GetTransactionReq extends $pb.GeneratedMessage {
   factory GetTransactionReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTransactionReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$1.TransactionId>(1, _omitFieldNames ? '' : 'transactionId', protoName: 'transactionId', subBuilder: $1.TransactionId.create)
+    ..aOM<$2.TransactionId>(1, _omitFieldNames ? '' : 'transactionId', protoName: 'transactionId', subBuilder: $2.TransactionId.create)
     ..hasRequiredFields = false
   ;
 
@@ -298,15 +212,15 @@ class GetTransactionReq extends $pb.GeneratedMessage {
   static GetTransactionReq? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $1.TransactionId get transactionId => $_getN(0);
+  $2.TransactionId get transactionId => $_getN(0);
   @$pb.TagNumber(1)
-  set transactionId($1.TransactionId v) { setField(1, v); }
+  set transactionId($2.TransactionId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasTransactionId() => $_has(0);
   @$pb.TagNumber(1)
   void clearTransactionId() => clearField(1);
   @$pb.TagNumber(1)
-  $1.TransactionId ensureTransactionId() => $_ensure(0);
+  $2.TransactionId ensureTransactionId() => $_ensure(0);
 }
 
 class GetTransactionRes extends $pb.GeneratedMessage {
@@ -316,7 +230,7 @@ class GetTransactionRes extends $pb.GeneratedMessage {
   factory GetTransactionRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTransactionRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$1.Transaction>(1, _omitFieldNames ? '' : 'transaction', subBuilder: $1.Transaction.create)
+    ..aOM<$2.Transaction>(1, _omitFieldNames ? '' : 'transaction', subBuilder: $2.Transaction.create)
     ..hasRequiredFields = false
   ;
 
@@ -342,15 +256,15 @@ class GetTransactionRes extends $pb.GeneratedMessage {
   static GetTransactionRes? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $1.Transaction get transaction => $_getN(0);
+  $2.Transaction get transaction => $_getN(0);
   @$pb.TagNumber(1)
-  set transaction($1.Transaction v) { setField(1, v); }
+  set transaction($2.Transaction v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasTransaction() => $_has(0);
   @$pb.TagNumber(1)
   void clearTransaction() => clearField(1);
   @$pb.TagNumber(1)
-  $1.Transaction ensureTransaction() => $_ensure(0);
+  $2.Transaction ensureTransaction() => $_ensure(0);
 }
 
 class BlockIdGossipReq extends $pb.GeneratedMessage {
@@ -392,7 +306,7 @@ class BlockIdGossipRes extends $pb.GeneratedMessage {
   factory BlockIdGossipRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockIdGossipRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$1.BlockId>(1, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: $1.BlockId.create)
+    ..aOM<$2.BlockId>(1, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: $2.BlockId.create)
     ..hasRequiredFields = false
   ;
 
@@ -418,15 +332,15 @@ class BlockIdGossipRes extends $pb.GeneratedMessage {
   static BlockIdGossipRes? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $1.BlockId get blockId => $_getN(0);
+  $2.BlockId get blockId => $_getN(0);
   @$pb.TagNumber(1)
-  set blockId($1.BlockId v) { setField(1, v); }
+  set blockId($2.BlockId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasBlockId() => $_has(0);
   @$pb.TagNumber(1)
   void clearBlockId() => clearField(1);
   @$pb.TagNumber(1)
-  $1.BlockId ensureBlockId() => $_ensure(0);
+  $2.BlockId ensureBlockId() => $_ensure(0);
 }
 
 class TransactionIdGossipReq extends $pb.GeneratedMessage {
@@ -468,7 +382,7 @@ class TransactionIdGossipRes extends $pb.GeneratedMessage {
   factory TransactionIdGossipRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionIdGossipRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$1.TransactionId>(1, _omitFieldNames ? '' : 'transactionId', protoName: 'transactionId', subBuilder: $1.TransactionId.create)
+    ..aOM<$2.TransactionId>(1, _omitFieldNames ? '' : 'transactionId', protoName: 'transactionId', subBuilder: $2.TransactionId.create)
     ..hasRequiredFields = false
   ;
 
@@ -494,15 +408,15 @@ class TransactionIdGossipRes extends $pb.GeneratedMessage {
   static TransactionIdGossipRes? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $1.TransactionId get transactionId => $_getN(0);
+  $2.TransactionId get transactionId => $_getN(0);
   @$pb.TagNumber(1)
-  set transactionId($1.TransactionId v) { setField(1, v); }
+  set transactionId($2.TransactionId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasTransactionId() => $_has(0);
   @$pb.TagNumber(1)
   void clearTransactionId() => clearField(1);
   @$pb.TagNumber(1)
-  $1.TransactionId ensureTransactionId() => $_ensure(0);
+  $2.TransactionId ensureTransactionId() => $_ensure(0);
 }
 
 

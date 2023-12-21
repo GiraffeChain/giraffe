@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:blockchain_codecs/codecs.dart';
-import 'package:blockchain_crypto/utils.dart';
+import 'package:blockchain/codecs.dart';
+import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 

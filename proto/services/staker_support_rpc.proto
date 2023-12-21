@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package com.blockchain.services;
+
+import 'models/core.proto';
+
+service StakerSupportRpc {
+    rpc BroadcastBlock (BroadcastBlockReq) returns (BroadcastBlockRes);
+    rpc GetStaker(GetStakerReq) returns (GetStakerRes);
+    rpc PackBlock(PackBlockReq) returns (stream PackBlockRes);
+}
+
+
+message BroadcastBlockReq {
+    com.blockchain.models.Block block = 1;
+}
+
+message BroadcastBlockRes {}
+
+
+message GetStakerReq {
+    com.blockchain.models.StakingAddress stakingAddress = 1;
+    com.blockchain.models.BlockId parentBlockId = 2;
+    uint64 slot = 3;
+}
+
+message GetStakerRes {
+    com.blockchain.models.ActiveStaker staker = 1;
+}
+
+message PackBlockReq {
+    com.blockchain.models.BlockId parentBlockId = 1;
+    uint64 untilSlot = 2;
+}
+
+message PackBlockRes {
+    com.blockchain.models.BlockBody body = 1;
+}

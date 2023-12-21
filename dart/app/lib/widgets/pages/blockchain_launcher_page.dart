@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/config.dart';
-import 'package:blockchain_crypto/utils.dart';
+import 'package:blockchain/crypto/utils.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
