@@ -1,4 +1,4 @@
-import 'package:blockchain/consensus/interpreters/leader_election_validation.dart';
+import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/models/vrf_config.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:convert/convert.dart';

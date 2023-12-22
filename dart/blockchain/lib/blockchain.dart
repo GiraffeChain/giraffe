@@ -1,41 +1,29 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/config.dart';
+import 'package:blockchain/consensus/consensus.dart';
 import 'package:blockchain/data_stores.dart';
+import 'package:blockchain/ledger/mempool.dart';
+import 'package:blockchain/ledger/ledger.dart';
+import 'package:blockchain/minting/block_packer.dart';
+import 'package:blockchain/minting/block_producer.dart';
+import 'package:blockchain/minting/operational_key_maker.dart';
+import 'package:blockchain/minting/secure_store.dart';
+import 'package:blockchain/minting/staking.dart';
+import 'package:blockchain/minting/vrf_calculator.dart';
 import 'package:blockchain/private_testnet.dart';
-import 'package:blockchain/validators.dart';
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/algebras/clock_algebra.dart';
-import 'package:blockchain/common/algebras/parent_child_tree_algebra.dart';
-import 'package:blockchain/common/interpreters/block_height_tree.dart';
-import 'package:blockchain/common/interpreters/clock.dart';
-import 'package:blockchain/common/interpreters/parent_child_tree.dart';
-import 'package:blockchain/consensus/algebras/consensus_validation_state_algebra.dart';
-import 'package:blockchain/consensus/algebras/leader_election_validation_algebra.dart';
-import 'package:blockchain/consensus/interpreters/chain_selection.dart';
-import 'package:blockchain/consensus/interpreters/consensus_data_event_sourced_state.dart';
-import 'package:blockchain/consensus/interpreters/consensus_validation_state.dart';
-import 'package:blockchain/consensus/interpreters/epoch_boundaries.dart';
-import 'package:blockchain/consensus/interpreters/eta_calculation.dart';
-import 'package:blockchain/consensus/interpreters/leader_election_validation.dart';
-import 'package:blockchain/consensus/interpreters/local_chain.dart';
+import 'package:blockchain/common/clock.dart';
+import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/consensus/models/vrf_config.dart';
 import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/kes.dart';
 import 'package:blockchain/crypto/utils.dart';
-import 'package:blockchain/ledger/algebras/mempool_algebra.dart';
-import 'package:blockchain/ledger/interpreters/mempool.dart';
 import 'package:blockchain/ledger/models/body_validation_context.dart';
-import 'package:blockchain/minting/algebras/block_producer_algebra.dart';
-import 'package:blockchain/minting/interpreters/block_packer.dart';
-import 'package:blockchain/minting/interpreters/block_producer.dart';
-import 'package:blockchain/minting/interpreters/in_memory_secure_store.dart';
-import 'package:blockchain/minting/interpreters/operational_key_maker.dart';
-import 'package:blockchain/minting/interpreters/staking.dart';
-import 'package:blockchain/minting/interpreters/vrf_calculator.dart';
 import 'package:blockchain/network/p2p_server.dart';
 import 'package:blockchain/network/peers_manager.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -49,14 +37,9 @@ class Blockchain {
   final ClockAlgebra clock;
   final DataStores dataStores;
   final ParentChildTreeAlgebra<BlockId> parentChildTree;
-  final EtaCalculation etaCalculation;
-  final LeaderElectionValidationAlgebra leaderElection;
-  final ConsensusValidationStateAlgebra consensusValidationState;
-  final LocalChain localChain;
-  final ChainSelection chainSelection;
-  final Validators validators;
+  final Consensus consensus;
+  final Ledger ledger;
   final BlockProducerAlgebra blockProducer;
-  final MempoolAlgebra mempool;
   final P2PServer p2pServer;
   final WalletESS walletESS;
 
@@ -66,14 +49,9 @@ class Blockchain {
     this.clock,
     this.dataStores,
     this.parentChildTree,
-    this.etaCalculation,
-    this.leaderElection,
-    this.consensusValidationState,
-    this.localChain,
-    this.chainSelection,
-    this.validators,
+    this.consensus,
+    this.ledger,
     this.blockProducer,
-    this.mempool,
     this.p2pServer,
     this.walletESS,
   );
@@ -131,208 +109,144 @@ class Blockchain {
                       dataStores.parentChildTree.put,
                       genesisBlock.header.parentHeaderId,
                     );
-
-                    final etaCalculation = EtaCalculation(
-                        dataStores.slotData.getOrRaise,
-                        clock,
-                        genesisBlock.header.eligibilityCertificate.eta);
-
-                    final leaderElection =
-                        LeaderElectionValidation(vrfConfig, isolate);
-
-                    final vrfCalculator = VrfCalculator(
-                        stakerInitializer.vrfKeyPair.sk,
-                        clock,
-                        leaderElection,
-                        vrfConfig);
-
-                    final secureStore = InMemorySecureStore();
-
                     return Resource.eval(() =>
-                        currentEventIdGetterSetters.canonicalHead
-                            .get()).flatMap((canonicalHeadId) => Resource.eval(
-                        () => dataStores.slotData
-                            .getOrRaise(canonicalHeadId)).flatMap((canonicalHeadSlotData) =>
-                        Resource.eval(() => parentChildTree.assocate(genesisBlockId, genesisBlock.header.parentHeaderId))
-                            .evalFlatMap((_) async {
-                          log.info("Preparing Consensus State");
+                            currentEventIdGetterSetters.blockHeightTree.get())
+                        .map((eventId) => makeBlockHeightTree(
+                            dataStores.blockHeightTree,
+                            eventId,
+                            dataStores.slotData,
+                            parentChildTree,
+                            currentEventIdGetterSetters.blockHeightTree.set))
+                        .flatMap((blockHeightTree) {
+                      final secureStore = InMemorySecureStore();
 
-                          final epochBoundaryState =
-                              epochBoundariesEventSourcedState(
-                                  clock,
-                                  await currentEventIdGetterSetters
-                                      .epochBoundaries
-                                      .get(),
-                                  parentChildTree,
-                                  currentEventIdGetterSetters
-                                      .epochBoundaries.set,
-                                  dataStores.epochBoundaries,
-                                  dataStores.slotData.getOrRaise);
-                          final consensusDataState =
-                              consensusDataEventSourcedState(
-                                  await currentEventIdGetterSetters
-                                      .consensusData
-                                      .get(),
-                                  parentChildTree,
-                                  currentEventIdGetterSetters.consensusData.set,
-                                  ConsensusData(
-                                      dataStores.activeStake,
-                                      dataStores.inactiveStake,
-                                      dataStores.activeStakers),
-                                  dataStores.bodies.getOrRaise,
-                                  dataStores.transactions.getOrRaise);
-
-                          final consensusValidationState =
-                              ConsensusValidationState(
-                                  genesisBlockId,
-                                  epochBoundaryState,
-                                  consensusDataState,
-                                  clock);
-
-                          log.info("Preparing OperationalKeyMaker");
-
-                          final operationalKeyMaker =
-                              await OperationalKeyMaker.init(
-                            canonicalHeadSlotData.slotId,
-                            config.consensus.operationalPeriodLength,
-                            Int64(0),
-                            stakerInitializer.stakingAddress,
-                            secureStore,
-                            clock,
-                            vrfCalculator,
-                            etaCalculation,
-                            consensusValidationState,
-                            stakerInitializer.kesKeyPair.sk,
-                          );
-
-                          log.info("Preparing LocalChain");
-
-                          final blockHeightTree = BlockHeightTree(
-                              dataStores.blockHeightTree,
-                              await currentEventIdGetterSetters.blockHeightTree
-                                  .get(),
-                              dataStores.slotData,
+                      return Resource.eval(() => currentEventIdGetterSetters.canonicalHead.get()).flatMap((canonicalHeadId) => Resource.eval(() => dataStores.slotData.getOrRaise(canonicalHeadId)).flatMap((canonicalHeadSlotData) => Resource.eval(
+                              () => parentChildTree.assocate(genesisBlockId, genesisBlock.header.parentHeaderId))
+                          .flatMap((_) => Consensus.make(
+                              vrfConfig,
+                              dataStores,
+                              clock,
+                              genesisBlock,
+                              currentEventIdGetterSetters,
                               parentChildTree,
-                              currentEventIdGetterSetters.blockHeightTree.set);
-
-                          final localChain = LocalChain(
-                              await currentEventIdGetterSetters.canonicalHead
-                                  .get(),
                               blockHeightTree,
-                              (id) async =>
-                                  (await dataStores.slotData.getOrRaise(id))
-                                      .height);
+                              isolate))
+                          .flatMap((consensus) => Ledger.make(dataStores, currentEventIdGetterSetters, parentChildTree).evalFlatMap((ledger) async {
+                                log.info("Preparing OperationalKeyMaker");
 
-                          final chainSelection =
-                              ChainSelection(dataStores.slotData.getOrRaise);
+                                final vrfCalculator = VrfCalculator(
+                                    stakerInitializer.vrfKeyPair.sk,
+                                    clock,
+                                    consensus.leaderElectionValidation,
+                                    vrfConfig);
 
-                          log.info("Preparing Validators");
+                                final operationalKeyMaker =
+                                    await OperationalKeyMaker.init(
+                                  canonicalHeadSlotData.slotId,
+                                  config.consensus.operationalPeriodLength,
+                                  Int64(0),
+                                  stakerInitializer.stakingAddress,
+                                  secureStore,
+                                  clock,
+                                  vrfCalculator,
+                                  consensus.etaCalculation,
+                                  consensus.consensusValidationState,
+                                  stakerInitializer.kesKeyPair.sk,
+                                );
 
-                          final validators = await Validators.make(
-                            dataStores,
-                            genesisBlockId,
-                            currentEventIdGetterSetters,
-                            parentChildTree,
-                            etaCalculation,
-                            consensusValidationState,
-                            leaderElection,
-                            clock,
-                          );
+                                log.info("Preparing Staking");
 
-                          log.info("Preparing Staking");
+                                final staker = Staking(
+                                  stakerInitializer.stakingAddress,
+                                  stakerInitializer.vrfKeyPair.vk,
+                                  operationalKeyMaker,
+                                  consensus.consensusValidationState,
+                                  consensus.etaCalculation,
+                                  vrfCalculator,
+                                  consensus.leaderElectionValidation,
+                                );
 
-                          final staker = Staking(
-                            stakerInitializer.stakingAddress,
-                            stakerInitializer.vrfKeyPair.vk,
-                            operationalKeyMaker,
-                            consensusValidationState,
-                            etaCalculation,
-                            vrfCalculator,
-                            leaderElection,
-                          );
+                                log.info("Preparing mempool");
+                                final mempool = Mempool(
+                                    dataStores.bodies.getOrRaise,
+                                    parentChildTree,
+                                    await currentEventIdGetterSetters.mempool
+                                        .get(),
+                                    Duration(minutes: 5));
 
-                          log.info("Preparing mempool");
-                          final mempool = Mempool(
-                              dataStores.bodies.getOrRaise,
-                              parentChildTree,
-                              await currentEventIdGetterSetters.mempool.get(),
-                              Duration(minutes: 5));
+                                log.info("Preparing BlockProducer");
 
-                          log.info("Preparing BlockProducer");
+                                final blockPacker = BlockPacker(
+                                    mempool,
+                                    dataStores.transactions.getOrRaise,
+                                    dataStores.transactions.contains,
+                                    BlockPacker.makeBodyValidator(
+                                        ledger.bodySyntaxValidation,
+                                        ledger.bodySemanticValidation,
+                                        ledger.bodyAuthorizationValidation));
 
-                          final blockPacker = BlockPacker(
-                              mempool,
-                              dataStores.transactions.getOrRaise,
-                              dataStores.transactions.contains,
-                              BlockPacker.makeBodyValidator(
-                                  validators.bodySyntax,
-                                  validators.bodySemantic,
-                                  validators.bodyAuthorization));
+                                final blockProducer = BlockProducer(
+                                  ConcatStream([
+                                    Stream.value(canonicalHeadSlotData)
+                                        .asyncMap((d) => clock
+                                            .delayedUntilSlot(d.slotId.slot)
+                                            .then((_) => d)),
+                                    consensus.localChain.adoptions.asyncMap(
+                                        dataStores.slotData.getOrRaise),
+                                  ]),
+                                  staker,
+                                  clock,
+                                  blockPacker,
+                                );
 
-                          final blockProducer = BlockProducer(
-                            ConcatStream([
-                              Stream.value(canonicalHeadSlotData).asyncMap(
-                                  (d) => clock
-                                      .delayedUntilSlot(d.slotId.slot)
-                                      .then((_) => d)),
-                              localChain.adoptions
-                                  .asyncMap(dataStores.slotData.getOrRaise),
-                            ]),
-                            staker,
-                            clock,
-                            blockPacker,
-                          );
+                                log.info("Initializing Wallet ESS");
+                                final wallet = Wallet.empty();
+                                await wallet.addPrivateGenesisKey();
+                                final walletESS = WalletEventSourcedState.make(
+                                  wallet,
+                                  dataStores.bodies.getOrRaise,
+                                  dataStores.transactions.getOrRaise,
+                                  parentChildTree,
+                                  genesisBlock.header.parentHeaderId,
+                                );
 
-                          log.info("Initializing Wallet ESS");
-                          final wallet = Wallet.empty();
-                          await wallet.addPrivateGenesisKey();
-                          final walletESS = WalletEventSourcedState.make(
-                            wallet,
-                            dataStores.bodies.getOrRaise,
-                            dataStores.transactions.getOrRaise,
-                            parentChildTree,
-                            genesisBlock.header.parentHeaderId,
-                          );
+                                log.info("Preparing P2P Network");
 
-                          log.info("Preparing P2P Network");
+                                final p2pKey = await ed25519.generateKeyPair();
+                                final peersManager = PeersManager(
+                                    p2pKey,
+                                    Uint8List.fromList(
+                                        List.generate(32, (i) => i)));
+                                final p2pServer = P2PServer(
+                                  config.p2p.bindHost,
+                                  config.p2p.bindPort,
+                                  (socket) => peersManager
+                                      .handleConnection(socket)
+                                      .onError((error, stackTrace) {
+                                    log.warning("P2P Connection failure", error,
+                                        stackTrace);
+                                    socket.destroy();
+                                  }),
+                                );
 
-                          final p2pKey = await ed25519.generateKeyPair();
-                          final peersManager = PeersManager(p2pKey,
-                              Uint8List.fromList(List.generate(32, (i) => i)));
-                          final p2pServer = P2PServer(
-                            config.p2p.bindHost,
-                            config.p2p.bindPort,
-                            (socket) => peersManager
-                                .handleConnection(socket)
-                                .onError((error, stackTrace) {
-                              log.warning(
-                                  "P2P Connection failure", error, stackTrace);
-                              socket.destroy();
-                            }),
-                          );
+                                for (final peer in config.p2p.knownPeers) {
+                                  final parsed = peer.split(":");
+                                  p2pServer.connectOutbound(
+                                      parsed[0], int.parse(parsed[1]));
+                                }
 
-                          for (final peer in config.p2p.knownPeers) {
-                            final parsed = peer.split(":");
-                            p2pServer.connectOutbound(
-                                parsed[0], int.parse(parsed[1]));
-                          }
-
-                          return p2pServer.start().map((_) => Blockchain(
-                                clock,
-                                dataStores,
-                                parentChildTree,
-                                etaCalculation,
-                                leaderElection,
-                                consensusValidationState,
-                                localChain,
-                                chainSelection,
-                                validators,
-                                blockProducer,
-                                mempool,
-                                p2pServer,
-                                walletESS,
-                              ));
-                        })));
+                                return p2pServer.start().map((_) => Blockchain(
+                                      clock,
+                                      dataStores,
+                                      parentChildTree,
+                                      consensus,
+                                      ledger,
+                                      blockProducer,
+                                      p2pServer,
+                                      walletESS,
+                                    ));
+                              }))));
+                    });
                   })));
             })
             .tap((_) => log.info("Blockchain Initialized"))
@@ -353,9 +267,11 @@ class Blockchain {
           ..header = block.header
           ..body = body);
     await dataStores.bodies.put(id, body);
-    if (await chainSelection.select(id, await localChain.currentHead) == id) {
+    if (await consensus.chainSelection
+            .select(id, await consensus.localChain.currentHead) ==
+        id) {
       log.info("Adopting id=${id.show}");
-      localChain.adopt(id);
+      consensus.localChain.adopt(id);
     }
   }
 
@@ -364,7 +280,7 @@ class Blockchain {
     await dataStores.slotData.put(id, await block.header.slotData);
     await dataStores.headers.put(id, block.header);
 
-    final errors = await validators.header.validate(block.header);
+    final errors = await consensus.blockHeaderValidation.validate(block.header);
     throwErrors() async {
       if (errors.isNotEmpty) {
         // TODO: ParentChildTree disassociate
@@ -376,14 +292,15 @@ class Blockchain {
 
     await throwErrors();
 
-    errors.addAll(await validators.bodySyntax.validate(block.body));
+    errors.addAll(await ledger.bodySyntaxValidation.validate(block.body));
     await throwErrors();
     final bodyValidationContext = BodyValidationContext(
         block.header.parentHeaderId, block.header.height, block.header.slot);
-    errors.addAll(await validators.bodySemantic
+    errors.addAll(await ledger.bodySemanticValidation
         .validate(block.body, bodyValidationContext));
     await throwErrors();
-    errors.addAll(await validators.bodyAuthorization.validate(block.body));
+    errors
+        .addAll(await ledger.bodyAuthorizationValidation.validate(block.body));
     await throwErrors();
   }
 
@@ -391,7 +308,8 @@ class Blockchain {
           () => blockProducer.blocks.asyncMap(processBlock).listen((event) {}))
       .voidResult;
 
-  Stream<FullBlock> get newBlocks => localChain.adoptions.asyncMap((id) async {
+  Stream<FullBlock> get newBlocks =>
+      consensus.localChain.adoptions.asyncMap((id) async {
         final header = await dataStores.headers.getOrRaise(id);
         final body = await dataStores.bodies.getOrRaise(id);
         final transactions = [
@@ -406,7 +324,7 @@ class Blockchain {
 
   Stream<TraversalStep> get traversal {
     BlockId? lastId = null;
-    return localChain.adoptions
+    return consensus.localChain.adoptions
         .asyncExpand((id) => (lastId == null)
             ? Stream.value(TraversalStep_Applied(id))
             : traversalBetween(lastId!, id))
@@ -417,9 +335,10 @@ class Blockchain {
   }
 
   Stream<TraversalStep> get traversalFromGenesis =>
-      Stream.fromFuture(localChain.blockIdAtHeight(Int64(1)))
-          .asyncExpand((genesisId) => Stream.fromFuture(localChain.currentHead)
-              .asyncExpand((head) => traversalBetween(genesisId!, head)))
+      Stream.fromFuture(consensus.localChain.blockIdAtHeight(Int64(1)))
+          .asyncExpand((genesisId) =>
+              Stream.fromFuture(consensus.localChain.currentHead)
+                  .asyncExpand((head) => traversalBetween(genesisId!, head)))
           .concatWith([traversal]);
 
   Stream<TraversalStep> traversalBetween(BlockId a, BlockId b) =>

@@ -1,9 +1,8 @@
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/interpreters/in_memory_store.dart';
+import 'package:blockchain/common/store.dart';
 import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:blockchain/common/algebras/store_algebra.dart';
 
 class DataStores {
   final StoreAlgebra<BlockId, (Int64, BlockId)> parentChildTree;

@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:blockchain/common/algebras/clock_algebra.dart';
-import 'package:blockchain/consensus/algebras/leader_election_validation_algebra.dart';
+import 'package:blockchain/common/clock.dart';
+import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/models/vrf_config.dart';
 import 'package:blockchain/crypto/utils.dart';
-import 'package:blockchain/minting/interpreters/vrf_calculator.dart';
+import 'package:blockchain/minting/vrf_calculator.dart';
 import 'package:convert/convert.dart';
 import 'package:rational/rational.dart';
 import 'package:test/test.dart';

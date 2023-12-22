@@ -1,9 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/algebras/event_sourced_state_algebra.dart';
-import 'package:blockchain/common/interpreters/event_tree_state.dart';
-import 'package:blockchain/common/interpreters/parent_child_tree.dart';
+import 'package:blockchain/common/event_sourced_state.dart';
+import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:collection/collection.dart';

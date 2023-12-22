@@ -36,15 +36,15 @@ class BlockchainPage extends StatelessWidget {
     return TabBarView(children: [
       const LiveBlocksView(),
       StreamBuilder(
-        stream: Stream.fromFuture(blockchain.localChain.currentHead)
-            .concatWith([blockchain.localChain.adoptions]).asyncMap(
+        stream: Stream.fromFuture(blockchain.consensus.localChain.currentHead)
+            .concatWith([blockchain.consensus.localChain.adoptions]).asyncMap(
                 (id) => blockchain.walletESS.stateAt(id)),
         builder: (context, snapshot) => snapshot.hasData
             ? TransactView(
                 wallet: snapshot.data!,
                 processTransaction: (tx) async {
                   await blockchain.dataStores.transactions.put(tx.id, tx);
-                  await blockchain.mempool.add(tx.id);
+                  await blockchain.ledger.mempool.add(tx.id);
                 },
               )
             : const CircularProgressIndicator(),
@@ -138,8 +138,8 @@ class LiveBlocksView extends StatelessWidget {
 }
 
 Stream<FullBlock> _fullBlocks(Blockchain blockchain) => StreamGroup.merge([
-      Stream.fromFuture(blockchain.localChain.currentHead),
-      blockchain.localChain.adoptions
+      Stream.fromFuture(blockchain.consensus.localChain.currentHead),
+      blockchain.consensus.localChain.adoptions
     ]).asyncMap((id) async {
       final header = await blockchain.dataStores.headers.getOrRaise(id);
       final body = await blockchain.dataStores.bodies.getOrRaise(id);
