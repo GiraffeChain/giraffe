@@ -4,7 +4,7 @@
 //
 // @dart = 2.12
 
-// ignore_for_file: annotate_overrides, camel_case_types
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
 // ignore_for_file: constant_identifier_names, library_prefixes
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 // ignore_for_file: unnecessary_import, unnecessary_this, unused_import
@@ -17,7 +17,15 @@ import 'package:protobuf/protobuf.dart' as $pb;
 import '../models/core.pb.dart' as $2;
 
 class BroadcastBlockReq extends $pb.GeneratedMessage {
-  factory BroadcastBlockReq() => create();
+  factory BroadcastBlockReq({
+    $2.Block? block,
+  }) {
+    final $result = create();
+    if (block != null) {
+      $result.block = block;
+    }
+    return $result;
+  }
   BroadcastBlockReq._() : super();
   factory BroadcastBlockReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BroadcastBlockReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -93,7 +101,23 @@ class BroadcastBlockRes extends $pb.GeneratedMessage {
 }
 
 class GetStakerReq extends $pb.GeneratedMessage {
-  factory GetStakerReq() => create();
+  factory GetStakerReq({
+    $2.StakingAddress? stakingAddress,
+    $2.BlockId? parentBlockId,
+    $fixnum.Int64? slot,
+  }) {
+    final $result = create();
+    if (stakingAddress != null) {
+      $result.stakingAddress = stakingAddress;
+    }
+    if (parentBlockId != null) {
+      $result.parentBlockId = parentBlockId;
+    }
+    if (slot != null) {
+      $result.slot = slot;
+    }
+    return $result;
+  }
   GetStakerReq._() : super();
   factory GetStakerReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetStakerReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -159,7 +183,15 @@ class GetStakerReq extends $pb.GeneratedMessage {
 }
 
 class GetStakerRes extends $pb.GeneratedMessage {
-  factory GetStakerRes() => create();
+  factory GetStakerRes({
+    $2.ActiveStaker? staker,
+  }) {
+    final $result = create();
+    if (staker != null) {
+      $result.staker = staker;
+    }
+    return $result;
+  }
   GetStakerRes._() : super();
   factory GetStakerRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetStakerRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -203,7 +235,19 @@ class GetStakerRes extends $pb.GeneratedMessage {
 }
 
 class PackBlockReq extends $pb.GeneratedMessage {
-  factory PackBlockReq() => create();
+  factory PackBlockReq({
+    $2.BlockId? parentBlockId,
+    $fixnum.Int64? untilSlot,
+  }) {
+    final $result = create();
+    if (parentBlockId != null) {
+      $result.parentBlockId = parentBlockId;
+    }
+    if (untilSlot != null) {
+      $result.untilSlot = untilSlot;
+    }
+    return $result;
+  }
   PackBlockReq._() : super();
   factory PackBlockReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory PackBlockReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -257,7 +301,15 @@ class PackBlockReq extends $pb.GeneratedMessage {
 }
 
 class PackBlockRes extends $pb.GeneratedMessage {
-  factory PackBlockRes() => create();
+  factory PackBlockRes({
+    $2.BlockBody? body,
+  }) {
+    final $result = create();
+    if (body != null) {
+      $result.body = body;
+    }
+    return $result;
+  }
   PackBlockRes._() : super();
   factory PackBlockRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory PackBlockRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);

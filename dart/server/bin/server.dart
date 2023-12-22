@@ -22,6 +22,7 @@ Future<void> main() async {
   ed25519VRF.ed25519Vrf = ed25519VRF.Ed25519VRFIsolated(_isolate);
   kes.kesProduct = kes.KesProudctIsolated(_isolate);
   final BlockchainConfig config = BlockchainConfig();
-  final blockchain = await Blockchain.init(config, _isolate);
-  blockchain.run();
+  final (_, finalizer) = await Blockchain.init(config, _isolate).allocated();
+
+  ProcessSignal.sigint.watch().asyncMap((_) => finalizer()).drain();
 }

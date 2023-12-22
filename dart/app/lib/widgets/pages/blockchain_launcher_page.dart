@@ -1,9 +1,10 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/crypto/utils.dart';
+import 'package:blockchain_app/widgets/resource_builder.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,28 +23,18 @@ class BlockchainLauncherPage extends StatefulWidget {
 }
 
 class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
-  Future<Blockchain> launch() async {
-    await _flutterBackgroundInit();
-    final blockchain = await Blockchain.init(widget.config, widget.isolate);
-    blockchain.run();
-    return blockchain;
-  }
+  Resource<Blockchain> launch() => Resource.make(
+          () => _flutterBackgroundInit(), (_) => _flutterBackgroundRelease())
+      .flatMap((_) => Blockchain.init(widget.config, widget.isolate));
 
   @override
-  void dispose() {
-    super.dispose();
-    unawaited(_flutterBackgroundRelease());
-  }
-
-  @override
-  Widget build(BuildContext context) => FutureBuilder(
-      future: launch(),
-      builder: (context, snapshot) => snapshot.hasData
+  Widget build(BuildContext context) => ResourceBuilder<Blockchain>(
+      resource: launch(),
+      builder: (context, AsyncSnapshot<Blockchain> snapshot) => snapshot.hasData
           ? MultiProvider(
               providers: [
                   Provider(
                     create: (_) => snapshot.data!,
-                    dispose: (_, blockchain) => blockchain.cleanup(),
                   )
                 ],
               child: Navigator(

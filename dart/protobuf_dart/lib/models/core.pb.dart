@@ -4,7 +4,7 @@
 //
 // @dart = 2.12
 
-// ignore_for_file: annotate_overrides, camel_case_types
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
 // ignore_for_file: constant_identifier_names, library_prefixes
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 // ignore_for_file: unnecessary_import, unnecessary_this, unused_import
@@ -15,7 +15,15 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 class BlockId extends $pb.GeneratedMessage {
-  factory BlockId() => create();
+  factory BlockId({
+    $core.List<$core.int>? value,
+  }) {
+    final $result = create();
+    if (value != null) {
+      $result.value = value;
+    }
+    return $result;
+  }
   BlockId._() : super();
   factory BlockId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BlockId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -56,8 +64,61 @@ class BlockId extends $pb.GeneratedMessage {
   void clearValue() => clearField(1);
 }
 
+/// Captures a block producer's consensus-commitment to a new block
 class BlockHeader extends $pb.GeneratedMessage {
-  factory BlockHeader() => create();
+  factory BlockHeader({
+    BlockId? parentHeaderId,
+    $fixnum.Int64? parentSlot,
+    $core.List<$core.int>? txRoot,
+    $core.List<$core.int>? bloomFilter,
+    $fixnum.Int64? timestamp,
+    $fixnum.Int64? height,
+    $fixnum.Int64? slot,
+    EligibilityCertificate? eligibilityCertificate,
+    OperationalCertificate? operationalCertificate,
+    $core.List<$core.int>? metadata,
+    StakingAddress? address,
+    BlockId? headerId,
+  }) {
+    final $result = create();
+    if (parentHeaderId != null) {
+      $result.parentHeaderId = parentHeaderId;
+    }
+    if (parentSlot != null) {
+      $result.parentSlot = parentSlot;
+    }
+    if (txRoot != null) {
+      $result.txRoot = txRoot;
+    }
+    if (bloomFilter != null) {
+      $result.bloomFilter = bloomFilter;
+    }
+    if (timestamp != null) {
+      $result.timestamp = timestamp;
+    }
+    if (height != null) {
+      $result.height = height;
+    }
+    if (slot != null) {
+      $result.slot = slot;
+    }
+    if (eligibilityCertificate != null) {
+      $result.eligibilityCertificate = eligibilityCertificate;
+    }
+    if (operationalCertificate != null) {
+      $result.operationalCertificate = operationalCertificate;
+    }
+    if (metadata != null) {
+      $result.metadata = metadata;
+    }
+    if (address != null) {
+      $result.address = address;
+    }
+    if (headerId != null) {
+      $result.headerId = headerId;
+    }
+    return $result;
+  }
   BlockHeader._() : super();
   factory BlockHeader.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BlockHeader.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -99,6 +160,7 @@ class BlockHeader extends $pb.GeneratedMessage {
   static BlockHeader getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockHeader>(create);
   static BlockHeader? _defaultInstance;
 
+  /// The parent block's ID.  Each header builds from a single parent.
   @$pb.TagNumber(1)
   BlockId get parentHeaderId => $_getN(0);
   @$pb.TagNumber(1)
@@ -110,6 +172,7 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   BlockId ensureParentHeaderId() => $_ensure(0);
 
+  /// The slot of the parent block
   @$pb.TagNumber(2)
   $fixnum.Int64 get parentSlot => $_getI64(1);
   @$pb.TagNumber(2)
@@ -119,6 +182,8 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearParentSlot() => clearField(2);
 
+  /// The commitment/accumulator of the block body
+  /// length = 32
   @$pb.TagNumber(3)
   $core.List<$core.int> get txRoot => $_getN(2);
   @$pb.TagNumber(3)
@@ -128,6 +193,8 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearTxRoot() => clearField(3);
 
+  /// A fuzzy search for addresses associated with this block
+  /// length = 256
   @$pb.TagNumber(4)
   $core.List<$core.int> get bloomFilter => $_getN(3);
   @$pb.TagNumber(4)
@@ -137,6 +204,7 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearBloomFilter() => clearField(4);
 
+  /// The UTC UNIX timestamp (ms) when the block was created
   @$pb.TagNumber(5)
   $fixnum.Int64 get timestamp => $_getI64(4);
   @$pb.TagNumber(5)
@@ -146,6 +214,7 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearTimestamp() => clearField(5);
 
+  /// The 1-based index of this block in the blockchain
   @$pb.TagNumber(6)
   $fixnum.Int64 get height => $_getI64(5);
   @$pb.TagNumber(6)
@@ -155,6 +224,7 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearHeight() => clearField(6);
 
+  /// The time-slot in which the block producer created the block
   @$pb.TagNumber(7)
   $fixnum.Int64 get slot => $_getI64(6);
   @$pb.TagNumber(7)
@@ -164,6 +234,7 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   void clearSlot() => clearField(7);
 
+  /// A certificate indicating that the block producer was eligible to make this block
   @$pb.TagNumber(8)
   EligibilityCertificate get eligibilityCertificate => $_getN(7);
   @$pb.TagNumber(8)
@@ -175,6 +246,7 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   EligibilityCertificate ensureEligibilityCertificate() => $_ensure(7);
 
+  /// A certificate indicating the operator's commitment to this block
   @$pb.TagNumber(9)
   OperationalCertificate get operationalCertificate => $_getN(8);
   @$pb.TagNumber(9)
@@ -186,6 +258,8 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(9)
   OperationalCertificate ensureOperationalCertificate() => $_ensure(8);
 
+  /// Optional metadata stamped by the operator.  Must be latin-1 encoded, and must be at most 32 bytes in length.
+  /// optional
   @$pb.TagNumber(10)
   $core.List<$core.int> get metadata => $_getN(9);
   @$pb.TagNumber(10)
@@ -195,6 +269,7 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(10)
   void clearMetadata() => clearField(10);
 
+  /// The operator's staking address
   @$pb.TagNumber(11)
   StakingAddress get address => $_getN(10);
   @$pb.TagNumber(11)
@@ -206,6 +281,8 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(11)
   StakingAddress ensureAddress() => $_ensure(10);
 
+  /// The ID of _this_ block header.  This value is optional and its contents are not included in the signable or identifiable data.  Clients which _can_ verify
+  /// this value should verify this value, but some clients may not be able to or need to, in which case this field acts as a convenience.
   @$pb.TagNumber(12)
   BlockId get headerId => $_getN(11);
   @$pb.TagNumber(12)
@@ -218,8 +295,29 @@ class BlockHeader extends $pb.GeneratedMessage {
   BlockId ensureHeaderId() => $_ensure(11);
 }
 
+/// A certificate proving the operator's election
 class EligibilityCertificate extends $pb.GeneratedMessage {
-  factory EligibilityCertificate() => create();
+  factory EligibilityCertificate({
+    $core.List<$core.int>? vrfSig,
+    $core.List<$core.int>? vrfVK,
+    $core.List<$core.int>? thresholdEvidence,
+    $core.List<$core.int>? eta,
+  }) {
+    final $result = create();
+    if (vrfSig != null) {
+      $result.vrfSig = vrfSig;
+    }
+    if (vrfVK != null) {
+      $result.vrfVK = vrfVK;
+    }
+    if (thresholdEvidence != null) {
+      $result.thresholdEvidence = thresholdEvidence;
+    }
+    if (eta != null) {
+      $result.eta = eta;
+    }
+    return $result;
+  }
   EligibilityCertificate._() : super();
   factory EligibilityCertificate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory EligibilityCertificate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -253,6 +351,7 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
   static EligibilityCertificate getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EligibilityCertificate>(create);
   static EligibilityCertificate? _defaultInstance;
 
+  /// Signs `eta ++ slot` using the `vrfSK`
   @$pb.TagNumber(1)
   $core.List<$core.int> get vrfSig => $_getN(0);
   @$pb.TagNumber(1)
@@ -262,6 +361,7 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearVrfSig() => clearField(1);
 
+  /// The VRF VK
   @$pb.TagNumber(2)
   $core.List<$core.int> get vrfVK => $_getN(1);
   @$pb.TagNumber(2)
@@ -271,6 +371,9 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearVrfVK() => clearField(2);
 
+  /// Hash of the operator's `threshold`
+  /// routine = blake2b256
+  /// length = 32
   @$pb.TagNumber(3)
   $core.List<$core.int> get thresholdEvidence => $_getN(2);
   @$pb.TagNumber(3)
@@ -280,6 +383,8 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearThresholdEvidence() => clearField(3);
 
+  /// The epoch's randomness
+  /// length = 32
   @$pb.TagNumber(4)
   $core.List<$core.int> get eta => $_getN(3);
   @$pb.TagNumber(4)
@@ -290,8 +395,29 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
   void clearEta() => clearField(4);
 }
 
+/// A certificate which commits an operator to a linear key, which is then used to sign the block
 class OperationalCertificate extends $pb.GeneratedMessage {
-  factory OperationalCertificate() => create();
+  factory OperationalCertificate({
+    VerificationKeyKesProduct? parentVK,
+    SignatureKesProduct? parentSignature,
+    $core.List<$core.int>? childVK,
+    $core.List<$core.int>? childSignature,
+  }) {
+    final $result = create();
+    if (parentVK != null) {
+      $result.parentVK = parentVK;
+    }
+    if (parentSignature != null) {
+      $result.parentSignature = parentSignature;
+    }
+    if (childVK != null) {
+      $result.childVK = childVK;
+    }
+    if (childSignature != null) {
+      $result.childSignature = childSignature;
+    }
+    return $result;
+  }
   OperationalCertificate._() : super();
   factory OperationalCertificate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory OperationalCertificate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -325,6 +451,7 @@ class OperationalCertificate extends $pb.GeneratedMessage {
   static OperationalCertificate getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationalCertificate>(create);
   static OperationalCertificate? _defaultInstance;
 
+  /// The KES VK of the parent key (forward-secure) (hour+minute hands)
   @$pb.TagNumber(1)
   VerificationKeyKesProduct get parentVK => $_getN(0);
   @$pb.TagNumber(1)
@@ -336,6 +463,7 @@ class OperationalCertificate extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   VerificationKeyKesProduct ensureParentVK() => $_ensure(0);
 
+  /// Signs the `childVK` using the `parentSK`
   @$pb.TagNumber(2)
   SignatureKesProduct get parentSignature => $_getN(1);
   @$pb.TagNumber(2)
@@ -347,6 +475,7 @@ class OperationalCertificate extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   SignatureKesProduct ensureParentSignature() => $_ensure(1);
 
+  /// The linear VK
   @$pb.TagNumber(3)
   $core.List<$core.int> get childVK => $_getN(2);
   @$pb.TagNumber(3)
@@ -356,6 +485,7 @@ class OperationalCertificate extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearChildVK() => clearField(3);
 
+  /// The signature of the block
   @$pb.TagNumber(4)
   $core.List<$core.int> get childSignature => $_getN(3);
   @$pb.TagNumber(4)
@@ -367,7 +497,19 @@ class OperationalCertificate extends $pb.GeneratedMessage {
 }
 
 class VerificationKeyKesProduct extends $pb.GeneratedMessage {
-  factory VerificationKeyKesProduct() => create();
+  factory VerificationKeyKesProduct({
+    $core.List<$core.int>? value,
+    $core.int? step,
+  }) {
+    final $result = create();
+    if (value != null) {
+      $result.value = value;
+    }
+    if (step != null) {
+      $result.step = step;
+    }
+    return $result;
+  }
   VerificationKeyKesProduct._() : super();
   factory VerificationKeyKesProduct.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory VerificationKeyKesProduct.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -399,6 +541,7 @@ class VerificationKeyKesProduct extends $pb.GeneratedMessage {
   static VerificationKeyKesProduct getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<VerificationKeyKesProduct>(create);
   static VerificationKeyKesProduct? _defaultInstance;
 
+  /// length = 32
   @$pb.TagNumber(1)
   $core.List<$core.int> get value => $_getN(0);
   @$pb.TagNumber(1)
@@ -419,7 +562,23 @@ class VerificationKeyKesProduct extends $pb.GeneratedMessage {
 }
 
 class SignatureKesSum extends $pb.GeneratedMessage {
-  factory SignatureKesSum() => create();
+  factory SignatureKesSum({
+    $core.List<$core.int>? verificationKey,
+    $core.List<$core.int>? signature,
+    $core.Iterable<$core.List<$core.int>>? witness,
+  }) {
+    final $result = create();
+    if (verificationKey != null) {
+      $result.verificationKey = verificationKey;
+    }
+    if (signature != null) {
+      $result.signature = signature;
+    }
+    if (witness != null) {
+      $result.witness.addAll(witness);
+    }
+    return $result;
+  }
   SignatureKesSum._() : super();
   factory SignatureKesSum.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SignatureKesSum.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -470,12 +629,29 @@ class SignatureKesSum extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearSignature() => clearField(2);
 
+  /// item length = 32
   @$pb.TagNumber(3)
   $core.List<$core.List<$core.int>> get witness => $_getList(2);
 }
 
 class SignatureKesProduct extends $pb.GeneratedMessage {
-  factory SignatureKesProduct() => create();
+  factory SignatureKesProduct({
+    SignatureKesSum? superSignature,
+    SignatureKesSum? subSignature,
+    $core.List<$core.int>? subRoot,
+  }) {
+    final $result = create();
+    if (superSignature != null) {
+      $result.superSignature = superSignature;
+    }
+    if (subSignature != null) {
+      $result.subSignature = subSignature;
+    }
+    if (subRoot != null) {
+      $result.subRoot = subRoot;
+    }
+    return $result;
+  }
   SignatureKesProduct._() : super();
   factory SignatureKesProduct.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SignatureKesProduct.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -530,6 +706,7 @@ class SignatureKesProduct extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   SignatureKesSum ensureSubSignature() => $_ensure(1);
 
+  /// length = 32
   @$pb.TagNumber(3)
   $core.List<$core.int> get subRoot => $_getN(2);
   @$pb.TagNumber(3)
@@ -540,8 +717,33 @@ class SignatureKesProduct extends $pb.GeneratedMessage {
   void clearSubRoot() => clearField(3);
 }
 
+/// Represents a "mini" block header, containing just a subset of its data needed to quickly inspect consensus characteristics of a block
 class SlotData extends $pb.GeneratedMessage {
-  factory SlotData() => create();
+  factory SlotData({
+    SlotId? slotId,
+    SlotId? parentSlotId,
+    $core.List<$core.int>? rho,
+    $core.List<$core.int>? eta,
+    $fixnum.Int64? height,
+  }) {
+    final $result = create();
+    if (slotId != null) {
+      $result.slotId = slotId;
+    }
+    if (parentSlotId != null) {
+      $result.parentSlotId = parentSlotId;
+    }
+    if (rho != null) {
+      $result.rho = rho;
+    }
+    if (eta != null) {
+      $result.eta = eta;
+    }
+    if (height != null) {
+      $result.height = height;
+    }
+    return $result;
+  }
   SlotData._() : super();
   factory SlotData.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SlotData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -576,6 +778,7 @@ class SlotData extends $pb.GeneratedMessage {
   static SlotData getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SlotData>(create);
   static SlotData? _defaultInstance;
 
+  /// The slot ID corresponding to "this" block
   @$pb.TagNumber(1)
   SlotId get slotId => $_getN(0);
   @$pb.TagNumber(1)
@@ -587,6 +790,7 @@ class SlotData extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   SlotId ensureSlotId() => $_ensure(0);
 
+  /// The slot ID corresponding to "this" block's parent
   @$pb.TagNumber(2)
   SlotId get parentSlotId => $_getN(1);
   @$pb.TagNumber(2)
@@ -598,6 +802,8 @@ class SlotData extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   SlotId ensureParentSlotId() => $_ensure(1);
 
+  /// The "rho" corresponding to "this" block
+  /// length = 64
   @$pb.TagNumber(3)
   $core.List<$core.int> get rho => $_getN(2);
   @$pb.TagNumber(3)
@@ -607,6 +813,8 @@ class SlotData extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearRho() => clearField(3);
 
+  /// The "eta" corresponding to "this" block
+  /// length = 32
   @$pb.TagNumber(4)
   $core.List<$core.int> get eta => $_getN(3);
   @$pb.TagNumber(4)
@@ -616,6 +824,7 @@ class SlotData extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearEta() => clearField(4);
 
+  /// The height of "this" block
   @$pb.TagNumber(5)
   $fixnum.Int64 get height => $_getI64(4);
   @$pb.TagNumber(5)
@@ -626,8 +835,21 @@ class SlotData extends $pb.GeneratedMessage {
   void clearHeight() => clearField(5);
 }
 
+/// A glorified tuple
 class SlotId extends $pb.GeneratedMessage {
-  factory SlotId() => create();
+  factory SlotId({
+    $fixnum.Int64? slot,
+    BlockId? blockId,
+  }) {
+    final $result = create();
+    if (slot != null) {
+      $result.slot = slot;
+    }
+    if (blockId != null) {
+      $result.blockId = blockId;
+    }
+    return $result;
+  }
   SlotId._() : super();
   factory SlotId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SlotId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -659,6 +881,7 @@ class SlotId extends $pb.GeneratedMessage {
   static SlotId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SlotId>(create);
   static SlotId? _defaultInstance;
 
+  /// The slot in which a block was created
   @$pb.TagNumber(1)
   $fixnum.Int64 get slot => $_getI64(0);
   @$pb.TagNumber(1)
@@ -668,6 +891,7 @@ class SlotId extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearSlot() => clearField(1);
 
+  /// The ID of the block
   @$pb.TagNumber(2)
   BlockId get blockId => $_getN(1);
   @$pb.TagNumber(2)
@@ -681,7 +905,15 @@ class SlotId extends $pb.GeneratedMessage {
 }
 
 class StakingAddress extends $pb.GeneratedMessage {
-  factory StakingAddress() => create();
+  factory StakingAddress({
+    $core.List<$core.int>? value,
+  }) {
+    final $result = create();
+    if (value != null) {
+      $result.value = value;
+    }
+    return $result;
+  }
   StakingAddress._() : super();
   factory StakingAddress.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory StakingAddress.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -722,8 +954,17 @@ class StakingAddress extends $pb.GeneratedMessage {
   void clearValue() => clearField(1);
 }
 
+/// Captures the ordering of transaction IDs within a block
 class BlockBody extends $pb.GeneratedMessage {
-  factory BlockBody() => create();
+  factory BlockBody({
+    $core.Iterable<TransactionId>? transactionIds,
+  }) {
+    final $result = create();
+    if (transactionIds != null) {
+      $result.transactionIds.addAll(transactionIds);
+    }
+    return $result;
+  }
   BlockBody._() : super();
   factory BlockBody.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BlockBody.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -754,12 +995,22 @@ class BlockBody extends $pb.GeneratedMessage {
   static BlockBody getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockBody>(create);
   static BlockBody? _defaultInstance;
 
+  /// A list of Transaction IDs included in this block
   @$pb.TagNumber(1)
   $core.List<TransactionId> get transactionIds => $_getList(0);
 }
 
+/// Captures the ordering of transactions (not just IDs) within a block
 class FullBlockBody extends $pb.GeneratedMessage {
-  factory FullBlockBody() => create();
+  factory FullBlockBody({
+    $core.Iterable<Transaction>? transactions,
+  }) {
+    final $result = create();
+    if (transactions != null) {
+      $result.transactions.addAll(transactions);
+    }
+    return $result;
+  }
   FullBlockBody._() : super();
   factory FullBlockBody.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory FullBlockBody.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -790,12 +1041,26 @@ class FullBlockBody extends $pb.GeneratedMessage {
   static FullBlockBody getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FullBlockBody>(create);
   static FullBlockBody? _defaultInstance;
 
+  /// A list of Transactions included in this block
   @$pb.TagNumber(1)
   $core.List<Transaction> get transactions => $_getList(0);
 }
 
+/// Captures the header and all transactions in a block
 class Block extends $pb.GeneratedMessage {
-  factory Block() => create();
+  factory Block({
+    BlockHeader? header,
+    BlockBody? body,
+  }) {
+    final $result = create();
+    if (header != null) {
+      $result.header = header;
+    }
+    if (body != null) {
+      $result.body = body;
+    }
+    return $result;
+  }
   Block._() : super();
   factory Block.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Block.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -827,6 +1092,7 @@ class Block extends $pb.GeneratedMessage {
   static Block getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Block>(create);
   static Block? _defaultInstance;
 
+  /// The block's header
   @$pb.TagNumber(1)
   BlockHeader get header => $_getN(0);
   @$pb.TagNumber(1)
@@ -838,6 +1104,7 @@ class Block extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   BlockHeader ensureHeader() => $_ensure(0);
 
+  /// The block's body
   @$pb.TagNumber(2)
   BlockBody get body => $_getN(1);
   @$pb.TagNumber(2)
@@ -850,8 +1117,21 @@ class Block extends $pb.GeneratedMessage {
   BlockBody ensureBody() => $_ensure(1);
 }
 
+/// Captures the header and all transactions in a block
 class FullBlock extends $pb.GeneratedMessage {
-  factory FullBlock() => create();
+  factory FullBlock({
+    BlockHeader? header,
+    FullBlockBody? fullBody,
+  }) {
+    final $result = create();
+    if (header != null) {
+      $result.header = header;
+    }
+    if (fullBody != null) {
+      $result.fullBody = fullBody;
+    }
+    return $result;
+  }
   FullBlock._() : super();
   factory FullBlock.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory FullBlock.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -883,6 +1163,7 @@ class FullBlock extends $pb.GeneratedMessage {
   static FullBlock getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FullBlock>(create);
   static FullBlock? _defaultInstance;
 
+  /// The block's header
   @$pb.TagNumber(1)
   BlockHeader get header => $_getN(0);
   @$pb.TagNumber(1)
@@ -894,6 +1175,7 @@ class FullBlock extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   BlockHeader ensureHeader() => $_ensure(0);
 
+  /// The block's full body
   @$pb.TagNumber(2)
   FullBlockBody get fullBody => $_getN(1);
   @$pb.TagNumber(2)
@@ -906,8 +1188,17 @@ class FullBlock extends $pb.GeneratedMessage {
   FullBlockBody ensureFullBody() => $_ensure(1);
 }
 
+/// Represents the identifier of a Transction.  It is constructed from the evidence of the signable bytes of the Transaction.
 class TransactionId extends $pb.GeneratedMessage {
-  factory TransactionId() => create();
+  factory TransactionId({
+    $core.List<$core.int>? value,
+  }) {
+    final $result = create();
+    if (value != null) {
+      $result.value = value;
+    }
+    return $result;
+  }
   TransactionId._() : super();
   factory TransactionId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -938,6 +1229,8 @@ class TransactionId extends $pb.GeneratedMessage {
   static TransactionId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<TransactionId>(create);
   static TransactionId? _defaultInstance;
 
+  /// The evidence of the Transaction's signable bytes
+  /// length = 32
   @$pb.TagNumber(1)
   $core.List<$core.int> get value => $_getN(0);
   @$pb.TagNumber(1)
@@ -949,7 +1242,19 @@ class TransactionId extends $pb.GeneratedMessage {
 }
 
 class Transaction extends $pb.GeneratedMessage {
-  factory Transaction() => create();
+  factory Transaction({
+    $core.Iterable<TransactionInput>? inputs,
+    $core.Iterable<TransactionOutput>? outputs,
+  }) {
+    final $result = create();
+    if (inputs != null) {
+      $result.inputs.addAll(inputs);
+    }
+    if (outputs != null) {
+      $result.outputs.addAll(outputs);
+    }
+    return $result;
+  }
   Transaction._() : super();
   factory Transaction.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Transaction.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -989,7 +1294,27 @@ class Transaction extends $pb.GeneratedMessage {
 }
 
 class TransactionInput extends $pb.GeneratedMessage {
-  factory TransactionInput() => create();
+  factory TransactionInput({
+    TransactionOutputReference? reference,
+    Lock? lock,
+    Key? key,
+    Value? value,
+  }) {
+    final $result = create();
+    if (reference != null) {
+      $result.reference = reference;
+    }
+    if (lock != null) {
+      $result.lock = lock;
+    }
+    if (key != null) {
+      $result.key = key;
+    }
+    if (value != null) {
+      $result.value = value;
+    }
+    return $result;
+  }
   TransactionInput._() : super();
   factory TransactionInput.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionInput.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1069,7 +1394,19 @@ class TransactionInput extends $pb.GeneratedMessage {
 }
 
 class TransactionOutputReference extends $pb.GeneratedMessage {
-  factory TransactionOutputReference() => create();
+  factory TransactionOutputReference({
+    TransactionId? transactionId,
+    $core.int? index,
+  }) {
+    final $result = create();
+    if (transactionId != null) {
+      $result.transactionId = transactionId;
+    }
+    if (index != null) {
+      $result.index = index;
+    }
+    return $result;
+  }
   TransactionOutputReference._() : super();
   factory TransactionOutputReference.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionOutputReference.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1123,7 +1460,19 @@ class TransactionOutputReference extends $pb.GeneratedMessage {
 }
 
 class TransactionOutput extends $pb.GeneratedMessage {
-  factory TransactionOutput() => create();
+  factory TransactionOutput({
+    LockAddress? lockAddress,
+    Value? value,
+  }) {
+    final $result = create();
+    if (lockAddress != null) {
+      $result.lockAddress = lockAddress;
+    }
+    if (value != null) {
+      $result.value = value;
+    }
+    return $result;
+  }
   TransactionOutput._() : super();
   factory TransactionOutput.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionOutput.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1179,7 +1528,19 @@ class TransactionOutput extends $pb.GeneratedMessage {
 }
 
 class Value extends $pb.GeneratedMessage {
-  factory Value() => create();
+  factory Value({
+    $fixnum.Int64? quantity,
+    StakingRegistration? registration,
+  }) {
+    final $result = create();
+    if (quantity != null) {
+      $result.quantity = quantity;
+    }
+    if (registration != null) {
+      $result.registration = registration;
+    }
+    return $result;
+  }
   Value._() : super();
   factory Value.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Value.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1220,6 +1581,7 @@ class Value extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearQuantity() => clearField(1);
 
+  /// Optional.  If not provided, this token will not be used for staking purposes.
   @$pb.TagNumber(2)
   StakingRegistration get registration => $_getN(1);
   @$pb.TagNumber(2)
@@ -1232,8 +1594,21 @@ class Value extends $pb.GeneratedMessage {
   StakingRegistration ensureRegistration() => $_ensure(1);
 }
 
+/// A proof-of-stake registration
 class StakingRegistration extends $pb.GeneratedMessage {
-  factory StakingRegistration() => create();
+  factory StakingRegistration({
+    SignatureKesProduct? signature,
+    StakingAddress? stakingAddress,
+  }) {
+    final $result = create();
+    if (signature != null) {
+      $result.signature = signature;
+    }
+    if (stakingAddress != null) {
+      $result.stakingAddress = stakingAddress;
+    }
+    return $result;
+  }
   StakingRegistration._() : super();
   factory StakingRegistration.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory StakingRegistration.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1288,8 +1663,21 @@ class StakingRegistration extends $pb.GeneratedMessage {
   StakingAddress ensureStakingAddress() => $_ensure(1);
 }
 
+/// An active, registered participate in the consensus protocol, for a particular epoch.
 class ActiveStaker extends $pb.GeneratedMessage {
-  factory ActiveStaker() => create();
+  factory ActiveStaker({
+    StakingRegistration? registration,
+    $fixnum.Int64? quantity,
+  }) {
+    final $result = create();
+    if (registration != null) {
+      $result.registration = registration;
+    }
+    if (quantity != null) {
+      $result.quantity = quantity;
+    }
+    return $result;
+  }
   ActiveStaker._() : super();
   factory ActiveStaker.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory ActiveStaker.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1321,6 +1709,7 @@ class ActiveStaker extends $pb.GeneratedMessage {
   static ActiveStaker getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ActiveStaker>(create);
   static ActiveStaker? _defaultInstance;
 
+  /// the staker's registration
   @$pb.TagNumber(1)
   StakingRegistration get registration => $_getN(0);
   @$pb.TagNumber(1)
@@ -1332,6 +1721,7 @@ class ActiveStaker extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   StakingRegistration ensureRegistration() => $_ensure(0);
 
+  /// the quantity of staked tokens for the epoch
   @$pb.TagNumber(3)
   $fixnum.Int64 get quantity => $_getI64(1);
   @$pb.TagNumber(3)
@@ -1343,7 +1733,15 @@ class ActiveStaker extends $pb.GeneratedMessage {
 }
 
 class LockAddress extends $pb.GeneratedMessage {
-  factory LockAddress() => create();
+  factory LockAddress({
+    $core.List<$core.int>? value,
+  }) {
+    final $result = create();
+    if (value != null) {
+      $result.value = value;
+    }
+    return $result;
+  }
   LockAddress._() : super();
   factory LockAddress.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory LockAddress.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1385,7 +1783,15 @@ class LockAddress extends $pb.GeneratedMessage {
 }
 
 class Lock_Ed25519 extends $pb.GeneratedMessage {
-  factory Lock_Ed25519() => create();
+  factory Lock_Ed25519({
+    $core.List<$core.int>? vk,
+  }) {
+    final $result = create();
+    if (vk != null) {
+      $result.vk = vk;
+    }
+    return $result;
+  }
   Lock_Ed25519._() : super();
   factory Lock_Ed25519.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Lock_Ed25519.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1432,7 +1838,15 @@ enum Lock_Value {
 }
 
 class Lock extends $pb.GeneratedMessage {
-  factory Lock() => create();
+  factory Lock({
+    Lock_Ed25519? ed25519,
+  }) {
+    final $result = create();
+    if (ed25519 != null) {
+      $result.ed25519 = ed25519;
+    }
+    return $result;
+  }
   Lock._() : super();
   factory Lock.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Lock.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1484,7 +1898,15 @@ class Lock extends $pb.GeneratedMessage {
 }
 
 class Key_Ed25519 extends $pb.GeneratedMessage {
-  factory Key_Ed25519() => create();
+  factory Key_Ed25519({
+    $core.List<$core.int>? signature,
+  }) {
+    final $result = create();
+    if (signature != null) {
+      $result.signature = signature;
+    }
+    return $result;
+  }
   Key_Ed25519._() : super();
   factory Key_Ed25519.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Key_Ed25519.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -1531,7 +1953,15 @@ enum Key_Value {
 }
 
 class Key extends $pb.GeneratedMessage {
-  factory Key() => create();
+  factory Key({
+    Key_Ed25519? ed25519,
+  }) {
+    final $result = create();
+    if (ed25519 != null) {
+      $result.ed25519 = ed25519;
+    }
+    return $result;
+  }
   Key._() : super();
   factory Key.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Key.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);

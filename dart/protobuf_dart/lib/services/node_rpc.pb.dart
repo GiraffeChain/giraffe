@@ -4,7 +4,7 @@
 //
 // @dart = 2.12
 
-// ignore_for_file: annotate_overrides, camel_case_types
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
 // ignore_for_file: constant_identifier_names, library_prefixes
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 // ignore_for_file: unnecessary_import, unnecessary_this, unused_import
@@ -16,7 +16,15 @@ import 'package:protobuf/protobuf.dart' as $pb;
 import '../models/core.pb.dart' as $2;
 
 class BroadcastTransactionReq extends $pb.GeneratedMessage {
-  factory BroadcastTransactionReq() => create();
+  factory BroadcastTransactionReq({
+    $2.Transaction? transaction,
+  }) {
+    final $result = create();
+    if (transaction != null) {
+      $result.transaction = transaction;
+    }
+    return $result;
+  }
   BroadcastTransactionReq._() : super();
   factory BroadcastTransactionReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BroadcastTransactionReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -92,7 +100,15 @@ class BroadcastTransactionRes extends $pb.GeneratedMessage {
 }
 
 class GetBlockReq extends $pb.GeneratedMessage {
-  factory GetBlockReq() => create();
+  factory GetBlockReq({
+    $2.BlockId? blockId,
+  }) {
+    final $result = create();
+    if (blockId != null) {
+      $result.blockId = blockId;
+    }
+    return $result;
+  }
   GetBlockReq._() : super();
   factory GetBlockReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetBlockReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -136,7 +152,15 @@ class GetBlockReq extends $pb.GeneratedMessage {
 }
 
 class GetBlockRes extends $pb.GeneratedMessage {
-  factory GetBlockRes() => create();
+  factory GetBlockRes({
+    $2.Block? block,
+  }) {
+    final $result = create();
+    if (block != null) {
+      $result.block = block;
+    }
+    return $result;
+  }
   GetBlockRes._() : super();
   factory GetBlockRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetBlockRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -180,7 +204,15 @@ class GetBlockRes extends $pb.GeneratedMessage {
 }
 
 class GetTransactionReq extends $pb.GeneratedMessage {
-  factory GetTransactionReq() => create();
+  factory GetTransactionReq({
+    $2.TransactionId? transactionId,
+  }) {
+    final $result = create();
+    if (transactionId != null) {
+      $result.transactionId = transactionId;
+    }
+    return $result;
+  }
   GetTransactionReq._() : super();
   factory GetTransactionReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetTransactionReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -224,7 +256,15 @@ class GetTransactionReq extends $pb.GeneratedMessage {
 }
 
 class GetTransactionRes extends $pb.GeneratedMessage {
-  factory GetTransactionRes() => create();
+  factory GetTransactionRes({
+    $2.Transaction? transaction,
+  }) {
+    final $result = create();
+    if (transaction != null) {
+      $result.transaction = transaction;
+    }
+    return $result;
+  }
   GetTransactionRes._() : super();
   factory GetTransactionRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetTransactionRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -300,7 +340,15 @@ class BlockIdGossipReq extends $pb.GeneratedMessage {
 }
 
 class BlockIdGossipRes extends $pb.GeneratedMessage {
-  factory BlockIdGossipRes() => create();
+  factory BlockIdGossipRes({
+    $2.BlockId? blockId,
+  }) {
+    final $result = create();
+    if (blockId != null) {
+      $result.blockId = blockId;
+    }
+    return $result;
+  }
   BlockIdGossipRes._() : super();
   factory BlockIdGossipRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BlockIdGossipRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
@@ -376,7 +424,15 @@ class TransactionIdGossipReq extends $pb.GeneratedMessage {
 }
 
 class TransactionIdGossipRes extends $pb.GeneratedMessage {
-  factory TransactionIdGossipRes() => create();
+  factory TransactionIdGossipRes({
+    $2.TransactionId? transactionId,
+  }) {
+    final $result = create();
+    if (transactionId != null) {
+      $result.transactionId = transactionId;
+    }
+    return $result;
+  }
   TransactionIdGossipRes._() : super();
   factory TransactionIdGossipRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionIdGossipRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
