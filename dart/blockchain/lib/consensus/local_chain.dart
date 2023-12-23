@@ -8,15 +8,17 @@ import 'package:fixnum/fixnum.dart';
 abstract class LocalChainAlgebra {
   Future<void> adopt(BlockId newHead);
   Future<BlockId> get currentHead;
+  BlockId get genesis;
   Stream<BlockId> get adoptions;
   Future<BlockId?> blockIdAtHeight(Int64 height);
-  Future<BlockId?> blockIdAtDepth(Int64 height);
 }
 
 class LocalChain extends LocalChainAlgebra {
-  LocalChain(BlockId initialHead, this._blockHeightTree, this._heightOfBlock)
+  LocalChain(this._genesis, BlockId initialHead, this._blockHeightTree,
+      this._heightOfBlock)
       : this._currentHead = initialHead;
   BlockId _currentHead;
+  final BlockId _genesis;
 
   final EventSourcedStateAlgebra<BlockHeightTreeState, BlockId>
       _blockHeightTree;
@@ -41,17 +43,23 @@ class LocalChain extends LocalChainAlgebra {
   Future<BlockId> get currentHead => Future.sync(() => _currentHead);
 
   @override
-  Future<BlockId?> blockIdAtHeight(Int64 height) async =>
-      _blockHeightTree.useStateAt(await currentHead, (s) => s(height));
+  Future<BlockId?> blockIdAtHeight(Int64 height) async {
+    if (height == Int64.ONE)
+      return genesis;
+    else if (height > 1) {
+      return _blockHeightTree.useStateAt(await currentHead, (s) => s(height));
+    } else {
+      final headId = await currentHead;
+      final headHeight = await _heightOfBlock(headId);
+      final depth = height.abs();
+      if (headHeight >= depth)
+        return _blockHeightTree.useStateAt(
+            await currentHead, (s) => s(headHeight - depth));
+      else
+        return null;
+    }
+  }
 
   @override
-  Future<BlockId?> blockIdAtDepth(Int64 depth) async {
-    final headId = await currentHead;
-    final headHeight = await _heightOfBlock(headId);
-    if (headHeight >= depth)
-      return _blockHeightTree.useStateAt(
-          await currentHead, (s) => s(headHeight - depth));
-    else
-      return null;
-  }
+  BlockId get genesis => _genesis;
 }

@@ -1,4 +1,6 @@
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/data_stores.dart';
+import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
@@ -11,25 +13,31 @@ Resource<Server> serveRpcs(String host, int port, NodeRpcServiceBase nodeRpc,
         .evalTap((server) => server.serve(address: host, port: port));
 
 class NodeRpcServiceImpl extends NodeRpcServiceBase {
-  final Stream<BlockId> _localAdoptions;
-  final Future<Block?> Function(BlockId) _getBlock;
-  final Future<Transaction?> Function(TransactionId) _getTransaction;
+  final Stream<TraversalStep> _traversal;
+  final DataStores _dataStores;
   final Future<void> Function(Transaction) _onBroadcastTransaction;
+  final Future<BlockId?> Function(Int64) _blockIdAtHeight;
 
   NodeRpcServiceImpl(
-      {required Stream<BlockId> localAdoptions,
-      required Future<Block?> Function(BlockId) getBlock,
-      required Future<Transaction?> Function(TransactionId) getTransaction,
-      required Future<void> Function(Transaction) onBroadcastTransaction})
-      : _localAdoptions = localAdoptions,
-        _getBlock = getBlock,
-        _getTransaction = getTransaction,
-        _onBroadcastTransaction = onBroadcastTransaction;
+      {required Stream<TraversalStep> traversal,
+      required DataStores dataStores,
+      required Future<void> Function(Transaction) onBroadcastTransaction,
+      required Future<BlockId?> Function(Int64) blockIdAtHeight})
+      : _traversal = traversal,
+        _dataStores = dataStores,
+        _onBroadcastTransaction = onBroadcastTransaction,
+        _blockIdAtHeight = blockIdAtHeight;
 
   @override
-  Stream<BlockIdGossipRes> blockIdGossip(
-      ServiceCall call, BlockIdGossipReq request) {
-    return _localAdoptions.map((id) => BlockIdGossipRes(blockId: id));
+  Stream<FollowRes> follow(ServiceCall call, FollowReq request) {
+    return _traversal.map((t) {
+      if (t is TraversalStep_Applied) {
+        return FollowRes(adopted: t.blockId);
+      } else if (t is TraversalStep_Unapplied) {
+        return FollowRes(unadopted: t.blockId);
+      } else
+        throw ArgumentError.notNull();
+    });
   }
 
   @override
@@ -41,18 +49,43 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
   }
 
   @override
-  Future<GetBlockRes> getBlock(ServiceCall call, GetBlockReq request) async {
+  Future<GetFullBlockRes> getFullBlock(
+      ServiceCall call, GetFullBlockReq request) async {
     assert(request.hasBlockId());
-    final block = await _getBlock(request.blockId);
-    return GetBlockRes(block: block);
+    final block = await _dataStores.getFullBlock(request.blockId);
+    return GetFullBlockRes(fullBlock: block);
   }
 
   @override
   Future<GetTransactionRes> getTransaction(
       ServiceCall call, GetTransactionReq request) async {
     assert(request.hasTransactionId());
-    final transaction = await _getTransaction(request.transactionId);
+    final transaction =
+        await _dataStores.transactions.get(request.transactionId);
     return GetTransactionRes(transaction: transaction);
+  }
+
+  @override
+  Future<GetBlockBodyRes> getBlockBody(
+      ServiceCall call, GetBlockBodyReq request) async {
+    assert(request.hasBlockId());
+    final body = await _dataStores.bodies.get(request.blockId);
+    return GetBlockBodyRes(body: body);
+  }
+
+  @override
+  Future<GetBlockHeaderRes> getBlockHeader(
+      ServiceCall call, GetBlockHeaderReq request) async {
+    assert(request.hasBlockId());
+    final header = await _dataStores.headers.get(request.blockId);
+    return GetBlockHeaderRes(header: header);
+  }
+
+  @override
+  Future<GetBlockIdAtHeightRes> getBlockIdAtHeight(
+      ServiceCall call, GetBlockIdAtHeightReq request) async {
+    final blockId = await _blockIdAtHeight(request.height);
+    return GetBlockIdAtHeightRes(blockId: blockId);
   }
 }
 

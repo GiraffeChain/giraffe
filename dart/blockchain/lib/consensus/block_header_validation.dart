@@ -163,7 +163,7 @@ class BlockHeaderValidation extends BlockHeaderValidationAlgebra {
     final rho =
         await ed25519Vrf.proofToHash(header.eligibilityCertificate.vrfSig);
     final isSlotLeader =
-        await leaderElectionValidation.isSlotLeaderForThreshold(threshold, rho);
+        await leaderElectionValidation.isEligible(threshold, rho);
     if (!isSlotLeader) return ["Ineligible"];
     return [];
   }

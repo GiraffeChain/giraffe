@@ -28,6 +28,7 @@ dependencies:
     path: ../protobuf_dart
   flutter:
     sdk: flutter
+  grpc: ^3.2.4
 
 dev_dependencies:
   flutter_test:

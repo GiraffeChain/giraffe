@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:blockchain/common/models/common.dart';
@@ -11,7 +12,7 @@ import 'package:fixnum/fixnum.dart';
 
 abstract class LeaderElectionValidationAlgebra {
   Future<Rational> getThreshold(Rational relativeStake, Int64 slotDiff);
-  Future<bool> isSlotLeaderForThreshold(Rational threshold, Rho rho);
+  Future<bool> isEligible(Rational threshold, Rho rho);
 }
 
 class LeaderElectionValidation extends LeaderElectionValidationAlgebra {
@@ -26,7 +27,7 @@ class LeaderElectionValidation extends LeaderElectionValidationAlgebra {
           ((relativeStake, slotDiff), config));
 
   @override
-  Future<bool> isSlotLeaderForThreshold(Rational threshold, Rho rho) =>
+  Future<bool> isEligible(Rational threshold, Rho rho) =>
       _compute((t) => _isSlotLeaderForThreshold(t.$1, t.$2), (threshold, rho));
 }
 
@@ -36,7 +37,8 @@ final _thresholdCache = <(Rational, Int64), Rational>{};
 
 Future<Rational> _getThreshold(
     Rational relativeStake, Int64 slotDiff, VrfConfig config) async {
-  final cacheKey = (relativeStake, slotDiff);
+  final cacheKey =
+      (relativeStake, Int64(min(config.lddCutoff, slotDiff.toInt())));
   final previous = _thresholdCache[cacheKey];
   if (previous != null) return previous;
   final difficultyCurve = (slotDiff > config.lddCutoff)

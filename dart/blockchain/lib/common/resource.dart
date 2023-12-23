@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:logging/logging.dart';
+
 abstract class Resource<A> {
   static Resource<A> pure<A>(A a) => PureResource(a: a);
   static Resource<A> make<A>(
@@ -40,6 +42,14 @@ abstract class Resource<A> {
   Resource<A> flatTap<U>(Resource Function(A) f) {
     return BindResource<A, A>(source: this, fs: (a) => f(a).map((_) => a));
   }
+
+  Resource<A> tapLog(Logger log, String Function(A) messageF) => map((a) {
+        log.info(messageF(a));
+        return a;
+      });
+
+  Resource<A> tapLogFinalize(Logger log, String message) => flatTap(
+      (a) => Resource.onFinalize(() => Future.sync(() => log.info(message))));
 
   Future<T> use<T>(Future<T> Function(A) f) async {
     final (a, finalizer) = await allocated();

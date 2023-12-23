@@ -30,8 +30,8 @@ void main() {
 
       final rho = hex.decode(
           "ed1f67d7419ef6176494dadc4ff9f39349c7088f88b66e7719400dc96fa10d989e4a9c9335b30732cf19389e8a584e6d4f54d1c2e33b2e62ae3495734121a4da");
-      final isSlotLeader = await leaderElectionValidation
-          .isSlotLeaderForThreshold(threshold, rho);
+      final isSlotLeader =
+          await leaderElectionValidation.isEligible(threshold, rho);
       expect(isSlotLeader, true);
     });
   });

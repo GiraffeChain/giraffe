@@ -6,9 +6,12 @@ import 'models/core.proto';
 
 service NodeRpc {
     rpc BroadcastTransaction (BroadcastTransactionReq) returns (BroadcastTransactionRes);
-    rpc GetBlock(GetBlockReq) returns (GetBlockRes);
+    rpc GetBlockHeader(GetBlockHeaderReq) returns (GetBlockHeaderRes);
+    rpc GetBlockBody(GetBlockBodyReq) returns (GetBlockBodyRes);
+    rpc GetFullBlock(GetFullBlockReq) returns (GetFullBlockRes);
     rpc GetTransaction(GetTransactionReq) returns (GetTransactionRes);
-    rpc BlockIdGossip(BlockIdGossipReq) returns (stream BlockIdGossipRes);
+    rpc GetBlockIdAtHeight(GetBlockIdAtHeightReq) returns (GetBlockIdAtHeightRes);
+    rpc Follow(FollowReq) returns (stream FollowRes);
 }
 
 message BroadcastTransactionReq {
@@ -17,12 +20,28 @@ message BroadcastTransactionReq {
 
 message BroadcastTransactionRes {}
 
-message GetBlockReq {
+message GetBlockHeaderReq {
     com.blockchain.models.BlockId blockId = 1;
 }
 
-message GetBlockRes {
-    com.blockchain.models.Block block = 1;
+message GetBlockHeaderRes {
+    com.blockchain.models.BlockHeader header = 1;
+}
+
+message GetBlockBodyReq {
+    com.blockchain.models.BlockId blockId = 1;
+}
+
+message GetBlockBodyRes {
+    com.blockchain.models.BlockBody body = 1;
+}
+
+message GetFullBlockReq {
+    com.blockchain.models.BlockId blockId = 1;
+}
+
+message GetFullBlockRes {
+    com.blockchain.models.FullBlock fullBlock = 1;
 }
 
 message GetTransactionReq {
@@ -33,15 +52,22 @@ message GetTransactionRes {
     com.blockchain.models.Transaction transaction = 1;
 }
 
-message BlockIdGossipReq {}
+message FollowReq {}
 
-message BlockIdGossipRes {
-    com.blockchain.models.BlockId blockId = 1;
+message FollowRes {
+    oneof step {
+        com.blockchain.models.BlockId adopted = 1;
+        com.blockchain.models.BlockId unadopted = 2;
+    }
 }
 
-message TransactionIdGossipReq {}
+message GetBlockIdAtHeightReq {
+    // Non-positive value -> Depth
+    // i.e. `0` returns canonical head, `-1` returns canonical head's parent
+    int64 height = 1;
+}
 
-message TransactionIdGossipRes {
-    com.blockchain.models.TransactionId transactionId = 1;
+message GetBlockIdAtHeightRes {
+    com.blockchain.models.BlockId blockId = 1;
 }
 

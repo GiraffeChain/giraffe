@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
@@ -46,7 +47,10 @@ class BlockProducer extends BlockProducerAlgebra {
         controller
           ..onPause = subscription.pause
           ..onResume = subscription.resume
-          ..onCancel = subscription.cancel;
+          ..onCancel = () async {
+            await currentOperation?.cancel();
+            await subscription.cancel;
+          };
       };
       return controller.stream.listen(null);
     });
@@ -67,7 +71,10 @@ class BlockProducer extends BlockProducerAlgebra {
         );
         if (bodyOpt != null) {
           log.info("Constructing block for slot=${nextHit.slot}");
-          final timestamp = clock.slotToTimestamps(nextHit.slot).$1;
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final (slotStart, slotEnd) = clock.slotToTimestamps(nextHit.slot);
+          final timestamp =
+              Int64(min(slotEnd.toInt(), max(now, slotStart.toInt())));
           final maybeHeader = await staker.certifyBlock(
               parentSlotData.slotId,
               nextHit.slot,
@@ -99,8 +106,6 @@ class BlockProducer extends BlockProducerAlgebra {
 
   Future<VrfHit?> _nextEligibility(SlotId parentSlotId) async {
     Int64 test = parentSlotId.slot + 1;
-    final globalSlot = clock.globalSlot;
-    if (globalSlot > test) test = globalSlot;
     final exitSlot =
         clock.epochRange(clock.epochOfSlot(parentSlotId.slot) + 1).$2;
     VrfHit? maybeHit;

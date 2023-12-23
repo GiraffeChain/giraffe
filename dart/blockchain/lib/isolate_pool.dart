@@ -1,21 +1,26 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:blockchain/common/resource.dart';
 import 'package:integral_isolates/integral_isolates.dart';
 
 class IsolatePool {
   final int maxIsolates;
-  final List<StatefulIsolate> _instances = [];
+  final List<StatefulIsolate> instances = [];
 
   IsolatePool(this.maxIsolates);
 
+  static Resource<IsolatePool> make(int maxIsolates) => Resource.make(
+      () => Future.sync(() => IsolatePool(maxIsolates)),
+      (pool) => Future.wait(pool.instances.map((i) => i.dispose())));
+
   StatefulIsolate getIsolate() {
-    if (_instances.length < maxIsolates) {
+    if (instances.length < maxIsolates) {
       final instance = StatefulIsolate();
-      _instances.add(instance);
+      instances.add(instance);
       return instance;
     } else {
-      return _instances[Random().nextInt(maxIsolates)];
+      return instances[Random().nextInt(maxIsolates)];
     }
   }
 

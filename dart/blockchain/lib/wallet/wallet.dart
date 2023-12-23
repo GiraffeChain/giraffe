@@ -1,47 +1,14 @@
 import 'dart:typed_data';
 
+import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/event_sourced_state.dart';
-import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/crypto/ed25519.dart';
+import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:collection/collection.dart';
 import 'package:fpdart/fpdart.dart';
 
 typedef Signer = Future<Transaction> Function(Transaction);
-typedef WalletESS = EventSourcedStateAlgebra<Wallet, BlockId>;
-
-class WalletEventSourcedState {
-  static WalletESS make(
-    Wallet initialWallet,
-    Future<BlockBody> Function(BlockId) fetchBlockBody,
-    Future<Transaction> Function(TransactionId) fetchTransaction,
-    ParentChildTree<BlockId> parentChildTree,
-    // TODO: Persistent
-    BlockId genesisParentId,
-  ) {
-    return EventTreeState<Wallet, BlockId>(
-      (state, blockId) async {
-        final body = await fetchBlockBody(blockId);
-        for (final txId in body.transactionIds) {
-          state.applyTransaction(await fetchTransaction(txId));
-        }
-        return state;
-      },
-      (state, blockId) async {
-        final body = await fetchBlockBody(blockId);
-        for (final txId in body.transactionIds.reversed) {
-          state.unapplyTransaction(await fetchTransaction(txId));
-        }
-        return state;
-      },
-      parentChildTree,
-      initialWallet,
-      genesisParentId,
-      (p0) async {},
-    );
-  }
-}
 
 const _mapEq = MapEquality();
 
@@ -57,6 +24,31 @@ class Wallet {
 
   factory Wallet.empty() {
     return Wallet(spendableOutputs: {}, locks: {}, signers: {});
+  }
+
+  static Stream<Wallet> streamed(BlockchainView blockchain) async* {
+    Wallet wallet = Wallet.empty();
+    await wallet.addPrivateGenesisKey();
+    await for (final block in blockchain.replayBlocks) {
+      for (final transaction in block.fullBody.transactions) {
+        wallet.applyTransaction(transaction);
+      }
+    }
+    yield wallet;
+    await for (final step in blockchain.traversal) {
+      if (step is TraversalStep_Applied) {
+        final block = await blockchain.getFullBlockOrRaise(step.blockId);
+        for (final transaction in block.fullBody.transactions) {
+          wallet.applyTransaction(transaction);
+        }
+      } else if (step is TraversalStep_Unapplied) {
+        final block = await blockchain.getFullBlockOrRaise(step.blockId);
+        for (final transaction in block.fullBody.transactions.reversed) {
+          wallet.unapplyTransaction(transaction);
+        }
+      }
+      yield wallet;
+    }
   }
 
   @override
@@ -84,7 +76,7 @@ class Wallet {
           ..transactionId = txId
           ..index = index] = t;
       }
-    });
+    }).toList();
   }
 
   void unapplyTransaction(Transaction transaction) {

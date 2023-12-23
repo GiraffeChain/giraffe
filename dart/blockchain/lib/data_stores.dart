@@ -90,6 +90,29 @@ class DataStores {
     }
     return stores;
   }
+
+  Future<Block?> getBlock(BlockId id) async {
+    final header = await headers.get(id);
+    if (header == null) return null;
+    final body = await bodies.get(id);
+    if (body == null) return null;
+    return Block(header: header, body: body);
+  }
+
+  Future<FullBlock?> getFullBlock(BlockId id) async {
+    final header = await headers.get(id);
+    if (header == null) return null;
+    final body = await bodies.get(id);
+    if (body == null) return null;
+    final transactionsResult = <Transaction>[];
+    for (final transactionId in body.transactionIds) {
+      final transaction = await transactions.get(transactionId);
+      if (transaction == null) return null;
+      transactionsResult.add(transaction);
+    }
+    final fullBody = FullBlockBody(transactions: transactionsResult);
+    return FullBlock(header: header, fullBody: fullBody);
+  }
 }
 
 class CurreventEventIdGetterSetterIndices {

@@ -57,8 +57,8 @@ class MainApp extends StatelessWidget {
             onSubmit: (context, config) => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => BlockchainLauncherPage(
-                        isolate: _isolate, config: config))),
+                    builder: (context) =>
+                        BlockchainLauncherPage(config: config))),
           ),
         ),
       );

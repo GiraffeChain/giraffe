@@ -6,14 +6,8 @@ import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/consensus.dart';
 import 'package:blockchain/data_stores.dart';
-import 'package:blockchain/ledger/mempool.dart';
 import 'package:blockchain/ledger/ledger.dart';
-import 'package:blockchain/minting/block_packer.dart';
-import 'package:blockchain/minting/block_producer.dart';
-import 'package:blockchain/minting/operational_key_maker.dart';
-import 'package:blockchain/minting/secure_store.dart';
-import 'package:blockchain/minting/staking.dart';
-import 'package:blockchain/minting/vrf_calculator.dart';
+import 'package:blockchain/minting/minting.dart';
 import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
@@ -26,34 +20,37 @@ import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/ledger/models/body_validation_context.dart';
 import 'package:blockchain/network/p2p_server.dart';
 import 'package:blockchain/network/peers_manager.dart';
+import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:blockchain/wallet/wallet.dart';
+import 'package:blockchain/rpc/server.dart' as rpc;
 import 'package:fixnum/fixnum.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/streams.dart';
 
 class Blockchain {
+  final BlockchainConfig config;
   final ClockAlgebra clock;
   final DataStores dataStores;
   final ParentChildTreeAlgebra<BlockId> parentChildTree;
+  final BlockHeightTree blockHeightTree;
   final Consensus consensus;
   final Ledger ledger;
-  final BlockProducerAlgebra blockProducer;
+  final Minting minting;
   final P2PServer p2pServer;
-  final WalletESS walletESS;
 
   final log = Logger("Blockchain");
 
   Blockchain(
+    this.config,
     this.clock,
     this.dataStores,
     this.parentChildTree,
+    this.blockHeightTree,
     this.consensus,
     this.ledger,
-    this.blockProducer,
+    this.minting,
     this.p2pServer,
-    this.walletESS,
   );
 
   static Resource<Blockchain> init(
@@ -80,25 +77,25 @@ class Blockchain {
             (_) => Future.sync(() => log.info("Terminating blockchain"))))
         .tap((log) => log.info("Genesis timestamp=$genesisTimestamp"))
         .flatMap((log) => Resource.eval(() => PrivateTestnet.stakerInitializers(
-                genesisTimestamp,
-                config.genesis.stakerCount,
-                TreeHeight(config.consensus.kesKeyHours,
-                    config.consensus.kesKeyMinutes)))
-            .flatMap((stakerInitializers) {
+                    genesisTimestamp,
+                    config.genesis.stakerCount,
+                    TreeHeight(config.consensus.kesKeyHours,
+                        config.consensus.kesKeyMinutes)))
+                .flatMap((stakerInitializers) {
               log.info("Staker initializers prepared");
 
               final stakerInitializer =
                   stakerInitializers[config.genesis.localStakerIndex!];
 
-              return Resource.eval(() => PrivateTestnet.config(
-                  genesisTimestamp,
-                  stakerInitializers,
-                  config.genesis
-                      .stakes)).flatMap((genesisConfig) => Resource.eval(
-                  () =>
-                      genesisConfig.block).flatMap((genesisBlock) =>
-                  Resource.eval(() => DataStores.init(genesisBlock))
-                      .flatMap((dataStores) {
+              return Resource.eval(
+                () => PrivateTestnet.config(genesisTimestamp,
+                    stakerInitializers, config.genesis.stakes),
+              ).flatMap(
+                (genesisConfig) =>
+                    Resource.eval(() => genesisConfig.block).flatMap(
+                  (genesisBlock) =>
+                      Resource.eval(() => DataStores.init(genesisBlock))
+                          .flatMap((dataStores) {
                     final genesisBlockId = genesisBlock.header.id;
 
                     final currentEventIdGetterSetters =
@@ -117,143 +114,94 @@ class Blockchain {
                             dataStores.slotData,
                             parentChildTree,
                             currentEventIdGetterSetters.blockHeightTree.set))
-                        .flatMap((blockHeightTree) {
-                      final secureStore = InMemorySecureStore();
+                        .flatMap((blockHeightTree) => Resource.eval(() =>
+                                currentEventIdGetterSetters.canonicalHead
+                                    .get()).flatMap(
+                              (canonicalHeadId) => Resource.eval(() =>
+                                  dataStores.slotData
+                                      .getOrRaise(canonicalHeadId)).flatMap(
+                                (canonicalHeadSlotData) => Resource.eval(() =>
+                                        parentChildTree.assocate(genesisBlockId,
+                                            genesisBlock.header.parentHeaderId))
+                                    .flatMap((_) => Consensus.make(
+                                        vrfConfig,
+                                        dataStores,
+                                        clock,
+                                        genesisBlock,
+                                        currentEventIdGetterSetters,
+                                        parentChildTree,
+                                        blockHeightTree,
+                                        isolate))
+                                    .flatMap(
+                                      (consensus) => Ledger.make(
+                                              dataStores,
+                                              currentEventIdGetterSetters,
+                                              parentChildTree)
+                                          .flatMap(
+                                        (ledger) => Minting.make(
+                                                vrfConfig,
+                                                config.consensus
+                                                    .operationalPeriodLength,
+                                                clock,
+                                                consensus,
+                                                ledger,
+                                                dataStores,
+                                                canonicalHeadSlotData,
+                                                stakerInitializer)
+                                            .evalMap((minting) async {
+                                          log.info("Preparing P2P Network");
 
-                      return Resource.eval(() => currentEventIdGetterSetters.canonicalHead.get()).flatMap((canonicalHeadId) => Resource.eval(() => dataStores.slotData.getOrRaise(canonicalHeadId)).flatMap((canonicalHeadSlotData) => Resource.eval(
-                              () => parentChildTree.assocate(genesisBlockId, genesisBlock.header.parentHeaderId))
-                          .flatMap((_) => Consensus.make(
-                              vrfConfig,
-                              dataStores,
-                              clock,
-                              genesisBlock,
-                              currentEventIdGetterSetters,
-                              parentChildTree,
-                              blockHeightTree,
-                              isolate))
-                          .flatMap((consensus) => Ledger.make(dataStores, currentEventIdGetterSetters, parentChildTree).evalFlatMap((ledger) async {
-                                log.info("Preparing OperationalKeyMaker");
-
-                                final vrfCalculator = VrfCalculator(
-                                    stakerInitializer.vrfKeyPair.sk,
-                                    clock,
-                                    consensus.leaderElectionValidation,
-                                    vrfConfig);
-
-                                final operationalKeyMaker =
-                                    await OperationalKeyMaker.init(
-                                  canonicalHeadSlotData.slotId,
-                                  config.consensus.operationalPeriodLength,
-                                  Int64(0),
-                                  stakerInitializer.stakingAddress,
-                                  secureStore,
-                                  clock,
-                                  vrfCalculator,
-                                  consensus.etaCalculation,
-                                  consensus.consensusValidationState,
-                                  stakerInitializer.kesKeyPair.sk,
-                                );
-
-                                log.info("Preparing Staking");
-
-                                final staker = Staking(
-                                  stakerInitializer.stakingAddress,
-                                  stakerInitializer.vrfKeyPair.vk,
-                                  operationalKeyMaker,
-                                  consensus.consensusValidationState,
-                                  consensus.etaCalculation,
-                                  vrfCalculator,
-                                  consensus.leaderElectionValidation,
-                                );
-
-                                log.info("Preparing mempool");
-                                final mempool = Mempool(
-                                    dataStores.bodies.getOrRaise,
-                                    parentChildTree,
-                                    await currentEventIdGetterSetters.mempool
-                                        .get(),
-                                    Duration(minutes: 5));
-
-                                log.info("Preparing BlockProducer");
-
-                                final blockPacker = BlockPacker(
-                                    mempool,
-                                    dataStores.transactions.getOrRaise,
-                                    dataStores.transactions.contains,
-                                    BlockPacker.makeBodyValidator(
-                                        ledger.bodySyntaxValidation,
-                                        ledger.bodySemanticValidation,
-                                        ledger.bodyAuthorizationValidation));
-
-                                final blockProducer = BlockProducer(
-                                  ConcatStream([
-                                    Stream.value(canonicalHeadSlotData)
-                                        .asyncMap((d) => clock
-                                            .delayedUntilSlot(d.slotId.slot)
-                                            .then((_) => d)),
-                                    consensus.localChain.adoptions.asyncMap(
-                                        dataStores.slotData.getOrRaise),
-                                  ]),
-                                  staker,
-                                  clock,
-                                  blockPacker,
-                                );
-
-                                log.info("Initializing Wallet ESS");
-                                final wallet = Wallet.empty();
-                                await wallet.addPrivateGenesisKey();
-                                final walletESS = WalletEventSourcedState.make(
-                                  wallet,
-                                  dataStores.bodies.getOrRaise,
-                                  dataStores.transactions.getOrRaise,
-                                  parentChildTree,
-                                  genesisBlock.header.parentHeaderId,
-                                );
-
-                                log.info("Preparing P2P Network");
-
-                                final p2pKey = await ed25519.generateKeyPair();
-                                final peersManager = PeersManager(
-                                    p2pKey,
-                                    Uint8List.fromList(
-                                        List.generate(32, (i) => i)));
-                                final p2pServer = P2PServer(
-                                  config.p2p.bindHost,
-                                  config.p2p.bindPort,
-                                  (socket) => peersManager
-                                      .handleConnection(socket)
-                                      .onError((error, stackTrace) {
-                                    log.warning("P2P Connection failure", error,
-                                        stackTrace);
-                                    socket.destroy();
-                                  }),
-                                );
-
-                                for (final peer in config.p2p.knownPeers) {
-                                  final parsed = peer.split(":");
-                                  p2pServer.connectOutbound(
-                                      parsed[0], int.parse(parsed[1]));
-                                }
-
-                                return p2pServer.start().map((_) => Blockchain(
-                                      clock,
-                                      dataStores,
-                                      parentChildTree,
-                                      consensus,
-                                      ledger,
-                                      blockProducer,
-                                      p2pServer,
-                                      walletESS,
-                                    ));
-                              }))));
-                    });
-                  })));
-            })
-            .tap((_) => log.info("Blockchain Initialized"))
-            .flatTap((blockchain) => blockchain.run()));
+                                          final p2pKey =
+                                              await ed25519.generateKeyPair();
+                                          final peersManager = PeersManager(
+                                              p2pKey,
+                                              Uint8List.fromList(
+                                                  List.generate(32, (i) => i)));
+                                          final p2pServer = P2PServer(
+                                            config.p2p.bindHost,
+                                            config.p2p.bindPort,
+                                            (socket) => peersManager
+                                                .handleConnection(socket)
+                                                .onError((error, stackTrace) {
+                                              log.warning(
+                                                  "P2P Connection failure",
+                                                  error,
+                                                  stackTrace);
+                                              socket.destroy();
+                                            }),
+                                          );
+                                          return Blockchain(
+                                            config,
+                                            clock,
+                                            dataStores,
+                                            parentChildTree,
+                                            blockHeightTree,
+                                            consensus,
+                                            ledger,
+                                            minting,
+                                            p2pServer,
+                                          );
+                                        }),
+                                      ),
+                                    ),
+                              ),
+                            ));
+                  }),
+                ),
+              );
+            }).tap((_) => log.info("Blockchain Initialized")));
   }
 
-  Future<void> processBlock(FullBlock block) async {
+  Future<void> processBlock(Block block) async {
+    final transactions = await Future.wait(
+        block.body.transactionIds.map(dataStores.transactions.getOrRaise));
+    final fullBlock = FullBlock(
+        header: block.header,
+        fullBody: FullBlockBody(transactions: transactions));
+    return await processFullBlock(fullBlock);
+  }
+
+  Future<void> processFullBlock(FullBlock block) async {
     final id = await block.header.id;
 
     final body = BlockBody()
@@ -304,23 +252,51 @@ class Blockchain {
     await throwErrors();
   }
 
-  Resource<void> run() => Resource.forStreamSubscription(
-          () => blockProducer.blocks.asyncMap(processBlock).listen((event) {}))
-      .voidResult;
+  Resource<void> get _makeRpcServer => rpc.serveRpcs(
+        config.rpc.bindHost,
+        config.rpc.bindPort,
+        rpc.NodeRpcServiceImpl(
+          traversal: traversal,
+          dataStores: dataStores,
+          onBroadcastTransaction: ledger.onTransactionBroadcasted,
+          blockIdAtHeight: consensus.localChain.blockIdAtHeight,
+        ),
+        rpc.StakerSupportRpcImpl(
+          onBroadcastBlock: processBlock,
+          getStaker: (address, parentBlockId, slot) => consensus
+              .consensusValidationState
+              .staker(parentBlockId, slot, address),
+          packBlock: (parentBlockId, targetSlot) =>
+              Stream.fromFuture(dataStores.headers.getOrRaise(parentBlockId))
+                  .map((h) => h.height)
+                  .asyncExpand((parentHeight) => minting.blockPacker
+                      .streamed(parentBlockId, parentHeight + 1, targetSlot)
+                      .map((fullBody) => BlockBody(
+                          transactionIds:
+                              fullBody.transactions.map((t) => t.id)))),
+        ),
+      );
 
-  Stream<FullBlock> get newBlocks =>
-      consensus.localChain.adoptions.asyncMap((id) async {
-        final header = await dataStores.headers.getOrRaise(id);
-        final body = await dataStores.bodies.getOrRaise(id);
-        final transactions = [
-          for (final id in body.transactionIds)
-            await dataStores.transactions.getOrRaise(id)
-        ];
-        final fullBlock = FullBlock()
-          ..header = header
-          ..fullBody = (FullBlockBody()..transactions.addAll(transactions));
-        return fullBlock;
-      });
+  Resource<void> run() => p2pServer
+      .start()
+      .flatMap((_) => Resource.forStreamSubscription(() =>
+          Stream.fromIterable(config.p2p.knownPeers)
+              .map((s) => s.split(":"))
+              .map((parsed) =>
+                  p2pServer.connectOutbound(parsed[0], int.parse(parsed[1])))
+              .listen((_) {})))
+      .tapLog(log, (_) => "P2P Initialized")
+      .tapLogFinalize(log, "Terminating P2P")
+      .tapLog(log, (_) => "Initializing RPC")
+      .tapLogFinalize(log, "RPC Terminated")
+      .flatMap((_) => _makeRpcServer)
+      .tapLog(log, (_) => "RPC Initialized")
+      .tapLogFinalize(log, "Terminating RPC")
+      .flatMap((_) => Resource.forStreamSubscription(() => minting
+          .blockProducer.blocks
+          .asyncMap(processFullBlock)
+          .listen((event) {})))
+      .voidResult;
 
   Stream<TraversalStep> get traversal {
     BlockId? lastId = null;
@@ -350,18 +326,4 @@ class Blockchain {
             ..addAll(unapplyApply.$2.tail
                 .toNullable()!
                 .map((id) => TraversalStep_Applied(id))));
-}
-
-abstract class TraversalStep {
-  final BlockId blockId;
-
-  TraversalStep(this.blockId);
-}
-
-class TraversalStep_Applied extends TraversalStep {
-  TraversalStep_Applied(super.blockId);
-}
-
-class TraversalStep_Unapplied extends TraversalStep {
-  TraversalStep_Unapplied(super.blockId);
 }

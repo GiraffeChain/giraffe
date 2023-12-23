@@ -332,7 +332,7 @@ class MockLeaderElectionValidationAlgebra extends _i1.Mock
       ) as _i5.Future<_i3.Rational>);
 
   @override
-  _i5.Future<bool> isSlotLeaderForThreshold(
+  _i5.Future<bool> isEligible(
     _i3.Rational? threshold,
     List<int>? rho,
   ) =>

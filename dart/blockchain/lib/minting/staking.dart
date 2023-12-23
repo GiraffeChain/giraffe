@@ -98,8 +98,7 @@ class Staking extends StakingAlgebra {
     final threshold = await leaderElectionValidation.getThreshold(
         relativeStake, slot - parentSlotId.slot);
     final rho = await vrfCalculator.rhoForSlot(slot, eta);
-    final isLeader =
-        await leaderElectionValidation.isSlotLeaderForThreshold(threshold, rho);
+    final isLeader = await leaderElectionValidation.isEligible(threshold, rho);
     log.fine("Staking leader election test result=$isLeader slot=$slot");
     if (isLeader) {
       final evidence = threshold.thresholdEvidence;

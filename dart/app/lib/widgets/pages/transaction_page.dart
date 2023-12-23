@@ -1,4 +1,4 @@
-import 'package:blockchain/blockchain.dart';
+import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/utils.dart';
@@ -14,7 +14,7 @@ class UnloadedTransactionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: context.watch<Blockchain>().dataStores.transactions.get(id),
+        future: context.watch<BlockchainView>().getTransaction(id),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data != null) {

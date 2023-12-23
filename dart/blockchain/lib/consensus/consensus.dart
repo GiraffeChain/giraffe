@@ -70,6 +70,7 @@ class Consensus {
             genesisBlockId, epochBoundaryState, consensusDataState, clock);
 
         final localChain = LocalChain(
+            genesisBlockId,
             await currentEventIdGetterSetters.canonicalHead.get(),
             blockHeightTree,
             (id) async => (await dataStores.slotData.getOrRaise(id)).height);

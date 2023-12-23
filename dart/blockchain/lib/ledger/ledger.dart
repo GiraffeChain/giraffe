@@ -1,3 +1,4 @@
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/data_stores.dart';
@@ -74,4 +75,12 @@ class Ledger {
             boxState: boxState,
             mempool: mempool);
       });
+
+  Future<void> onTransactionBroadcasted(Transaction transaction) async {
+    final validationErrors =
+        await transactionSyntaxValidation.validate(transaction);
+    if (validationErrors.isNotEmpty)
+      throw ArgumentError.value(transaction, validationErrors.first);
+    await mempool.add(transaction.id);
+  }
 }

@@ -17,6 +17,26 @@ abstract class BlockPackerAlgebra {
     Int64 height,
     Int64 slot,
   );
+
+  Stream<FullBlockBody> streamed(
+    BlockId parentBlockId,
+    Int64 height,
+    Int64 slot,
+  ) async* {
+    final iterative = await improvePackedBlock(parentBlockId, height, slot);
+    FullBlockBody result = FullBlockBody();
+    yield result;
+    bool done = false;
+    while (!done) {
+      final next = await iterative(result);
+      if (next == null) {
+        done = true;
+      } else {
+        result = next;
+        yield result;
+      }
+    }
+  }
 }
 
 typedef Iterative<E> = Future<E?> Function(E);

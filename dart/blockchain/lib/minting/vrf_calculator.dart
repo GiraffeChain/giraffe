@@ -45,8 +45,8 @@ class VrfCalculator extends VrfCalculatorAlgebra {
     final leaderCalculations = <Slot>[];
     forSlot(Int64 slot) async {
       final rho = await rhoForSlot(slot, eta);
-      final isLeader = await leaderElectionValidation.isSlotLeaderForThreshold(
-          threshold, rho);
+      final isLeader =
+          await leaderElectionValidation.isEligible(threshold, rho);
       if (!isLeader) {
         leaderCalculations.add(slot);
       }
