@@ -10,8 +10,10 @@ class GenesisConfig {
   final Int64 timestamp;
   final List<Transaction> transactions;
   final List<int> etaPrefix;
+  final Map<String, String> settings;
 
-  GenesisConfig(this.timestamp, this.transactions, this.etaPrefix);
+  GenesisConfig(
+      this.timestamp, this.transactions, this.etaPrefix, this.settings);
 
   static final DefaultEtaPrefix = utf8.encode("genesis");
 
@@ -37,6 +39,8 @@ class GenesisConfig {
       ..eligibilityCertificate = eligibilityCertificate
       ..operationalCertificate = GenesisOperationalCertificate
       ..address = (StakingAddress()..value = _emptyBytes(32));
+
+    header.settings.addAll(settings);
 
     return FullBlock()
       ..header = header

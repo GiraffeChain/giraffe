@@ -1,7 +1,9 @@
 import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain_app/widgets/resource_builder.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
+import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -17,29 +19,42 @@ class BlockchainLauncherPage extends StatefulWidget {
 }
 
 class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
-  Resource<BlockchainView> launch() =>
-      Resource.pure(NodeRpcClient(ClientChannel(widget.config.rpcHost,
-              port: widget.config.rpcPort,
-              options: const ChannelOptions(
-                  credentials: ChannelCredentials.insecure()))))
-          .map((client) => BlockchainViewFromRpc(nodeClient: client));
+  get _channel => ClientChannel(widget.config.rpcHost,
+      port: widget.config.rpcPort,
+      options:
+          const ChannelOptions(credentials: ChannelCredentials.insecure()));
+
+  Resource<(BlockchainView, BlockchainWriter)> launch() => Resource.pure((
+        nodeClient: NodeRpcClient(_channel),
+        stakerSupportClient: StakerSupportRpcClient(_channel),
+      )).map((clients) => (
+            BlockchainViewFromRpc(nodeClient: clients.nodeClient),
+            BlockchainWriter(
+              submitTransaction: (tx) => clients.nodeClient
+                  .broadcastTransaction(
+                      BroadcastTransactionReq(transaction: tx)),
+              submitBlock: (block) => clients.stakerSupportClient
+                  .broadcastBlock(BroadcastBlockReq(block: block)),
+            ),
+          ));
 
   @override
-  Widget build(BuildContext context) => ResourceBuilder<BlockchainView>(
-      resource: launch(),
-      builder: (context, AsyncSnapshot<BlockchainView> snapshot) =>
-          snapshot.hasData
-              ? MultiProvider(
-                  providers: [
-                      Provider(
-                        create: (_) => snapshot.data!,
-                      )
-                    ],
-                  child: Navigator(
-                    initialRoute: '/',
-                    onGenerateRoute: FluroRouter.appRouter.generator,
-                  ))
-              : loading);
+  Widget build(BuildContext context) =>
+      ResourceBuilder<(BlockchainView, BlockchainWriter)>(
+          resource: launch(),
+          builder: (context,
+                  AsyncSnapshot<(BlockchainView, BlockchainWriter)> snapshot) =>
+              snapshot.hasData
+                  ? MultiProvider(
+                      providers: [
+                          Provider(create: (_) => snapshot.data!.$1),
+                          Provider(create: (_) => snapshot.data!.$2),
+                        ],
+                      child: Navigator(
+                        initialRoute: '/',
+                        onGenerateRoute: FluroRouter.appRouter.generator,
+                      ))
+                  : loading);
 
   Widget get loading => Scaffold(
       body: Container(
@@ -91,4 +106,12 @@ class LaunchSettings {
   final int rpcPort;
 
   LaunchSettings({required this.rpcHost, required this.rpcPort});
+}
+
+class BlockchainWriter {
+  final Future<void> Function(Transaction) submitTransaction;
+  final Future<void> Function(Block) submitBlock;
+
+  BlockchainWriter(
+      {required this.submitTransaction, required this.submitBlock});
 }

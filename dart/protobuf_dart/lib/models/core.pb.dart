@@ -79,6 +79,7 @@ class BlockHeader extends $pb.GeneratedMessage {
     $core.List<$core.int>? metadata,
     StakingAddress? address,
     BlockId? headerId,
+    $core.Map<$core.String, $core.String>? settings,
   }) {
     final $result = create();
     if (parentHeaderId != null) {
@@ -117,6 +118,9 @@ class BlockHeader extends $pb.GeneratedMessage {
     if (headerId != null) {
       $result.headerId = headerId;
     }
+    if (settings != null) {
+      $result.settings.addAll(settings);
+    }
     return $result;
   }
   BlockHeader._() : super();
@@ -136,6 +140,7 @@ class BlockHeader extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(10, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
     ..aOM<StakingAddress>(11, _omitFieldNames ? '' : 'address', subBuilder: StakingAddress.create)
     ..aOM<BlockId>(12, _omitFieldNames ? '' : 'headerId', protoName: 'headerId', subBuilder: BlockId.create)
+    ..m<$core.String, $core.String>(13, _omitFieldNames ? '' : 'settings', entryClassName: 'BlockHeader.SettingsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('com.blockchain.models'))
     ..hasRequiredFields = false
   ;
 
@@ -293,6 +298,10 @@ class BlockHeader extends $pb.GeneratedMessage {
   void clearHeaderId() => clearField(12);
   @$pb.TagNumber(12)
   BlockId ensureHeaderId() => $_ensure(11);
+
+  /// Configuration or protocol changes
+  @$pb.TagNumber(13)
+  $core.Map<$core.String, $core.String> get settings => $_getMap(12);
 }
 
 /// A certificate proving the operator's election

@@ -111,17 +111,11 @@ class MockClockAlgebra extends _i1.Mock implements _i4.ClockAlgebra {
       ) as _i2.Int64);
 
   @override
-  _i2.Int64 get forwardBiasedSlotWindow => (super.noSuchMethod(
+  int get forwardBiasedSlotWindow => (super.noSuchMethod(
         Invocation.getter(#forwardBiasedSlotWindow),
-        returnValue: _FakeInt64_1(
-          this,
-          Invocation.getter(#forwardBiasedSlotWindow),
-        ),
-        returnValueForMissingStub: _FakeInt64_1(
-          this,
-          Invocation.getter(#forwardBiasedSlotWindow),
-        ),
-      ) as _i2.Int64);
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
 
   @override
   _i2.Int64 get globalEpoch => (super.noSuchMethod(
@@ -338,7 +332,7 @@ class MockLeaderElectionValidationAlgebra extends _i1.Mock
   ) =>
       (super.noSuchMethod(
         Invocation.method(
-          #isSlotLeaderForThreshold,
+          #isEligible,
           [
             threshold,
             rho,

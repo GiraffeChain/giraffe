@@ -2,11 +2,10 @@ import 'dart:typed_data';
 
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
-import 'package:blockchain/consensus/models/vrf_config.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/minting/vrf_calculator.dart';
 import 'package:convert/convert.dart';
-import 'package:rational/rational.dart';
 import 'package:test/test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:fixnum/fixnum.dart';
@@ -19,12 +18,8 @@ void main() {
   group("VrfCalculator", () {
     test("proofForSlot", () async {
       final skVrf = Int8List(32);
-      final config = VrfConfig(
-        lddCutoff: 15,
-        precision: 40,
-        baselineDifficulty: Rational.fromInt(1, 20),
-        amplitude: Rational.fromInt(1, 2),
-      );
+      final config = ProtocolSettings.defaultSettings
+          .mergeFromMap({"vrf-ldd-cutoff": "15"});
       final calculator = VrfCalculator(skVrf, MockClockAlgebra(),
           MockLeaderElectionValidationAlgebra(), config);
 

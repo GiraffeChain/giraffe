@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:blockchain/codecs.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/kes.dart';
 import 'package:blockchain/genesis.dart';
@@ -42,7 +43,7 @@ class PrivateTestnet {
       transactions.addAll(await staker.genesisTransactions(stake));
     }
 
-    return GenesisConfig(
-        timestamp, transactions, GenesisConfig.DefaultEtaPrefix);
+    return GenesisConfig(timestamp, transactions,
+        GenesisConfig.DefaultEtaPrefix, ProtocolSettings.defaultAsMap);
   }
 }

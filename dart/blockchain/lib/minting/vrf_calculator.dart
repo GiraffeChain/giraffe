@@ -2,7 +2,7 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
-import 'package:blockchain/consensus/models/vrf_config.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/consensus/models/vrf_argument.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:fixnum/fixnum.dart';
@@ -20,15 +20,15 @@ class VrfCalculator extends VrfCalculatorAlgebra {
   final List<int> skVrf;
   final ClockAlgebra clock;
   final LeaderElectionValidationAlgebra leaderElectionValidation;
-  final VrfConfig vrfConfig;
+  final ProtocolSettings protocolSettings;
 
   final log = Logger("VrfCalculator");
 
   Map<(List<int>, Int64), List<int>> _vrfProofsCache = {};
   Map<(List<int>, Int64), List<int>> _rhosCache = {};
 
-  VrfCalculator(
-      this.skVrf, this.clock, this.leaderElectionValidation, this.vrfConfig);
+  VrfCalculator(this.skVrf, this.clock, this.leaderElectionValidation,
+      this.protocolSettings);
 
   @override
   Future<List<Int64>> ineligibleSlots(
@@ -41,7 +41,7 @@ class VrfCalculator extends VrfCalculatorAlgebra {
           " range=$minSlot..$maxSlot",
     );
     final threshold = await leaderElectionValidation.getThreshold(
-        relativeStake, Int64(vrfConfig.lddCutoff));
+        relativeStake, Int64(protocolSettings.vrfLddCutoff));
     final leaderCalculations = <Slot>[];
     forSlot(Int64 slot) async {
       final rho = await rhoForSlot(slot, eta);

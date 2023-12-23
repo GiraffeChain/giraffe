@@ -1,7 +1,7 @@
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/consensus/consensus.dart';
-import 'package:blockchain/consensus/models/vrf_config.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/ledger/ledger.dart';
 import 'package:blockchain/minting/block_packer.dart';
@@ -32,8 +32,7 @@ class Minting {
       required this.vrfCalculator});
 
   static Resource<Minting> make(
-    VrfConfig vrfConfig,
-    Int64 operationalPeriodLength,
+    ProtocolSettings protocolSettings,
     ClockAlgebra clock,
     Consensus consensus,
     Ledger ledger,
@@ -53,11 +52,11 @@ class Minting {
                 ledger.bodyAuthorizationValidation));
 
         final vrfCalculator = VrfCalculator(stakerInitializer.vrfKeyPair.sk,
-            clock, consensus.leaderElectionValidation, vrfConfig);
+            clock, consensus.leaderElectionValidation, protocolSettings);
 
         final operationalKeyMaker = await OperationalKeyMaker.init(
           canonicalHeadSlotData.slotId,
-          operationalPeriodLength,
+          protocolSettings.operationalPeriodLength,
           Int64(0),
           stakerInitializer.stakingAddress,
           secureStore,

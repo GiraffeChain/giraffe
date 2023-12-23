@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/utils.dart';
-import 'package:blockchain/consensus/models/vrf_config.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/consensus/numeric_utils.dart';
 import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain/crypto/utils.dart';
@@ -16,15 +16,15 @@ abstract class LeaderElectionValidationAlgebra {
 }
 
 class LeaderElectionValidation extends LeaderElectionValidationAlgebra {
-  final VrfConfig config;
+  final ProtocolSettings protocolSettings;
   DComputeImpl _compute;
 
-  LeaderElectionValidation(this.config, this._compute);
+  LeaderElectionValidation(this.protocolSettings, this._compute);
 
   @override
   Future<Rational> getThreshold(Rational relativeStake, Int64 slotDiff) =>
       _compute((t) => _getThreshold(t.$1.$1, t.$1.$2, t.$2),
-          ((relativeStake, slotDiff), config));
+          ((relativeStake, slotDiff), protocolSettings));
 
   @override
   Future<bool> isEligible(Rational threshold, Rho rho) =>
@@ -35,16 +35,19 @@ final NormalizationConstant = BigInt.from(2).pow(512);
 
 final _thresholdCache = <(Rational, Int64), Rational>{};
 
-Future<Rational> _getThreshold(
-    Rational relativeStake, Int64 slotDiff, VrfConfig config) async {
-  final cacheKey =
-      (relativeStake, Int64(min(config.lddCutoff, slotDiff.toInt())));
+Future<Rational> _getThreshold(Rational relativeStake, Int64 slotDiff,
+    ProtocolSettings protocolSettings) async {
+  final cacheKey = (
+    relativeStake,
+    Int64(min(protocolSettings.vrfLddCutoff, slotDiff.toInt()))
+  );
   final previous = _thresholdCache[cacheKey];
   if (previous != null) return previous;
-  final difficultyCurve = (slotDiff > config.lddCutoff)
-      ? config.baselineDifficulty
-      : (Rational(slotDiff.toBigInt, BigInt.from(config.lddCutoff)) *
-          config.amplitude);
+  final difficultyCurve = (slotDiff > protocolSettings.vrfLddCutoff)
+      ? protocolSettings.vrfBaselineDifficulty
+      : (Rational(
+              slotDiff.toBigInt, BigInt.from(protocolSettings.vrfLddCutoff)) *
+          protocolSettings.vrfAmpltitude);
 
   if (difficultyCurve == Rational.one) {
     _thresholdCache[cacheKey] = difficultyCurve;

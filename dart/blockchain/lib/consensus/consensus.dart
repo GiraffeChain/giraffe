@@ -10,7 +10,7 @@ import 'package:blockchain/consensus/consensus_validation_state.dart';
 import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/local_chain.dart';
-import 'package:blockchain/consensus/models/vrf_config.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -35,7 +35,7 @@ class Consensus {
   });
 
   static Resource<Consensus> make(
-          VrfConfig vrfConfig,
+          ProtocolSettings protocolSettings,
           DataStores dataStores,
           ClockAlgebra clock,
           FullBlock genesisBlock,
@@ -48,7 +48,8 @@ class Consensus {
         final etaCalculation = EtaCalculation(dataStores.slotData.getOrRaise,
             clock, genesisBlock.header.eligibilityCertificate.eta);
 
-        final leaderElection = LeaderElectionValidation(vrfConfig, isolate);
+        final leaderElection =
+            LeaderElectionValidation(protocolSettings, isolate);
 
         final epochBoundaryState = epochBoundariesEventSourcedState(
             clock,

@@ -41,7 +41,19 @@ const BlockHeader$json = {
     {'1': 'operationalCertificate', '3': 9, '4': 1, '5': 11, '6': '.com.blockchain.models.OperationalCertificate', '8': {}, '10': 'operationalCertificate'},
     {'1': 'metadata', '3': 10, '4': 1, '5': 12, '8': {}, '10': 'metadata'},
     {'1': 'address', '3': 11, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingAddress', '8': {}, '10': 'address'},
+    {'1': 'settings', '3': 13, '4': 3, '5': 11, '6': '.com.blockchain.models.BlockHeader.SettingsEntry', '10': 'settings'},
   ],
+  '3': [BlockHeader_SettingsEntry$json],
+};
+
+@$core.Deprecated('Use blockHeaderDescriptor instead')
+const BlockHeader_SettingsEntry$json = {
+  '1': 'SettingsEntry',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {'1': 'value', '3': 2, '4': 1, '5': 9, '10': 'value'},
+  ],
+  '7': {'7': true},
 };
 
 /// Descriptor for `BlockHeader`. Decode as a `google.protobuf.DescriptorProto`.
@@ -58,7 +70,9 @@ final $typed_data.Uint8List blockHeaderDescriptor = $convert.base64Decode(
     '4ubW9kZWxzLk9wZXJhdGlvbmFsQ2VydGlmaWNhdGVCCPpCBYoBAhABUhZvcGVyYXRpb25hbENl'
     'cnRpZmljYXRlEiMKCG1ldGFkYXRhGAogASgMQgf6QgR6AhggUghtZXRhZGF0YRJJCgdhZGRyZX'
     'NzGAsgASgLMiUuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlN0YWtpbmdBZGRyZXNzQgj6QgWKAQIQ'
-    'AVIHYWRkcmVzcw==');
+    'AVIHYWRkcmVzcxJMCghzZXR0aW5ncxgNIAMoCzIwLmNvbS5ibG9ja2NoYWluLm1vZGVscy5CbG'
+    '9ja0hlYWRlci5TZXR0aW5nc0VudHJ5UghzZXR0aW5ncxo7Cg1TZXR0aW5nc0VudHJ5EhAKA2tl'
+    'eRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAE=');
 
 @$core.Deprecated('Use eligibilityCertificateDescriptor instead')
 const EligibilityCertificate$json = {

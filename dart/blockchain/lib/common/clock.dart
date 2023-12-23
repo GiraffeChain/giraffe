@@ -9,7 +9,7 @@ abstract class ClockAlgebra {
   Int64 get slotsPerEpoch;
   Int64 get globalSlot;
   Int64 get localTimestamp;
-  Int64 get forwardBiasedSlotWindow;
+  int get forwardBiasedSlotWindow;
   Int64 timestampToSlot(Int64 timestamp);
   // Returns an inclusive range (minimum, maximum) of valid timestamps for the given slot
   (Int64, Int64) slotToTimestamps(Int64 slot);
@@ -37,7 +37,7 @@ class Clock extends ClockAlgebra {
   final Duration _slotLength;
   final Int64 _slotsPerEpoch;
   final Int64 _genesisTimestamp;
-  final Int64 _forwardBiasedSlotWindow;
+  final int _forwardBiasedSlotWindow;
 
   Clock(this._slotLength, this._slotsPerEpoch, this._genesisTimestamp,
       this._forwardBiasedSlotWindow);
@@ -51,7 +51,7 @@ class Clock extends ClockAlgebra {
       Duration(milliseconds: (timestamp - localTimestamp).toInt()));
 
   @override
-  Int64 get forwardBiasedSlotWindow => _forwardBiasedSlotWindow;
+  int get forwardBiasedSlotWindow => _forwardBiasedSlotWindow;
 
   @override
   Int64 get globalSlot => timestampToSlot(localTimestamp);

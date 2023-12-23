@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:blockchain/wallet/wallet.dart';
+import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_app/widgets/pages/transact_page.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/blockchain_view.dart';
@@ -33,6 +34,7 @@ class BlockchainPage extends StatelessWidget {
 
   _tabBarView(BuildContext context) {
     final blockchain = context.watch<BlockchainView>();
+    final blockchainWriter = context.watch<BlockchainWriter>();
     return TabBarView(children: [
       const LiveBlocksView(),
       StreamBuilder(
@@ -40,11 +42,7 @@ class BlockchainPage extends StatelessWidget {
         builder: (context, snapshot) => snapshot.hasData
             ? TransactView(
                 wallet: snapshot.data!,
-                processTransaction: (tx) async {
-                  // TODO
-                  // await blockchain.dataStores.transactions.put(tx.id, tx);
-                  // await blockchain.ledger.mempool.add(tx.id);
-                },
+                processTransaction: blockchainWriter.submitTransaction,
               )
             : const CircularProgressIndicator(),
       )
@@ -82,12 +80,11 @@ class BlockchainPage extends StatelessWidget {
     return StreamBuilder(
         stream: Stream.fromFuture(blockchain.genesisBlock)
             .map((b) => b.header)
-            .asyncExpand((header) =>
-                // TODO
-                Stream.periodic(const Duration(seconds: 1)).map((_) =>
+            .asyncExpand((header) => Stream.periodic(const Duration(seconds: 1))
+                .map((_) =>
                     (DateTime.now().millisecondsSinceEpoch -
                         header.timestamp.toInt()) ~/
-                    1000)),
+                    int.parse(header.settings["slot-duration-ms"]!))),
         builder: (context, snapshot) => Row(children: [
               const VerticalDivider(),
               Text("Slot: ${snapshot.data ?? Int64.ZERO}",

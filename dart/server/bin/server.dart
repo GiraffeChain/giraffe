@@ -22,7 +22,7 @@ Future<void> main() async {
     ed25519.ed25519 = ed25519.Ed25519Isolated(isolate);
     ed25519VRF.ed25519Vrf = ed25519VRF.Ed25519VRFIsolated(isolate);
     kes.kesProduct = kes.KesProudctIsolated(isolate);
-  }).flatMap((isolate) => Blockchain.init(config, isolate)
+  }).flatMap((isolate) => Blockchain.make(config, isolate)
           .flatTap((blockchain) => blockchain.run()));
   final (_, finalizer) = await resource.allocated();
 

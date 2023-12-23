@@ -38,6 +38,8 @@ message BlockHeader {
   bytes metadata = 10 [(validate.rules).bytes.max_len = 32];
   // The operator's staking address
   StakingAddress address = 11 [(validate.rules).message.required = true];
+  // Configuration or protocol changes
+  map<string, string> settings = 13;
 }
 
 // A certificate proving the operator's election
