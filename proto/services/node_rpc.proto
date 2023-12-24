@@ -6,6 +6,7 @@ import 'models/core.proto';
 
 service NodeRpc {
     rpc BroadcastTransaction (BroadcastTransactionReq) returns (BroadcastTransactionRes);
+    rpc GetSlotData(GetSlotDataReq) returns (GetSlotDataRes);
     rpc GetBlockHeader(GetBlockHeaderReq) returns (GetBlockHeaderRes);
     rpc GetBlockBody(GetBlockBodyReq) returns (GetBlockBodyRes);
     rpc GetFullBlock(GetFullBlockReq) returns (GetFullBlockRes);
@@ -19,6 +20,14 @@ message BroadcastTransactionReq {
 }
 
 message BroadcastTransactionRes {}
+
+message GetSlotDataReq {
+    com.blockchain.models.BlockId blockId = 1;
+}
+
+message GetSlotDataRes {
+    com.blockchain.models.SlotData slotData = 1;
+}
 
 message GetBlockHeaderReq {
     com.blockchain.models.BlockId blockId = 1;

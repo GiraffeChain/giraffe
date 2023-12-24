@@ -84,7 +84,7 @@ class ProtocolSettings {
     "vrf-precision": "40",
     "vrf-baseline-difficulty": "1/20",
     "vrf-amplitude": "1/2",
-    "chain-selection-k-lookback": "5184",
+    "chain-selection-k-lookback": "162", // 5184
     "slot-duration-ms": "1000",
     "forward-biased-slot-window": "50",
     "operational-periods-per-epoch": "25",

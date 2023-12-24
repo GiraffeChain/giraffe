@@ -57,16 +57,67 @@ const GetStakerRes$json = {
   '1': 'GetStakerRes',
   '2': [
     {'1': 'staker', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.ActiveStaker', '10': 'staker'},
-    {'1': 'totalStake', '3': 2, '4': 1, '5': 3, '10': 'totalStake'},
-    {'1': 'eta', '3': 3, '4': 1, '5': 12, '8': {}, '10': 'eta'},
   ],
 };
 
 /// Descriptor for `GetStakerRes`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getStakerResDescriptor = $convert.base64Decode(
     'CgxHZXRTdGFrZXJSZXMSOwoGc3Rha2VyGAEgASgLMiMuY29tLmJsb2NrY2hhaW4ubW9kZWxzLk'
-    'FjdGl2ZVN0YWtlclIGc3Rha2VyEh4KCnRvdGFsU3Rha2UYAiABKANSCnRvdGFsU3Rha2USGQoD'
-    'ZXRhGAMgASgMQgf6QgR6AmggUgNldGE=');
+    'FjdGl2ZVN0YWtlclIGc3Rha2Vy');
+
+@$core.Deprecated('Use getTotalActiveStakeReqDescriptor instead')
+const GetTotalActiveStakeReq$json = {
+  '1': 'GetTotalActiveStakeReq',
+  '2': [
+    {'1': 'parentBlockId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'parentBlockId'},
+    {'1': 'slot', '3': 2, '4': 1, '5': 4, '10': 'slot'},
+  ],
+};
+
+/// Descriptor for `GetTotalActiveStakeReq`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getTotalActiveStakeReqDescriptor = $convert.base64Decode(
+    'ChZHZXRUb3RhbEFjdGl2ZVN0YWtlUmVxEkQKDXBhcmVudEJsb2NrSWQYASABKAsyHi5jb20uYm'
+    'xvY2tjaGFpbi5tb2RlbHMuQmxvY2tJZFINcGFyZW50QmxvY2tJZBISCgRzbG90GAIgASgEUgRz'
+    'bG90');
+
+@$core.Deprecated('Use getTotalActiveStakeResDescriptor instead')
+const GetTotalActiveStakeRes$json = {
+  '1': 'GetTotalActiveStakeRes',
+  '2': [
+    {'1': 'totalActiveStake', '3': 1, '4': 1, '5': 3, '10': 'totalActiveStake'},
+  ],
+};
+
+/// Descriptor for `GetTotalActiveStakeRes`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getTotalActiveStakeResDescriptor = $convert.base64Decode(
+    'ChZHZXRUb3RhbEFjdGl2ZVN0YWtlUmVzEioKEHRvdGFsQWN0aXZlU3Rha2UYASABKANSEHRvdG'
+    'FsQWN0aXZlU3Rha2U=');
+
+@$core.Deprecated('Use calculateEtaReqDescriptor instead')
+const CalculateEtaReq$json = {
+  '1': 'CalculateEtaReq',
+  '2': [
+    {'1': 'parentBlockId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'parentBlockId'},
+    {'1': 'slot', '3': 2, '4': 1, '5': 4, '10': 'slot'},
+  ],
+};
+
+/// Descriptor for `CalculateEtaReq`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List calculateEtaReqDescriptor = $convert.base64Decode(
+    'Cg9DYWxjdWxhdGVFdGFSZXESRAoNcGFyZW50QmxvY2tJZBgBIAEoCzIeLmNvbS5ibG9ja2NoYW'
+    'luLm1vZGVscy5CbG9ja0lkUg1wYXJlbnRCbG9ja0lkEhIKBHNsb3QYAiABKARSBHNsb3Q=');
+
+@$core.Deprecated('Use calculateEtaResDescriptor instead')
+const CalculateEtaRes$json = {
+  '1': 'CalculateEtaRes',
+  '2': [
+    {'1': 'eta', '3': 1, '4': 1, '5': 12, '8': {}, '10': 'eta'},
+  ],
+};
+
+/// Descriptor for `CalculateEtaRes`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List calculateEtaResDescriptor = $convert.base64Decode(
+    'Cg9DYWxjdWxhdGVFdGFSZXMSGQoDZXRhGAEgASgMQgf6QgR6AmggUgNldGE=');
 
 @$core.Deprecated('Use packBlockReqDescriptor instead')
 const PackBlockReq$json = {

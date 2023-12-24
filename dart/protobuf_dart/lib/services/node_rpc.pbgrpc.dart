@@ -25,6 +25,10 @@ class NodeRpcClient extends $grpc.Client {
       '/com.blockchain.services.NodeRpc/BroadcastTransaction',
       ($1.BroadcastTransactionReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $1.BroadcastTransactionRes.fromBuffer(value));
+  static final _$getSlotData = $grpc.ClientMethod<$1.GetSlotDataReq, $1.GetSlotDataRes>(
+      '/com.blockchain.services.NodeRpc/GetSlotData',
+      ($1.GetSlotDataReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $1.GetSlotDataRes.fromBuffer(value));
   static final _$getBlockHeader = $grpc.ClientMethod<$1.GetBlockHeaderReq, $1.GetBlockHeaderRes>(
       '/com.blockchain.services.NodeRpc/GetBlockHeader',
       ($1.GetBlockHeaderReq value) => value.writeToBuffer(),
@@ -58,6 +62,10 @@ class NodeRpcClient extends $grpc.Client {
 
   $grpc.ResponseFuture<$1.BroadcastTransactionRes> broadcastTransaction($1.BroadcastTransactionReq request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$broadcastTransaction, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$1.GetSlotDataRes> getSlotData($1.GetSlotDataReq request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$getSlotData, request, options: options);
   }
 
   $grpc.ResponseFuture<$1.GetBlockHeaderRes> getBlockHeader($1.GetBlockHeaderReq request, {$grpc.CallOptions? options}) {
@@ -97,6 +105,13 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $1.BroadcastTransactionReq.fromBuffer(value),
         ($1.BroadcastTransactionRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$1.GetSlotDataReq, $1.GetSlotDataRes>(
+        'GetSlotData',
+        getSlotData_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $1.GetSlotDataReq.fromBuffer(value),
+        ($1.GetSlotDataRes value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$1.GetBlockHeaderReq, $1.GetBlockHeaderRes>(
         'GetBlockHeader',
         getBlockHeader_Pre,
@@ -145,6 +160,10 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
     return broadcastTransaction(call, await request);
   }
 
+  $async.Future<$1.GetSlotDataRes> getSlotData_Pre($grpc.ServiceCall call, $async.Future<$1.GetSlotDataReq> request) async {
+    return getSlotData(call, await request);
+  }
+
   $async.Future<$1.GetBlockHeaderRes> getBlockHeader_Pre($grpc.ServiceCall call, $async.Future<$1.GetBlockHeaderReq> request) async {
     return getBlockHeader(call, await request);
   }
@@ -170,6 +189,7 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
   }
 
   $async.Future<$1.BroadcastTransactionRes> broadcastTransaction($grpc.ServiceCall call, $1.BroadcastTransactionReq request);
+  $async.Future<$1.GetSlotDataRes> getSlotData($grpc.ServiceCall call, $1.GetSlotDataReq request);
   $async.Future<$1.GetBlockHeaderRes> getBlockHeader($grpc.ServiceCall call, $1.GetBlockHeaderReq request);
   $async.Future<$1.GetBlockBodyRes> getBlockBody($grpc.ServiceCall call, $1.GetBlockBodyReq request);
   $async.Future<$1.GetFullBlockRes> getFullBlock($grpc.ServiceCall call, $1.GetFullBlockReq request);

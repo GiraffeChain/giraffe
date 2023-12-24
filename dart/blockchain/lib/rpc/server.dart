@@ -89,6 +89,14 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
     final blockId = await _blockIdAtHeight(request.height);
     return GetBlockIdAtHeightRes(blockId: blockId);
   }
+
+  @override
+  Future<GetSlotDataRes> getSlotData(
+      ServiceCall call, GetSlotDataReq request) async {
+    assert(request.hasBlockId());
+    final slotData = await _dataStores.slotData.get(request.blockId);
+    return GetSlotDataRes(slotData: slotData);
+  }
 }
 
 class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
@@ -125,10 +133,7 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
       request.slot,
       request.stakingAddress,
     );
-    final totalStake = await _stakerTracker.totalActiveStake(
-        request.parentBlockId, request.slot);
-    final eta = await _calculateEta(request.parentBlockId, request.slot);
-    return GetStakerRes(staker: staker, totalStake: totalStake, eta: eta);
+    return GetStakerRes(staker: staker);
   }
 
   @override
@@ -140,5 +145,20 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
         in _packBlock(request.parentBlockId, request.untilSlot)) {
       yield PackBlockRes(body: candidate);
     }
+  }
+
+  @override
+  Future<CalculateEtaRes> calculateEta(
+      ServiceCall call, CalculateEtaReq request) async {
+    final eta = await _calculateEta(request.parentBlockId, request.slot);
+    return CalculateEtaRes(eta: eta);
+  }
+
+  @override
+  Future<GetTotalActiveStakeRes> getTotalActivestake(
+      ServiceCall call, GetTotalActiveStakeReq request) async {
+    final totalActiveStake = await _stakerTracker.totalActiveStake(
+        request.parentBlockId, request.slot);
+    return GetTotalActiveStakeRes(totalActiveStake: totalActiveStake);
   }
 }

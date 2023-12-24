@@ -12,34 +12,12 @@ import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 
 abstract class BlockPacker {
-  Future<Iterative<FullBlockBody>> improvePackedBlock(
-    BlockId parentBlockId,
-    Int64 height,
-    Int64 slot,
-  );
-
   Stream<FullBlockBody> streamed(
     BlockId parentBlockId,
     Int64 height,
     Int64 slot,
-  ) async* {
-    final iterative = await improvePackedBlock(parentBlockId, height, slot);
-    FullBlockBody result = FullBlockBody();
-    yield result;
-    bool done = false;
-    while (!done) {
-      final next = await iterative(result);
-      if (next == null) {
-        done = true;
-      } else {
-        result = next;
-        yield result;
-      }
-    }
-  }
+  );
 }
-
-typedef Iterative<E> = Future<E?> Function(E);
 
 class BlockPackerImpl extends BlockPacker {
   final Mempool mempool;
@@ -53,8 +31,8 @@ class BlockPackerImpl extends BlockPacker {
       this.transactionExistsLocally, this.validateTransaction);
 
   @override
-  Future<Iterative<FullBlockBody>> improvePackedBlock(
-      BlockId parentBlockId, Int64 height, Int64 slot) async {
+  Stream<FullBlockBody> streamed(
+      BlockId parentBlockId, Int64 height, Int64 slot) async* {
     final queue = Queue<Transaction>();
 
     populateQueue(FullBlockBody current) async {
@@ -95,7 +73,16 @@ class BlockPackerImpl extends BlockPacker {
       return null;
     }
 
-    return improve;
+    FullBlockBody best = FullBlockBody();
+
+    while (true) {
+      yield best;
+      FullBlockBody? next = await improve(best);
+      while (next == null) {
+        next = await Future.delayed(
+            Duration(milliseconds: 200), () => improve(best));
+      }
+    }
   }
 
   static Future<bool> Function(TransactionValidationContext) makeBodyValidator(

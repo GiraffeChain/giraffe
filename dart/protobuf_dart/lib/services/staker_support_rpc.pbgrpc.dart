@@ -29,6 +29,14 @@ class StakerSupportRpcClient extends $grpc.Client {
       '/com.blockchain.services.StakerSupportRpc/GetStaker',
       ($0.GetStakerReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.GetStakerRes.fromBuffer(value));
+  static final _$getTotalActivestake = $grpc.ClientMethod<$0.GetTotalActiveStakeReq, $0.GetTotalActiveStakeRes>(
+      '/com.blockchain.services.StakerSupportRpc/GetTotalActivestake',
+      ($0.GetTotalActiveStakeReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetTotalActiveStakeRes.fromBuffer(value));
+  static final _$calculateEta = $grpc.ClientMethod<$0.CalculateEtaReq, $0.CalculateEtaRes>(
+      '/com.blockchain.services.StakerSupportRpc/CalculateEta',
+      ($0.CalculateEtaReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.CalculateEtaRes.fromBuffer(value));
   static final _$packBlock = $grpc.ClientMethod<$0.PackBlockReq, $0.PackBlockRes>(
       '/com.blockchain.services.StakerSupportRpc/PackBlock',
       ($0.PackBlockReq value) => value.writeToBuffer(),
@@ -46,6 +54,14 @@ class StakerSupportRpcClient extends $grpc.Client {
 
   $grpc.ResponseFuture<$0.GetStakerRes> getStaker($0.GetStakerReq request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getStaker, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.GetTotalActiveStakeRes> getTotalActivestake($0.GetTotalActiveStakeReq request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$getTotalActivestake, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.CalculateEtaRes> calculateEta($0.CalculateEtaReq request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$calculateEta, request, options: options);
   }
 
   $grpc.ResponseStream<$0.PackBlockRes> packBlock($0.PackBlockReq request, {$grpc.CallOptions? options}) {
@@ -72,6 +88,20 @@ abstract class StakerSupportRpcServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.GetStakerReq.fromBuffer(value),
         ($0.GetStakerRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetTotalActiveStakeReq, $0.GetTotalActiveStakeRes>(
+        'GetTotalActivestake',
+        getTotalActivestake_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.GetTotalActiveStakeReq.fromBuffer(value),
+        ($0.GetTotalActiveStakeRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.CalculateEtaReq, $0.CalculateEtaRes>(
+        'CalculateEta',
+        calculateEta_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.CalculateEtaReq.fromBuffer(value),
+        ($0.CalculateEtaRes value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.PackBlockReq, $0.PackBlockRes>(
         'PackBlock',
         packBlock_Pre,
@@ -89,11 +119,21 @@ abstract class StakerSupportRpcServiceBase extends $grpc.Service {
     return getStaker(call, await request);
   }
 
+  $async.Future<$0.GetTotalActiveStakeRes> getTotalActivestake_Pre($grpc.ServiceCall call, $async.Future<$0.GetTotalActiveStakeReq> request) async {
+    return getTotalActivestake(call, await request);
+  }
+
+  $async.Future<$0.CalculateEtaRes> calculateEta_Pre($grpc.ServiceCall call, $async.Future<$0.CalculateEtaReq> request) async {
+    return calculateEta(call, await request);
+  }
+
   $async.Stream<$0.PackBlockRes> packBlock_Pre($grpc.ServiceCall call, $async.Future<$0.PackBlockReq> request) async* {
     yield* packBlock(call, await request);
   }
 
   $async.Future<$0.BroadcastBlockRes> broadcastBlock($grpc.ServiceCall call, $0.BroadcastBlockReq request);
   $async.Future<$0.GetStakerRes> getStaker($grpc.ServiceCall call, $0.GetStakerReq request);
+  $async.Future<$0.GetTotalActiveStakeRes> getTotalActivestake($grpc.ServiceCall call, $0.GetTotalActiveStakeReq request);
+  $async.Future<$0.CalculateEtaRes> calculateEta($grpc.ServiceCall call, $0.CalculateEtaReq request);
   $async.Stream<$0.PackBlockRes> packBlock($grpc.ServiceCall call, $0.PackBlockReq request);
 }

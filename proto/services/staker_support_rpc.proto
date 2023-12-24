@@ -9,6 +9,8 @@ import "validate/validate.proto";
 service StakerSupportRpc {
     rpc BroadcastBlock (BroadcastBlockReq) returns (BroadcastBlockRes);
     rpc GetStaker(GetStakerReq) returns (GetStakerRes);
+    rpc GetTotalActivestake(GetTotalActiveStakeReq) returns (GetTotalActiveStakeRes);
+    rpc CalculateEta(CalculateEtaReq) returns (CalculateEtaRes);
     rpc PackBlock(PackBlockReq) returns (stream PackBlockRes);
 }
 
@@ -28,8 +30,26 @@ message GetStakerReq {
 
 message GetStakerRes {
     com.blockchain.models.ActiveStaker staker = 1;
-    int64 totalStake = 2;
-    bytes eta = 3 [(validate.rules).bytes.len = 32];
+}
+
+
+message GetTotalActiveStakeReq {
+    com.blockchain.models.BlockId parentBlockId = 1;
+    uint64 slot = 2;
+}
+
+message GetTotalActiveStakeRes {
+    int64 totalActiveStake = 1;
+}
+
+
+message CalculateEtaReq {
+    com.blockchain.models.BlockId parentBlockId = 1;
+    uint64 slot = 2;
+}
+
+message CalculateEtaRes {
+    bytes eta = 1 [(validate.rules).bytes.len = 32];
 }
 
 message PackBlockReq {

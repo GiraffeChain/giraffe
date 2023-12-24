@@ -185,18 +185,10 @@ class GetStakerReq extends $pb.GeneratedMessage {
 class GetStakerRes extends $pb.GeneratedMessage {
   factory GetStakerRes({
     $2.ActiveStaker? staker,
-    $fixnum.Int64? totalStake,
-    $core.List<$core.int>? eta,
   }) {
     final $result = create();
     if (staker != null) {
       $result.staker = staker;
-    }
-    if (totalStake != null) {
-      $result.totalStake = totalStake;
-    }
-    if (eta != null) {
-      $result.eta = eta;
     }
     return $result;
   }
@@ -206,8 +198,6 @@ class GetStakerRes extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetStakerRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
     ..aOM<$2.ActiveStaker>(1, _omitFieldNames ? '' : 'staker', subBuilder: $2.ActiveStaker.create)
-    ..aInt64(2, _omitFieldNames ? '' : 'totalStake', protoName: 'totalStake')
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'eta', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
 
@@ -242,24 +232,238 @@ class GetStakerRes extends $pb.GeneratedMessage {
   void clearStaker() => clearField(1);
   @$pb.TagNumber(1)
   $2.ActiveStaker ensureStaker() => $_ensure(0);
+}
+
+class GetTotalActiveStakeReq extends $pb.GeneratedMessage {
+  factory GetTotalActiveStakeReq({
+    $2.BlockId? parentBlockId,
+    $fixnum.Int64? slot,
+  }) {
+    final $result = create();
+    if (parentBlockId != null) {
+      $result.parentBlockId = parentBlockId;
+    }
+    if (slot != null) {
+      $result.slot = slot;
+    }
+    return $result;
+  }
+  GetTotalActiveStakeReq._() : super();
+  factory GetTotalActiveStakeReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetTotalActiveStakeReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTotalActiveStakeReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+    ..aOM<$2.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $2.BlockId.create)
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetTotalActiveStakeReq clone() => GetTotalActiveStakeReq()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetTotalActiveStakeReq copyWith(void Function(GetTotalActiveStakeReq) updates) => super.copyWith((message) => updates(message as GetTotalActiveStakeReq)) as GetTotalActiveStakeReq;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetTotalActiveStakeReq create() => GetTotalActiveStakeReq._();
+  GetTotalActiveStakeReq createEmptyInstance() => create();
+  static $pb.PbList<GetTotalActiveStakeReq> createRepeated() => $pb.PbList<GetTotalActiveStakeReq>();
+  @$core.pragma('dart2js:noInline')
+  static GetTotalActiveStakeReq getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetTotalActiveStakeReq>(create);
+  static GetTotalActiveStakeReq? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $2.BlockId get parentBlockId => $_getN(0);
+  @$pb.TagNumber(1)
+  set parentBlockId($2.BlockId v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasParentBlockId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearParentBlockId() => clearField(1);
+  @$pb.TagNumber(1)
+  $2.BlockId ensureParentBlockId() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $fixnum.Int64 get totalStake => $_getI64(1);
+  $fixnum.Int64 get slot => $_getI64(1);
   @$pb.TagNumber(2)
-  set totalStake($fixnum.Int64 v) { $_setInt64(1, v); }
+  set slot($fixnum.Int64 v) { $_setInt64(1, v); }
   @$pb.TagNumber(2)
-  $core.bool hasTotalStake() => $_has(1);
+  $core.bool hasSlot() => $_has(1);
   @$pb.TagNumber(2)
-  void clearTotalStake() => clearField(2);
+  void clearSlot() => clearField(2);
+}
 
-  @$pb.TagNumber(3)
-  $core.List<$core.int> get eta => $_getN(2);
-  @$pb.TagNumber(3)
-  set eta($core.List<$core.int> v) { $_setBytes(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasEta() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearEta() => clearField(3);
+class GetTotalActiveStakeRes extends $pb.GeneratedMessage {
+  factory GetTotalActiveStakeRes({
+    $fixnum.Int64? totalActiveStake,
+  }) {
+    final $result = create();
+    if (totalActiveStake != null) {
+      $result.totalActiveStake = totalActiveStake;
+    }
+    return $result;
+  }
+  GetTotalActiveStakeRes._() : super();
+  factory GetTotalActiveStakeRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetTotalActiveStakeRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTotalActiveStakeRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'totalActiveStake', protoName: 'totalActiveStake')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetTotalActiveStakeRes clone() => GetTotalActiveStakeRes()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetTotalActiveStakeRes copyWith(void Function(GetTotalActiveStakeRes) updates) => super.copyWith((message) => updates(message as GetTotalActiveStakeRes)) as GetTotalActiveStakeRes;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetTotalActiveStakeRes create() => GetTotalActiveStakeRes._();
+  GetTotalActiveStakeRes createEmptyInstance() => create();
+  static $pb.PbList<GetTotalActiveStakeRes> createRepeated() => $pb.PbList<GetTotalActiveStakeRes>();
+  @$core.pragma('dart2js:noInline')
+  static GetTotalActiveStakeRes getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetTotalActiveStakeRes>(create);
+  static GetTotalActiveStakeRes? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get totalActiveStake => $_getI64(0);
+  @$pb.TagNumber(1)
+  set totalActiveStake($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasTotalActiveStake() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTotalActiveStake() => clearField(1);
+}
+
+class CalculateEtaReq extends $pb.GeneratedMessage {
+  factory CalculateEtaReq({
+    $2.BlockId? parentBlockId,
+    $fixnum.Int64? slot,
+  }) {
+    final $result = create();
+    if (parentBlockId != null) {
+      $result.parentBlockId = parentBlockId;
+    }
+    if (slot != null) {
+      $result.slot = slot;
+    }
+    return $result;
+  }
+  CalculateEtaReq._() : super();
+  factory CalculateEtaReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory CalculateEtaReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateEtaReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+    ..aOM<$2.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $2.BlockId.create)
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  CalculateEtaReq clone() => CalculateEtaReq()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  CalculateEtaReq copyWith(void Function(CalculateEtaReq) updates) => super.copyWith((message) => updates(message as CalculateEtaReq)) as CalculateEtaReq;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CalculateEtaReq create() => CalculateEtaReq._();
+  CalculateEtaReq createEmptyInstance() => create();
+  static $pb.PbList<CalculateEtaReq> createRepeated() => $pb.PbList<CalculateEtaReq>();
+  @$core.pragma('dart2js:noInline')
+  static CalculateEtaReq getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CalculateEtaReq>(create);
+  static CalculateEtaReq? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $2.BlockId get parentBlockId => $_getN(0);
+  @$pb.TagNumber(1)
+  set parentBlockId($2.BlockId v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasParentBlockId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearParentBlockId() => clearField(1);
+  @$pb.TagNumber(1)
+  $2.BlockId ensureParentBlockId() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get slot => $_getI64(1);
+  @$pb.TagNumber(2)
+  set slot($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSlot() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSlot() => clearField(2);
+}
+
+class CalculateEtaRes extends $pb.GeneratedMessage {
+  factory CalculateEtaRes({
+    $core.List<$core.int>? eta,
+  }) {
+    final $result = create();
+    if (eta != null) {
+      $result.eta = eta;
+    }
+    return $result;
+  }
+  CalculateEtaRes._() : super();
+  factory CalculateEtaRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory CalculateEtaRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateEtaRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'eta', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  CalculateEtaRes clone() => CalculateEtaRes()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  CalculateEtaRes copyWith(void Function(CalculateEtaRes) updates) => super.copyWith((message) => updates(message as CalculateEtaRes)) as CalculateEtaRes;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CalculateEtaRes create() => CalculateEtaRes._();
+  CalculateEtaRes createEmptyInstance() => create();
+  static $pb.PbList<CalculateEtaRes> createRepeated() => $pb.PbList<CalculateEtaRes>();
+  @$core.pragma('dart2js:noInline')
+  static CalculateEtaRes getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CalculateEtaRes>(create);
+  static CalculateEtaRes? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get eta => $_getN(0);
+  @$pb.TagNumber(1)
+  set eta($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasEta() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEta() => clearField(1);
 }
 
 class PackBlockReq extends $pb.GeneratedMessage {

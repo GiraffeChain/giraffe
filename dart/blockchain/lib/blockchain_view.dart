@@ -1,4 +1,5 @@
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
@@ -51,6 +52,11 @@ abstract class BlockchainView {
 
   Future<FullBlock> get genesisBlock =>
       genesisBlockId.then(getFullBlockOrRaise);
+
+  Future<ProtocolSettings> get protocolSettings async {
+    final genesis = await genesisBlock;
+    return ProtocolSettings.fromMap(genesis.header.settings);
+  }
 
   Stream<FullBlock> get adoptedBlocks =>
       adoptions.asyncMap(getFullBlock).whereNotNull();
@@ -144,10 +150,9 @@ class BlockchainViewFromRpc extends BlockchainView {
       .then((v) => v.hasBlockId() ? v.blockId : null);
 
   @override
-  Future<SlotData?> getSlotData(BlockId blockId) {
-    // TODO: implement getSlotData
-    throw UnimplementedError();
-  }
+  Future<SlotData?> getSlotData(BlockId blockId) => nodeClient
+      .getSlotData(GetSlotDataReq(blockId: blockId))
+      .then((v) => v.hasSlotData() ? v.slotData : null);
 
   @override
   Future<Transaction?> getTransaction(TransactionId transactionId) => nodeClient

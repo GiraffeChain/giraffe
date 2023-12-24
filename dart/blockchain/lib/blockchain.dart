@@ -133,18 +133,36 @@ class Blockchain {
                                                 parentChildTree)
                                             .flatMap(
                                           (ledger) => ((config.genesis
-                                                          .localStakerIndex !=
-                                                      null)
-                                                  ? Minting.make(
+                                                              .localStakerIndex !=
+                                                          null &&
+                                                      config.genesis
+                                                              .localStakerIndex! >=
+                                                          0)
+                                                  ? Minting.makeForConsensus(
                                                       protocolSettings,
                                                       clock,
                                                       consensus,
-                                                      ledger,
-                                                      dataStores,
+                                                      ledger.blockPacker,
                                                       canonicalHeadSlotData,
                                                       stakerInitializers[config
                                                           .genesis
-                                                          .localStakerIndex!])
+                                                          .localStakerIndex!],
+                                                      ConcatStream([
+                                                        Stream.value(
+                                                                canonicalHeadSlotData)
+                                                            .asyncMap((d) => clock
+                                                                .delayedUntilSlot(
+                                                                    d.slotId
+                                                                        .slot)
+                                                                .then(
+                                                                    (_) => d)),
+                                                        consensus.localChain
+                                                            .adoptions
+                                                            .asyncMap(dataStores
+                                                                .slotData
+                                                                .getOrRaise),
+                                                      ]),
+                                                    )
                                                   : Resource.pure<Minting?>(
                                                           null)
                                                       .tapLog(
@@ -216,7 +234,7 @@ class Blockchain {
             .select(id, await consensus.localChain.currentHead) ==
         id) {
       log.info("Adopting id=${id.show}");
-      consensus.localChain.adopt(id);
+      await consensus.localChain.adopt(id);
     }
   }
 

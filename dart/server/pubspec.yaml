@@ -13,8 +13,11 @@ dependencies:
   logging: ^1.2.0
   fixnum: ^1.1.0
   integral_isolates: ^0.4.1
+  grpc: ^3.2.4
   blockchain:
     path: ../blockchain
+  blockchain_protobuf:
+    path: ../protobuf_dart
 
 dev_dependencies:
   test: ^1.25.0

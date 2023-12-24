@@ -8,12 +8,16 @@ import 'package:blockchain/crypto/ed25519vrf.dart' as ed25519VRF;
 import 'package:blockchain/crypto/kes.dart' as kes;
 import 'package:logging/logging.dart';
 
-final BlockchainConfig config = BlockchainConfig();
+final BlockchainConfig config =
+    BlockchainConfig(genesis: BlockchainGenesis(localStakerIndex: -1));
 Future<void> main() async {
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
+    final _errorSuffix = (record.error != null) ? ": ${record.error}" : "";
+    final _stackTraceSuffix =
+        (record.stackTrace != null) ? "\n${record.stackTrace}" : "";
     print(
-        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}');
+        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${_errorSuffix}${_stackTraceSuffix}');
   });
 
   final resource = IsolatePool.make(Platform.numberOfProcessors)

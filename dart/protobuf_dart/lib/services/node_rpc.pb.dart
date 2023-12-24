@@ -100,6 +100,110 @@ class BroadcastTransactionRes extends $pb.GeneratedMessage {
   static BroadcastTransactionRes? _defaultInstance;
 }
 
+class GetSlotDataReq extends $pb.GeneratedMessage {
+  factory GetSlotDataReq({
+    $2.BlockId? blockId,
+  }) {
+    final $result = create();
+    if (blockId != null) {
+      $result.blockId = blockId;
+    }
+    return $result;
+  }
+  GetSlotDataReq._() : super();
+  factory GetSlotDataReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetSlotDataReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetSlotDataReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+    ..aOM<$2.BlockId>(1, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: $2.BlockId.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetSlotDataReq clone() => GetSlotDataReq()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetSlotDataReq copyWith(void Function(GetSlotDataReq) updates) => super.copyWith((message) => updates(message as GetSlotDataReq)) as GetSlotDataReq;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetSlotDataReq create() => GetSlotDataReq._();
+  GetSlotDataReq createEmptyInstance() => create();
+  static $pb.PbList<GetSlotDataReq> createRepeated() => $pb.PbList<GetSlotDataReq>();
+  @$core.pragma('dart2js:noInline')
+  static GetSlotDataReq getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetSlotDataReq>(create);
+  static GetSlotDataReq? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $2.BlockId get blockId => $_getN(0);
+  @$pb.TagNumber(1)
+  set blockId($2.BlockId v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasBlockId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBlockId() => clearField(1);
+  @$pb.TagNumber(1)
+  $2.BlockId ensureBlockId() => $_ensure(0);
+}
+
+class GetSlotDataRes extends $pb.GeneratedMessage {
+  factory GetSlotDataRes({
+    $2.SlotData? slotData,
+  }) {
+    final $result = create();
+    if (slotData != null) {
+      $result.slotData = slotData;
+    }
+    return $result;
+  }
+  GetSlotDataRes._() : super();
+  factory GetSlotDataRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetSlotDataRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetSlotDataRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+    ..aOM<$2.SlotData>(1, _omitFieldNames ? '' : 'slotData', protoName: 'slotData', subBuilder: $2.SlotData.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetSlotDataRes clone() => GetSlotDataRes()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetSlotDataRes copyWith(void Function(GetSlotDataRes) updates) => super.copyWith((message) => updates(message as GetSlotDataRes)) as GetSlotDataRes;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetSlotDataRes create() => GetSlotDataRes._();
+  GetSlotDataRes createEmptyInstance() => create();
+  static $pb.PbList<GetSlotDataRes> createRepeated() => $pb.PbList<GetSlotDataRes>();
+  @$core.pragma('dart2js:noInline')
+  static GetSlotDataRes getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetSlotDataRes>(create);
+  static GetSlotDataRes? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $2.SlotData get slotData => $_getN(0);
+  @$pb.TagNumber(1)
+  set slotData($2.SlotData v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasSlotData() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSlotData() => clearField(1);
+  @$pb.TagNumber(1)
+  $2.SlotData ensureSlotData() => $_ensure(0);
+}
+
 class GetBlockHeaderReq extends $pb.GeneratedMessage {
   factory GetBlockHeaderReq({
     $2.BlockId? blockId,

@@ -11,6 +11,8 @@ import 'package:blockchain/minting/staking.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:rxdart/streams.dart';
+import 'package:rxdart/transformers.dart';
 
 abstract class BlockProducer {
   Stream<FullBlock> get blocks;
@@ -60,48 +62,53 @@ class BlockProducerImpl extends BlockProducer {
 
   CancelableOperation<FullBlock?> _makeChild(SlotData parentSlotData) {
     late final CancelableOperation<FullBlock?> completer;
+    List<Future<void> Function()> _cancelOps = [];
 
     Future<FullBlock?> go() async {
       final nextHit = await _nextEligibility(parentSlotData.slotId);
       if (nextHit != null) {
         log.info("Packing block for slot=${nextHit.slot}");
-        final bodyOpt = await _prepareBlockBody(
-          parentSlotData,
-          nextHit.slot,
-          () => completer.isCanceled,
-        );
-        if (bodyOpt != null) {
-          log.info("Constructing block for slot=${nextHit.slot}");
-          final now = DateTime.now().millisecondsSinceEpoch;
-          final (slotStart, slotEnd) = clock.slotToTimestamps(nextHit.slot);
-          final timestamp =
-              Int64(min(slotEnd.toInt(), max(now, slotStart.toInt())));
-          final maybeHeader = await staker.certifyBlock(
-              parentSlotData.slotId,
-              nextHit.slot,
-              _prepareUnsignedBlock(
-                parentSlotData,
-                bodyOpt,
-                timestamp,
-                nextHit,
-              ));
-          if (maybeHeader != null) {
-            final headerId = await maybeHeader.id;
-            final transactionIds = bodyOpt.transactions.map((tx) => tx.id);
-            log.info(
-                "Produced block id=${headerId.show} height=${maybeHeader.height} slot=${maybeHeader.slot} parentId=${maybeHeader.parentHeaderId.show} transactionIds=[${transactionIds.map((i) => i.show).join(",")}]");
-            return FullBlock()
-              ..header = maybeHeader
-              ..fullBody = bodyOpt;
-          } else {
-            log.warning("Failed to produce block at next slot=${nextHit.slot}");
-          }
+        FullBlockBody bodyOpt = FullBlockBody();
+        final packOperation = CancelableOperation.fromFuture(blockPacker
+            .streamed(parentSlotData.slotId.blockId, parentSlotData.height + 1,
+                nextHit.slot)
+            .takeWhile((_) => clock.globalSlot <= nextHit.slot)
+            .forEach((b) => bodyOpt = b));
+        _cancelOps.add(packOperation.cancel);
+        await clock.delayedUntilSlot(nextHit.slot);
+        await packOperation.cancel();
+        final body = bodyOpt;
+        log.info("Constructing block for slot=${nextHit.slot}");
+        final now = DateTime.now().millisecondsSinceEpoch;
+        final (slotStart, slotEnd) = clock.slotToTimestamps(nextHit.slot);
+        final timestamp =
+            Int64(min(slotEnd.toInt(), max(now, slotStart.toInt())));
+        final maybeHeader = await staker.certifyBlock(
+            parentSlotData.slotId,
+            nextHit.slot,
+            _prepareUnsignedBlock(
+              parentSlotData,
+              body,
+              timestamp,
+              nextHit,
+            ));
+        if (maybeHeader != null) {
+          final headerId = await maybeHeader.id;
+          final transactionIds = body.transactions.map((tx) => tx.id);
+          log.info(
+              "Produced block id=${headerId.show} height=${maybeHeader.height} slot=${maybeHeader.slot} parentId=${maybeHeader.parentHeaderId.show} transactionIds=[${transactionIds.map((i) => i.show).join(",")}]");
+          return FullBlock()
+            ..header = maybeHeader
+            ..fullBody = bodyOpt;
+        } else {
+          log.warning("Failed to produce block at next slot=${nextHit.slot}");
         }
       }
       return null;
     }
 
-    completer = CancelableOperation.fromFuture(go());
+    completer = CancelableOperation.fromFuture(go(),
+        onCancel: () => Future.wait(_cancelOps.map((f) => f())));
     return completer;
   }
 
@@ -115,24 +122,6 @@ class BlockProducerImpl extends BlockProducer {
       test = test + 1;
     }
     return maybeHit;
-  }
-
-  Future<FullBlockBody?> _prepareBlockBody(SlotData parentSlotData,
-      Int64 targetSlot, bool Function() isCanceled) async {
-    FullBlockBody body = FullBlockBody();
-    bool c = isCanceled();
-    final iterative = await blockPacker.improvePackedBlock(
-        parentSlotData.slotId.blockId, parentSlotData.height + 1, targetSlot);
-    while (!c && clock.globalSlot <= targetSlot) {
-      final newIteration = await iterative(body);
-      if (newIteration != null)
-        body = newIteration;
-      else
-        await Future.delayed(Duration(milliseconds: 50));
-      c = isCanceled();
-    }
-    if (c) return null;
-    return body;
   }
 
   UnsignedBlockHeader Function(PartialOperationalCertificate)
