@@ -30,13 +30,13 @@ import 'package:rxdart/streams.dart';
 
 class Blockchain {
   final BlockchainConfig config;
-  final ClockAlgebra clock;
+  final Clock clock;
   final DataStores dataStores;
-  final ParentChildTreeAlgebra<BlockId> parentChildTree;
+  final ParentChildTree<BlockId> parentChildTree;
   final BlockHeightTree blockHeightTree;
   final Consensus consensus;
   final Ledger ledger;
-  final Minting minting;
+  final Minting? minting;
   final P2PServer p2pServer;
 
   final log = Logger("Blockchain");
@@ -59,16 +59,16 @@ class Blockchain {
 
     final log = Logger("Blockchain.Init");
 
-    return Resource.make(
-            () => Future.sync(() => log.info("Initializing blockchain")),
-            (_) => Future.sync(() => log.info("Terminating blockchain")))
-        .tap((_) => log.info("Genesis timestamp=$genesisTimestamp"))
+    return Resource.pure(())
+        .tapLog(log, (_) => "Initializing blockchain")
+        .tapLogFinalize(log, "Blockchain terminated")
+        .tapLog(log, (_) => "Genesis timestamp=$genesisTimestamp")
         .flatMap((_) => Resource.eval(() => PrivateTestnet.stakerInitializers(
                 genesisTimestamp,
                 config.genesis.stakerCount,
                 TreeHeight(ProtocolSettings.defaultSettings.kesKeyHours,
                     ProtocolSettings.defaultSettings.kesKeyMinutes)))
-            .tap((_) => log.info("Staker initializers prepared"))
+            .tapLog(log, (_) => "Staker initializers prepared")
             .flatMap((stakerInitializers) => Resource.eval(
                   () => PrivateTestnet.config(genesisTimestamp,
                       stakerInitializers, config.genesis.stakes),
@@ -84,7 +84,7 @@ class Blockchain {
                           CurrentEventIdGetterSetters(
                               dataStores.currentEventIds);
 
-                      final parentChildTree = ParentChildTree<BlockId>(
+                      final parentChildTree = ParentChildTreeImpl<BlockId>(
                         dataStores.parentChildTree.get,
                         dataStores.parentChildTree.put,
                         genesisBlock.header.parentHeaderId,
@@ -92,7 +92,7 @@ class Blockchain {
                       final protocolSettings = ProtocolSettings.fromMap(
                           genesisBlock.header.settings);
 
-                      final clock = Clock(
+                      final clock = ClockImpl(
                         protocolSettings.slotDuration,
                         protocolSettings.epochLength,
                         genesisTimestamp,
@@ -132,16 +132,25 @@ class Blockchain {
                                                 currentEventIdGetterSetters,
                                                 parentChildTree)
                                             .flatMap(
-                                          (ledger) => Minting.make(
-                                                  protocolSettings,
-                                                  clock,
-                                                  consensus,
-                                                  ledger,
-                                                  dataStores,
-                                                  canonicalHeadSlotData,
-                                                  stakerInitializers[config
-                                                      .genesis
-                                                      .localStakerIndex!])
+                                          (ledger) => ((config.genesis
+                                                          .localStakerIndex !=
+                                                      null)
+                                                  ? Minting.make(
+                                                      protocolSettings,
+                                                      clock,
+                                                      consensus,
+                                                      ledger,
+                                                      dataStores,
+                                                      canonicalHeadSlotData,
+                                                      stakerInitializers[config
+                                                          .genesis
+                                                          .localStakerIndex!])
+                                                  : Resource.pure<Minting?>(
+                                                          null)
+                                                      .tapLog(
+                                                          log,
+                                                          (_) =>
+                                                              "Local staking disabled"))
                                               .evalMap((minting) async {
                                             log.info("Preparing P2P Network");
 
@@ -260,17 +269,19 @@ class Blockchain {
         ),
         rpc.StakerSupportRpcImpl(
           onBroadcastBlock: processBlock,
-          getStaker: (address, parentBlockId, slot) => consensus
-              .consensusValidationState
-              .staker(parentBlockId, slot, address),
+          stakerTracker: consensus.stakerTracker,
           packBlock: (parentBlockId, targetSlot) =>
               Stream.fromFuture(dataStores.headers.getOrRaise(parentBlockId))
                   .map((h) => h.height)
-                  .asyncExpand((parentHeight) => minting.blockPacker
+                  .asyncExpand((parentHeight) => ledger.blockPacker
                       .streamed(parentBlockId, parentHeight + 1, targetSlot)
                       .map((fullBody) => BlockBody(
                           transactionIds:
                               fullBody.transactions.map((t) => t.id)))),
+          calculateEta: (parentId, slot) => dataStores.slotData
+              .getOrRaise(parentId)
+              .then((parentSlotData) => consensus.etaCalculation
+                  .etaToBe(parentSlotData.slotId, slot)),
         ),
       );
 
@@ -289,10 +300,13 @@ class Blockchain {
       .flatMap((_) => _makeRpcServer)
       .tapLog(log, (_) => "RPC Initialized")
       .tapLogFinalize(log, "Terminating RPC")
-      .flatMap((_) => Resource.forStreamSubscription(() => minting
-          .blockProducer.blocks
-          .asyncMap(processFullBlock)
-          .listen((event) {})))
+      .flatMap(
+        (_) => (minting != null)
+            ? Resource.forStreamSubscription(() => minting!.blockProducer.blocks
+                .asyncMap(processFullBlock)
+                .listen((event) {}))
+            : Resource.pure(()),
+      )
       .voidResult;
 
   Stream<TraversalStep> get traversal {

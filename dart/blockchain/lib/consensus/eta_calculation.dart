@@ -11,16 +11,16 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:hashlib/hashlib.dart';
 
-abstract class EtaCalculationAlgebra {
+abstract class EtaCalculation {
   Future<Eta> etaToBe(SlotId parentSlotId, Int64 childSlot);
 }
 
-class EtaCalculation extends EtaCalculationAlgebra {
+class EtaCalculationImpl extends EtaCalculation {
   final Future<SlotData> Function(BlockId) fetchSlotData;
-  final ClockAlgebra clock;
+  final Clock clock;
   final Eta genesisEta;
 
-  EtaCalculation(this.fetchSlotData, this.clock, this.genesisEta);
+  EtaCalculationImpl(this.fetchSlotData, this.clock, this.genesisEta);
 
   final log = Logger("EtaCalculation");
 

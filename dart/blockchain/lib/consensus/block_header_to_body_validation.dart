@@ -1,10 +1,10 @@
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
-abstract class BlockHeaderToBodyValidationAlgebra {
+abstract class BlockHeaderToBodyValidation {
   Future<List<String>> validate(Block block);
 }
 
-class BlockHeaderToBodyValidation extends BlockHeaderToBodyValidationAlgebra {
+class BlockHeaderToBodyValidationImpl extends BlockHeaderToBodyValidation {
   @override
   Future<List<String>> validate(Block block) async {
     return []; // TODO

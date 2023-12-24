@@ -3,11 +3,11 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:collection/collection.dart';
 import 'package:fixnum/fixnum.dart';
 
-abstract class TransactionSyntaxVerifier {
+abstract class TransactionSyntaxValidation {
   Future<List<String>> validate(Transaction transaction);
 }
 
-class TransactionSyntaxInterpreter extends TransactionSyntaxVerifier {
+class TransactionSyntaxValidationImpl extends TransactionSyntaxValidation {
   @override
   Future<List<String>> validate(Transaction transaction) async {
     for (final validator in validators) {

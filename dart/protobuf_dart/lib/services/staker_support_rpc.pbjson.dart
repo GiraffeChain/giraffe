@@ -57,13 +57,16 @@ const GetStakerRes$json = {
   '1': 'GetStakerRes',
   '2': [
     {'1': 'staker', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.ActiveStaker', '10': 'staker'},
+    {'1': 'totalStake', '3': 2, '4': 1, '5': 3, '10': 'totalStake'},
+    {'1': 'eta', '3': 3, '4': 1, '5': 12, '8': {}, '10': 'eta'},
   ],
 };
 
 /// Descriptor for `GetStakerRes`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getStakerResDescriptor = $convert.base64Decode(
     'CgxHZXRTdGFrZXJSZXMSOwoGc3Rha2VyGAEgASgLMiMuY29tLmJsb2NrY2hhaW4ubW9kZWxzLk'
-    'FjdGl2ZVN0YWtlclIGc3Rha2Vy');
+    'FjdGl2ZVN0YWtlclIGc3Rha2VyEh4KCnRvdGFsU3Rha2UYAiABKANSCnRvdGFsU3Rha2USGQoD'
+    'ZXRhGAMgASgMQgf6QgR6AmggUgNldGE=');
 
 @$core.Deprecated('Use packBlockReqDescriptor instead')
 const PackBlockReq$json = {

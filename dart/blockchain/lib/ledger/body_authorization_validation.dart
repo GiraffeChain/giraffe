@@ -1,15 +1,15 @@
-import 'package:blockchain/ledger/transaction_authorization_interpreter.dart';
+import 'package:blockchain/ledger/transaction_authorization_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
-abstract class BodyAuthorizationValidationAlgebra {
+abstract class BodyAuthorizationValidation {
   Future<List<String>> validate(BlockBody body);
 }
 
-class BodyAuthorizationValidation extends BodyAuthorizationValidationAlgebra {
+class BodyAuthorizationValidationImpl extends BodyAuthorizationValidation {
   final Future<Transaction> Function(TransactionId) fetchTransaction;
-  final TransactionAuthorizationVerifier transactionAuthorizationVerifier;
+  final TransactionAuthorizationValidation transactionAuthorizationVerifier;
 
-  BodyAuthorizationValidation(
+  BodyAuthorizationValidationImpl(
       this.fetchTransaction, this.transactionAuthorizationVerifier);
 
   @override

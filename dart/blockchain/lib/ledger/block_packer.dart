@@ -11,7 +11,7 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 
-abstract class BlockPackerAlgebra {
+abstract class BlockPacker {
   Future<Iterative<FullBlockBody>> improvePackedBlock(
     BlockId parentBlockId,
     Int64 height,
@@ -41,15 +41,15 @@ abstract class BlockPackerAlgebra {
 
 typedef Iterative<E> = Future<E?> Function(E);
 
-class BlockPacker extends BlockPackerAlgebra {
-  final MempoolAlgebra mempool;
+class BlockPackerImpl extends BlockPacker {
+  final Mempool mempool;
   final Future<Transaction> Function(TransactionId) fetchTransaction;
   final Future<bool> Function(TransactionId) transactionExistsLocally;
   final Future<bool> Function(TransactionValidationContext) validateTransaction;
 
   final log = Logger("BlockPacker");
 
-  BlockPacker(this.mempool, this.fetchTransaction,
+  BlockPackerImpl(this.mempool, this.fetchTransaction,
       this.transactionExistsLocally, this.validateTransaction);
 
   @override
@@ -99,9 +99,9 @@ class BlockPacker extends BlockPackerAlgebra {
   }
 
   static Future<bool> Function(TransactionValidationContext) makeBodyValidator(
-      BodySyntaxValidationAlgebra bodySyntaxValidation,
-      BodySemanticValidationAlgebra bodySemanticValidation,
-      BodyAuthorizationValidationAlgebra bodyAuthorizationValidation) {
+      BodySyntaxValidation bodySyntaxValidation,
+      BodySemanticValidation bodySemanticValidation,
+      BodyAuthorizationValidation bodyAuthorizationValidation) {
     final log = Logger("BlockPacker.Validator");
     return (context) async {
       final proposedBody = BlockBody()

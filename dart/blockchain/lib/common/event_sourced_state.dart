@@ -2,21 +2,21 @@ import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mutex/mutex.dart';
 
-abstract class EventSourcedStateAlgebra<State, Id> {
+abstract class EventSourcedState<State, Id> {
   Future<State> stateAt(Id eventId);
   Future<U> useStateAt<U>(Id eventId, Future<U> Function(State) f);
 }
 
-class EventTreeState<State, Id> extends EventSourcedStateAlgebra<State, Id> {
+class EventTreeStateImpl<State, Id> extends EventSourcedState<State, Id> {
   final Future<State> Function(State, Id) applyEvent;
   final Future<State> Function(State, Id) unapplyEvent;
-  final ParentChildTreeAlgebra<Id> parentChildTree;
+  final ParentChildTree<Id> parentChildTree;
   State currentState;
   Id currentEventId;
   final Future<void> Function(Id) currentEventChanged;
   final _mutex = Mutex();
 
-  EventTreeState(
+  EventTreeStateImpl(
     this.applyEvent,
     this.unapplyEvent,
     this.parentChildTree,

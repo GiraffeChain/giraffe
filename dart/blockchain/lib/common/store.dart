@@ -1,4 +1,4 @@
-abstract class StoreAlgebra<Key, T> {
+abstract class Store<Key, T> {
   Future<T?> get(Key id);
   Future<bool> contains(Key id);
   Future<void> put(Key id, T value);
@@ -11,7 +11,7 @@ abstract class StoreAlgebra<Key, T> {
   }
 }
 
-class InMemoryStore<Key, Value> extends StoreAlgebra<Key, Value> {
+class InMemoryStore<Key, Value> extends Store<Key, Value> {
   Map<Key, Value> _entries = {};
 
   @override

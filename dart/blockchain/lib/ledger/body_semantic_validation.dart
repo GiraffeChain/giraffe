@@ -3,15 +3,15 @@ import 'package:blockchain/ledger/models/transaction_validation_context.dart';
 import 'package:blockchain/ledger/transaction_semantic_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
-abstract class BodySemanticValidationAlgebra {
+abstract class BodySemanticValidation {
   Future<List<String>> validate(BlockBody body, BodyValidationContext context);
 }
 
-class BodySemanticValidation extends BodySemanticValidationAlgebra {
+class BodySemanticValidationImpl extends BodySemanticValidation {
   final Future<Transaction> Function(TransactionId) fetchTransaction;
-  final TransactionSemanticValidationAlgebra transactionSemanticValidation;
+  final TransactionSemanticValidation transactionSemanticValidation;
 
-  BodySemanticValidation(
+  BodySemanticValidationImpl(
       this.fetchTransaction, this.transactionSemanticValidation);
 
   @override

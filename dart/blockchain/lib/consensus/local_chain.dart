@@ -5,7 +5,7 @@ import 'package:blockchain/common/event_sourced_state.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
-abstract class LocalChainAlgebra {
+abstract class LocalChain {
   Future<void> adopt(BlockId newHead);
   Future<BlockId> get currentHead;
   BlockId get genesis;
@@ -13,15 +13,14 @@ abstract class LocalChainAlgebra {
   Future<BlockId?> blockIdAtHeight(Int64 height);
 }
 
-class LocalChain extends LocalChainAlgebra {
-  LocalChain(this._genesis, BlockId initialHead, this._blockHeightTree,
+class LocalChainImpl extends LocalChain {
+  LocalChainImpl(this._genesis, BlockId initialHead, this._blockHeightTree,
       this._heightOfBlock)
       : this._currentHead = initialHead;
   BlockId _currentHead;
   final BlockId _genesis;
 
-  final EventSourcedStateAlgebra<BlockHeightTreeState, BlockId>
-      _blockHeightTree;
+  final EventSourcedState<BlockHeightTreeState, BlockId> _blockHeightTree;
 
   final Future<Int64> Function(BlockId) _heightOfBlock;
 

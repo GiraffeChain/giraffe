@@ -185,10 +185,18 @@ class GetStakerReq extends $pb.GeneratedMessage {
 class GetStakerRes extends $pb.GeneratedMessage {
   factory GetStakerRes({
     $2.ActiveStaker? staker,
+    $fixnum.Int64? totalStake,
+    $core.List<$core.int>? eta,
   }) {
     final $result = create();
     if (staker != null) {
       $result.staker = staker;
+    }
+    if (totalStake != null) {
+      $result.totalStake = totalStake;
+    }
+    if (eta != null) {
+      $result.eta = eta;
     }
     return $result;
   }
@@ -198,6 +206,8 @@ class GetStakerRes extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetStakerRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
     ..aOM<$2.ActiveStaker>(1, _omitFieldNames ? '' : 'staker', subBuilder: $2.ActiveStaker.create)
+    ..aInt64(2, _omitFieldNames ? '' : 'totalStake', protoName: 'totalStake')
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'eta', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
 
@@ -232,6 +242,24 @@ class GetStakerRes extends $pb.GeneratedMessage {
   void clearStaker() => clearField(1);
   @$pb.TagNumber(1)
   $2.ActiveStaker ensureStaker() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get totalStake => $_getI64(1);
+  @$pb.TagNumber(2)
+  set totalStake($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasTotalStake() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTotalStake() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get eta => $_getN(2);
+  @$pb.TagNumber(3)
+  set eta($core.List<$core.int> v) { $_setBytes(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasEta() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEta() => clearField(3);
 }
 
 class PackBlockReq extends $pb.GeneratedMessage {

@@ -9,7 +9,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:rational/rational.dart';
 
-abstract class ConsensusValidationStateAlgebra {
+abstract class StakerTracker {
   Future<Int64> totalActiveStake(BlockId currentBlockId, Slot slot);
 
   Future<ActiveStaker?> staker(
@@ -26,22 +26,22 @@ abstract class ConsensusValidationStateAlgebra {
 }
 
 class ConsensusData {
-  final StoreAlgebra<void, Int64> totalActiveStake;
-  final StoreAlgebra<void, Int64> totalInactiveStake;
-  final StoreAlgebra<StakingAddress, ActiveStaker> registrations;
+  final Store<void, Int64> totalActiveStake;
+  final Store<void, Int64> totalInactiveStake;
+  final Store<StakingAddress, ActiveStaker> registrations;
 
   ConsensusData(
       this.totalActiveStake, this.totalInactiveStake, this.registrations);
 }
 
-EventSourcedStateAlgebra<ConsensusData, BlockId> consensusDataEventSourcedState(
+EventSourcedState<ConsensusData, BlockId> consensusDataEventSourcedState(
     BlockId initialBlockId,
-    ParentChildTreeAlgebra<BlockId> parentChildTree,
+    ParentChildTree<BlockId> parentChildTree,
     Future<void> Function(BlockId) currentEventChanged,
     ConsensusData initialState,
     Future<BlockBody> Function(BlockId) fetchBlockBody,
     Future<Transaction> Function(TransactionId) fetchTransaction) {
-  return EventTreeState(
+  return EventTreeStateImpl(
       _applyBlock(fetchBlockBody, fetchTransaction),
       _unapplyBlock(fetchBlockBody, fetchTransaction),
       parentChildTree,
@@ -161,14 +161,13 @@ Int64 _inactiveQuantityOf(Iterable<Value> values) => values
     .map((v) => v.quantity)
     .fold(Int64.ZERO, (a, b) => a + b);
 
-class ConsensusValidationState extends ConsensusValidationStateAlgebra {
+class StakerTrackerImpl extends StakerTracker {
   final BlockId genesisBlockId;
-  final EventSourcedStateAlgebra<EpochBoundariesState, BlockId>
-      epochBoundaryState;
-  final EventSourcedStateAlgebra<ConsensusData, BlockId> consensusDataState;
-  final ClockAlgebra clock;
+  final EventSourcedState<EpochBoundariesState, BlockId> epochBoundaryState;
+  final EventSourcedState<ConsensusData, BlockId> consensusDataState;
+  final Clock clock;
 
-  ConsensusValidationState(this.genesisBlockId, this.epochBoundaryState,
+  StakerTrackerImpl(this.genesisBlockId, this.epochBoundaryState,
       this.consensusDataState, this.clock);
 
   @override
@@ -194,13 +193,13 @@ class ConsensusValidationState extends ConsensusValidationStateAlgebra {
   }
 }
 
-typedef EpochBoundariesState = StoreAlgebra<Epoch, BlockId>;
+typedef EpochBoundariesState = Store<Epoch, BlockId>;
 
-EventSourcedStateAlgebra<EpochBoundariesState, BlockId>
+EventSourcedState<EpochBoundariesState, BlockId>
     epochBoundariesEventSourcedState(
-        ClockAlgebra clock,
+        Clock clock,
         BlockId initialBlockId,
-        ParentChildTreeAlgebra<BlockId> parentChildTree,
+        ParentChildTree<BlockId> parentChildTree,
         Future<void> Function(BlockId) currentEventChanged,
         EpochBoundariesState initialState,
         Future<SlotData> Function(BlockId) fetchSlotData) {
@@ -224,6 +223,6 @@ EventSourcedStateAlgebra<EpochBoundariesState, BlockId>
     return state;
   }
 
-  return EventTreeState(applyBlock, unapplyBlock, parentChildTree, initialState,
-      initialBlockId, currentEventChanged);
+  return EventTreeStateImpl(applyBlock, unapplyBlock, parentChildTree,
+      initialState, initialBlockId, currentEventChanged);
 }

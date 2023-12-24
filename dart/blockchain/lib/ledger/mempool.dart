@@ -4,32 +4,32 @@ import 'package:blockchain/common/event_sourced_state.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
-abstract class MempoolAlgebra {
+abstract class Mempool {
   Future<Set<TransactionId>> read(BlockId currentHead);
   Future<void> add(TransactionId transactionId);
   Future<void> remove(TransactionId transactionId);
 }
 
-class Mempool extends MempoolAlgebra {
+class MempoolImpl extends Mempool {
   final Map<TransactionId, MempoolEntry> _state;
   final Future<BlockBody> Function(BlockId) fetchBlockBody;
-  final EventSourcedStateAlgebra<Map<TransactionId, MempoolEntry>, BlockId>
+  final EventSourcedState<Map<TransactionId, MempoolEntry>, BlockId>
       eventSourcedState;
   final Future<void> Function(TransactionId transactionId) _add;
 
-  Mempool._(
+  MempoolImpl._(
       this._state, this.fetchBlockBody, this.eventSourcedState, this._add);
 
-  factory Mempool(
+  factory MempoolImpl(
       Future<BlockBody> Function(BlockId) fetchBlockBody,
-      ParentChildTreeAlgebra<BlockId> parentChildTree,
+      ParentChildTree<BlockId> parentChildTree,
       BlockId currentEventId,
       Duration expirationDuration) {
     final state = <TransactionId, MempoolEntry>{};
     final _add = (TransactionId transactionId) => state[transactionId] =
         MempoolEntry(transactionId, DateTime.now().add(expirationDuration));
     final eventSourcedState =
-        EventTreeState<Map<TransactionId, MempoolEntry>, BlockId>(
+        EventTreeStateImpl<Map<TransactionId, MempoolEntry>, BlockId>(
       (state, blockId) async {
         final blockBody = await fetchBlockBody(blockId);
         blockBody.transactionIds.forEach(state.remove);
@@ -53,7 +53,7 @@ class Mempool extends MempoolAlgebra {
       state.removeWhere((key, value) => value.addedAt.isBefore(now));
     });
 
-    return Mempool._(
+    return MempoolImpl._(
         state, fetchBlockBody, eventSourcedState, (id) async => _add(id));
   }
 

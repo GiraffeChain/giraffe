@@ -9,17 +9,17 @@ import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:rational/rational.dart';
 
-abstract class VrfCalculatorAlgebra {
+abstract class VrfCalculator {
   Future<List<int>> rhoForSlot(Int64 slot, List<int> eta);
   Future<List<int>> proofForSlot(Int64 slot, List<int> eta);
   Future<List<Int64>> ineligibleSlots(
       List<int> eta, (Int64, Int64) slotRange, Rational relativeStake);
 }
 
-class VrfCalculator extends VrfCalculatorAlgebra {
+class VrfCalculatorImpl extends VrfCalculator {
   final List<int> skVrf;
-  final ClockAlgebra clock;
-  final LeaderElectionValidationAlgebra leaderElectionValidation;
+  final Clock clock;
+  final LeaderElection leaderElectionValidation;
   final ProtocolSettings protocolSettings;
 
   final log = Logger("VrfCalculator");
@@ -27,7 +27,7 @@ class VrfCalculator extends VrfCalculatorAlgebra {
   Map<(List<int>, Int64), List<int>> _vrfProofsCache = {};
   Map<(List<int>, Int64), List<int>> _rhosCache = {};
 
-  VrfCalculator(this.skVrf, this.clock, this.leaderElectionValidation,
+  VrfCalculatorImpl(this.skVrf, this.clock, this.leaderElectionValidation,
       this.protocolSettings);
 
   @override

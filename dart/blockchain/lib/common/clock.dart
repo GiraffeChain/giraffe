@@ -4,7 +4,7 @@ import 'package:fixnum/fixnum.dart';
 
 import 'package:blockchain/common/models/common.dart';
 
-abstract class ClockAlgebra {
+abstract class Clock {
   Duration get slotLength;
   Int64 get slotsPerEpoch;
   Int64 get globalSlot;
@@ -33,13 +33,13 @@ abstract class ClockAlgebra {
   }
 }
 
-class Clock extends ClockAlgebra {
+class ClockImpl extends Clock {
   final Duration _slotLength;
   final Int64 _slotsPerEpoch;
   final Int64 _genesisTimestamp;
   final int _forwardBiasedSlotWindow;
 
-  Clock(this._slotLength, this._slotsPerEpoch, this._genesisTimestamp,
+  ClockImpl(this._slotLength, this._slotsPerEpoch, this._genesisTimestamp,
       this._forwardBiasedSlotWindow);
 
   @override

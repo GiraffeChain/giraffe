@@ -1,4 +1,6 @@
+import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/consensus/staker_tracker.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -91,18 +93,19 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
 
 class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
   final Future<void> Function(Block) _onBroadcastBlock;
-  final Future<ActiveStaker?> Function(StakingAddress, BlockId, Int64)
-      _getStaker;
+  final StakerTracker _stakerTracker;
   final Stream<BlockBody> Function(BlockId, Int64) _packBlock;
+  final Future<Eta> Function(BlockId, Int64) _calculateEta;
 
   StakerSupportRpcImpl(
       {required Future<void> Function(Block) onBroadcastBlock,
-      required Future<ActiveStaker?> Function(StakingAddress, BlockId, Int64)
-          getStaker,
-      required Stream<BlockBody> Function(BlockId, Int64) packBlock})
+      required StakerTracker stakerTracker,
+      required Stream<BlockBody> Function(BlockId, Int64) packBlock,
+      required Future<Eta> Function(BlockId, Int64) calculateEta})
       : _onBroadcastBlock = onBroadcastBlock,
-        _getStaker = getStaker,
-        _packBlock = packBlock;
+        _stakerTracker = stakerTracker,
+        _packBlock = packBlock,
+        _calculateEta = calculateEta;
 
   @override
   Future<BroadcastBlockRes> broadcastBlock(
@@ -117,9 +120,15 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
     assert(request.hasParentBlockId());
     assert(request.hasStakingAddress());
     assert(request.hasSlot());
-    final staker = await _getStaker(
-        request.stakingAddress, request.parentBlockId, request.slot);
-    return GetStakerRes(staker: staker);
+    final staker = await _stakerTracker.staker(
+      request.parentBlockId,
+      request.slot,
+      request.stakingAddress,
+    );
+    final totalStake = await _stakerTracker.totalActiveStake(
+        request.parentBlockId, request.slot);
+    final eta = await _calculateEta(request.parentBlockId, request.slot);
+    return GetStakerRes(staker: staker, totalStake: totalStake, eta: eta);
   }
 
   @override

@@ -5,19 +5,19 @@ import 'package:blockchain/common/store.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fpdart/fpdart.dart';
 
-abstract class BoxStateAlgebra {
+abstract class BoxState {
   Future<bool> boxExistsAt(
       BlockId blockId, TransactionOutputReference outputReference);
 }
 
-typedef State = StoreAlgebra<TransactionId, List<int>>;
+typedef State = Store<TransactionId, List<int>>;
 typedef FetchBlockBody = Future<BlockBody> Function(BlockId);
 typedef FetchTransaction = Future<Transaction> Function(TransactionId);
 
-class BoxState extends BoxStateAlgebra {
-  final EventSourcedStateAlgebra<State, BlockId> eventSourcedState;
+class BoxStateImpl extends BoxState {
+  final EventSourcedState<State, BlockId> eventSourcedState;
 
-  BoxState(this.eventSourcedState);
+  BoxStateImpl(this.eventSourcedState);
 
   @override
   Future<bool> boxExistsAt(
@@ -27,14 +27,14 @@ class BoxState extends BoxStateAlgebra {
     return spendableIndices != null && spendableIndices.contains(boxId.index);
   }
 
-  factory BoxState.make(
+  factory BoxStateImpl.make(
       State initialState,
       BlockId currentBlockId,
       Future<BlockBody> Function(BlockId) fetchBlockBody,
       Future<Transaction> Function(TransactionId) fetchTransaction,
-      ParentChildTreeAlgebra<BlockId> parentChildTree,
+      ParentChildTree<BlockId> parentChildTree,
       Future<void> Function(BlockId) currentEventChanged) {
-    final eventState = EventTreeState<State, BlockId>(
+    final eventState = EventTreeStateImpl<State, BlockId>(
       (state, blockId) => _applyBlock(
         fetchBlockBody,
         fetchTransaction,
@@ -52,7 +52,7 @@ class BoxState extends BoxStateAlgebra {
       currentBlockId,
       currentEventChanged,
     );
-    return BoxState(eventState);
+    return BoxStateImpl(eventState);
   }
 }
 
@@ -103,8 +103,8 @@ Future<State> _unapplyBlock(FetchBlockBody fetchBlockBody,
   return state;
 }
 
-class AugmentedBoxState extends BoxStateAlgebra {
-  final BoxStateAlgebra boxState;
+class AugmentedBoxState extends BoxState {
+  final BoxState boxState;
   final StateAugmentation stateAugmentation;
 
   AugmentedBoxState(this.boxState, this.stateAugmentation);

@@ -1,15 +1,16 @@
-import 'package:blockchain/ledger/transaction_syntax_interpreter.dart';
+import 'package:blockchain/ledger/transaction_syntax_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
-abstract class BodySyntaxValidationAlgebra {
+abstract class BodySyntaxValidation {
   Future<List<String>> validate(BlockBody body);
 }
 
-class BodySyntaxValidation extends BodySyntaxValidationAlgebra {
+class BodySyntaxValidationImpl extends BodySyntaxValidation {
   final Future<Transaction> Function(TransactionId) fetchTransaction;
-  final TransactionSyntaxVerifier transactionSyntaxVerifier;
+  final TransactionSyntaxValidation transactionSyntaxVerifier;
 
-  BodySyntaxValidation(this.fetchTransaction, this.transactionSyntaxVerifier);
+  BodySyntaxValidationImpl(
+      this.fetchTransaction, this.transactionSyntaxVerifier);
   @override
   Future<List<String>> validate(BlockBody body) async {
     final transactions = await Future.wait(body.transactionIds

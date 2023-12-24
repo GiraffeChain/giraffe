@@ -10,16 +10,16 @@ import 'package:blockchain/crypto/utils.dart';
 import 'package:rational/rational.dart';
 import 'package:fixnum/fixnum.dart';
 
-abstract class LeaderElectionValidationAlgebra {
+abstract class LeaderElection {
   Future<Rational> getThreshold(Rational relativeStake, Int64 slotDiff);
   Future<bool> isEligible(Rational threshold, Rho rho);
 }
 
-class LeaderElectionValidation extends LeaderElectionValidationAlgebra {
+class LeaderElectionImpl extends LeaderElection {
   final ProtocolSettings protocolSettings;
   DComputeImpl _compute;
 
-  LeaderElectionValidation(this.protocolSettings, this._compute);
+  LeaderElectionImpl(this.protocolSettings, this._compute);
 
   @override
   Future<Rational> getThreshold(Rational relativeStake, Int64 slotDiff) =>
@@ -39,7 +39,7 @@ Future<Rational> _getThreshold(Rational relativeStake, Int64 slotDiff,
     ProtocolSettings protocolSettings) async {
   final cacheKey = (
     relativeStake,
-    Int64(min(protocolSettings.vrfLddCutoff, slotDiff.toInt()))
+    Int64(min(protocolSettings.vrfLddCutoff + 1, slotDiff.toInt()))
   );
   final previous = _thresholdCache[cacheKey];
   if (previous != null) return previous;

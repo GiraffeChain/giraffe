@@ -13,8 +13,7 @@ void main() {
       final slotDiff = Int64(15);
       final config = ProtocolSettings.defaultSettings
           .mergeFromMap({"vrf-ldd-cutoff": "15"});
-      final leaderElectionValidation =
-          LeaderElectionValidation(config, LocalCompute);
+      final leaderElectionValidation = LeaderElectionImpl(config, LocalCompute);
       final threshold =
           await leaderElectionValidation.getThreshold(relativeStake, slotDiff);
       final expectedThreshold = Rational(

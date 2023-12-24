@@ -5,24 +5,25 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/unsigned.dart';
 import 'package:async/async.dart';
-import 'package:blockchain/minting/block_packer.dart';
+import 'package:blockchain/ledger/block_packer.dart';
 import 'package:blockchain/minting/models/vrf_hit.dart';
 import 'package:blockchain/minting/staking.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
-abstract class BlockProducerAlgebra {
+abstract class BlockProducer {
   Stream<FullBlock> get blocks;
 }
 
-class BlockProducer extends BlockProducerAlgebra {
+class BlockProducerImpl extends BlockProducer {
   final Stream<SlotData> parentHeaders;
-  final StakingAlgebra staker;
-  final ClockAlgebra clock;
-  final BlockPackerAlgebra blockPacker;
+  final Staking staker;
+  final Clock clock;
+  final BlockPacker blockPacker;
 
-  BlockProducer(this.parentHeaders, this.staker, this.clock, this.blockPacker);
+  BlockProducerImpl(
+      this.parentHeaders, this.staker, this.clock, this.blockPacker);
 
   final log = Logger("BlockProducer");
 

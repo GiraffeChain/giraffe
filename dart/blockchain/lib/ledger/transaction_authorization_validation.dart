@@ -1,11 +1,11 @@
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
-abstract class TransactionAuthorizationVerifier {
+abstract class TransactionAuthorizationValidation {
   Future<List<String>> validate(Transaction transaction);
 }
 
-class TransactionAuthorizationInterpreter
-    extends TransactionAuthorizationVerifier {
+class TransactionAuthorizationValidationImpl
+    extends TransactionAuthorizationValidation {
   @override
   Future<List<String>> validate(Transaction transaction) async {
     for (final input in transaction.inputs) {

@@ -5,18 +5,18 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
 class DataStores {
-  final StoreAlgebra<BlockId, (Int64, BlockId)> parentChildTree;
-  final StoreAlgebra<int, BlockId> currentEventIds;
-  final StoreAlgebra<BlockId, SlotData> slotData;
-  final StoreAlgebra<BlockId, BlockHeader> headers;
-  final StoreAlgebra<BlockId, BlockBody> bodies;
-  final StoreAlgebra<TransactionId, Transaction> transactions;
-  final StoreAlgebra<TransactionId, List<int>> spendableBoxIds;
-  final StoreAlgebra<Int64, BlockId> epochBoundaries;
-  final StoreAlgebra<void, Int64> activeStake;
-  final StoreAlgebra<void, Int64> inactiveStake;
-  final StoreAlgebra<StakingAddress, ActiveStaker> activeStakers;
-  final StoreAlgebra<Int64, BlockId> blockHeightTree;
+  final Store<BlockId, (Int64, BlockId)> parentChildTree;
+  final Store<int, BlockId> currentEventIds;
+  final Store<BlockId, SlotData> slotData;
+  final Store<BlockId, BlockHeader> headers;
+  final Store<BlockId, BlockBody> bodies;
+  final Store<TransactionId, Transaction> transactions;
+  final Store<TransactionId, List<int>> spendableBoxIds;
+  final Store<Int64, BlockId> epochBoundaries;
+  final Store<void, Int64> activeStake;
+  final Store<void, Int64> inactiveStake;
+  final Store<StakingAddress, ActiveStaker> activeStakers;
+  final Store<Int64, BlockId> blockHeightTree;
 
   DataStores({
     required this.parentChildTree,
@@ -125,7 +125,7 @@ class CurreventEventIdGetterSetterIndices {
 }
 
 class CurrentEventIdGetterSetters {
-  final StoreAlgebra<int, BlockId> store;
+  final Store<int, BlockId> store;
 
   CurrentEventIdGetterSetters(this.store);
 
@@ -154,7 +154,7 @@ class GetterSetter {
 
   GetterSetter(this.get, this.set);
 
-  factory GetterSetter.forByte(StoreAlgebra<int, BlockId> store, int byte) =>
+  factory GetterSetter.forByte(Store<int, BlockId> store, int byte) =>
       GetterSetter(
           () => store.getOrRaise(byte), (value) => store.put(byte, value));
 }

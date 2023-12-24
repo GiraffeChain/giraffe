@@ -33,7 +33,7 @@ class ProtocolSettings {
       vrfPrecision: int.parse(map["vrf-precision"]!),
       vrfBaselineDifficulty: _parseRational(map["vrf-baseline-difficulty"]!),
       vrfAmpltitude: _parseRational(map["vrf-amplitude"]!),
-      chainSelectionKLookback: int.parse(map["vrf-precision"]!),
+      chainSelectionKLookback: int.parse(map["chain-selection-k-lookback"]!),
       slotDuration: Duration(milliseconds: int.parse(map["slot-duration-ms"]!)),
       forwardBiasedSlotWindow: int.parse(map["forward-biased-slot-window"]!),
       operationalPeriodsPerEpoch:
@@ -57,8 +57,8 @@ class ProtocolSettings {
         vrfAmpltitude: map.containsKey("vrf-amplitude")
             ? _parseRational(map["vrf-amplitude"]!)
             : vrfAmpltitude,
-        chainSelectionKLookback: map.containsKey("vrf-precision")
-            ? int.parse(map["vrf-precision"]!)
+        chainSelectionKLookback: map.containsKey("chain-selection-k-lookback")
+            ? int.parse(map["chain-selection-k-lookback"]!)
             : chainSelectionKLookback,
         slotDuration: map.containsKey("slot-duration-ms")
             ? Duration(milliseconds: int.parse(map["slot-duration-ms"]!))

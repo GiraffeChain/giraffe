@@ -6,7 +6,7 @@ import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/consensus/block_header_to_body_validation.dart';
 import 'package:blockchain/consensus/block_header_validation.dart';
 import 'package:blockchain/consensus/chain_selection.dart';
-import 'package:blockchain/consensus/consensus_validation_state.dart';
+import 'package:blockchain/consensus/staker_tracker.dart';
 import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/local_chain.dart';
@@ -16,40 +16,41 @@ import 'package:blockchain/data_stores.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
 class Consensus {
-  final BlockHeaderToBodyValidationAlgebra blockHeaderToBodyValidation;
-  final BlockHeaderValidationAlgebra blockHeaderValidation;
-  final ChainSelectionAlgebra chainSelection;
-  final ConsensusValidationStateAlgebra consensusValidationState;
-  final EtaCalculationAlgebra etaCalculation;
-  final LeaderElectionValidationAlgebra leaderElectionValidation;
-  final LocalChainAlgebra localChain;
+  final BlockHeaderToBodyValidation blockHeaderToBodyValidation;
+  final BlockHeaderValidation blockHeaderValidation;
+  final ChainSelection chainSelection;
+  final StakerTracker stakerTracker;
+  final EtaCalculation etaCalculation;
+  final LeaderElection leaderElection;
+  final LocalChain localChain;
 
   Consensus({
     required this.blockHeaderToBodyValidation,
     required this.blockHeaderValidation,
     required this.chainSelection,
-    required this.consensusValidationState,
+    required this.stakerTracker,
     required this.etaCalculation,
-    required this.leaderElectionValidation,
+    required this.leaderElection,
     required this.localChain,
   });
 
   static Resource<Consensus> make(
           ProtocolSettings protocolSettings,
           DataStores dataStores,
-          ClockAlgebra clock,
+          Clock clock,
           FullBlock genesisBlock,
           CurrentEventIdGetterSetters currentEventIdGetterSetters,
-          ParentChildTreeAlgebra<BlockId> parentChildTree,
+          ParentChildTree<BlockId> parentChildTree,
           BlockHeightTree blockHeightTree,
           DComputeImpl isolate) =>
       Resource.eval(() async {
         final genesisBlockId = genesisBlock.header.id;
-        final etaCalculation = EtaCalculation(dataStores.slotData.getOrRaise,
-            clock, genesisBlock.header.eligibilityCertificate.eta);
+        final etaCalculation = EtaCalculationImpl(
+            dataStores.slotData.getOrRaise,
+            clock,
+            genesisBlock.header.eligibilityCertificate.eta);
 
-        final leaderElection =
-            LeaderElectionValidation(protocolSettings, isolate);
+        final leaderElection = LeaderElectionImpl(protocolSettings, isolate);
 
         final epochBoundaryState = epochBoundariesEventSourcedState(
             clock,
@@ -67,17 +68,18 @@ class Consensus {
             dataStores.bodies.getOrRaise,
             dataStores.transactions.getOrRaise);
 
-        final consensusValidationState = ConsensusValidationState(
+        final consensusValidationState = StakerTrackerImpl(
             genesisBlockId, epochBoundaryState, consensusDataState, clock);
 
-        final localChain = LocalChain(
+        final localChain = LocalChainImpl(
             genesisBlockId,
             await currentEventIdGetterSetters.canonicalHead.get(),
             blockHeightTree,
             (id) async => (await dataStores.slotData.getOrRaise(id)).height);
 
-        final chainSelection = ChainSelection(dataStores.slotData.getOrRaise);
-        final headerValidation = BlockHeaderValidation(
+        final chainSelection =
+            ChainSelectionImpl(dataStores.slotData.getOrRaise);
+        final headerValidation = BlockHeaderValidationImpl(
             genesisBlockId,
             etaCalculation,
             consensusValidationState,
@@ -85,15 +87,15 @@ class Consensus {
             clock,
             dataStores.headers.getOrRaise);
 
-        final headerToBodyValidation = BlockHeaderToBodyValidation();
+        final headerToBodyValidation = BlockHeaderToBodyValidationImpl();
 
         return Consensus(
             blockHeaderToBodyValidation: headerToBodyValidation,
             blockHeaderValidation: headerValidation,
             chainSelection: chainSelection,
-            consensusValidationState: consensusValidationState,
+            stakerTracker: consensusValidationState,
             etaCalculation: etaCalculation,
-            leaderElectionValidation: leaderElection,
+            leaderElection: leaderElection,
             localChain: localChain);
       });
 }

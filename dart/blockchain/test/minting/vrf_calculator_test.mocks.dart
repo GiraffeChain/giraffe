@@ -57,7 +57,7 @@ class _FakeRational_2 extends _i1.SmartFake implements _i3.Rational {
 /// A class which mocks [ClockAlgebra].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockClockAlgebra extends _i1.Mock implements _i4.ClockAlgebra {
+class MockClockAlgebra extends _i1.Mock implements _i4.Clock {
   @override
   Duration get slotLength => (super.noSuchMethod(
         Invocation.getter(#slotLength),
@@ -288,7 +288,7 @@ class MockClockAlgebra extends _i1.Mock implements _i4.ClockAlgebra {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockLeaderElectionValidationAlgebra extends _i1.Mock
-    implements _i6.LeaderElectionValidationAlgebra {
+    implements _i6.LeaderElection {
   @override
   _i5.Future<_i3.Rational> getThreshold(
     _i3.Rational? relativeStake,

@@ -1,7 +1,7 @@
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/utils.dart';
-import 'package:blockchain/consensus/consensus_validation_state.dart';
+import 'package:blockchain/consensus/staker_tracker.dart';
 import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/models/vrf_argument.dart';
@@ -14,22 +14,22 @@ import 'package:fpdart/fpdart.dart';
 import 'package:rational/rational.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
-abstract class BlockHeaderValidationAlgebra {
+abstract class BlockHeaderValidation {
   /**
    * Indicates if the claimed child is a valid descendent of the parent
    */
   Future<List<String>> validate(BlockHeader header);
 }
 
-class BlockHeaderValidation extends BlockHeaderValidationAlgebra {
+class BlockHeaderValidationImpl extends BlockHeaderValidation {
   final BlockId genesisBlockId;
-  final EtaCalculationAlgebra etaInterpreter;
-  final ConsensusValidationStateAlgebra consensusValidationState;
-  final LeaderElectionValidationAlgebra leaderElectionValidation;
-  final ClockAlgebra clock;
+  final EtaCalculation etaInterpreter;
+  final StakerTracker consensusValidationState;
+  final LeaderElection leaderElectionValidation;
+  final Clock clock;
   final Future<BlockHeader> Function(BlockId) fetchHeader;
 
-  BlockHeaderValidation(
+  BlockHeaderValidationImpl(
       this.genesisBlockId,
       this.etaInterpreter,
       this.consensusValidationState,

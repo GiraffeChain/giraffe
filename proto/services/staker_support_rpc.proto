@@ -4,6 +4,8 @@ package com.blockchain.services;
 
 import 'models/core.proto';
 
+import "validate/validate.proto";
+
 service StakerSupportRpc {
     rpc BroadcastBlock (BroadcastBlockReq) returns (BroadcastBlockRes);
     rpc GetStaker(GetStakerReq) returns (GetStakerRes);
@@ -26,6 +28,8 @@ message GetStakerReq {
 
 message GetStakerRes {
     com.blockchain.models.ActiveStaker staker = 1;
+    int64 totalStake = 2;
+    bytes eta = 3 [(validate.rules).bytes.len = 32];
 }
 
 message PackBlockReq {

@@ -10,8 +10,7 @@ import 'package:test/test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:fixnum/fixnum.dart';
 
-@GenerateNiceMocks(
-    [MockSpec<ClockAlgebra>(), MockSpec<LeaderElectionValidationAlgebra>()])
+@GenerateNiceMocks([MockSpec<Clock>(), MockSpec<LeaderElection>()])
 import 'vrf_calculator_test.mocks.dart';
 
 void main() {
@@ -20,7 +19,7 @@ void main() {
       final skVrf = Int8List(32);
       final config = ProtocolSettings.defaultSettings
           .mergeFromMap({"vrf-ldd-cutoff": "15"});
-      final calculator = VrfCalculator(skVrf, MockClockAlgebra(),
+      final calculator = VrfCalculatorImpl(skVrf, MockClockAlgebra(),
           MockLeaderElectionValidationAlgebra(), config);
 
       final eta = Int8List(32);
