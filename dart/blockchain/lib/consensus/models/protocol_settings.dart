@@ -1,3 +1,4 @@
+import 'package:blockchain/crypto/impl/kes_product.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rational/rational.dart';
 
@@ -110,6 +111,8 @@ class ProtocolSettings {
 
   Int64 get operationalPeriodLength =>
       epochLength ~/ operationalPeriodsPerEpoch;
+
+  TreeHeight get kesTreeHeight => TreeHeight(kesKeyHours, kesKeyMinutes);
 }
 
 _parseRational(String value) {

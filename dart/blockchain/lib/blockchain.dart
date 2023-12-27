@@ -8,6 +8,7 @@ import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/consensus.dart';
 import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/data_stores.dart';
+import 'package:blockchain/genesis.dart';
 import 'package:blockchain/ledger/ledger.dart';
 import 'package:blockchain/minting/minting.dart';
 import 'package:blockchain/private_testnet.dart';
@@ -16,7 +17,6 @@ import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain/crypto/ed25519.dart';
-import 'package:blockchain/crypto/kes.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/ledger/models/body_validation_context.dart';
 import 'package:blockchain/network/p2p_server.dart';
@@ -60,162 +60,117 @@ class Blockchain {
 
     final log = Logger("Blockchain.Init");
 
+    final blockchainBaseDir =
+        Directory("${Directory.systemTemp.path}/blockchain");
+
     return Resource.pure(())
         .tapLog(log, (_) => "Initializing blockchain")
         .tapLogFinalize(log, "Blockchain terminated")
         .tapLog(log, (_) => "Genesis timestamp=$genesisTimestamp")
-        .flatMap((_) => Resource.eval(() => PrivateTestnet.stakerInitializers(
+        .evalMap((_) async => PrivateTestnet.initTo(
+              blockchainBaseDir,
+              genesisTimestamp,
+              config.genesis.stakes,
+              ProtocolSettings.defaultSettings.kesTreeHeight,
+            ))
+        .flatMap(
+          (genesisBlockId) => Resource.eval(() => Genesis.loadFromDisk(
+              Directory(
+                  "${blockchainBaseDir.path}/${genesisBlockId.show}/genesis"),
+              genesisBlockId)).flatMap(
+            (genesisBlock) => Resource.eval(() => DataStores.init(genesisBlock))
+                .flatMap((dataStores) {
+              final genesisBlockId = genesisBlock.header.id;
+
+              final currentEventIdGetterSetters =
+                  CurrentEventIdGetterSetters(dataStores.currentEventIds);
+
+              final parentChildTree = ParentChildTreeImpl<BlockId>(
+                dataStores.parentChildTree.get,
+                dataStores.parentChildTree.put,
+                genesisBlock.header.parentHeaderId,
+              );
+              final protocolSettings =
+                  ProtocolSettings.fromMap(genesisBlock.header.settings);
+
+              final clock = ClockImpl(
+                protocolSettings.slotDuration,
+                protocolSettings.epochLength,
+                protocolSettings.operationalPeriodLength,
                 genesisTimestamp,
-                config.genesis.stakerCount,
-                TreeHeight(ProtocolSettings.defaultSettings.kesKeyHours,
-                    ProtocolSettings.defaultSettings.kesKeyMinutes)))
-            .tapLog(log, (_) => "Staker initializers prepared")
-            .flatMap((stakerInitializers) => Resource.eval(
-                  () => PrivateTestnet.config(genesisTimestamp,
-                      stakerInitializers, config.genesis.stakes),
-                ).flatMap(
-                  (genesisConfig) =>
-                      Resource.eval(() => genesisConfig.block).flatMap(
-                    (genesisBlock) =>
-                        Resource.eval(() => DataStores.init(genesisBlock))
-                            .flatMap((dataStores) {
-                      final genesisBlockId = genesisBlock.header.id;
+                protocolSettings.forwardBiasedSlotWindow,
+              );
+              return Resource.eval(
+                      () => currentEventIdGetterSetters.blockHeightTree.get())
+                  .map((eventId) => makeBlockHeightTree(
+                      dataStores.blockHeightTree,
+                      eventId,
+                      dataStores.slotData,
+                      parentChildTree,
+                      currentEventIdGetterSetters.blockHeightTree.set))
+                  .flatMap(
+                    (blockHeightTree) => Resource.eval(() =>
+                            currentEventIdGetterSetters.canonicalHead.get())
+                        .flatMap(
+                      (canonicalHeadId) => Resource.eval(() =>
+                              dataStores.slotData.getOrRaise(canonicalHeadId))
+                          .flatMap(
+                        (canonicalHeadSlotData) => Resource.eval(() =>
+                                parentChildTree.assocate(genesisBlockId,
+                                    genesisBlock.header.parentHeaderId))
+                            .flatMap((_) => Consensus.make(
+                                protocolSettings,
+                                dataStores,
+                                clock,
+                                genesisBlock,
+                                currentEventIdGetterSetters,
+                                parentChildTree,
+                                blockHeightTree,
+                                isolate))
+                            .flatMap(
+                              (consensus) => Ledger.make(
+                                      dataStores,
+                                      currentEventIdGetterSetters,
+                                      parentChildTree)
+                                  .evalMap((ledger) async {
+                                log.info("Preparing P2P Network");
 
-                      final currentEventIdGetterSetters =
-                          CurrentEventIdGetterSetters(
-                              dataStores.currentEventIds);
-
-                      final parentChildTree = ParentChildTreeImpl<BlockId>(
-                        dataStores.parentChildTree.get,
-                        dataStores.parentChildTree.put,
-                        genesisBlock.header.parentHeaderId,
-                      );
-                      final protocolSettings = ProtocolSettings.fromMap(
-                          genesisBlock.header.settings);
-
-                      final clock = ClockImpl(
-                        protocolSettings.slotDuration,
-                        protocolSettings.epochLength,
-                        protocolSettings.operationalPeriodLength,
-                        genesisTimestamp,
-                        protocolSettings.forwardBiasedSlotWindow,
-                      );
-                      return Resource.eval(() =>
-                              currentEventIdGetterSetters.blockHeightTree.get())
-                          .map((eventId) => makeBlockHeightTree(
-                              dataStores.blockHeightTree,
-                              eventId,
-                              dataStores.slotData,
-                              parentChildTree,
-                              currentEventIdGetterSetters.blockHeightTree.set))
-                          .flatMap((blockHeightTree) => Resource.eval(() =>
-                                  currentEventIdGetterSetters.canonicalHead
-                                      .get()).flatMap(
-                                (canonicalHeadId) => Resource.eval(() =>
-                                    dataStores.slotData
-                                        .getOrRaise(canonicalHeadId)).flatMap(
-                                  (canonicalHeadSlotData) => Resource.eval(() =>
-                                          parentChildTree.assocate(
-                                              genesisBlockId,
-                                              genesisBlock
-                                                  .header.parentHeaderId))
-                                      .flatMap((_) => Consensus.make(
-                                          protocolSettings,
-                                          dataStores,
-                                          clock,
-                                          genesisBlock,
-                                          currentEventIdGetterSetters,
-                                          parentChildTree,
-                                          blockHeightTree,
-                                          isolate))
-                                      .flatMap(
-                                        (consensus) => Ledger.make(
-                                                dataStores,
-                                                currentEventIdGetterSetters,
-                                                parentChildTree)
-                                            .flatMap(
-                                          (ledger) => ((config.genesis
-                                                              .localStakerIndex !=
-                                                          null &&
-                                                      config.genesis
-                                                              .localStakerIndex! >=
-                                                          0)
-                                                  ? Minting.makeForConsensus(
-                                                      Directory(
-                                                          "${Directory.systemTemp.path}/blockchain-staking-${genesisBlockId.show}"),
-                                                      protocolSettings,
-                                                      clock,
-                                                      consensus,
-                                                      ledger.blockPacker,
-                                                      canonicalHeadSlotData,
-                                                      stakerInitializers[config
-                                                          .genesis
-                                                          .localStakerIndex!],
-                                                      ConcatStream([
-                                                        Stream.value(
-                                                                canonicalHeadSlotData)
-                                                            .asyncMap((d) => clock
-                                                                .delayedUntilSlot(
-                                                                    d.slotId
-                                                                        .slot)
-                                                                .then(
-                                                                    (_) => d)),
-                                                        consensus.localChain
-                                                            .adoptions
-                                                            .asyncMap(dataStores
-                                                                .slotData
-                                                                .getOrRaise),
-                                                      ]),
-                                                    )
-                                                  : Resource.pure<Minting?>(
-                                                          null)
-                                                      .tapLog(
-                                                          log,
-                                                          (_) =>
-                                                              "Local staking disabled"))
-                                              .evalMap((minting) async {
-                                            log.info("Preparing P2P Network");
-
-                                            final p2pKey =
-                                                await ed25519.generateKeyPair();
-                                            final peersManager = PeersManager(
-                                                p2pKey,
-                                                Uint8List.fromList(
-                                                    List.generate(
-                                                        32, (i) => i)));
-                                            final p2pServer = P2PServer(
-                                              config.p2p.bindHost,
-                                              config.p2p.bindPort,
-                                              (socket) => peersManager
-                                                  .handleConnection(socket)
-                                                  .onError((error, stackTrace) {
-                                                log.warning(
-                                                    "P2P Connection failure",
-                                                    error,
-                                                    stackTrace);
-                                                socket.destroy();
-                                              }),
-                                            );
-                                            return Blockchain(
-                                              config,
-                                              clock,
-                                              dataStores,
-                                              parentChildTree,
-                                              blockHeightTree,
-                                              consensus,
-                                              ledger,
-                                              minting,
-                                              p2pServer,
-                                            );
-                                          }),
-                                        ),
-                                      ),
-                                ),
-                              ));
-                    }),
-                  ),
-                ))
-            .tap((_) => log.info("Blockchain Initialized")));
+                                final p2pKey = await ed25519.generateKeyPair();
+                                final peersManager = PeersManager(
+                                    p2pKey,
+                                    Uint8List.fromList(
+                                        List.generate(32, (i) => i)));
+                                final p2pServer = P2PServer(
+                                  config.p2p.bindHost,
+                                  config.p2p.bindPort,
+                                  (socket) => peersManager
+                                      .handleConnection(socket)
+                                      .onError((error, stackTrace) {
+                                    log.warning("P2P Connection failure", error,
+                                        stackTrace);
+                                    socket.destroy();
+                                  }),
+                                );
+                                return Blockchain(
+                                  config,
+                                  clock,
+                                  dataStores,
+                                  parentChildTree,
+                                  blockHeightTree,
+                                  consensus,
+                                  ledger,
+                                  null,
+                                  p2pServer,
+                                );
+                              }),
+                            ),
+                      ),
+                    ),
+                  );
+            }),
+          ),
+        )
+        .tap((_) => log.info("Blockchain Initialized"));
   }
 
   Future<void> processBlock(Block block) async {

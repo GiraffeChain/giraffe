@@ -18,23 +18,18 @@ class BlockchainConfig {
 
 class BlockchainGenesis {
   final Int64 timestamp;
-  final int stakerCount;
   final List<Int64> stakes;
   final int? localStakerIndex;
 
   BlockchainGenesis({
     Int64? timestamp,
-    int? stakerCount,
     List<Int64>? stakes,
     int? localStakerIndex,
   })  : timestamp = timestamp ??
             Int64(DateTime.now()
                 .add(Duration(seconds: 5))
                 .millisecondsSinceEpoch),
-        stakerCount = stakerCount ?? 1,
-        stakes = stakes ??
-            List.generate(stakerCount ?? 1,
-                (idx) => Int64(1000000 ~/ (stakerCount ?? 1))),
+        stakes = [Int64(1000000)],
         localStakerIndex = localStakerIndex ?? 0;
 }
 

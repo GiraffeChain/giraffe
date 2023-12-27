@@ -8,12 +8,13 @@ import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/consensus/staker_tracker.dart';
+import 'package:blockchain/crypto/ed25519.dart';
+import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:blockchain/ledger/block_packer.dart';
 import 'package:blockchain/minting/block_producer.dart';
 import 'package:blockchain/minting/secure_store.dart';
 import 'package:blockchain/minting/staking.dart';
 import 'package:blockchain/minting/vrf_calculator.dart';
-import 'package:blockchain/staker_initializer.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
@@ -38,29 +39,29 @@ class Minting {
     Clock clock,
     BlockPacker blockPacker,
     SlotData canonicalHeadSlotData,
-    StakerInitializer stakerInitializer,
     Stream<SlotData> adoptedSlotData,
     EtaCalculation etaCalculation,
     LeaderElection leaderElection,
     StakerTracker stakerTracker,
   ) =>
       Resource.pure(Directory("${stakingDir.path}/kes"))
-          .evalTap((kesDir) => kesDir.create(recursive: true))
           .map((kesDir) => DiskSecureStore(baseDir: kesDir))
-          .evalTap((secureStore) async {
-        final l = await secureStore.list();
-        if (l.isEmpty)
-          await secureStore.write("k", stakerInitializer.kesKeyPair.sk.encode);
-      }).flatMap((secureStore) {
-        final vrfCalculator = VrfCalculatorImpl(stakerInitializer.vrfKeyPair.sk,
-            clock, leaderElection, protocolSettings);
+          .evalFlatMap((secureStore) async {
+        final vrfSk = await File("${stakingDir.path}/vrf").readAsBytes();
+        final vrfVk = await ed25519Vrf.getVerificationKey(vrfSk);
+        final operatorSk =
+            await File("${stakingDir.path}/operator").readAsBytes();
+        final operatorVk = await ed25519.getVerificationKey(operatorSk);
+        final stakingAddress = StakingAddress(value: operatorVk);
+        final vrfCalculator =
+            VrfCalculatorImpl(vrfSk, clock, leaderElection, protocolSettings);
 
         return StakingImpl.make(
           canonicalHeadSlotData.slotId,
           protocolSettings.operationalPeriodLength,
           Int64(0),
-          stakerInitializer.stakingAddress,
-          stakerInitializer.vrfKeyPair.vk,
+          stakingAddress,
+          vrfVk,
           secureStore,
           clock,
           vrfCalculator,
@@ -91,7 +92,6 @@ class Minting {
     Consensus consensus,
     BlockPacker blockPacker,
     SlotData canonicalHeadSlotData,
-    StakerInitializer stakerInitializer,
     Stream<SlotData> adoptedSlotData,
   ) =>
       make(
@@ -100,7 +100,6 @@ class Minting {
           clock,
           blockPacker,
           canonicalHeadSlotData,
-          stakerInitializer,
           adoptedSlotData,
           consensus.etaCalculation,
           consensus.leaderElection,
@@ -111,7 +110,6 @@ class Minting {
     ProtocolSettings protocolSettings,
     Clock clock,
     SlotData canonicalHeadSlotData,
-    StakerInitializer stakerInitializer,
     Stream<SlotData> adoptedSlotData,
     LeaderElection leaderElection,
     NodeRpcClient nodeClient,
@@ -124,7 +122,6 @@ class Minting {
         BlockPackerForStakerSupportRpc(
             client: stakerSupportClient, nodeClient: nodeClient),
         canonicalHeadSlotData,
-        stakerInitializer,
         adoptedSlotData,
         EtaCalculationForStakerSupportRpc(client: stakerSupportClient),
         leaderElection,

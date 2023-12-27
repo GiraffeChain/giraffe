@@ -73,16 +73,15 @@ Future<void> main() async {
             ]);
             return Resource.eval(() => PrivateTestnet.stakerInitializers(
                     genesisHeader.timestamp,
-                    config.genesis.stakerCount,
+                    config.genesis.stakes.length,
                     TreeHeight(protocolSettings.kesKeyHours,
                         protocolSettings.kesKeyMinutes)))
                 .flatMap((stakerInitializers) => Minting.makeForRpc(
                       Directory(
-                          "${Directory.systemTemp.path}/blockchain-staking-${genesisBlockId.show}"),
+                          "${Directory.systemTemp.path}/blockchain/${genesisBlockId.show}/stakers/${config.genesis.localStakerIndex}"),
                       protocolSettings,
                       clock,
                       canonicalHeadSlotData,
-                      stakerInitializers[config.genesis.localStakerIndex!],
                       adoptedSlotData,
                       leaderElection,
                       rpcClient,

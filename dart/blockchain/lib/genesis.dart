@@ -1,10 +1,56 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
+
+class Genesis {
+  static Future<void> save(Directory directory, FullBlock block) async {
+    await directory.create(recursive: true);
+    final blockIdStr = block.header.id.show;
+    Future<void> save(String name, List<int> data) async {
+      final file = File("${directory.path}/$name");
+      await file.writeAsBytes(data);
+    }
+
+    await save("$blockIdStr.header.pbuf", block.header.writeToBuffer());
+    final body =
+        BlockBody(transactionIds: block.fullBody.transactions.map((t) => t.id));
+    await save("$blockIdStr.body.pbuf", body.writeToBuffer());
+    for (final transaction in block.fullBody.transactions) {
+      final transactionIdStr = transaction.id.show;
+      await save(
+          "$transactionIdStr.transaction.pbuf", transaction.writeToBuffer());
+    }
+  }
+
+  static Future<FullBlock> loadFromDisk(
+      Directory directory, BlockId blockId) async {
+    final blockIdStr = blockId.show;
+    Future<List<int>> load(String name) async {
+      final file = File("${directory.path}/$name");
+      return file.readAsBytes();
+    }
+
+    final header =
+        BlockHeader.fromBuffer(await load("$blockIdStr.header.pbuf"));
+
+    final body = BlockBody.fromBuffer(await load("$blockIdStr.body.pbuf"));
+
+    final transactions = [
+      for (final transactionId in body.transactionIds)
+        await Transaction.fromBuffer(
+            await load("${transactionId.show}.transaction.pbuf"))
+    ];
+
+    final fullBody = FullBlockBody(transactions: transactions);
+    // TODO: Verify
+    return FullBlock(header: header, fullBody: fullBody);
+  }
+}
 
 class GenesisConfig {
   final Int64 timestamp;
