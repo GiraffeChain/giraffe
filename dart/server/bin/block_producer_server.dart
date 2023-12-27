@@ -60,6 +60,7 @@ Future<void> main() async {
             final clock = ClockImpl(
               protocolSettings.slotDuration,
               protocolSettings.epochLength,
+              protocolSettings.operationalPeriodLength,
               genesisHeader.timestamp,
               protocolSettings.forwardBiasedSlotWindow,
             );
@@ -76,6 +77,8 @@ Future<void> main() async {
                     TreeHeight(protocolSettings.kesKeyHours,
                         protocolSettings.kesKeyMinutes)))
                 .flatMap((stakerInitializers) => Minting.makeForRpc(
+                      Directory(
+                          "${Directory.systemTemp.path}/blockchain-staking-${genesisBlockId.show}"),
                       protocolSettings,
                       clock,
                       canonicalHeadSlotData,

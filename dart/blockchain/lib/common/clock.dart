@@ -7,6 +7,7 @@ import 'package:blockchain/common/models/common.dart';
 abstract class Clock {
   Duration get slotLength;
   Int64 get slotsPerEpoch;
+  Int64 get slotsPerOperationalPeriod;
   Int64 get globalSlot;
   Int64 get localTimestamp;
   int get forwardBiasedSlotWindow;
@@ -23,6 +24,16 @@ abstract class Clock {
     return (epoch * spe, (epoch + 1) * spe - 1);
   }
 
+  Int64 operationalPeriodOfSlot(Int64 slot) =>
+      slot ~/ slotsPerOperationalPeriod;
+
+  Int64 get globalOperationalPeriod => operationalPeriodOfSlot(globalSlot);
+
+  (Int64, Int64) operationalPeriodRange(Int64 operationalPeriod) {
+    final spor = slotsPerOperationalPeriod;
+    return (operationalPeriod * spor, (spor + 1) * spor - 1);
+  }
+
   Stream<Slot> get slots async* {
     var s = globalSlot;
     while (true) {
@@ -34,13 +45,19 @@ abstract class Clock {
 }
 
 class ClockImpl extends Clock {
-  final Duration _slotLength;
-  final Int64 _slotsPerEpoch;
+  final Duration slotLength;
+  final Int64 slotsPerEpoch;
+  final Int64 slotsPerOperationalPeriod;
   final Int64 _genesisTimestamp;
-  final int _forwardBiasedSlotWindow;
+  final int forwardBiasedSlotWindow;
 
-  ClockImpl(this._slotLength, this._slotsPerEpoch, this._genesisTimestamp,
-      this._forwardBiasedSlotWindow);
+  ClockImpl(
+    this.slotLength,
+    this.slotsPerEpoch,
+    this.slotsPerOperationalPeriod,
+    this._genesisTimestamp,
+    this.forwardBiasedSlotWindow,
+  );
 
   @override
   Future<void> delayedUntilSlot(Int64 slot) =>
@@ -51,16 +68,10 @@ class ClockImpl extends Clock {
       Duration(milliseconds: (timestamp - localTimestamp).toInt()));
 
   @override
-  int get forwardBiasedSlotWindow => _forwardBiasedSlotWindow;
-
-  @override
   Int64 get globalSlot => timestampToSlot(localTimestamp);
 
   @override
   Int64 get localTimestamp => Int64(DateTime.now().millisecondsSinceEpoch);
-
-  @override
-  Duration get slotLength => _slotLength;
 
   @override
   (Int64, Int64) slotToTimestamps(Int64 slot) {
@@ -70,9 +81,6 @@ class ClockImpl extends Clock {
   }
 
   @override
-  Int64 get slotsPerEpoch => _slotsPerEpoch;
-
-  @override
   Int64 timestampToSlot(Int64 timestamp) =>
-      ((timestamp - _genesisTimestamp) ~/ _slotLength.inMilliseconds);
+      ((timestamp - _genesisTimestamp) ~/ slotLength.inMilliseconds);
 }

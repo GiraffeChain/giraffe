@@ -32,27 +32,8 @@ class Minting {
     required this.vrfCalculator,
   });
 
-  static Resource<Minting> makeForConsensus(
-    ProtocolSettings protocolSettings,
-    Clock clock,
-    Consensus consensus,
-    BlockPacker blockPacker,
-    SlotData canonicalHeadSlotData,
-    StakerInitializer stakerInitializer,
-    Stream<SlotData> adoptedSlotData,
-  ) =>
-      make(
-          protocolSettings,
-          clock,
-          blockPacker,
-          canonicalHeadSlotData,
-          stakerInitializer,
-          adoptedSlotData,
-          consensus.etaCalculation,
-          consensus.leaderElection,
-          consensus.stakerTracker);
-
   static Resource<Minting> make(
+    Directory stakingDir,
     ProtocolSettings protocolSettings,
     Clock clock,
     BlockPacker blockPacker,
@@ -63,9 +44,14 @@ class Minting {
     LeaderElection leaderElection,
     StakerTracker stakerTracker,
   ) =>
-      Resource.eval(() => Directory.systemTemp.createTemp("secure-store"))
-          .map((stakingDir) => DiskSecureStore(baseDir: stakingDir))
-          .flatMap((secureStore) {
+      Resource.pure(Directory("${stakingDir.path}/kes"))
+          .evalTap((kesDir) => kesDir.create(recursive: true))
+          .map((kesDir) => DiskSecureStore(baseDir: kesDir))
+          .evalTap((secureStore) async {
+        final l = await secureStore.list();
+        if (l.isEmpty)
+          await secureStore.write("k", stakerInitializer.kesKeyPair.sk.encode);
+      }).flatMap((secureStore) {
         final vrfCalculator = VrfCalculatorImpl(stakerInitializer.vrfKeyPair.sk,
             clock, leaderElection, protocolSettings);
 
@@ -74,7 +60,6 @@ class Minting {
           protocolSettings.operationalPeriodLength,
           Int64(0),
           stakerInitializer.stakingAddress,
-          stakerInitializer.kesKeyPair.sk,
           stakerInitializer.vrfKeyPair.vk,
           secureStore,
           clock,
@@ -99,7 +84,30 @@ class Minting {
         });
       });
 
+  static Resource<Minting> makeForConsensus(
+    Directory stakingDir,
+    ProtocolSettings protocolSettings,
+    Clock clock,
+    Consensus consensus,
+    BlockPacker blockPacker,
+    SlotData canonicalHeadSlotData,
+    StakerInitializer stakerInitializer,
+    Stream<SlotData> adoptedSlotData,
+  ) =>
+      make(
+          stakingDir,
+          protocolSettings,
+          clock,
+          blockPacker,
+          canonicalHeadSlotData,
+          stakerInitializer,
+          adoptedSlotData,
+          consensus.etaCalculation,
+          consensus.leaderElection,
+          consensus.stakerTracker);
+
   static Resource<Minting> makeForRpc(
+    Directory stakingDir,
     ProtocolSettings protocolSettings,
     Clock clock,
     SlotData canonicalHeadSlotData,
@@ -110,6 +118,7 @@ class Minting {
     StakerSupportRpcClient stakerSupportClient,
   ) =>
       make(
+        stakingDir,
         protocolSettings,
         clock,
         BlockPackerForStakerSupportRpc(

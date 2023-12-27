@@ -11,8 +11,6 @@ import 'package:blockchain/minting/staking.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:rxdart/streams.dart';
-import 'package:rxdart/transformers.dart';
 
 abstract class BlockProducer {
   Stream<FullBlock> get blocks;
@@ -23,6 +21,7 @@ class BlockProducerImpl extends BlockProducer {
   final Staking staker;
   final Clock clock;
   final BlockPacker blockPacker;
+  Int64 _nextSlotMinimum = Int64.ZERO;
 
   BlockProducerImpl(
       this.parentHeaders, this.staker, this.clock, this.blockPacker);
@@ -65,7 +64,9 @@ class BlockProducerImpl extends BlockProducer {
     List<Future<void> Function()> _cancelOps = [];
 
     Future<FullBlock?> go() async {
-      final nextHit = await _nextEligibility(parentSlotData.slotId);
+      Int64 fromSlot = parentSlotData.slotId.slot + 1;
+      if (fromSlot < _nextSlotMinimum) fromSlot = _nextSlotMinimum;
+      final nextHit = await _nextEligibility(parentSlotData.slotId, fromSlot);
       if (nextHit != null) {
         log.info("Packing block for slot=${nextHit.slot}");
         FullBlockBody bodyOpt = FullBlockBody();
@@ -97,11 +98,17 @@ class BlockProducerImpl extends BlockProducer {
           final transactionIds = body.transactions.map((tx) => tx.id);
           log.info(
               "Produced block id=${headerId.show} height=${maybeHeader.height} slot=${maybeHeader.slot} parentId=${maybeHeader.parentHeaderId.show} transactionIds=[${transactionIds.map((i) => i.show).join(",")}]");
+          _nextSlotMinimum = maybeHeader.slot + 1;
           return FullBlock()
             ..header = maybeHeader
             ..fullBody = bodyOpt;
         } else {
-          log.warning("Failed to produce block at next slot=${nextHit.slot}");
+          log.warning(
+              "Failed to certify block at next slot=${nextHit.slot}.  Skipping eligibilities within current operational period.");
+          final (nextOperationalPeriodStart, _) = clock.operationalPeriodRange(
+              clock.operationalPeriodOfSlot(nextHit.slot) + 1);
+          _nextSlotMinimum = nextOperationalPeriodStart;
+          return go();
         }
       }
       return null;
@@ -112,8 +119,8 @@ class BlockProducerImpl extends BlockProducer {
     return completer;
   }
 
-  Future<VrfHit?> _nextEligibility(SlotId parentSlotId) async {
-    Int64 test = parentSlotId.slot + 1;
+  Future<VrfHit?> _nextEligibility(SlotId parentSlotId, Int64 fromSlot) async {
+    Int64 test = fromSlot;
     final exitSlot =
         clock.epochRange(clock.epochOfSlot(parentSlotId.slot) + 1).$2;
     VrfHit? maybeHit;

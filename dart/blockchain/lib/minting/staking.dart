@@ -63,7 +63,6 @@ class StakingImpl extends Staking {
     Int64 operationalPeriodLength,
     Int64 activationOperationalPeriod,
     StakingAddress address,
-    SecretKeyKesProduct initialSK,
     List<int> vkVrf,
     SecureStore secureStore,
     Clock clock,
@@ -72,22 +71,17 @@ class StakingImpl extends Staking {
     StakerTracker stakerTracker,
     LeaderElection leaderElection,
   ) =>
-      Resource.eval(() async {
-        Int64 slot = clock.globalSlot;
-        if (slot < 0) slot = Int64.ZERO;
-        await secureStore.write("k", initialSK.encode);
-        return StakingImpl(
-          operationalPeriodLength,
-          activationOperationalPeriod,
-          address,
-          secureStore,
-          vkVrf,
-          stakerTracker,
-          etaCalculation,
-          vrfCalculator,
-          leaderElection,
-        );
-      });
+      Resource.pure(StakingImpl(
+        operationalPeriodLength,
+        activationOperationalPeriod,
+        address,
+        secureStore,
+        vkVrf,
+        stakerTracker,
+        etaCalculation,
+        vrfCalculator,
+        leaderElection,
+      ));
 
   @override
   StakingAddress get address => _address;

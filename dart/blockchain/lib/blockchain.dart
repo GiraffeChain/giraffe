@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blockchain/common/block_height_tree.dart';
@@ -95,6 +96,7 @@ class Blockchain {
                       final clock = ClockImpl(
                         protocolSettings.slotDuration,
                         protocolSettings.epochLength,
+                        protocolSettings.operationalPeriodLength,
                         genesisTimestamp,
                         protocolSettings.forwardBiasedSlotWindow,
                       );
@@ -139,6 +141,8 @@ class Blockchain {
                                                               .localStakerIndex! >=
                                                           0)
                                                   ? Minting.makeForConsensus(
+                                                      Directory(
+                                                          "${Directory.systemTemp.path}/blockchain-staking-${genesisBlockId.show}"),
                                                       protocolSettings,
                                                       clock,
                                                       consensus,
