@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:fixnum/fixnum.dart';
 
 class BlockchainConfig {
@@ -37,11 +39,17 @@ class BlockchainP2P {
   final String bindHost;
   final int bindPort;
   final List<String> knownPeers;
+  final Uint8List magicBytes;
 
-  BlockchainP2P({String? bindHost, int? bindPort, List<String>? knownPeers})
+  BlockchainP2P(
+      {String? bindHost,
+      int? bindPort,
+      List<String>? knownPeers,
+      Uint8List? magicBytes})
       : bindHost = bindHost ?? "0.0.0.0",
         bindPort = bindPort ?? 2023,
-        knownPeers = knownPeers ?? [];
+        knownPeers = knownPeers ?? [],
+        magicBytes = magicBytes ?? Uint8List(32);
 }
 
 class BlockchainRPC {

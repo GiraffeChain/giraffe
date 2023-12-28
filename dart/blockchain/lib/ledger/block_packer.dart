@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:blockchain/codecs.dart';
+import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/ledger/body_authorization_validation.dart';
 import 'package:blockchain/ledger/body_semantic_validation.dart';
 import 'package:blockchain/ledger/body_syntax_validation.dart';
@@ -21,13 +22,14 @@ abstract class BlockPacker {
 
 class BlockPackerImpl extends BlockPacker {
   final Mempool mempool;
+  final Clock clock;
   final Future<Transaction> Function(TransactionId) fetchTransaction;
   final Future<bool> Function(TransactionId) transactionExistsLocally;
   final Future<bool> Function(TransactionValidationContext) validateTransaction;
 
   final log = Logger("BlockPacker");
 
-  BlockPackerImpl(this.mempool, this.fetchTransaction,
+  BlockPackerImpl(this.mempool, this.clock, this.fetchTransaction,
       this.transactionExistsLocally, this.validateTransaction);
 
   @override
@@ -75,10 +77,10 @@ class BlockPackerImpl extends BlockPacker {
 
     FullBlockBody best = FullBlockBody();
 
-    while (true) {
+    while (clock.globalSlot < slot) {
       yield best;
       FullBlockBody? next = await improve(best);
-      while (next == null) {
+      while (next == null && clock.globalSlot < slot) {
         next = await Future.delayed(
             Duration(milliseconds: 200), () => improve(best));
       }

@@ -79,8 +79,10 @@ class Blockchain {
               Directory(
                   "${blockchainBaseDir.path}/${genesisBlockId.show}/genesis"),
               genesisBlockId)).flatMap(
-            (genesisBlock) => Resource.eval(() => DataStores.init(genesisBlock))
-                .flatMap((dataStores) {
+            (genesisBlock) => DataStores.make().evalTap((d) async {
+              if (!await d.isInitialized(genesisBlockId))
+                await d.init(genesisBlock);
+            }).flatMap((dataStores) {
               final genesisBlockId = genesisBlock.header.id;
 
               final currentEventIdGetterSetters =
@@ -130,27 +132,24 @@ class Blockchain {
                                 isolate))
                             .flatMap(
                               (consensus) => Ledger.make(
-                                      dataStores,
-                                      currentEventIdGetterSetters,
-                                      parentChildTree)
-                                  .evalMap((ledger) async {
+                                dataStores,
+                                currentEventIdGetterSetters,
+                                parentChildTree,
+                                clock,
+                              ).evalMap((ledger) async {
                                 log.info("Preparing P2P Network");
 
                                 final p2pKey = await ed25519.generateKeyPair();
                                 final peersManager = PeersManager(
-                                    p2pKey,
-                                    Uint8List.fromList(
-                                        List.generate(32, (i) => i)));
+                                  p2pKey,
+                                  config.p2p.magicBytes,
+                                );
                                 final p2pServer = P2PServer(
                                   config.p2p.bindHost,
                                   config.p2p.bindPort,
-                                  (socket) => peersManager
-                                      .handleConnection(socket)
-                                      .onError((error, stackTrace) {
-                                    log.warning("P2P Connection failure", error,
-                                        stackTrace);
-                                    socket.destroy();
-                                  }),
+                                  (socket) => Resource.make(() async => socket,
+                                          (s) async => s.destroy())
+                                      .use(peersManager.handleConnection),
                                 );
                                 return Blockchain(
                                   config,

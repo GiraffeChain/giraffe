@@ -1,3 +1,4 @@
+import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/data_stores.dart';
@@ -39,6 +40,7 @@ class Ledger {
     DataStores dataStores,
     CurrentEventIdGetterSetters currentEventIdGetterSetters,
     ParentChildTree<BlockId> parentChildTree,
+    Clock clock,
   ) =>
       Resource.eval(() async {
         final boxState = BoxStateImpl.make(
@@ -69,6 +71,7 @@ class Ledger {
             Duration(minutes: 5));
         final blockPacker = BlockPackerImpl(
             mempool,
+            clock,
             dataStores.transactions.getOrRaise,
             dataStores.transactions.contains,
             BlockPackerImpl.makeBodyValidator(bodySyntaxValidation,

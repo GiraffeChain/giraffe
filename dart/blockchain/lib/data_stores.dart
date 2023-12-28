@@ -1,4 +1,5 @@
 import 'package:blockchain/codecs.dart';
+import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/common/store.dart';
 import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -17,6 +18,7 @@ class DataStores {
   final Store<void, Int64> inactiveStake;
   final Store<StakingAddress, ActiveStaker> activeStakers;
   final Store<Int64, BlockId> blockHeightTree;
+  final Store<int, List<int>> metadata;
 
   DataStores({
     required this.parentChildTree,
@@ -31,30 +33,43 @@ class DataStores {
     required this.inactiveStake,
     required this.activeStakers,
     required this.blockHeightTree,
+    required this.metadata,
   });
 
-  static Future<DataStores> init(FullBlock genesisBlock) async {
+  static Resource<DataStores> make() {
     makeDb<Key, Value>() => InMemoryStore<Key, Value>();
+    return Resource.make(
+        () async => DataStores(
+              parentChildTree: makeDb(),
+              currentEventIds: makeDb(),
+              slotData: makeDb(),
+              headers: makeDb(),
+              bodies: makeDb(),
+              transactions: makeDb(),
+              spendableBoxIds: makeDb(),
+              epochBoundaries: makeDb(),
+              activeStake: makeDb(),
+              inactiveStake: makeDb(),
+              activeStakers: makeDb(),
+              blockHeightTree: makeDb(),
+              metadata: makeDb(),
+            ),
+        (_) async {});
+  }
 
-    final stores = DataStores(
-      parentChildTree: makeDb(),
-      currentEventIds: makeDb(),
-      slotData: makeDb(),
-      headers: makeDb(),
-      bodies: makeDb(),
-      transactions: makeDb(),
-      spendableBoxIds: makeDb(),
-      epochBoundaries: makeDb(),
-      activeStake: makeDb(),
-      inactiveStake: makeDb(),
-      activeStakers: makeDb(),
-      blockHeightTree: makeDb(),
-    );
+  Future<bool> isInitialized(BlockId genesisId) async {
+    final storeGenesisId = await blockHeightTree.get(Int64.ZERO);
+    if (storeGenesisId == null) return false;
+    if (storeGenesisId != genesisId)
+      throw ArgumentError("Data store belongs to different chain");
+    return true;
+  }
 
+  Future<void> init(FullBlock genesisBlock) async {
     final genesisBlockId = await genesisBlock.header.id;
 
-    await stores.currentEventIds
-        .put(CurreventEventIdGetterSetterIndices.CanonicalHead, genesisBlockId);
+    await currentEventIds.put(
+        CurreventEventIdGetterSetterIndices.CanonicalHead, genesisBlockId);
     for (final key in [
       CurreventEventIdGetterSetterIndices.ConsensusData,
       CurreventEventIdGetterSetterIndices.EpochBoundaries,
@@ -62,13 +77,12 @@ class DataStores {
       CurreventEventIdGetterSetterIndices.BoxState,
       CurreventEventIdGetterSetterIndices.Mempool,
     ]) {
-      await stores.currentEventIds.put(key, genesisBlock.header.parentHeaderId);
+      await currentEventIds.put(key, genesisBlock.header.parentHeaderId);
     }
 
-    await stores.slotData
-        .put(genesisBlockId, await genesisBlock.header.slotData);
-    await stores.headers.put(genesisBlockId, genesisBlock.header);
-    await stores.bodies.put(
+    await slotData.put(genesisBlockId, await genesisBlock.header.slotData);
+    await headers.put(genesisBlockId, genesisBlock.header);
+    await bodies.put(
         genesisBlockId,
         BlockBody()
           ..transactionIds.addAll(
@@ -78,17 +92,15 @@ class DataStores {
             ],
           ));
     for (final transaction in genesisBlock.fullBody.transactions) {
-      await stores.transactions.put(await transaction.id, transaction);
+      await transactions.put(await transaction.id, transaction);
     }
-    await stores.blockHeightTree
-        .put(Int64(0), genesisBlock.header.parentHeaderId);
-    if (!await stores.activeStake.contains("")) {
-      await stores.activeStake.put("", Int64.ZERO);
+    await blockHeightTree.put(Int64(0), genesisBlock.header.parentHeaderId);
+    if (!await activeStake.contains("")) {
+      await activeStake.put("", Int64.ZERO);
     }
-    if (!await stores.inactiveStake.contains("")) {
-      await stores.inactiveStake.put("", Int64.ZERO);
+    if (!await inactiveStake.contains("")) {
+      await inactiveStake.put("", Int64.ZERO);
     }
-    return stores;
   }
 
   Future<Block?> getBlock(BlockId id) async {
