@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/event_sourced_state.dart';
+import 'package:blockchain/common/resource.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
@@ -14,18 +15,26 @@ abstract class LocalChain {
 }
 
 class LocalChainImpl extends LocalChain {
-  LocalChainImpl(this._genesis, BlockId initialHead, this._blockHeightTree,
-      this._heightOfBlock)
+  final BlockId genesis;
+  LocalChainImpl(this.genesis, BlockId initialHead, this._blockHeightTree,
+      this._heightOfBlock, this._streamController)
       : this._currentHead = initialHead;
   BlockId _currentHead;
-  final BlockId _genesis;
 
   final EventSourcedState<BlockHeightTreeState, BlockId> _blockHeightTree;
 
   final Future<Int64> Function(BlockId) _heightOfBlock;
 
-  final StreamController<BlockId> _streamController =
-      StreamController.broadcast();
+  final StreamController<BlockId> _streamController;
+
+  static Resource<LocalChainImpl> make(
+          BlockId genesis,
+          BlockId initialHead,
+          BlockHeightTree blockHeightTree,
+          Future<Int64> Function(BlockId) heightOfBlock) =>
+      Resource.streamController(() => StreamController<BlockId>.broadcast())
+          .map((controller) => LocalChainImpl(genesis, initialHead,
+              blockHeightTree, heightOfBlock, controller));
 
   @override
   Future<void> adopt(BlockId newHead) async {
@@ -58,7 +67,4 @@ class LocalChainImpl extends LocalChain {
         return null;
     }
   }
-
-  @override
-  BlockId get genesis => _genesis;
 }

@@ -22,6 +22,11 @@ abstract class Resource<A> {
       make(() => Future.sync(() => subscriptionF()),
           (subscription) => subscription.cancel());
 
+  static Resource<StreamController<T>> streamController<T>(
+          StreamController<T> Function() makeController) =>
+      make(() => Future.sync(() => makeController()),
+          (controller) => controller.close());
+
   Resource<void> get voidResult => map((_) => ());
 
   Resource<U> map<U>(U Function(A) f) => flatMap((t) => PureResource(a: f(t)));
@@ -53,11 +58,13 @@ abstract class Resource<A> {
 
   Future<T> use<T>(Future<T> Function(A) f) async {
     final (a, finalizer) = await allocated();
+    late T r;
     try {
-      return await f(a);
+      r = await f(a);
     } finally {
-      await finalizer;
+      await finalizer();
     }
+    return r;
   }
 
   Future<(A, Future<void> Function())> allocated();
@@ -70,6 +77,9 @@ abstract class Resource<A> {
             await f(a);
             return a;
           }));
+
+  Resource<(A, A2)> product<A2>(Resource<A2> rA2) => ParBindResources(
+      sources: [this, rA2], fs: (vs) => pure((vs[0] as A, vs[1] as A2)));
 }
 
 class BindResource<S, A> extends Resource<A> {
@@ -83,11 +93,41 @@ class BindResource<S, A> extends Resource<A> {
     final (sourceA, sourceFinalizer) = await source.allocated();
     final rA = fs(sourceA);
     final (a, rAFinalizer) = await rA.allocated();
+    bool isFinalized = false;
     return (
       a,
       () async {
-        await rAFinalizer();
-        await sourceFinalizer();
+        if (!isFinalized) {
+          isFinalized = true;
+          await rAFinalizer();
+          await sourceFinalizer();
+        }
+      }
+    );
+  }
+}
+
+class ParBindResources<A> extends Resource<A> {
+  final List<Resource> sources;
+  final Resource<A> Function(List<dynamic>) fs;
+
+  ParBindResources({required this.sources, required this.fs});
+
+  @override
+  Future<(A, Future<void> Function())> allocated() async {
+    final allocatedSources =
+        await Future.wait(sources.map((s) => s.allocated()).toList());
+    final rA = fs(allocatedSources.map((s) => s.$1).toList());
+    final (a, rAFinalizer) = await rA.allocated();
+    bool isFinalized = false;
+    return (
+      a,
+      () async {
+        if (!isFinalized) {
+          isFinalized = true;
+          await rAFinalizer();
+          await Future.wait(allocatedSources.map((a) => a.$2()).toList());
+        }
       }
     );
   }

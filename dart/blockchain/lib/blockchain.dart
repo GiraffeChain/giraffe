@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/consensus.dart';
 import 'package:blockchain/consensus/models/protocol_settings.dart';
@@ -187,13 +188,27 @@ class Blockchain {
 
     final body =
         BlockBody(transactionIds: block.fullBody.transactions.map((t) => t.id));
-    await validateBlock(id, Block(header: block.header, body: body));
+    try {
+      log.info("Validating id=${id.show}");
+      await log.timedInfoAsync(
+          () => validateBlock(id, Block(header: block.header, body: body)),
+          messageF: (duration) => "Validation took $duration");
+    } on Exception catch (e) {
+      log.warning("Failed to validate block", e);
+      rethrow;
+    }
     await dataStores.bodies.put(id, body);
-    if (await consensus.chainSelection
-            .select(id, await consensus.localChain.currentHead) ==
-        id) {
-      log.info("Adopting id=${id.show}");
+    final currentHead = await consensus.localChain.currentHead;
+    final selectedChain = await log.timedInfoAsync(
+        () => consensus.chainSelection.select(id, currentHead),
+        messageF: (duration) => "Chain Selection took $duration");
+    if (selectedChain == id) {
+      log.info(
+          "Adopting id=${id.show} height=${block.header.height} slot=${block.header.slot} transactionCount=${block.fullBody.transactions.length} stakingAddress=${block.header.address.show}");
       await consensus.localChain.adopt(id);
+    } else {
+      log.info(
+          "Current local head id=${currentHead.show} is better than remote id=${id.show}");
     }
   }
 

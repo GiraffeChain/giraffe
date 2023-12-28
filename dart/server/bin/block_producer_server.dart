@@ -98,7 +98,6 @@ Future<void> main() async {
                                         block.fullBody.transactions.map((t) => t.id))))))
                     .listen(null, onError: (e) => log.severe("Production failed", e))));
           }));
-  final (_, finalizer) = await resource.allocated();
 
-  await ProcessSignal.sigint.watch().asyncMap((_) => finalizer()).drain();
+  await resource.use((_) => ProcessSignal.sigint.watch().first);
 }

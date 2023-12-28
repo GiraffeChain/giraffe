@@ -14,8 +14,20 @@ abstract class Clock {
   Int64 timestampToSlot(Int64 timestamp);
   // Returns an inclusive range (minimum, maximum) of valid timestamps for the given slot
   (Int64, Int64) slotToTimestamps(Int64 slot);
-  Future<void> delayedUntilSlot(Int64 slot);
   Future<void> delayedUntilTimestamp(Int64 timestamp);
+
+  Future<void> delayedUntilSlot(Int64 slot) =>
+      delayedUntilTimestamp(slotToTimestamps(slot).$1);
+
+  Timer timerUntilTimestamp(Int64 timestamp, void Function() onComplete) =>
+      Timer(
+        DateTime.fromMillisecondsSinceEpoch(timestamp.toInt()).difference(
+            DateTime.fromMillisecondsSinceEpoch(localTimestamp.toInt())),
+        onComplete,
+      );
+
+  Timer timerUntilSlot(Int64 slot, void Function() onComplete) =>
+      timerUntilTimestamp(slotToTimestamps(slot).$1, onComplete);
 
   Int64 epochOfSlot(Int64 slot) => slot ~/ slotsPerEpoch;
   Int64 get globalEpoch => epochOfSlot(globalSlot);
@@ -58,10 +70,6 @@ class ClockImpl extends Clock {
     this._genesisTimestamp,
     this.forwardBiasedSlotWindow,
   );
-
-  @override
-  Future<void> delayedUntilSlot(Int64 slot) =>
-      delayedUntilTimestamp(slotToTimestamps(slot).$1);
 
   @override
   Future<void> delayedUntilTimestamp(Int64 timestamp) => Future.delayed(

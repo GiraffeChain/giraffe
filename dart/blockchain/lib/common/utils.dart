@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:blockchain/common/models/unsigned.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:logging/logging.dart';
 
 // Source: https://github.com/dart-lang/sdk/issues/32803#issuecomment-1228291047
 extension BigIntOps on BigInt {
@@ -63,4 +64,29 @@ extension TransactionOps on Transaction {
   Int64 get outputSum =>
       outputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
   Int64 get reward => inputSum - outputSum;
+}
+
+extension LogOps on Logger {
+  T timedInfo<T>(T Function() f, {String Function(Duration)? messageF}) {
+    final start = DateTime.now();
+    final r = f();
+    final duration = DateTime.now().difference(start);
+    final message = (messageF != null)
+        ? messageF(duration)
+        : "Operation took ${duration.inMilliseconds}";
+    info(message);
+    return r;
+  }
+
+  Future<T> timedInfoAsync<T>(Future<T> Function() f,
+      {String Function(Duration)? messageF}) async {
+    final start = DateTime.now();
+    final r = await f();
+    final duration = DateTime.now().difference(start);
+    final message = (messageF != null)
+        ? messageF(duration)
+        : "Operation took ${duration.inMilliseconds}";
+    info(message);
+    return r;
+  }
 }

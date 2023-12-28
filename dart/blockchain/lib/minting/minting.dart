@@ -19,6 +19,8 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:path/path.dart';
+import 'package:rxdart/transformers.dart';
 
 class Minting {
   final BlockProducer blockProducer;
@@ -171,23 +173,25 @@ class BlockPackerForStakerSupportRpc extends BlockPacker {
 
   @override
   Stream<FullBlockBody> streamed(
-          BlockId parentBlockId, Int64 height, Int64 slot) =>
-      client
-          .packBlock(
-              PackBlockReq(parentBlockId: parentBlockId, untilSlot: slot))
-          .takeWhile((v) => v.hasBody())
-          .map((v) => v.body)
-          .asyncMap(
-            (body) => Future.wait(
-              body.transactionIds.map(
-                (id) => nodeClient
-                    .getTransaction(GetTransactionReq(transactionId: id))
-                    .then((txRes) {
-                  assert(txRes.hasTransaction());
-                  return txRes.transaction;
-                }),
-              ),
+      BlockId parentBlockId, Int64 height, Int64 slot) {
+    final s = client
+        .packBlock(PackBlockReq(parentBlockId: parentBlockId, untilSlot: slot));
+    return s
+        .doOnCancel(() => s.cancel())
+        .takeWhile((v) => v.hasBody())
+        .map((v) => v.body)
+        .asyncMap(
+          (body) => Future.wait(
+            body.transactionIds.map(
+              (id) => nodeClient
+                  .getTransaction(GetTransactionReq(transactionId: id))
+                  .then((txRes) {
+                assert(txRes.hasTransaction());
+                return txRes.transaction;
+              }),
             ),
-          )
-          .map((transactions) => FullBlockBody(transactions: transactions));
+          ),
+        )
+        .map((transactions) => FullBlockBody(transactions: transactions));
+  }
 }

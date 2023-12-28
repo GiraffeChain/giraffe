@@ -28,7 +28,6 @@ Future<void> main() async {
     kes.kesProduct = kes.KesProudctIsolated(isolate);
   }).flatMap((isolate) => Blockchain.make(config, isolate)
           .flatTap((blockchain) => blockchain.run()));
-  final (_, finalizer) = await resource.allocated();
 
-  await ProcessSignal.sigint.watch().asyncMap((_) => finalizer()).drain();
+  await resource.use((_) => ProcessSignal.sigint.watch().first);
 }

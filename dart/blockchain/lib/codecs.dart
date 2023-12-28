@@ -199,3 +199,7 @@ extension LockCodecs on Lock {
 extension Lock_Ed25519Codecs on Lock_Ed25519 {
   List<int> get immutableBytes => vk;
 }
+
+extension StakingAddressCodecs on StakingAddress {
+  String get show => "s_${this.value.base58}";
+}

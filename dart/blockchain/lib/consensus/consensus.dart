@@ -43,7 +43,7 @@ class Consensus {
           ParentChildTree<BlockId> parentChildTree,
           BlockHeightTree blockHeightTree,
           DComputeImpl isolate) =>
-      Resource.eval(() async {
+      Resource.pure(()).evalFlatMap((_) async {
         final genesisBlockId = genesisBlock.header.id;
         final etaCalculation = EtaCalculationImpl(
             dataStores.slotData.getOrRaise,
@@ -71,31 +71,32 @@ class Consensus {
         final consensusValidationState = StakerTrackerImpl(
             genesisBlockId, epochBoundaryState, consensusDataState, clock);
 
-        final localChain = LocalChainImpl(
-            genesisBlockId,
-            await currentEventIdGetterSetters.canonicalHead.get(),
-            blockHeightTree,
-            (id) async => (await dataStores.slotData.getOrRaise(id)).height);
+        return LocalChainImpl.make(
+                genesisBlockId,
+                await currentEventIdGetterSetters.canonicalHead.get(),
+                blockHeightTree,
+                (id) async => (await dataStores.slotData.getOrRaise(id)).height)
+            .map((localChain) {
+          final chainSelection =
+              ChainSelectionImpl(dataStores.slotData.getOrRaise);
+          final headerValidation = BlockHeaderValidationImpl(
+              genesisBlockId,
+              etaCalculation,
+              consensusValidationState,
+              leaderElection,
+              clock,
+              dataStores.headers.getOrRaise);
 
-        final chainSelection =
-            ChainSelectionImpl(dataStores.slotData.getOrRaise);
-        final headerValidation = BlockHeaderValidationImpl(
-            genesisBlockId,
-            etaCalculation,
-            consensusValidationState,
-            leaderElection,
-            clock,
-            dataStores.headers.getOrRaise);
+          final headerToBodyValidation = BlockHeaderToBodyValidationImpl();
 
-        final headerToBodyValidation = BlockHeaderToBodyValidationImpl();
-
-        return Consensus(
-            blockHeaderToBodyValidation: headerToBodyValidation,
-            blockHeaderValidation: headerValidation,
-            chainSelection: chainSelection,
-            stakerTracker: consensusValidationState,
-            etaCalculation: etaCalculation,
-            leaderElection: leaderElection,
-            localChain: localChain);
+          return Consensus(
+              blockHeaderToBodyValidation: headerToBodyValidation,
+              blockHeaderValidation: headerValidation,
+              chainSelection: chainSelection,
+              stakerTracker: consensusValidationState,
+              etaCalculation: etaCalculation,
+              leaderElection: leaderElection,
+              localChain: localChain);
+        });
       });
 }
