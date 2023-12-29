@@ -76,6 +76,10 @@ class Consensus {
                 await currentEventIdGetterSetters.canonicalHead.get(),
                 blockHeightTree,
                 (id) async => (await dataStores.slotData.getOrRaise(id)).height)
+            .flatTap((localChain) => Resource.forStreamSubscription(() =>
+                localChain.adoptions
+                    .asyncMap(currentEventIdGetterSetters.canonicalHead.set)
+                    .listen(null)))
             .map((localChain) {
           final chainSelection =
               ChainSelectionImpl(dataStores.slotData.getOrRaise);

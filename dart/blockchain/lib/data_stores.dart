@@ -1,9 +1,13 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/common/store.dart';
 import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:logging/logging.dart';
 
 class DataStores {
   final Store<BlockId, (Int64, BlockId)> parentChildTree;
@@ -36,6 +40,8 @@ class DataStores {
     required this.metadata,
   });
 
+  static final log = Logger("DataStoresInit");
+
   static Resource<DataStores> make() {
     makeDb<Key, Value>() => InMemoryStore<Key, Value>();
     return Resource.make(
@@ -57,23 +63,169 @@ class DataStores {
         (_) async {});
   }
 
+  static Resource<DataStores> makePersistent(Directory directory) =>
+      HiveStore.makeHive(directory).flatMap(
+        (hive) => HiveStore.make<BlockId, (Int64, BlockId)>(
+                "parent-child-tree",
+                hive,
+                PersistenceCodecs.encodeBlockId,
+                PersistenceCodecs.encodeHeightBlockId,
+                PersistenceCodecs.decodeBlockId,
+                PersistenceCodecs.decodeHeightBlockId)
+            .flatMap(
+          (parentChildTree) => HiveStore.make<int, BlockId>(
+                  "current-event-ids",
+                  hive,
+                  (key) => Uint8List.fromList([key]),
+                  PersistenceCodecs.encodeBlockId,
+                  (bytes) => bytes[0],
+                  PersistenceCodecs.decodeBlockId)
+              .flatMap(
+            (currentEventIds) => HiveStore.make<BlockId, SlotData>(
+                    "slot-data",
+                    hive,
+                    PersistenceCodecs.encodeBlockId,
+                    (value) => value.writeToBuffer(),
+                    PersistenceCodecs.decodeBlockId,
+                    SlotData.fromBuffer)
+                .flatMap(
+              (slotData) => HiveStore.make<BlockId, BlockHeader>(
+                      "block-header",
+                      hive,
+                      PersistenceCodecs.encodeBlockId,
+                      (value) => value.writeToBuffer(),
+                      PersistenceCodecs.decodeBlockId,
+                      BlockHeader.fromBuffer)
+                  .flatMap(
+                (headers) => HiveStore.make<BlockId, BlockBody>(
+                        "block-body",
+                        hive,
+                        PersistenceCodecs.encodeBlockId,
+                        (value) => value.writeToBuffer(),
+                        PersistenceCodecs.decodeBlockId,
+                        BlockBody.fromBuffer)
+                    .flatMap(
+                  (bodies) => HiveStore.make<TransactionId, Transaction>(
+                          "transactions",
+                          hive,
+                          PersistenceCodecs.encodeTransactionId,
+                          (value) => value.writeToBuffer(),
+                          PersistenceCodecs.decodeTransactionId,
+                          Transaction.fromBuffer)
+                      .flatMap(
+                    (transactions) => HiveStore.make<TransactionId, List<int>>(
+                        "spendable-box-ids",
+                        hive,
+                        PersistenceCodecs.encodeTransactionId,
+                        (value) => Uint8List.fromList(value),
+                        PersistenceCodecs.decodeTransactionId,
+                        (bytes) => bytes.buffer.asInt32List()).flatMap(
+                      (spendableBoxIds) => HiveStore.make<Int64, BlockId>(
+                              "epoch-boundaries",
+                              hive,
+                              (key) => Uint8List.fromList(key.toBytes()),
+                              PersistenceCodecs.encodeBlockId,
+                              Int64.fromBytes,
+                              PersistenceCodecs.decodeBlockId)
+                          .flatMap(
+                        (epochBoundaries) => HiveStore.make<void, Int64>(
+                                "active-stake",
+                                hive,
+                                (_) => Uint8List(1),
+                                (value) => Uint8List.fromList(value.toBytes()),
+                                (_) {},
+                                Int64.fromBytes)
+                            .flatMap(
+                          (activeStake) => HiveStore.make<void, Int64>(
+                                  "inactive-stake",
+                                  hive,
+                                  (_) => Uint8List(1),
+                                  (value) =>
+                                      Uint8List.fromList(value.toBytes()),
+                                  (_) {},
+                                  Int64.fromBytes)
+                              .flatMap(
+                            (inactiveStake) =>
+                                HiveStore.make<StakingAddress, ActiveStaker>(
+                                        "active-stakers",
+                                        hive,
+                                        (key) => key.writeToBuffer(),
+                                        (value) => value.writeToBuffer(),
+                                        StakingAddress.fromBuffer,
+                                        ActiveStaker.fromBuffer)
+                                    .flatMap(
+                              (activeStakers) => HiveStore.make<Int64, BlockId>(
+                                      "block-height-tree",
+                                      hive,
+                                      (key) =>
+                                          Uint8List.fromList(key.toBytes()),
+                                      PersistenceCodecs.encodeBlockId,
+                                      Int64.fromBytes,
+                                      PersistenceCodecs.decodeBlockId)
+                                  .flatMap(
+                                (blockHeightTree) =>
+                                    HiveStore.make<int, List<int>>(
+                                        "metadata",
+                                        hive,
+                                        (key) => Uint8List.fromList([key]),
+                                        Uint8List.fromList,
+                                        (bytes) => bytes[0],
+                                        (bytes) => bytes).map(
+                                  (metadata) => DataStores(
+                                    parentChildTree: parentChildTree,
+                                    currentEventIds: currentEventIds,
+                                    slotData: slotData,
+                                    headers: headers,
+                                    bodies: bodies,
+                                    transactions: transactions,
+                                    spendableBoxIds: spendableBoxIds,
+                                    epochBoundaries: epochBoundaries,
+                                    activeStake: activeStake,
+                                    inactiveStake: inactiveStake,
+                                    activeStakers: activeStakers,
+                                    blockHeightTree: blockHeightTree,
+                                    metadata: metadata,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
   Future<bool> isInitialized(BlockId genesisId) async {
-    final storeGenesisId = await blockHeightTree.get(Int64.ZERO);
-    if (storeGenesisId == null) return false;
+    final storeGenesisId = await blockHeightTree.get(Int64.ONE);
+    if (storeGenesisId == null) {
+      log.info("Data Stores not initialized");
+      return false;
+    }
     if (storeGenesisId != genesisId)
       throw ArgumentError("Data store belongs to different chain");
+    log.info("Data Stores already initialized to genesis id=${genesisId.show}");
     return true;
   }
 
   Future<void> init(FullBlock genesisBlock) async {
+    log.info(
+        "Initializing data stores to genesis id=${genesisBlock.header.id.show}");
     final genesisBlockId = await genesisBlock.header.id;
 
     await currentEventIds.put(
         CurreventEventIdGetterSetterIndices.CanonicalHead, genesisBlockId);
+
+    await currentEventIds.put(
+        CurreventEventIdGetterSetterIndices.BlockHeightTree, genesisBlockId);
     for (final key in [
       CurreventEventIdGetterSetterIndices.ConsensusData,
       CurreventEventIdGetterSetterIndices.EpochBoundaries,
-      CurreventEventIdGetterSetterIndices.BlockHeightTree,
       CurreventEventIdGetterSetterIndices.BoxState,
       CurreventEventIdGetterSetterIndices.Mempool,
     ]) {
@@ -94,13 +246,15 @@ class DataStores {
     for (final transaction in genesisBlock.fullBody.transactions) {
       await transactions.put(await transaction.id, transaction);
     }
-    await blockHeightTree.put(Int64(0), genesisBlock.header.parentHeaderId);
+    await blockHeightTree.put(Int64.ONE, genesisBlock.header.id);
     if (!await activeStake.contains("")) {
       await activeStake.put("", Int64.ZERO);
     }
     if (!await inactiveStake.contains("")) {
       await inactiveStake.put("", Int64.ZERO);
     }
+    await parentChildTree.put(genesisBlock.header.id,
+        (genesisBlock.header.height, genesisBlock.header.parentHeaderId));
   }
 
   Future<Block?> getBlock(BlockId id) async {

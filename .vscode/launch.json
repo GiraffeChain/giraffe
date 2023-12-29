@@ -5,72 +5,45 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "app",
+            "name": "Relay",
+            "cwd": "dart/server",
+            "request": "launch",
+            "type": "dart",
+            "program": "bin/server.dart"
+        },
+        {
+            "name": "Block Producer",
+            "cwd": "dart/server",
+            "request": "launch",
+            "type": "dart",
+            "program": "bin/block_producer_server.dart"
+        },
+        {
+            "name": "Frontend",
             "cwd": "dart/app",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "app (profile mode)",
+            "name": "Frontend (debug mode)",
+            "cwd": "dart/app",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug"
+        },
+        {
+            "name": "Frontend (profile mode)",
             "cwd": "dart/app",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "app (release mode)",
+            "name": "Frontend (release mode)",
             "cwd": "dart/app",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
-        },
-        {
-            "name": "block_production",
-            "cwd": "dart/block_production",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "blockchain",
-            "cwd": "dart/blockchain",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "codecs",
-            "cwd": "dart/codecs",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "common",
-            "cwd": "dart/common",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "consensus",
-            "cwd": "dart/consensus",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "ledger",
-            "cwd": "dart/ledger",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "network",
-            "cwd": "dart/network",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "protobuf_dart",
-            "cwd": "dart/protobuf_dart",
-            "request": "launch",
-            "type": "dart"
         }
     ]
 }

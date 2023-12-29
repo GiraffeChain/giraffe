@@ -203,3 +203,21 @@ extension Lock_Ed25519Codecs on Lock_Ed25519 {
 extension StakingAddressCodecs on StakingAddress {
   String get show => "s_${this.value.base58}";
 }
+
+class PersistenceCodecs {
+  static Uint8List encodeHeightBlockId((Int64, BlockId) heightBlockTuple) =>
+      Uint8List.fromList(<int>[]
+        ..addAll(heightBlockTuple.$1.toBytes())
+        ..addAll(heightBlockTuple.$2.value));
+  static (Int64, BlockId) decodeHeightBlockId(Uint8List bytes) =>
+      (Int64.fromBytes(bytes.sublist(0, 8)), BlockId(value: bytes.sublist(8)));
+
+  static Uint8List encodeBlockId(BlockId blockId) =>
+      Uint8List.fromList(blockId.value);
+  static BlockId decodeBlockId(Uint8List bytes) => BlockId(value: bytes);
+
+  static Uint8List encodeTransactionId(TransactionId transactionId) =>
+      Uint8List.fromList(transactionId.value);
+  static TransactionId decodeTransactionId(Uint8List bytes) =>
+      TransactionId(value: bytes);
+}

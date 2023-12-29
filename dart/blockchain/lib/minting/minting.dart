@@ -19,7 +19,6 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:path/path.dart';
 import 'package:rxdart/transformers.dart';
 
 class Minting {

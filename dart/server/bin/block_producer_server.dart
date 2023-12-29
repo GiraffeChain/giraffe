@@ -87,16 +87,22 @@ Future<void> main() async {
                       rpcClient,
                       stakerSupportClient,
                     ))
-                .flatMap((minting) => Resource.forStreamSubscription(() => minting
-                    .blockProducer.blocks
-                    .asyncMap((block) => stakerSupportClient.broadcastBlock(
-                        BroadcastBlockReq(
-                            block: Block(
-                                header: block.header,
-                                body: BlockBody(
-                                    transactionIds:
-                                        block.fullBody.transactions.map((t) => t.id))))))
-                    .listen(null, onError: (e) => log.severe("Production failed", e))));
+                .flatMap((minting) => Resource.forStreamSubscription(() =>
+                    minting.blockProducer.blocks
+                        .asyncMap((block) => stakerSupportClient.broadcastBlock(
+                            BroadcastBlockReq(
+                                block: Block(
+                                    header: block.header,
+                                    body: BlockBody(
+                                        transactionIds: block
+                                            .fullBody.transactions
+                                            .map((t) => t.id))))))
+                        .listen(
+                          null,
+                          onError: (e) => log.severe("Production failed", e),
+                          onDone: () => log
+                              .info("Block production finished unexpectedly"),
+                        )));
           }));
 
   await resource.use((_) => ProcessSignal.sigint.watch().first);

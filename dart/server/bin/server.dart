@@ -6,10 +6,15 @@ import 'package:blockchain/isolate_pool.dart';
 import 'package:blockchain/crypto/ed25519.dart' as ed25519;
 import 'package:blockchain/crypto/ed25519vrf.dart' as ed25519VRF;
 import 'package:blockchain/crypto/kes.dart' as kes;
+import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 
-final BlockchainConfig config =
-    BlockchainConfig(genesis: BlockchainGenesis(localStakerIndex: -1));
+final BlockchainConfig config = BlockchainConfig(
+    genesis: BlockchainGenesis(
+  // timestamp: Int64(1703809384186),
+  timestamp: null,
+  localStakerIndex: -1,
+));
 Future<void> main() async {
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
