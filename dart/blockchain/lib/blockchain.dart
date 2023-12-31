@@ -100,6 +100,8 @@ class Blockchain {
               final protocolSettings =
                   ProtocolSettings.fromMap(genesisBlock.header.settings);
 
+              log.info("Protocol settings=$protocolSettings");
+
               final clock = ClockImpl(
                 protocolSettings.slotDuration,
                 protocolSettings.epochLength,
@@ -203,9 +205,9 @@ class Blockchain {
         () => consensus.chainSelection.select(id, currentHead),
         messageF: (duration) => "Chain Selection took $duration");
     if (selectedChain == id) {
-      log.info(
-          "Adopting id=${id.show} height=${block.header.height} slot=${block.header.slot} transactionCount=${block.fullBody.transactions.length} stakingAddress=${block.header.address.show}");
       await consensus.localChain.adopt(id);
+      log.info(
+          "Adopted id=${id.show} height=${block.header.height} slot=${block.header.slot} transactionCount=${block.fullBody.transactions.length} stakingAddress=${block.header.address.show}");
     } else {
       log.info(
           "Current local head id=${currentHead.show} is better than remote id=${id.show}");

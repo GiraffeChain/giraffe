@@ -11,7 +11,7 @@ import 'package:logging/logging.dart';
 
 final BlockchainConfig config = BlockchainConfig(
     genesis: BlockchainGenesis(
-  // timestamp: Int64(1703809384186),
+  // timestamp: Int64(1703957370323),
   timestamp: null,
   localStakerIndex: -1,
 ));

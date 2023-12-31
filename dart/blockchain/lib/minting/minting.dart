@@ -19,6 +19,7 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:rxdart/streams.dart';
 import 'package:rxdart/transformers.dart';
 
 class Minting {
@@ -71,7 +72,8 @@ class Minting {
           leaderElection,
         ).map((staking) {
           final blockProducer = BlockProducerImpl(
-            adoptedSlotData,
+            ConcatEagerStream(
+                [Stream.value(canonicalHeadSlotData), adoptedSlotData]),
             staking,
             clock,
             blockPacker,

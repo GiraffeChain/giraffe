@@ -20,14 +20,13 @@ class P2PServer {
   Resource<void> start() => Resource.make(
           () => ServerSocket.bind(bindHost, bindPort),
           (server) => server.close())
-      .flatMap((server) => Resource.make(
-          () => Future.sync(() => server.listen((socket) {
+      .flatMap((server) =>
+          Resource.forStreamSubscription(() => server.listen((socket) {
                 log.info(
                     "Inbound connection initializing from ${socket.remoteAddress}");
                 handleSocket(socket);
-              })),
-          (subscription) => subscription.cancel()))
-      .map((_) => ());
+              })))
+      .voidResult;
 
   Future<void> connectOutbound(String host, int port) async {
     log.info("Outbound connection initializing to $host:$port");

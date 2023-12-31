@@ -1,5 +1,6 @@
 import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/rpc/client.dart';
 import 'package:blockchain_app/widgets/resource_builder.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
@@ -7,7 +8,6 @@ import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:grpc/grpc.dart';
 
 class BlockchainLauncherPage extends StatefulWidget {
   final LaunchSettings config;
@@ -19,24 +19,23 @@ class BlockchainLauncherPage extends StatefulWidget {
 }
 
 class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
-  get _channel => ClientChannel(widget.config.rpcHost,
-      port: widget.config.rpcPort,
-      options:
-          const ChannelOptions(credentials: ChannelCredentials.insecure()));
-
-  Resource<(BlockchainView, BlockchainWriter)> launch() => Resource.pure((
-        nodeClient: NodeRpcClient(_channel),
-        stakerSupportClient: StakerSupportRpcClient(_channel),
-      )).map((clients) => (
-            BlockchainViewFromRpc(nodeClient: clients.nodeClient),
-            BlockchainWriter(
-              submitTransaction: (tx) => clients.nodeClient
-                  .broadcastTransaction(
-                      BroadcastTransactionReq(transaction: tx)),
-              submitBlock: (block) => clients.stakerSupportClient
-                  .broadcastBlock(BroadcastBlockReq(block: block)),
-            ),
-          ));
+  Resource<(BlockchainView, BlockchainWriter)> launch() =>
+      RpcClient.makeChannel(
+              host: widget.config.rpcHost, port: widget.config.rpcPort)
+          .map((channel) => (
+                nodeClient: NodeRpcClient(channel),
+                stakerSupportClient: StakerSupportRpcClient(channel)
+              ))
+          .map((clients) => (
+                BlockchainViewFromRpc(nodeClient: clients.nodeClient),
+                BlockchainWriter(
+                  submitTransaction: (tx) => clients.nodeClient
+                      .broadcastTransaction(
+                          BroadcastTransactionReq(transaction: tx)),
+                  submitBlock: (block) => clients.stakerSupportClient
+                      .broadcastBlock(BroadcastBlockReq(block: block)),
+                ),
+              ));
 
   @override
   Widget build(BuildContext context) =>

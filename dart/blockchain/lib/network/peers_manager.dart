@@ -22,6 +22,5 @@ class PeersManager {
         (data) async => socket.add(data), localPeerKeyPair, magicBytes);
 
     log.info("Handshake success with ${Base58Encode(handshakeResult.peerId)}");
-    socket.destroy();
   }
 }
