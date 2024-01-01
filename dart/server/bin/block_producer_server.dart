@@ -6,6 +6,7 @@ import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
+import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/isolate_pool.dart';
 import 'package:blockchain/crypto/ed25519.dart' as ed25519;
 import 'package:blockchain/crypto/ed25519vrf.dart' as ed25519VRF;
@@ -17,7 +18,10 @@ import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:logging/logging.dart';
 
-final BlockchainConfig config = BlockchainConfig();
+final BlockchainConfig config = BlockchainConfig(
+    staking: BlockchainStaking(
+        stakingDir:
+            "${Directory.systemTemp.path}/blockchain-genesis/{genesisId}/stakers/0"));
 Future<void> main() async {
   assert(config.genesis.localStakerIndex != null);
   Logger.root.level = Level.INFO;
@@ -59,8 +63,8 @@ Future<void> main() async {
             final leaderElection =
                 LeaderElectionImpl(protocolSettings, isolate);
             return Minting.makeForRpc(
-              Directory(
-                  "${Directory.systemTemp.path}/blockchain/${genesisBlockId.show}/stakers/${config.genesis.localStakerIndex}"),
+              Directory(DataStores.interpolateBlockId(
+                  config.staking.stakingDir, genesisBlockId)),
               protocolSettings,
               clock,
               canonicalHeadSlotData,

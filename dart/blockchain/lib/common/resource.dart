@@ -67,6 +67,12 @@ abstract class Resource<A> {
     return r;
   }
 
+  Future<A> get use_ async {
+    final (a, finalizer) = await allocated();
+    await finalizer();
+    return a;
+  }
+
   Future<(A, Future<void> Function())> allocated();
 
   Resource<O> evalMap<O>(Future<O> Function(A) f) =>

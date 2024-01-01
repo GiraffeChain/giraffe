@@ -3,19 +3,38 @@ import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 
 class BlockchainConfig {
+  final BlockchainData data;
+  final BlockchainStaking staking;
   final BlockchainGenesis genesis;
   final BlockchainP2P p2p;
   final BlockchainRPC rpc;
 
   BlockchainConfig({
+    BlockchainData? data,
+    BlockchainStaking? staking,
     BlockchainGenesis? genesis,
     BlockchainP2P? p2p,
     BlockchainRPC? rpc,
-  })  : genesis = genesis ?? BlockchainGenesis(),
+  })  : data = data ?? BlockchainData(),
+        staking = staking ?? BlockchainStaking(),
+        genesis = genesis ?? BlockchainGenesis(),
         p2p = p2p ?? BlockchainP2P(),
         rpc = rpc ?? BlockchainRPC();
 
   static final BlockchainConfig defaultConfig = BlockchainConfig();
+}
+
+class BlockchainData {
+  final String dataDir;
+  BlockchainData({String? dataDir})
+      : dataDir = dataDir ?? "/tmp/bifrost/data/{genesisId}";
+}
+
+class BlockchainStaking {
+  final String stakingDir;
+
+  BlockchainStaking({String? stakingDir})
+      : stakingDir = stakingDir ?? "/tmp/bifrost/staking/{genesisId}";
 }
 
 class BlockchainGenesis {

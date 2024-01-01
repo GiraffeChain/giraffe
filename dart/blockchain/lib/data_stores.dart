@@ -42,6 +42,9 @@ class DataStores {
 
   static final log = Logger("DataStoresInit");
 
+  static String interpolateBlockId(String base, BlockId genesisId) =>
+      base.replaceAll("{genesisId}", genesisId.show);
+
   static Resource<DataStores> make() {
     makeDb<Key, Value>() => InMemoryStore<Key, Value>();
     return Resource.make(

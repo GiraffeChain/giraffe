@@ -52,14 +52,14 @@ class BlockchainCore {
 
     final log = Logger("Blockchain.Core.Init");
 
-    final blockchainBaseDir =
-        Directory("${Directory.systemTemp.path}/blockchain");
+    final genesisBaseDir =
+        Directory("${Directory.systemTemp.path}/blockchain-genesis");
 
     return Resource.pure(())
         .tapLog(log, (_) => "Initializing")
         .tapLogFinalize(log, "Terminated")
         .evalMap((_) async => PrivateTestnet.initTo(
-              blockchainBaseDir,
+              genesisBaseDir,
               genesisTimestamp,
               config.genesis.stakes,
               ProtocolSettings.defaultSettings.kesTreeHeight,
@@ -67,10 +67,11 @@ class BlockchainCore {
         .flatMap(
           (genesisBlockId) => Resource.eval(() => Genesis.loadFromDisk(
               Directory(
-                  "${blockchainBaseDir.path}/${genesisBlockId.show}/genesis"),
+                  "${genesisBaseDir.path}/${genesisBlockId.show}/genesis"),
               genesisBlockId)).flatMap(
             (genesisBlock) => DataStores.makePersistent(Directory(
-                    "${blockchainBaseDir.path}/${genesisBlockId.show}/data"))
+                    DataStores.interpolateBlockId(
+                        config.data.dataDir, genesisBlockId)))
                 .evalTap((d) async {
               if (!await d.isInitialized(genesisBlockId)) {
                 await d.init(genesisBlock);
@@ -149,17 +150,24 @@ class BlockchainCore {
         .tapLog(log, (_) => "Initialized");
   }
 
-  Future<void> processBlock(Block block) async {
+  Future<void> processBlock(Block block, {bool compareAndAdopt = true}) async {
     final transactions = await Future.wait(
         block.body.transactionIds.map(dataStores.transactions.getOrRaise));
     final fullBlock = FullBlock(
         header: block.header,
         fullBody: FullBlockBody(transactions: transactions));
-    return await processFullBlock(fullBlock);
+    return await processFullBlock(fullBlock, compareAndAdopt: compareAndAdopt);
   }
 
-  Future<void> processFullBlock(FullBlock block) async {
+  Future<void> processFullBlock(FullBlock block,
+      {bool compareAndAdopt = true}) async {
     final id = await block.header.id;
+    final localBlockAtHeight =
+        await consensus.localChain.blockIdAtHeight(block.header.height);
+    if (id == localBlockAtHeight) {
+      log.info("Block id=${id.show} is already adopted");
+      return;
+    }
 
     final body =
         BlockBody(transactionIds: block.fullBody.transactions.map((t) => t.id));
@@ -173,17 +181,19 @@ class BlockchainCore {
       rethrow;
     }
     await dataStores.bodies.put(id, body);
-    final currentHead = await consensus.localChain.currentHead;
-    final selectedChain = await log.timedInfoAsync(
-        () => consensus.chainSelection.select(id, currentHead),
-        messageF: (duration) => "Chain Selection took $duration");
-    if (selectedChain == id) {
-      await consensus.localChain.adopt(id);
-      log.info(
-          "Adopted id=${id.show} height=${block.header.height} slot=${block.header.slot} transactionCount=${block.fullBody.transactions.length} stakingAddress=${block.header.address.show}");
-    } else {
-      log.info(
-          "Current local head id=${currentHead.show} is better than remote id=${id.show}");
+    if (compareAndAdopt) {
+      final currentHead = await consensus.localChain.currentHead;
+      final selectedChain = await log.timedInfoAsync(
+          () => consensus.chainSelection.select(id, currentHead),
+          messageF: (duration) => "Chain Selection took $duration");
+      if (selectedChain == id) {
+        await consensus.localChain.adopt(id);
+        log.info(
+            "Adopted id=${id.show} height=${block.header.height} slot=${block.header.slot} transactionCount=${block.fullBody.transactions.length} stakingAddress=${block.header.address.show}");
+      } else {
+        log.info(
+            "Current local head id=${currentHead.show} is better than remote id=${id.show}");
+      }
     }
   }
 
@@ -302,15 +312,27 @@ class BlockchainP2P {
 
         final p2pKey = await ed25519.generateKeyPair();
         final peersManager = PeersManager(
-          p2pKey,
-          config.p2p.magicBytes,
+          localPeerKeyPair: p2pKey,
+          magicBytes: config.p2p.magicBytes,
+          blockchain: blockchain,
         );
         return P2PServer(
           config.p2p.bindHost,
           config.p2p.bindPort,
-          (socket) =>
-              Resource.make(() async => socket, (s) async => s.destroy())
-                  .use(peersManager.handleConnection),
+          (socket) => Resource.make(() async {
+            log.info(
+                "Socket connected at host=${socket.remoteAddress} port=${socket.remotePort}");
+            return (
+              socket: socket,
+              remoteAddress: socket.remoteAddress,
+              remotePort: socket.remotePort
+            );
+          }, (t) async {
+            log.info(
+                "Socket closing at host=${t.remoteAddress} port=${t.remotePort}");
+            t.socket.destroy();
+            await t.socket.done;
+          }).map((t) => t.socket).use(peersManager.handleConnection),
         );
       }, (_) async {})
           .flatMap((p2pServer) => p2pServer.start().product(
