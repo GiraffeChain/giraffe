@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/event_sourced_state.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
@@ -10,7 +12,7 @@ abstract class BoxState {
       BlockId blockId, TransactionOutputReference outputReference);
 }
 
-typedef State = Store<TransactionId, List<int>>;
+typedef State = Store<TransactionId, Uint32List>;
 typedef FetchBlockBody = Future<BlockBody> Function(BlockId);
 typedef FetchTransaction = Future<Transaction> Function(TransactionId);
 
@@ -64,9 +66,9 @@ Future<State> _applyBlock(FetchBlockBody fetchBlockBody,
     for (final input in transaction.inputs) {
       final spentTxId = input.reference.transactionId;
       final unspentIndices = await state.getOrRaise(spentTxId);
-      final newUnspentIndices = unspentIndices
+      final newUnspentIndices = Uint32List.fromList(unspentIndices
           .where((index) => index != input.reference.index)
-          .toList();
+          .toList());
       if (newUnspentIndices.isEmpty) {
         await state.remove(spentTxId);
       } else {
@@ -74,8 +76,8 @@ Future<State> _applyBlock(FetchBlockBody fetchBlockBody,
       }
     }
     if (transaction.outputs.isNotEmpty) {
-      final indices =
-          transaction.outputs.mapWithIndex((t, index) => index).toList();
+      final indices = Uint32List.fromList(
+          List.generate(transaction.outputs.length, (i) => i));
       await state.put(await transaction.id, indices);
     }
   }
@@ -92,11 +94,12 @@ Future<State> _unapplyBlock(FetchBlockBody fetchBlockBody,
       final spentTxId = input.reference.transactionId;
       final unspentIndices = await state.get(spentTxId);
       if (unspentIndices != null) {
-        final newUnspentIndices = List.of(unspentIndices)
+        final newUnspentIndices = Uint32List.fromList(unspentIndices)
           ..add(input.reference.index);
         await state.put(spentTxId, newUnspentIndices);
       } else {
-        await state.put(spentTxId, [input.reference.index]);
+        await state.put(
+            spentTxId, Uint32List.fromList([input.reference.index]));
       }
     }
   }

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:blockchain/blockchain.dart';
-import 'package:blockchain/config.dart';
+import 'package:blockchain/config.dart' hide BlockchainP2P;
 import 'package:blockchain/isolate_pool.dart';
 import 'package:blockchain/crypto/ed25519.dart' as ed25519;
 import 'package:blockchain/crypto/ed25519vrf.dart' as ed25519VRF;
@@ -28,11 +28,14 @@ Future<void> main() async {
   final resource = IsolatePool.make(Platform.numberOfProcessors)
       .map((p) => p.isolate)
       .tap((isolate) {
-    ed25519.ed25519 = ed25519.Ed25519Isolated(isolate);
-    ed25519VRF.ed25519Vrf = ed25519VRF.Ed25519VRFIsolated(isolate);
-    kes.kesProduct = kes.KesProudctIsolated(isolate);
-  }).flatMap((isolate) => Blockchain.make(config, isolate)
-          .flatTap((blockchain) => blockchain.run()));
+        ed25519.ed25519 = ed25519.Ed25519Isolated(isolate);
+        ed25519VRF.ed25519Vrf = ed25519VRF.Ed25519VRFIsolated(isolate);
+        kes.kesProduct = kes.KesProudctIsolated(isolate);
+      })
+      .flatMap((isolate) => BlockchainCore.make(config, isolate))
+      .flatMap((blockchain) => BlockchainRpc.make(blockchain, config)
+          .product(BlockchainP2P.make(blockchain, config)))
+      .evalTap((_) => ProcessSignal.sigint.watch().first);
 
-  await resource.use((_) => ProcessSignal.sigint.watch().first);
+  await resource.use((_) async {});
 }

@@ -1,3 +1,4 @@
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/consensus/staker_tracker.dart';
@@ -8,6 +9,7 @@ import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:logging/logging.dart';
 
 Resource<Server> serveRpcs(String host, int port, NodeRpcServiceBase nodeRpc,
         StakerSupportRpcServiceBase stakerSupportRpc) =>
@@ -30,6 +32,8 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
         _onBroadcastTransaction = onBroadcastTransaction,
         _blockIdAtHeight = blockIdAtHeight;
 
+  final log = Logger("Blockchain.RPC");
+
   @override
   Stream<FollowRes> follow(ServiceCall call, FollowReq request) {
     return _traversal.map((t) {
@@ -46,6 +50,7 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
   Future<BroadcastTransactionRes> broadcastTransaction(
       ServiceCall call, BroadcastTransactionReq request) async {
     assert(request.hasTransaction());
+    log.info("Received transaction id=${request.transaction.id.show}");
     await _onBroadcastTransaction(request.transaction);
     return BroadcastTransactionRes();
   }
@@ -115,10 +120,13 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
         _packBlock = packBlock,
         _calculateEta = calculateEta;
 
+  final log = Logger("Blockchain.RPC");
+
   @override
   Future<BroadcastBlockRes> broadcastBlock(
       ServiceCall call, BroadcastBlockReq request) async {
     assert(request.hasBlock());
+    log.info("Received block id=${request.block.header.id.show}");
     await _onBroadcastBlock(request.block);
     return BroadcastBlockRes();
   }

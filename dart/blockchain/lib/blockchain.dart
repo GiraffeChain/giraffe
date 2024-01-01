@@ -10,7 +10,6 @@ import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/genesis.dart';
 import 'package:blockchain/ledger/ledger.dart';
-import 'package:blockchain/minting/minting.dart';
 import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
@@ -29,43 +28,36 @@ import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/streams.dart';
 
-class Blockchain {
-  final BlockchainConfig config;
+class BlockchainCore {
   final Clock clock;
   final DataStores dataStores;
   final ParentChildTree<BlockId> parentChildTree;
   final BlockHeightTree blockHeightTree;
   final Consensus consensus;
   final Ledger ledger;
-  final Minting? minting;
-  final P2PServer p2pServer;
 
-  final log = Logger("Blockchain");
+  BlockchainCore(
+      {required this.clock,
+      required this.dataStores,
+      required this.parentChildTree,
+      required this.blockHeightTree,
+      required this.consensus,
+      required this.ledger});
 
-  Blockchain(
-    this.config,
-    this.clock,
-    this.dataStores,
-    this.parentChildTree,
-    this.blockHeightTree,
-    this.consensus,
-    this.ledger,
-    this.minting,
-    this.p2pServer,
-  );
+  final Logger log = Logger("Blockchain.Core");
 
-  static Resource<Blockchain> make(
+  static Resource<BlockchainCore> make(
       BlockchainConfig config, DComputeImpl isolate) {
     final genesisTimestamp = config.genesis.timestamp;
 
-    final log = Logger("Blockchain.Init");
+    final log = Logger("Blockchain.Core.Init");
 
     final blockchainBaseDir =
         Directory("${Directory.systemTemp.path}/blockchain");
 
     return Resource.pure(())
-        .tapLog(log, (_) => "Initializing blockchain")
-        .tapLogFinalize(log, "Blockchain terminated")
+        .tapLog(log, (_) => "Initializing")
+        .tapLogFinalize(log, "Terminated")
         .evalMap((_) async => PrivateTestnet.initTo(
               blockchainBaseDir,
               genesisTimestamp,
@@ -141,39 +133,20 @@ class Blockchain {
                         currentEventIdGetterSetters,
                         parentChildTree,
                         clock,
-                      ).evalMap((ledger) async {
-                        log.info("Preparing P2P Network");
-
-                        final p2pKey = await ed25519.generateKeyPair();
-                        final peersManager = PeersManager(
-                          p2pKey,
-                          config.p2p.magicBytes,
-                        );
-                        final p2pServer = P2PServer(
-                          config.p2p.bindHost,
-                          config.p2p.bindPort,
-                          (socket) => Resource.make(
-                                  () async => socket, (s) async => s.destroy())
-                              .use(peersManager.handleConnection),
-                        );
-                        return Blockchain(
-                          config,
-                          clock,
-                          dataStores,
-                          parentChildTree,
-                          blockHeightTree,
-                          consensus,
-                          ledger,
-                          null,
-                          p2pServer,
-                        );
-                      }),
+                      ).map((ledger) => BlockchainCore(
+                            clock: clock,
+                            dataStores: dataStores,
+                            parentChildTree: parentChildTree,
+                            blockHeightTree: blockHeightTree,
+                            consensus: consensus,
+                            ledger: ledger,
+                          )),
                     ),
                   );
             }),
           ),
         )
-        .tap((_) => log.info("Blockchain Initialized"));
+        .tapLog(log, (_) => "Initialized");
   }
 
   Future<void> processBlock(Block block) async {
@@ -252,57 +225,6 @@ class Blockchain {
     await ledger.mempool.add(transaction.id);
   }
 
-  Resource<void> get _makeRpcServer => rpc.serveRpcs(
-        config.rpc.bindHost,
-        config.rpc.bindPort,
-        rpc.NodeRpcServiceImpl(
-          traversal: traversal,
-          dataStores: dataStores,
-          onBroadcastTransaction: processTransaction,
-          blockIdAtHeight: consensus.localChain.blockIdAtHeight,
-        ),
-        rpc.StakerSupportRpcImpl(
-          onBroadcastBlock: processBlock,
-          stakerTracker: consensus.stakerTracker,
-          packBlock: (parentBlockId, targetSlot) =>
-              Stream.fromFuture(dataStores.headers.getOrRaise(parentBlockId))
-                  .map((h) => h.height)
-                  .asyncExpand((parentHeight) => ledger.blockPacker
-                      .streamed(parentBlockId, parentHeight + 1, targetSlot)
-                      .map((fullBody) => BlockBody(
-                          transactionIds:
-                              fullBody.transactions.map((t) => t.id)))),
-          calculateEta: (parentId, slot) => dataStores.slotData
-              .getOrRaise(parentId)
-              .then((parentSlotData) => consensus.etaCalculation
-                  .etaToBe(parentSlotData.slotId, slot)),
-        ),
-      );
-
-  Resource<void> run() => p2pServer
-      .start()
-      .flatMap((_) => Resource.forStreamSubscription(() =>
-          Stream.fromIterable(config.p2p.knownPeers)
-              .map((s) => s.split(":"))
-              .map((parsed) =>
-                  p2pServer.connectOutbound(parsed[0], int.parse(parsed[1])))
-              .listen((_) {})))
-      .tapLog(log, (_) => "P2P Initialized")
-      .tapLogFinalize(log, "Terminating P2P")
-      .tapLog(log, (_) => "Initializing RPC")
-      .tapLogFinalize(log, "RPC Terminated")
-      .flatMap((_) => _makeRpcServer)
-      .tapLog(log, (_) => "RPC Initialized")
-      .tapLogFinalize(log, "Terminating RPC")
-      .flatMap(
-        (_) => (minting != null)
-            ? Resource.forStreamSubscription(() => minting!.blockProducer.blocks
-                .asyncMap(processFullBlock)
-                .listen((event) {}))
-            : Resource.pure(()),
-      )
-      .voidResult;
-
   Stream<TraversalStep> get traversal {
     BlockId? lastId = null;
     return consensus.localChain.adoptions
@@ -331,4 +253,77 @@ class Blockchain {
             ..addAll(unapplyApply.$2.tail
                 .toNullable()!
                 .map((id) => TraversalStep_Applied(id))));
+}
+
+class BlockchainRpc {
+  static final log = Logger("Blockchain.RPC");
+  static Resource<void> make(
+          BlockchainCore blockchain, BlockchainConfig config) =>
+      rpc
+          .serveRpcs(
+            config.rpc.bindHost,
+            config.rpc.bindPort,
+            rpc.NodeRpcServiceImpl(
+              traversal: blockchain.traversal,
+              dataStores: blockchain.dataStores,
+              onBroadcastTransaction: blockchain.processTransaction,
+              blockIdAtHeight: blockchain.consensus.localChain.blockIdAtHeight,
+            ),
+            rpc.StakerSupportRpcImpl(
+              onBroadcastBlock: blockchain.processBlock,
+              stakerTracker: blockchain.consensus.stakerTracker,
+              packBlock: (parentBlockId, targetSlot) => Stream.fromFuture(
+                      blockchain.dataStores.headers.getOrRaise(parentBlockId))
+                  .map((h) => h.height)
+                  .asyncExpand((parentHeight) => blockchain.ledger.blockPacker
+                      .streamed(parentBlockId, parentHeight + 1, targetSlot)
+                      .map((fullBody) => BlockBody(
+                          transactionIds:
+                              fullBody.transactions.map((t) => t.id)))),
+              calculateEta: (parentId, slot) => blockchain.dataStores.slotData
+                  .getOrRaise(parentId)
+                  .then((parentSlotData) => blockchain.consensus.etaCalculation
+                      .etaToBe(parentSlotData.slotId, slot)),
+            ),
+          )
+          .tapLog(
+              log,
+              (_) =>
+                  "Served on host=${config.rpc.bindHost} port=${config.rpc.bindPort}")
+          .tapLogFinalize(log, "Terminating");
+}
+
+class BlockchainP2P {
+  static final log = Logger("Blockchain.P2P");
+  static Resource<void> make(
+          BlockchainCore blockchain, BlockchainConfig config) =>
+      Resource.make(() async {
+        log.info("Preparing P2P Network");
+
+        final p2pKey = await ed25519.generateKeyPair();
+        final peersManager = PeersManager(
+          p2pKey,
+          config.p2p.magicBytes,
+        );
+        return P2PServer(
+          config.p2p.bindHost,
+          config.p2p.bindPort,
+          (socket) =>
+              Resource.make(() async => socket, (s) async => s.destroy())
+                  .use(peersManager.handleConnection),
+        );
+      }, (_) async {})
+          .flatMap((p2pServer) => p2pServer.start().product(
+              Resource.forStreamSubscription(() =>
+                  Stream.fromIterable(config.p2p.knownPeers)
+                      .map((s) => s.split(":"))
+                      .map((parsed) => p2pServer.connectOutbound(
+                          parsed[0], int.parse(parsed[1])))
+                      .listen((_) {}))))
+          .tapLog(
+              log,
+              (_) =>
+                  "Served on host=${config.p2p.bindHost} port=${config.p2p.bindPort}")
+          .tapLogFinalize(log, "Terminating")
+          .voidResult;
 }

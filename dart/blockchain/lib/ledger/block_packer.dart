@@ -80,10 +80,13 @@ class BlockPackerImpl extends BlockPacker {
     while (clock.globalSlot < slot) {
       yield best;
       FullBlockBody? next = await improve(best);
-      while (next == null && clock.globalSlot < slot) {
+      while (next == null) {
+        if (clock.globalSlot >= slot) break;
         next = await Future.delayed(
             Duration(milliseconds: 200), () => improve(best));
       }
+      if (clock.globalSlot >= slot) break;
+      best = next!;
     }
   }
 

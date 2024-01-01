@@ -76,7 +76,7 @@ abstract class BlockchainView {
 }
 
 class BlockchainViewFromBlockchain extends BlockchainView {
-  final Blockchain blockchain;
+  final BlockchainCore blockchain;
 
   BlockchainViewFromBlockchain({required this.blockchain});
 

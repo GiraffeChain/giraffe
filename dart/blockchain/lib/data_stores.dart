@@ -16,7 +16,7 @@ class DataStores {
   final Store<BlockId, BlockHeader> headers;
   final Store<BlockId, BlockBody> bodies;
   final Store<TransactionId, Transaction> transactions;
-  final Store<TransactionId, List<int>> spendableBoxIds;
+  final Store<TransactionId, Uint32List> spendableBoxIds;
   final Store<Int64, BlockId> epochBoundaries;
   final Store<void, Int64> activeStake;
   final Store<void, Int64> inactiveStake;
@@ -113,13 +113,14 @@ class DataStores {
                           PersistenceCodecs.decodeTransactionId,
                           Transaction.fromBuffer)
                       .flatMap(
-                    (transactions) => HiveStore.make<TransactionId, List<int>>(
-                        "spendable-box-ids",
-                        hive,
-                        PersistenceCodecs.encodeTransactionId,
-                        (value) => Uint8List.fromList(value),
-                        PersistenceCodecs.decodeTransactionId,
-                        (bytes) => bytes.buffer.asInt32List()).flatMap(
+                    (transactions) => HiveStore.make<TransactionId, Uint32List>(
+                      "spendable-box-ids",
+                      hive,
+                      PersistenceCodecs.encodeTransactionId,
+                      (value) => value.buffer.asUint8List(),
+                      PersistenceCodecs.decodeTransactionId,
+                      (bytes) => bytes.buffer.asUint32List(),
+                    ).flatMap(
                       (spendableBoxIds) => HiveStore.make<Int64, BlockId>(
                               "epoch-boundaries",
                               hive,
