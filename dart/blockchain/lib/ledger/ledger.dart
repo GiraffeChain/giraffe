@@ -42,7 +42,7 @@ class Ledger {
     ParentChildTree<BlockId> parentChildTree,
     Clock clock,
   ) =>
-      Resource.eval(() async {
+      Resource.pure(()).evalFlatMap((_) async {
         final boxState = BoxStateImpl.make(
           dataStores.spendableBoxIds,
           await currentEventIdGetterSetters.boxState.get(),
@@ -64,29 +64,31 @@ class Ledger {
         final bodyAuthorizationValidation = BodyAuthorizationValidationImpl(
             dataStores.transactions.getOrRaise,
             transactionAuthorizationValidation);
-        final mempool = MempoolImpl(
-            dataStores.bodies.getOrRaise,
-            parentChildTree,
-            await currentEventIdGetterSetters.mempool.get(),
-            Duration(minutes: 5));
-        final blockPacker = BlockPackerImpl(
-            mempool,
-            clock,
-            dataStores.transactions.getOrRaise,
-            dataStores.transactions.contains,
-            BlockPackerImpl.makeBodyValidator(bodySyntaxValidation,
-                bodySemanticValidation, bodyAuthorizationValidation));
-        return Ledger(
-          transactionSyntaxValidation: transactionSyntaxValidation,
-          transactionSemanticValidation: transactionSemanticValidation,
-          transactionAuthorizationValidation:
-              transactionAuthorizationValidation,
-          bodySyntaxValidation: bodySyntaxValidation,
-          bodySemanticValidation: bodySemanticValidation,
-          bodyAuthorizationValidation: bodyAuthorizationValidation,
-          boxState: boxState,
-          mempool: mempool,
-          blockPacker: blockPacker,
-        );
+        return MempoolImpl.make(
+                dataStores.bodies.getOrRaise,
+                parentChildTree,
+                await currentEventIdGetterSetters.mempool.get(),
+                Duration(minutes: 5))
+            .map((mempool) {
+          final blockPacker = BlockPackerImpl(
+              mempool,
+              clock,
+              dataStores.transactions.getOrRaise,
+              dataStores.transactions.contains,
+              BlockPackerImpl.makeBodyValidator(bodySyntaxValidation,
+                  bodySemanticValidation, bodyAuthorizationValidation));
+          return Ledger(
+            transactionSyntaxValidation: transactionSyntaxValidation,
+            transactionSemanticValidation: transactionSemanticValidation,
+            transactionAuthorizationValidation:
+                transactionAuthorizationValidation,
+            bodySyntaxValidation: bodySyntaxValidation,
+            bodySemanticValidation: bodySemanticValidation,
+            bodyAuthorizationValidation: bodyAuthorizationValidation,
+            boxState: boxState,
+            mempool: mempool,
+            blockPacker: blockPacker,
+          );
+        });
       });
 }

@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:blockchain/common/event_sourced_state.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
+import 'package:blockchain/common/resource.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:fpdart/fpdart.dart';
 
 abstract class Mempool {
   Future<Set<TransactionId>> read(BlockId currentHead);
   Future<void> add(TransactionId transactionId);
   Future<void> remove(TransactionId transactionId);
+  Stream<MempoolChange> get changes;
 }
 
 class MempoolImpl extends Mempool {
@@ -15,50 +18,70 @@ class MempoolImpl extends Mempool {
   final Future<BlockBody> Function(BlockId) fetchBlockBody;
   final EventSourcedState<Map<TransactionId, MempoolEntry>, BlockId>
       eventSourcedState;
-  final Future<void> Function(TransactionId transactionId) _add;
+  final StreamController<MempoolChange> mempoolChangesController;
+  final Duration expirationDuration;
 
   MempoolImpl._(
-      this._state, this.fetchBlockBody, this.eventSourcedState, this._add);
+    this._state,
+    this.fetchBlockBody,
+    this.eventSourcedState,
+    this.mempoolChangesController,
+    this.expirationDuration,
+  );
 
-  factory MempoolImpl(
-      Future<BlockBody> Function(BlockId) fetchBlockBody,
-      ParentChildTree<BlockId> parentChildTree,
-      BlockId currentEventId,
-      Duration expirationDuration) {
-    final state = <TransactionId, MempoolEntry>{};
-    final _add = (TransactionId transactionId) => state[transactionId] =
-        MempoolEntry(transactionId, DateTime.now().add(expirationDuration));
-    final eventSourcedState =
-        EventTreeStateImpl<Map<TransactionId, MempoolEntry>, BlockId>(
-      (state, blockId) async {
-        final blockBody = await fetchBlockBody(blockId);
-        blockBody.transactionIds.forEach(state.remove);
-        return state;
-      },
-      (state, blockId) async {
-        final blockBody = await fetchBlockBody(blockId);
-        for (final transactionId in blockBody.transactionIds) {
-          _add(transactionId);
-        }
-        return state;
-      },
-      parentChildTree,
-      state,
-      currentEventId,
-      (p0) async => {},
-    );
+  static Resource<MempoolImpl> make(
+          Future<BlockBody> Function(BlockId) fetchBlockBody,
+          ParentChildTree<BlockId> parentChildTree,
+          BlockId currentEventId,
+          Duration expirationDuration) =>
+      Resource.streamController(
+              () => StreamController<MempoolChange>.broadcast())
+          .flatMap((mempoolChangesController) {
+        final state = <TransactionId, MempoolEntry>{};
+        final _add = (TransactionId transactionId) => state[transactionId] =
+            MempoolEntry(transactionId, DateTime.now().add(expirationDuration));
+        final eventSourcedState =
+            EventTreeStateImpl<Map<TransactionId, MempoolEntry>, BlockId>(
+          (state, blockId) async {
+            final blockBody = await fetchBlockBody(blockId);
+            blockBody.transactionIds.forEach(state.remove);
+            return state;
+          },
+          (state, blockId) async {
+            final blockBody = await fetchBlockBody(blockId);
+            for (final transactionId in blockBody.transactionIds) {
+              _add(transactionId);
+            }
+            return state;
+          },
+          parentChildTree,
+          state,
+          currentEventId,
+          (p0) async => {},
+        );
 
-    Timer.periodic(Duration(seconds: 30), (timer) {
-      final now = DateTime.now();
-      state.removeWhere((key, value) => value.addedAt.isBefore(now));
-    });
-
-    return MempoolImpl._(
-        state, fetchBlockBody, eventSourcedState, (id) async => _add(id));
-  }
+        return Resource.make(
+          () =>
+              Future.sync(() => Timer.periodic(Duration(seconds: 30), (timer) {
+                    final now = DateTime.now();
+                    final toRemove =
+                        state.filter((v) => v.addedAt.isBefore(now));
+                    for (final id in toRemove.keys) {
+                      state.remove(id);
+                      mempoolChangesController.add(MempoolExpired(id: id));
+                    }
+                  })),
+          (timer) async => timer.cancel(),
+        ).map((_) => MempoolImpl._(state, fetchBlockBody, eventSourcedState,
+            mempoolChangesController, expirationDuration));
+      });
 
   @override
-  Future<void> add(TransactionId transactionId) => _add(transactionId);
+  Future<void> add(TransactionId transactionId) async {
+    _state[transactionId] =
+        MempoolEntry(transactionId, DateTime.now().add(expirationDuration));
+    mempoolChangesController.add(MempoolAdded(id: transactionId));
+  }
 
   @override
   Future<Set<TransactionId>> read(BlockId currentHead) => eventSourcedState
@@ -67,7 +90,11 @@ class MempoolImpl extends Mempool {
   @override
   Future<void> remove(TransactionId transactionId) async {
     _state.remove(transactionId);
+    mempoolChangesController.add(MempoolExpired(id: transactionId));
   }
+
+  @override
+  Stream<MempoolChange> get changes => mempoolChangesController.stream;
 }
 
 class MempoolEntry {
@@ -75,4 +102,18 @@ class MempoolEntry {
   final DateTime addedAt;
 
   MempoolEntry(this.transactionId, this.addedAt);
+}
+
+sealed class MempoolChange {}
+
+class MempoolAdded extends MempoolChange {
+  final TransactionId id;
+
+  MempoolAdded({required this.id});
+}
+
+class MempoolExpired extends MempoolChange {
+  final TransactionId id;
+
+  MempoolExpired({required this.id});
 }

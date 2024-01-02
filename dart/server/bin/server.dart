@@ -13,7 +13,7 @@ final conf.BlockchainConfig config2 = conf.BlockchainConfig(
     data: conf.BlockchainData(
         dataDir: "${Directory.systemTemp.path}/blockchain2/{genesisId}"),
     genesis: conf.BlockchainGenesis(
-      timestamp: Int64(1704142585256),
+      timestamp: Int64(1704159233203),
       // timestamp: null,
       localStakerIndex: -1,
     ),
