@@ -14,7 +14,6 @@ abstract class BlockchainView {
   Future<BlockId> get canonicalHeadId;
   Future<BlockId> get genesisBlockId;
   Stream<TraversalStep> get traversal;
-  Future<List<TransactionId>> get mempoolTransactionIds;
 
   Stream<BlockId> get adoptions =>
       traversal.whereType<TraversalStep_Applied>().map((t) => t.blockId);
@@ -104,12 +103,6 @@ class BlockchainViewFromBlockchain extends BlockchainView {
       blockchain.dataStores.transactions.get(transactionId);
 
   @override
-  Future<List<TransactionId>> get mempoolTransactionIds =>
-      blockchain.consensus.localChain.currentHead
-          .then(blockchain.ledger.mempool.read)
-          .then((l) => l.toList());
-
-  @override
   Stream<TraversalStep> get traversal => blockchain.traversal;
 }
 
@@ -145,11 +138,6 @@ class BlockchainViewFromRpc extends BlockchainView {
   Future<Transaction?> getTransaction(TransactionId transactionId) => nodeClient
       .getTransaction(GetTransactionReq(transactionId: transactionId))
       .then((v) => v.hasTransaction() ? v.transaction : null);
-
-  @override
-  // TODO: implement mempoolTransactionIds
-  Future<List<TransactionId>> get mempoolTransactionIds =>
-      throw UnimplementedError();
 
   @override
   Stream<TraversalStep> get traversal =>

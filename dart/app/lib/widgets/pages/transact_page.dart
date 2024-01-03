@@ -197,13 +197,20 @@ class TransactViewState extends State<TransactView> {
   }
 
   DataRow _feeOutputRow() {
-    final outputSum = _newOutputEntries
-        .map((t) => Int64.parseInt(t.$1))
-        .fold(Int64.ZERO, (a, b) => a + b);
-    final fee = _inputSum() - outputSum;
+    Int64 outputSum = Int64.ZERO;
+    String? errorText;
+    for (final t in _newOutputEntries) {
+      final parsed = Int64.tryParseInt(t.$1);
+      if (parsed == null) {
+        errorText = "?";
+        break;
+      } else {
+        outputSum += parsed;
+      }
+    }
 
     return DataRow(cells: [
-      DataCell(Text(fee.toString())),
+      DataCell(Text(errorText ?? (_inputSum() - outputSum).toString())),
       const DataCell(Text("Tip")),
       const DataCell(IconButton(
         icon: Icon(Icons.cancel),
@@ -245,6 +252,8 @@ class TransactViewState extends State<TransactView> {
             : DataTable(
                 columns: header,
                 rows: widget.wallet.spendableOutputs.entries
+                    // Hide registrations for now
+                    .where((e) => !e.value.value.hasRegistration())
                     .map(_inputEntryRow)
                     .toList(),
               ));

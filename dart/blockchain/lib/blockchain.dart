@@ -168,19 +168,14 @@ class BlockchainCore {
       log.info("Block id=${id.show} is already adopted");
       return;
     }
-
-    final body =
-        BlockBody(transactionIds: block.fullBody.transactions.map((t) => t.id));
     try {
       log.info("Validating id=${id.show}");
-      await log.timedInfoAsync(
-          () => validateBlock(id, Block(header: block.header, body: body)),
+      await log.timedInfoAsync(() => validateBlock(id, block),
           messageF: (duration) => "Validation took $duration");
     } on Exception catch (e) {
       log.warning("Failed to validate block", e);
       rethrow;
     }
-    await dataStores.bodies.put(id, body);
     if (compareAndAdopt) {
       final currentHead = await consensus.localChain.currentHead;
       final selectedChain = await log.timedInfoAsync(
@@ -197,24 +192,34 @@ class BlockchainCore {
     }
   }
 
-  Future<void> validateBlock(BlockId id, Block block) async {
-    await parentChildTree.assocate(id, block.header.parentHeaderId);
-    await dataStores.headers.put(id, block.header);
+  Future<void> validateBlock(BlockId id, FullBlock fullBlock) async {
+    await parentChildTree.assocate(id, fullBlock.header.parentHeaderId);
+    await dataStores.headers.put(id, fullBlock.header);
 
-    final errors = await consensus.blockHeaderValidation.validate(block.header);
+    final errors =
+        await consensus.blockHeaderValidation.validate(fullBlock.header);
     throwErrors() async {
       if (errors.isNotEmpty) {
         // TODO: ParentChildTree disassociate
         await dataStores.headers.remove(id);
+        await dataStores.bodies.remove(id);
         throw Exception("Invalid block. reason=$errors");
       }
     }
 
     await throwErrors();
 
+    final body = BlockBody(
+        transactionIds: fullBlock.fullBody.transactions.map((t) => t.id));
+    final block = Block(header: fullBlock.header, body: body);
+
     errors.addAll(await ledger.headerToBodyValidation.validate(block));
 
     await throwErrors();
+
+    for (final tx in fullBlock.fullBody.transactions) {
+      await dataStores.transactions.put(tx.id, tx);
+    }
 
     errors.addAll(await ledger.bodySyntaxValidation.validate(block.body));
     await throwErrors();
@@ -226,6 +231,7 @@ class BlockchainCore {
     errors
         .addAll(await ledger.bodyAuthorizationValidation.validate(block.body));
     await throwErrors();
+    await dataStores.bodies.put(id, body);
   }
 
   Future<void> processTransaction(Transaction transaction) async {

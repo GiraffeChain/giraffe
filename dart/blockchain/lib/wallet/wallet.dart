@@ -102,12 +102,14 @@ class Wallet {
     final genesisKeyPair = await ed25519.generateKeyPairFromSeed(Uint8List(32));
     final lock = Lock()..ed25519 = (Lock_Ed25519()..vk = genesisKeyPair.vk);
     final lockAddress = lock.address;
-    // TODO
     final Signer signer = (tx) async {
+      final bytesToSign = tx.immutableBytes;
       for (final input in tx.inputs) {
         if (input.lock == lock)
-          input.key =
-              (Key()..ed25519 = (Key_Ed25519()..signature = Uint8List(64)));
+          input.key = (Key()
+            ..ed25519 = (Key_Ed25519()
+              ..signature =
+                  await ed25519.sign(bytesToSign, genesisKeyPair.sk)));
       }
       return tx;
     };

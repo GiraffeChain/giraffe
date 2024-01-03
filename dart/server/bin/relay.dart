@@ -7,7 +7,7 @@ import 'package:blockchain/isolate_pool.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 
-final timestamp = 1704247535528;
+final timestamp = 1704249718692;
 
 final conf.BlockchainConfig config1 = conf.BlockchainConfig(
     genesis: conf.BlockchainGenesis(

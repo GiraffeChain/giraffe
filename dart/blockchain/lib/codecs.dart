@@ -157,7 +157,6 @@ extension TransactionCodecs on Transaction {
 extension TransactionInputCodecs on TransactionInput {
   List<int> get immutableBytes => <int>[]
     ..addAll(lock.immutableBytes)
-    ..addAll(key.immutableBytes)
     ..addAll(value.immutableBytes);
 }
 
