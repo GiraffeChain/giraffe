@@ -14,6 +14,8 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import '../google/protobuf/wrappers.pb.dart' as $2;
+
 class BlockId extends $pb.GeneratedMessage {
   factory BlockId({
     $core.List<$core.int>? value,
@@ -70,7 +72,6 @@ class BlockHeader extends $pb.GeneratedMessage {
     BlockId? parentHeaderId,
     $fixnum.Int64? parentSlot,
     $core.List<$core.int>? txRoot,
-    $core.List<$core.int>? bloomFilter,
     $fixnum.Int64? timestamp,
     $fixnum.Int64? height,
     $fixnum.Int64? slot,
@@ -78,8 +79,8 @@ class BlockHeader extends $pb.GeneratedMessage {
     OperationalCertificate? operationalCertificate,
     $core.List<$core.int>? metadata,
     StakingAddress? address,
-    BlockId? headerId,
     $core.Map<$core.String, $core.String>? settings,
+    BlockId? headerId,
   }) {
     final $result = create();
     if (parentHeaderId != null) {
@@ -90,9 +91,6 @@ class BlockHeader extends $pb.GeneratedMessage {
     }
     if (txRoot != null) {
       $result.txRoot = txRoot;
-    }
-    if (bloomFilter != null) {
-      $result.bloomFilter = bloomFilter;
     }
     if (timestamp != null) {
       $result.timestamp = timestamp;
@@ -115,11 +113,11 @@ class BlockHeader extends $pb.GeneratedMessage {
     if (address != null) {
       $result.address = address;
     }
-    if (headerId != null) {
-      $result.headerId = headerId;
-    }
     if (settings != null) {
       $result.settings.addAll(settings);
+    }
+    if (headerId != null) {
+      $result.headerId = headerId;
     }
     return $result;
   }
@@ -131,16 +129,15 @@ class BlockHeader extends $pb.GeneratedMessage {
     ..aOM<BlockId>(1, _omitFieldNames ? '' : 'parentHeaderId', protoName: 'parentHeaderId', subBuilder: BlockId.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'parentSlot', $pb.PbFieldType.OU6, protoName: 'parentSlot', defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'txRoot', $pb.PbFieldType.OY, protoName: 'txRoot')
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'bloomFilter', $pb.PbFieldType.OY, protoName: 'bloomFilter')
-    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'timestamp', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(7, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOM<EligibilityCertificate>(8, _omitFieldNames ? '' : 'eligibilityCertificate', protoName: 'eligibilityCertificate', subBuilder: EligibilityCertificate.create)
-    ..aOM<OperationalCertificate>(9, _omitFieldNames ? '' : 'operationalCertificate', protoName: 'operationalCertificate', subBuilder: OperationalCertificate.create)
-    ..a<$core.List<$core.int>>(10, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
-    ..aOM<StakingAddress>(11, _omitFieldNames ? '' : 'address', subBuilder: StakingAddress.create)
+    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'timestamp', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<EligibilityCertificate>(7, _omitFieldNames ? '' : 'eligibilityCertificate', protoName: 'eligibilityCertificate', subBuilder: EligibilityCertificate.create)
+    ..aOM<OperationalCertificate>(8, _omitFieldNames ? '' : 'operationalCertificate', protoName: 'operationalCertificate', subBuilder: OperationalCertificate.create)
+    ..a<$core.List<$core.int>>(9, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
+    ..aOM<StakingAddress>(10, _omitFieldNames ? '' : 'address', subBuilder: StakingAddress.create)
+    ..m<$core.String, $core.String>(11, _omitFieldNames ? '' : 'settings', entryClassName: 'BlockHeader.SettingsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('com.blockchain.models'))
     ..aOM<BlockId>(12, _omitFieldNames ? '' : 'headerId', protoName: 'headerId', subBuilder: BlockId.create)
-    ..m<$core.String, $core.String>(13, _omitFieldNames ? '' : 'settings', entryClassName: 'BlockHeader.SettingsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('com.blockchain.models'))
     ..hasRequiredFields = false
   ;
 
@@ -198,93 +195,86 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearTxRoot() => clearField(3);
 
-  /// A fuzzy search for addresses associated with this block
-  /// length = 256
-  @$pb.TagNumber(4)
-  $core.List<$core.int> get bloomFilter => $_getN(3);
-  @$pb.TagNumber(4)
-  set bloomFilter($core.List<$core.int> v) { $_setBytes(3, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasBloomFilter() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearBloomFilter() => clearField(4);
-
   /// The UTC UNIX timestamp (ms) when the block was created
-  @$pb.TagNumber(5)
-  $fixnum.Int64 get timestamp => $_getI64(4);
-  @$pb.TagNumber(5)
-  set timestamp($fixnum.Int64 v) { $_setInt64(4, v); }
-  @$pb.TagNumber(5)
-  $core.bool hasTimestamp() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearTimestamp() => clearField(5);
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get timestamp => $_getI64(3);
+  @$pb.TagNumber(4)
+  set timestamp($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasTimestamp() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearTimestamp() => clearField(4);
 
   /// The 1-based index of this block in the blockchain
-  @$pb.TagNumber(6)
-  $fixnum.Int64 get height => $_getI64(5);
-  @$pb.TagNumber(6)
-  set height($fixnum.Int64 v) { $_setInt64(5, v); }
-  @$pb.TagNumber(6)
-  $core.bool hasHeight() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearHeight() => clearField(6);
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get height => $_getI64(4);
+  @$pb.TagNumber(5)
+  set height($fixnum.Int64 v) { $_setInt64(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasHeight() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearHeight() => clearField(5);
 
   /// The time-slot in which the block producer created the block
-  @$pb.TagNumber(7)
-  $fixnum.Int64 get slot => $_getI64(6);
-  @$pb.TagNumber(7)
-  set slot($fixnum.Int64 v) { $_setInt64(6, v); }
-  @$pb.TagNumber(7)
-  $core.bool hasSlot() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearSlot() => clearField(7);
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get slot => $_getI64(5);
+  @$pb.TagNumber(6)
+  set slot($fixnum.Int64 v) { $_setInt64(5, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasSlot() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSlot() => clearField(6);
 
   /// A certificate indicating that the block producer was eligible to make this block
-  @$pb.TagNumber(8)
-  EligibilityCertificate get eligibilityCertificate => $_getN(7);
-  @$pb.TagNumber(8)
-  set eligibilityCertificate(EligibilityCertificate v) { setField(8, v); }
-  @$pb.TagNumber(8)
-  $core.bool hasEligibilityCertificate() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearEligibilityCertificate() => clearField(8);
-  @$pb.TagNumber(8)
-  EligibilityCertificate ensureEligibilityCertificate() => $_ensure(7);
+  @$pb.TagNumber(7)
+  EligibilityCertificate get eligibilityCertificate => $_getN(6);
+  @$pb.TagNumber(7)
+  set eligibilityCertificate(EligibilityCertificate v) { setField(7, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasEligibilityCertificate() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearEligibilityCertificate() => clearField(7);
+  @$pb.TagNumber(7)
+  EligibilityCertificate ensureEligibilityCertificate() => $_ensure(6);
 
   /// A certificate indicating the operator's commitment to this block
-  @$pb.TagNumber(9)
-  OperationalCertificate get operationalCertificate => $_getN(8);
-  @$pb.TagNumber(9)
-  set operationalCertificate(OperationalCertificate v) { setField(9, v); }
-  @$pb.TagNumber(9)
-  $core.bool hasOperationalCertificate() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearOperationalCertificate() => clearField(9);
-  @$pb.TagNumber(9)
-  OperationalCertificate ensureOperationalCertificate() => $_ensure(8);
+  @$pb.TagNumber(8)
+  OperationalCertificate get operationalCertificate => $_getN(7);
+  @$pb.TagNumber(8)
+  set operationalCertificate(OperationalCertificate v) { setField(8, v); }
+  @$pb.TagNumber(8)
+  $core.bool hasOperationalCertificate() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearOperationalCertificate() => clearField(8);
+  @$pb.TagNumber(8)
+  OperationalCertificate ensureOperationalCertificate() => $_ensure(7);
 
   /// Optional metadata stamped by the operator.  Must be latin-1 encoded, and must be at most 32 bytes in length.
   /// optional
-  @$pb.TagNumber(10)
-  $core.List<$core.int> get metadata => $_getN(9);
-  @$pb.TagNumber(10)
-  set metadata($core.List<$core.int> v) { $_setBytes(9, v); }
-  @$pb.TagNumber(10)
-  $core.bool hasMetadata() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearMetadata() => clearField(10);
+  @$pb.TagNumber(9)
+  $core.List<$core.int> get metadata => $_getN(8);
+  @$pb.TagNumber(9)
+  set metadata($core.List<$core.int> v) { $_setBytes(8, v); }
+  @$pb.TagNumber(9)
+  $core.bool hasMetadata() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearMetadata() => clearField(9);
 
   /// The operator's staking address
+  @$pb.TagNumber(10)
+  StakingAddress get address => $_getN(9);
+  @$pb.TagNumber(10)
+  set address(StakingAddress v) { setField(10, v); }
+  @$pb.TagNumber(10)
+  $core.bool hasAddress() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearAddress() => clearField(10);
+  @$pb.TagNumber(10)
+  StakingAddress ensureAddress() => $_ensure(9);
+
+  /// Configuration or protocol changes
   @$pb.TagNumber(11)
-  StakingAddress get address => $_getN(10);
-  @$pb.TagNumber(11)
-  set address(StakingAddress v) { setField(11, v); }
-  @$pb.TagNumber(11)
-  $core.bool hasAddress() => $_has(10);
-  @$pb.TagNumber(11)
-  void clearAddress() => clearField(11);
-  @$pb.TagNumber(11)
-  StakingAddress ensureAddress() => $_ensure(10);
+  $core.Map<$core.String, $core.String> get settings => $_getMap(10);
 
   /// The ID of _this_ block header.  This value is optional and its contents are not included in the signable or identifiable data.  Clients which _can_ verify
   /// this value should verify this value, but some clients may not be able to or need to, in which case this field acts as a convenience.
@@ -298,10 +288,6 @@ class BlockHeader extends $pb.GeneratedMessage {
   void clearHeaderId() => clearField(12);
   @$pb.TagNumber(12)
   BlockId ensureHeaderId() => $_ensure(11);
-
-  /// Configuration or protocol changes
-  @$pb.TagNumber(13)
-  $core.Map<$core.String, $core.String> get settings => $_getMap(12);
 }
 
 /// A certificate proving the operator's election
@@ -2019,6 +2005,200 @@ class Key extends $pb.GeneratedMessage {
   void clearEd25519() => clearField(1);
   @$pb.TagNumber(1)
   Key_Ed25519 ensureEd25519() => $_ensure(0);
+}
+
+class PeerId extends $pb.GeneratedMessage {
+  factory PeerId({
+    $core.List<$core.int>? value,
+  }) {
+    final $result = create();
+    if (value != null) {
+      $result.value = value;
+    }
+    return $result;
+  }
+  PeerId._() : super();
+  factory PeerId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PeerId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerId', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  PeerId clone() => PeerId()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PeerId copyWith(void Function(PeerId) updates) => super.copyWith((message) => updates(message as PeerId)) as PeerId;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PeerId create() => PeerId._();
+  PeerId createEmptyInstance() => create();
+  static $pb.PbList<PeerId> createRepeated() => $pb.PbList<PeerId>();
+  @$core.pragma('dart2js:noInline')
+  static PeerId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PeerId>(create);
+  static PeerId? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get value => $_getN(0);
+  @$pb.TagNumber(1)
+  set value($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasValue() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearValue() => clearField(1);
+}
+
+class PublicP2PState extends $pb.GeneratedMessage {
+  factory PublicP2PState({
+    ConnectedPeer? localPeer,
+    $core.Iterable<ConnectedPeer>? peers,
+  }) {
+    final $result = create();
+    if (localPeer != null) {
+      $result.localPeer = localPeer;
+    }
+    if (peers != null) {
+      $result.peers.addAll(peers);
+    }
+    return $result;
+  }
+  PublicP2PState._() : super();
+  factory PublicP2PState.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PublicP2PState.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PublicP2PState', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..aOM<ConnectedPeer>(1, _omitFieldNames ? '' : 'localPeer', protoName: 'localPeer', subBuilder: ConnectedPeer.create)
+    ..pc<ConnectedPeer>(2, _omitFieldNames ? '' : 'peers', $pb.PbFieldType.PM, subBuilder: ConnectedPeer.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  PublicP2PState clone() => PublicP2PState()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PublicP2PState copyWith(void Function(PublicP2PState) updates) => super.copyWith((message) => updates(message as PublicP2PState)) as PublicP2PState;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PublicP2PState create() => PublicP2PState._();
+  PublicP2PState createEmptyInstance() => create();
+  static $pb.PbList<PublicP2PState> createRepeated() => $pb.PbList<PublicP2PState>();
+  @$core.pragma('dart2js:noInline')
+  static PublicP2PState getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PublicP2PState>(create);
+  static PublicP2PState? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ConnectedPeer get localPeer => $_getN(0);
+  @$pb.TagNumber(1)
+  set localPeer(ConnectedPeer v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasLocalPeer() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLocalPeer() => clearField(1);
+  @$pb.TagNumber(1)
+  ConnectedPeer ensureLocalPeer() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.List<ConnectedPeer> get peers => $_getList(1);
+}
+
+class ConnectedPeer extends $pb.GeneratedMessage {
+  factory ConnectedPeer({
+    PeerId? peerId,
+    $2.StringValue? host,
+    $2.UInt32Value? port,
+  }) {
+    final $result = create();
+    if (peerId != null) {
+      $result.peerId = peerId;
+    }
+    if (host != null) {
+      $result.host = host;
+    }
+    if (port != null) {
+      $result.port = port;
+    }
+    return $result;
+  }
+  ConnectedPeer._() : super();
+  factory ConnectedPeer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ConnectedPeer.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConnectedPeer', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..aOM<PeerId>(1, _omitFieldNames ? '' : 'peerId', protoName: 'peerId', subBuilder: PeerId.create)
+    ..aOM<$2.StringValue>(2, _omitFieldNames ? '' : 'host', subBuilder: $2.StringValue.create)
+    ..aOM<$2.UInt32Value>(3, _omitFieldNames ? '' : 'port', subBuilder: $2.UInt32Value.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ConnectedPeer clone() => ConnectedPeer()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ConnectedPeer copyWith(void Function(ConnectedPeer) updates) => super.copyWith((message) => updates(message as ConnectedPeer)) as ConnectedPeer;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ConnectedPeer create() => ConnectedPeer._();
+  ConnectedPeer createEmptyInstance() => create();
+  static $pb.PbList<ConnectedPeer> createRepeated() => $pb.PbList<ConnectedPeer>();
+  @$core.pragma('dart2js:noInline')
+  static ConnectedPeer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ConnectedPeer>(create);
+  static ConnectedPeer? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  PeerId get peerId => $_getN(0);
+  @$pb.TagNumber(1)
+  set peerId(PeerId v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasPeerId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPeerId() => clearField(1);
+  @$pb.TagNumber(1)
+  PeerId ensurePeerId() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $2.StringValue get host => $_getN(1);
+  @$pb.TagNumber(2)
+  set host($2.StringValue v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasHost() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearHost() => clearField(2);
+  @$pb.TagNumber(2)
+  $2.StringValue ensureHost() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $2.UInt32Value get port => $_getN(2);
+  @$pb.TagNumber(3)
+  set port($2.UInt32Value v) { setField(3, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasPort() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPort() => clearField(3);
+  @$pb.TagNumber(3)
+  $2.UInt32Value ensurePort() => $_ensure(2);
 }
 
 

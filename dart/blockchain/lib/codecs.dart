@@ -23,7 +23,6 @@ extension BlockHeaderCodecs on BlockHeader {
     ..addAll(parentHeaderId.value)
     ..addAll(parentSlot.toBytes())
     ..addAll(txRoot)
-    ..addAll(bloomFilter)
     ..addAll(timestamp.immutableBytes)
     ..addAll(height.immutableBytes)
     ..addAll(slot.immutableBytes)
@@ -48,7 +47,6 @@ extension UnsignedBlockHeaderCodecs on UnsignedBlockHeader {
     ..addAll(parentHeaderId.value)
     ..addAll(parentSlot.toBytes())
     ..addAll(txRoot)
-    ..addAll(bloomFilter)
     ..addAll(timestamp.immutableBytes)
     ..addAll(height.immutableBytes)
     ..addAll(slot.immutableBytes)
@@ -165,9 +163,21 @@ extension KeyCodecs on Key {
   }
 }
 
+extension StakingAddressCodecs on StakingAddress {
+  List<int> get immutableBytes => <int>[]..addAll(value);
+  String get show => "s_${this.value.base58}";
+}
+
+extension StakingRegistrationCodecs on StakingRegistration {
+  List<int> get immutableBytes => <int>[]
+    ..addAll(signature.immutableBytes)
+    ..addAll(stakingAddress.immutableBytes);
+}
+
 extension ValueCodecs on Value {
-  // TODO registration
-  List<int> get immutableBytes => <int>[]..addAll(quantity.immutableBytes);
+  List<int> get immutableBytes => <int>[]
+    ..addAll(quantity.immutableBytes)
+    ..addAll(registration.immutableBytes);
 }
 
 extension LockAddressCodecs on LockAddress {
@@ -200,8 +210,8 @@ extension Lock_Ed25519Codecs on Lock_Ed25519 {
   List<int> get immutableBytes => vk;
 }
 
-extension StakingAddressCodecs on StakingAddress {
-  String get show => "s_${this.value.base58}";
+extension PeerIdCodecs on PeerId {
+  String get show => "p_${value.sublist(0, 8).show}";
 }
 
 class PersistenceCodecs {

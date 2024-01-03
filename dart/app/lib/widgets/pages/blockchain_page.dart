@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
-import 'package:blockchain/wallet/wallet.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_app/widgets/pages/transact_page.dart';
 import 'package:blockchain/codecs.dart';
@@ -37,15 +36,7 @@ class BlockchainPage extends StatelessWidget {
     final blockchainWriter = context.watch<BlockchainWriter>();
     return TabBarView(children: [
       const LiveBlocksView(),
-      StreamBuilder(
-        stream: Wallet.streamed(blockchain),
-        builder: (context, snapshot) => snapshot.hasData
-            ? TransactView(
-                wallet: snapshot.data!,
-                processTransaction: blockchainWriter.submitTransaction,
-              )
-            : const CircularProgressIndicator(),
-      )
+      StreamedTransactView(view: blockchain, writer: blockchainWriter)
     ]);
   }
 
@@ -112,15 +103,25 @@ class LatestBlockView extends StatelessWidget {
       );
 }
 
-class LiveBlocksView extends StatelessWidget {
+class LiveBlocksView extends StatefulWidget {
   const LiveBlocksView({super.key});
+
   @override
-  Widget build(BuildContext context) => Center(
-        child: StreamBuilder(
-          stream: _accumulateBlocksStream(context),
-          builder: (context, snapshot) => _blocksView(snapshot.data ?? []),
-        ),
-      );
+  State<StatefulWidget> createState() => LiveBlocksViewState();
+}
+
+class LiveBlocksViewState extends State<StatefulWidget>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Center(
+      child: StreamBuilder(
+        stream: _accumulateBlocksStream(context),
+        builder: (context, snapshot) => _blocksView(snapshot.data ?? []),
+      ),
+    );
+  }
 
   Stream<List<FullBlock>> _accumulateBlocksStream(BuildContext context) =>
       _fullBlocks(context.read<BlockchainView>())
@@ -141,6 +142,9 @@ class LiveBlocksView extends StatelessWidget {
               const Divider(),
         ),
       );
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 Stream<FullBlock> _fullBlocks(BlockchainView blockchain) => StreamGroup.merge([

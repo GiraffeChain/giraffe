@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/crypto/utils.dart';
+import 'package:blockchain/ledger/block_header_to_body_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
@@ -77,8 +78,7 @@ class GenesisConfig {
     final header = BlockHeader()
       ..parentHeaderId = GenesisParentId
       ..parentSlot = Int64(-1)
-      ..txRoot = _emptyBytes(32) // TODO
-      ..bloomFilter = _emptyBytes(256) // TODO
+      ..txRoot = TxRoot.calculateFromTransactions(Uint8List(32), transactions)
       ..timestamp = timestamp
       ..height = Int64.ONE
       ..slot = Int64.ZERO

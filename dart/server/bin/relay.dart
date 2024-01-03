@@ -2,30 +2,42 @@ import 'dart:io';
 
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/config.dart' as conf;
+import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/isolate_pool.dart';
-import 'package:blockchain/crypto/ed25519.dart' as ed25519;
-import 'package:blockchain/crypto/ed25519vrf.dart' as ed25519VRF;
-import 'package:blockchain/crypto/kes.dart' as kes;
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
+
+final timestamp = 1704241140953;
+
+final conf.BlockchainConfig config1 = conf.BlockchainConfig(
+    genesis: conf.BlockchainGenesis(
+  timestamp: null,
+  localStakerIndex: -1,
+));
 
 final conf.BlockchainConfig config2 = conf.BlockchainConfig(
     data: conf.BlockchainData(
         dataDir: "${Directory.systemTemp.path}/blockchain2/{genesisId}"),
     genesis: conf.BlockchainGenesis(
-      timestamp: Int64(1704159233203),
-      // timestamp: null,
+      timestamp: Int64(timestamp),
       localStakerIndex: -1,
     ),
     rpc: conf.BlockchainRPC(bindPort: 2034),
-    p2p: conf.BlockchainP2P(bindPort: 2033, knownPeers: ["localhost:2023"]));
+    p2p: conf.BlockchainP2P(
+        bindPort: 2033,
+        publicHost: "localhost",
+        publicPort: 2033,
+        knownPeers: ["localhost:2023"]));
 
-final conf.BlockchainConfig config1 = conf.BlockchainConfig(
+final conf.BlockchainConfig config3 = conf.BlockchainConfig(
+    data: conf.BlockchainData(
+        dataDir: "${Directory.systemTemp.path}/blockchain3/{genesisId}"),
     genesis: conf.BlockchainGenesis(
-  // timestamp: Int64(1703957370323),
-  timestamp: null,
-  localStakerIndex: -1,
-));
+      timestamp: Int64(timestamp),
+      localStakerIndex: -1,
+    ),
+    rpc: conf.BlockchainRPC(bindPort: 2044),
+    p2p: conf.BlockchainP2P(bindPort: 2043, knownPeers: ["localhost:2023"]));
 
 final config = config2;
 Future<void> main() async {
@@ -38,17 +50,15 @@ Future<void> main() async {
         '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${_errorSuffix}${_stackTraceSuffix}');
   });
 
-  final resource = IsolatePool.make(Platform.numberOfProcessors)
+  final resource = IsolatePool.make()
       .map((p) => p.isolate)
-      .tap((isolate) {
-        ed25519.ed25519 = ed25519.Ed25519Isolated(isolate);
-        ed25519VRF.ed25519Vrf = ed25519VRF.Ed25519VRFIsolated(isolate);
-        kes.kesProduct = kes.KesProudctIsolated(isolate);
-      })
+      .tap(setComputeFunction)
       .flatMap((isolate) => BlockchainCore.make(config, isolate))
-      .flatMap((blockchain) => BlockchainRpc.make(blockchain, config)
-          .product(BlockchainP2P.make(blockchain, config)))
-      .evalTap((_) => ProcessSignal.sigint.watch().first);
+      .flatMap(
+        (blockchain) => BlockchainRpc.make(blockchain, config)
+            .product(BlockchainP2P.make(blockchain, config)),
+      );
 
-  await resource.use((_) async {});
+  await resource
+      .use((f) => Future.any([f.$2, ProcessSignal.sigint.watch().first]));
 }

@@ -1,14 +1,11 @@
+import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/resource.dart';
-import 'package:blockchain/consensus/staker_tracker.dart';
-import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 
 Resource<Server> serveRpcs(String host, int port, NodeRpcServiceBase nodeRpc,
@@ -17,26 +14,15 @@ Resource<Server> serveRpcs(String host, int port, NodeRpcServiceBase nodeRpc,
         .evalTap((server) => server.serve(address: host, port: port));
 
 class NodeRpcServiceImpl extends NodeRpcServiceBase {
-  final Stream<TraversalStep> _traversal;
-  final DataStores _dataStores;
-  final Future<void> Function(Transaction) _onBroadcastTransaction;
-  final Future<BlockId?> Function(Int64) _blockIdAtHeight;
+  final BlockchainCore blockchain;
 
-  NodeRpcServiceImpl(
-      {required Stream<TraversalStep> traversal,
-      required DataStores dataStores,
-      required Future<void> Function(Transaction) onBroadcastTransaction,
-      required Future<BlockId?> Function(Int64) blockIdAtHeight})
-      : _traversal = traversal,
-        _dataStores = dataStores,
-        _onBroadcastTransaction = onBroadcastTransaction,
-        _blockIdAtHeight = blockIdAtHeight;
+  NodeRpcServiceImpl({required this.blockchain});
 
   final log = Logger("Blockchain.RPC");
 
   @override
   Stream<FollowRes> follow(ServiceCall call, FollowReq request) {
-    return _traversal.map((t) {
+    return blockchain.traversal.map((t) {
       if (t is TraversalStep_Applied) {
         return FollowRes(adopted: t.blockId);
       } else if (t is TraversalStep_Unapplied) {
@@ -51,7 +37,7 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
       ServiceCall call, BroadcastTransactionReq request) async {
     assert(request.hasTransaction());
     log.info("Received transaction id=${request.transaction.id.show}");
-    await _onBroadcastTransaction(request.transaction);
+    await blockchain.processTransaction(request.transaction);
     return BroadcastTransactionRes();
   }
 
@@ -59,7 +45,7 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
   Future<GetFullBlockRes> getFullBlock(
       ServiceCall call, GetFullBlockReq request) async {
     assert(request.hasBlockId());
-    final block = await _dataStores.getFullBlock(request.blockId);
+    final block = await blockchain.dataStores.getFullBlock(request.blockId);
     return GetFullBlockRes(fullBlock: block);
   }
 
@@ -68,7 +54,7 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
       ServiceCall call, GetTransactionReq request) async {
     assert(request.hasTransactionId());
     final transaction =
-        await _dataStores.transactions.get(request.transactionId);
+        await blockchain.dataStores.transactions.get(request.transactionId);
     return GetTransactionRes(transaction: transaction);
   }
 
@@ -76,7 +62,7 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
   Future<GetBlockBodyRes> getBlockBody(
       ServiceCall call, GetBlockBodyReq request) async {
     assert(request.hasBlockId());
-    final body = await _dataStores.bodies.get(request.blockId);
+    final body = await blockchain.dataStores.bodies.get(request.blockId);
     return GetBlockBodyRes(body: body);
   }
 
@@ -84,14 +70,15 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
   Future<GetBlockHeaderRes> getBlockHeader(
       ServiceCall call, GetBlockHeaderReq request) async {
     assert(request.hasBlockId());
-    final header = await _dataStores.headers.get(request.blockId);
+    final header = await blockchain.dataStores.headers.get(request.blockId);
     return GetBlockHeaderRes(header: header);
   }
 
   @override
   Future<GetBlockIdAtHeightRes> getBlockIdAtHeight(
       ServiceCall call, GetBlockIdAtHeightReq request) async {
-    final blockId = await _blockIdAtHeight(request.height);
+    final blockId =
+        await blockchain.consensus.localChain.blockIdAtHeight(request.height);
     return GetBlockIdAtHeightRes(blockId: blockId);
   }
 
@@ -99,26 +86,15 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
   Future<GetSlotDataRes> getSlotData(
       ServiceCall call, GetSlotDataReq request) async {
     assert(request.hasBlockId());
-    final slotData = await _dataStores.slotData.get(request.blockId);
+    final slotData = await blockchain.dataStores.slotData.get(request.blockId);
     return GetSlotDataRes(slotData: slotData);
   }
 }
 
 class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
-  final Future<void> Function(Block) _onBroadcastBlock;
-  final StakerTracker _stakerTracker;
-  final Stream<BlockBody> Function(BlockId, Int64) _packBlock;
-  final Future<Eta> Function(BlockId, Int64) _calculateEta;
+  final BlockchainCore blockchain;
 
-  StakerSupportRpcImpl(
-      {required Future<void> Function(Block) onBroadcastBlock,
-      required StakerTracker stakerTracker,
-      required Stream<BlockBody> Function(BlockId, Int64) packBlock,
-      required Future<Eta> Function(BlockId, Int64) calculateEta})
-      : _onBroadcastBlock = onBroadcastBlock,
-        _stakerTracker = stakerTracker,
-        _packBlock = packBlock,
-        _calculateEta = calculateEta;
+  StakerSupportRpcImpl({required this.blockchain});
 
   final log = Logger("Blockchain.RPC");
 
@@ -127,7 +103,7 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
       ServiceCall call, BroadcastBlockReq request) async {
     assert(request.hasBlock());
     log.info("Received block id=${request.block.header.id.show}");
-    await _onBroadcastBlock(request.block);
+    await blockchain.processBlock(request.block);
     return BroadcastBlockRes();
   }
 
@@ -136,7 +112,7 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
     assert(request.hasParentBlockId());
     assert(request.hasStakingAddress());
     assert(request.hasSlot());
-    final staker = await _stakerTracker.staker(
+    final staker = await blockchain.consensus.stakerTracker.staker(
       request.parentBlockId,
       request.slot,
       request.stakingAddress,
@@ -145,28 +121,35 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
   }
 
   @override
-  Stream<PackBlockRes> packBlock(
-      ServiceCall call, PackBlockReq request) async* {
+  Stream<PackBlockRes> packBlock(ServiceCall call, PackBlockReq request) {
     assert(request.hasParentBlockId());
     assert(request.hasUntilSlot());
-    await for (final candidate
-        in _packBlock(request.parentBlockId, request.untilSlot)) {
-      yield PackBlockRes(body: candidate);
-    }
+    return Stream.fromFuture(
+            blockchain.dataStores.headers.getOrRaise(request.parentBlockId))
+        .map((h) => h.height)
+        .asyncExpand((parentHeight) => blockchain.ledger.blockPacker
+            .streamed(
+                request.parentBlockId, parentHeight + 1, request.untilSlot)
+            .map((fullBody) => BlockBody(
+                transactionIds: fullBody.transactions.map((t) => t.id))))
+        .map((candidate) => PackBlockRes(body: candidate));
   }
 
   @override
   Future<CalculateEtaRes> calculateEta(
       ServiceCall call, CalculateEtaReq request) async {
-    final eta = await _calculateEta(request.parentBlockId, request.slot);
+    final parentSlotData =
+        await blockchain.dataStores.slotData.getOrRaise(request.parentBlockId);
+    final eta = await blockchain.consensus.etaCalculation
+        .etaToBe(parentSlotData.slotId, request.slot);
     return CalculateEtaRes(eta: eta);
   }
 
   @override
   Future<GetTotalActiveStakeRes> getTotalActivestake(
       ServiceCall call, GetTotalActiveStakeReq request) async {
-    final totalActiveStake = await _stakerTracker.totalActiveStake(
-        request.parentBlockId, request.slot);
+    final totalActiveStake = await blockchain.consensus.stakerTracker
+        .totalActiveStake(request.parentBlockId, request.slot);
     return GetTotalActiveStakeRes(totalActiveStake: totalActiveStake);
   }
 }

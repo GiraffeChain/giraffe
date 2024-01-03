@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/consensus/consensus.dart';
 import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
@@ -40,8 +41,8 @@ class Minting {
     ProtocolSettings protocolSettings,
     Clock clock,
     BlockPacker blockPacker,
-    SlotData canonicalHeadSlotData,
-    Stream<SlotData> adoptedSlotData,
+    BlockHeader canonicalHead,
+    Stream<BlockHeader> adoptedHeaders,
     EtaCalculation etaCalculation,
     LeaderElection leaderElection,
     StakerTracker stakerTracker,
@@ -59,7 +60,7 @@ class Minting {
             VrfCalculatorImpl(vrfSk, clock, leaderElection, protocolSettings);
 
         return StakingImpl.make(
-          canonicalHeadSlotData.slotId,
+          canonicalHead.slotId,
           protocolSettings.operationalPeriodLength,
           Int64(0),
           stakingAddress,
@@ -72,8 +73,7 @@ class Minting {
           leaderElection,
         ).map((staking) {
           final blockProducer = BlockProducerImpl(
-            ConcatEagerStream(
-                [Stream.value(canonicalHeadSlotData), adoptedSlotData]),
+            ConcatEagerStream([Stream.value(canonicalHead), adoptedHeaders]),
             staking,
             clock,
             blockPacker,
@@ -94,16 +94,16 @@ class Minting {
     Clock clock,
     Consensus consensus,
     BlockPacker blockPacker,
-    SlotData canonicalHeadSlotData,
-    Stream<SlotData> adoptedSlotData,
+    BlockHeader canonicalHead,
+    Stream<BlockHeader> adoptedHeaders,
   ) =>
       make(
           stakingDir,
           protocolSettings,
           clock,
           blockPacker,
-          canonicalHeadSlotData,
-          adoptedSlotData,
+          canonicalHead,
+          adoptedHeaders,
           consensus.etaCalculation,
           consensus.leaderElection,
           consensus.stakerTracker);
@@ -112,8 +112,8 @@ class Minting {
     Directory stakingDir,
     ProtocolSettings protocolSettings,
     Clock clock,
-    SlotData canonicalHeadSlotData,
-    Stream<SlotData> adoptedSlotData,
+    BlockHeader canonicalHead,
+    Stream<BlockHeader> adoptedHeaders,
     LeaderElection leaderElection,
     NodeRpcClient nodeClient,
     StakerSupportRpcClient stakerSupportClient,
@@ -124,8 +124,8 @@ class Minting {
         clock,
         BlockPackerForStakerSupportRpc(
             client: stakerSupportClient, nodeClient: nodeClient),
-        canonicalHeadSlotData,
-        adoptedSlotData,
+        canonicalHead,
+        adoptedHeaders,
         EtaCalculationForStakerSupportRpc(client: stakerSupportClient),
         leaderElection,
         StakerTrackerForStakerSupportRpc(client: stakerSupportClient),

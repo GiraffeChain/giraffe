@@ -9,14 +9,14 @@
             "cwd": "dart/server",
             "request": "launch",
             "type": "dart",
-            "program": "bin/server.dart"
+            "program": "bin/relay.dart"
         },
         {
             "name": "Block Producer",
             "cwd": "dart/server",
             "request": "launch",
             "type": "dart",
-            "program": "bin/block_producer_server.dart"
+            "program": "bin/producer.dart"
         },
         {
             "name": "Frontend",

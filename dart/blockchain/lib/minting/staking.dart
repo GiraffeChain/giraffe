@@ -117,7 +117,6 @@ class StakingImpl extends Staking {
         ..parentHeaderId = unsignedHeader.parentHeaderId
         ..parentSlot = unsignedHeader.parentSlot
         ..txRoot = unsignedHeader.txRoot
-        ..bloomFilter = unsignedHeader.bloomFilter
         ..timestamp = unsignedHeader.timestamp
         ..height = unsignedHeader.height
         ..slot = unsignedHeader.slot

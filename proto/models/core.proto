@@ -3,6 +3,7 @@ syntax = "proto3";
 package com.blockchain.models;
 
 import "validate/validate.proto";
+import "google/protobuf/wrappers.proto";
 
 message BlockId {
     bytes value = 1;
@@ -20,26 +21,23 @@ message BlockHeader {
   // The commitment/accumulator of the block body
   // length = 32
   bytes txRoot = 3 [(validate.rules).bytes.len = 32];
-  // A fuzzy search for addresses associated with this block
-  // length = 256
-  bytes bloomFilter = 4[(validate.rules).bytes.len = 256];
   // The UTC UNIX timestamp (ms) when the block was created
-  uint64 timestamp = 5;
+  uint64 timestamp = 4;
   // The 1-based index of this block in the blockchain
-  uint64 height = 6;
+  uint64 height = 5;
   // The time-slot in which the block producer created the block
-  uint64 slot = 7;
+  uint64 slot = 6;
   // A certificate indicating that the block producer was eligible to make this block
-  EligibilityCertificate eligibilityCertificate = 8 [(validate.rules).message.required = true];
+  EligibilityCertificate eligibilityCertificate = 7 [(validate.rules).message.required = true];
   // A certificate indicating the operator's commitment to this block
-  OperationalCertificate operationalCertificate = 9 [(validate.rules).message.required = true];
+  OperationalCertificate operationalCertificate = 8 [(validate.rules).message.required = true];
   // Optional metadata stamped by the operator.  Must be latin-1 encoded, and must be at most 32 bytes in length.
   // optional
-  bytes metadata = 10 [(validate.rules).bytes.max_len = 32];
+  bytes metadata = 9 [(validate.rules).bytes.max_len = 32];
   // The operator's staking address
-  StakingAddress address = 11 [(validate.rules).message.required = true];
+  StakingAddress address = 10 [(validate.rules).message.required = true];
   // Configuration or protocol changes
-  map<string, string> settings = 13;
+  map<string, string> settings = 11;
 }
 
 // A certificate proving the operator's election
@@ -219,4 +217,19 @@ message Key {
     message Ed25519 {
         bytes signature = 1;
     }
+}
+
+message PeerId {
+    bytes value = 1 [(validate.rules).bytes.len = 32];
+}
+
+message PublicP2PState {
+    ConnectedPeer localPeer = 1;
+    repeated ConnectedPeer peers = 2;
+}
+
+message ConnectedPeer {
+    PeerId peerId = 1;
+    google.protobuf.StringValue host = 2;
+    google.protobuf.UInt32Value port = 3;
 }

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-typedef PeerId = Uint8List;
+import 'package:blockchain_protobuf/google/protobuf/wrappers.pb.dart';
 
 typedef BytesReader = Future<List<int>> Function(int);
 typedef BytesWriter = Future<void> Function(List<int>);
@@ -13,3 +13,13 @@ Uint8List uintToBytes(int value) {
 }
 
 int bytesToUint(Uint8List bytes) => bytes.buffer.asUint32List().first;
+
+extension NullableStringOps on String? {
+  StringValue? get stringValue =>
+      (this != null) ? StringValue(value: this!) : null;
+}
+
+extension NullableIntOps on int? {
+  UInt32Value? get uint32Value =>
+      (this != null) ? UInt32Value(value: this!) : null;
+}

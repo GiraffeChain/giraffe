@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:async/async.dart';
@@ -9,22 +10,63 @@ import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/ledger/mempool.dart';
 import 'package:blockchain/network/framing.dart';
 import 'package:blockchain/network/handshake.dart';
-import 'package:blockchain/network/util.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/rxdart.dart';
 
 class PeersManager {
+  final ConnectedPeer localPeer;
   final Ed25519KeyPair localPeerKeyPair;
   final Uint8List magicBytes;
   final BlockchainCore blockchain;
 
-  PeersManager(
-      {required this.localPeerKeyPair,
-      required this.magicBytes,
-      required this.blockchain});
-  final log = Logger("PeersManager");
+  PeersManager({
+    required this.localPeer,
+    required this.localPeerKeyPair,
+    required this.magicBytes,
+    required this.blockchain,
+  });
+
+  static Resource<PeersManager> make({
+    required ConnectedPeer localPeer,
+    required Ed25519KeyPair localPeerKeyPair,
+    required Uint8List magicBytes,
+    required BlockchainCore blockchain,
+    required void Function(String, int) connect,
+  }) =>
+      Resource.pure(PeersManager(
+              localPeer: localPeer,
+              localPeerKeyPair: localPeerKeyPair,
+              magicBytes: magicBytes,
+              blockchain: blockchain))
+          .flatTap(
+        (manager) => Resource.forStreamSubscription(
+            () => Stream.periodic(Duration(seconds: 30), (_) {
+                  log.info(
+                      "Connected peers count=${manager.connectedPeers.length} ids=${manager.connectedPeers.keys.map((id) => id.show).join(",")}");
+                  final targets = Map.fromEntries(manager.connectedPeers.values
+                      .expand((s) => s.publicState.peers)
+                      .where((p) => p.hasHost() && p.hasPort())
+                      .map((p) => MapEntry(p.peerId, p)));
+
+                  targets.remove(localPeer.peerId);
+
+                  for (final connectedId in manager.connectedPeers.keys)
+                    targets.remove(connectedId);
+                  final targetsList = targets.values.toList();
+                  if (targetsList.isNotEmpty) {
+                    final selected =
+                        targetsList[Random().nextInt(targetsList.length)];
+                    connect(selected.host.value, selected.port.value);
+                  }
+                }).listen(null)),
+      );
+
+  final connectedPeers = <PeerId, PeerState>{};
+  static final log = Logger("Blockchain.P2P.PeersManager");
+
+  PeerId get localPeerId => PeerId(value: localPeerKeyPair.vk);
 
   Future<void> handleConnection(Socket socket) async {
     log.info("Initializing handshake with ${socket.remoteAddress}");
@@ -32,23 +74,49 @@ class PeersManager {
     final handshakeResult = await handshake(chunkedReader.readBytes,
         (data) async => socket.add(data), localPeerKeyPair, magicBytes);
 
-    log.info(
-        "Handshake success with peerId=${handshakeResult.peerId.sublist(0, 8).show}");
+    final state = PeerState(
+      publicState: PublicP2PState(
+          localPeer: ConnectedPeer(peerId: handshakeResult.peerId)),
+    );
+
+    connectedPeers[handshakeResult.peerId] = state;
+
+    log.info("Handshake success with peerId=${handshakeResult.peerId.show}");
 
     final exchange = MultiplexedDataExchange(
         MultiplexedIOForFramedIO(SocketBasedFramedIO(socket, chunkedReader)));
 
     final peerHandler = PeerHandler(
-        blockchain: blockchain,
-        remotePeerId: handshakeResult.peerId,
-        exchange: exchange);
+      blockchain: blockchain,
+      remotePeerId: handshakeResult.peerId,
+      exchange: exchange,
+      peersManager: this,
+    );
 
-    await Resource.forStreamSubscription(() =>
-        StreamGroup.merge([peerHandler.run(), Stream.fromFuture(socket.done)])
+    await Resource.onFinalize(
+            () async => connectedPeers.remove(handshakeResult.peerId))
+        .flatMap((_) => Resource.forStreamSubscription(() => StreamGroup.merge(
+                [peerHandler.run(), Stream.fromFuture(socket.done)])
             .listen(null,
                 onError: (e) => socket.flush().then((_) => socket.destroy()),
-                cancelOnError: true)).use((_) => socket.done);
+                cancelOnError: true)))
+        .use((subscription) =>
+            Future.any([subscription.asFuture(), socket.done]));
   }
+
+  PublicP2PState get publicState => PublicP2PState(
+        localPeer: localPeer,
+        peers: connectedPeers.entries.map((e) => e.value.publicState.localPeer),
+      );
+
+  void onPeerStateGossiped(PeerId peerId, PublicP2PState publicState) {
+    connectedPeers[peerId]!.publicState = publicState;
+  }
+}
+
+class PeerState {
+  PublicP2PState publicState;
+  PeerState({required this.publicState});
 }
 
 class P2PCodecs {
@@ -68,6 +136,9 @@ class P2PCodecs {
         ..addAll(v!.writeToBuffer()),
       (bytes) =>
           (bytes[0] == 0) ? null : Transaction.fromBuffer(bytes.sublist(1)));
+
+  static final publicP2PStateCodec = Codec<PublicP2PState>(
+      (v) => v.writeToBuffer(), PublicP2PState.fromBuffer);
 }
 
 class PeerHandler {
@@ -75,12 +146,14 @@ class PeerHandler {
   final PeerId remotePeerId;
   final MultiplexedDataExchange exchange;
   final Logger log;
+  final PeersManager peersManager;
 
-  PeerHandler(
-      {required this.blockchain,
-      required this.remotePeerId,
-      required this.exchange})
-      : log = Logger("Blockchain.P2P.Peer(${remotePeerId.sublist(0, 8).show})");
+  PeerHandler({
+    required this.blockchain,
+    required this.remotePeerId,
+    required this.exchange,
+    required this.peersManager,
+  }) : log = Logger("Blockchain.P2P.Peer(${remotePeerId.show})");
 
   Stream<Null> run() => ConcatStream([
         _verifyGenesisAgreement(),
@@ -88,6 +161,7 @@ class PeerHandler {
           _blockNotifierStream,
           _syncStream,
           _transactionNotifierStream,
+          _peerStateNotifierStream,
         ])
       ]);
 
@@ -138,6 +212,10 @@ class PeerHandler {
         final decoded = P2PCodecs.transactionIdCodec.decode(response.value);
         await _onPeerNotifiedTransaction(decoded);
         break;
+      case MultiplexerIds.ConnectedPeersNotification:
+        final decoded = P2PCodecs.publicP2PStateCodec.decode(response.value);
+        await _onPeerNotifiedState(decoded);
+        break;
     }
   }
 
@@ -155,6 +233,14 @@ class PeerHandler {
           .map(P2PCodecs.transactionIdCodec.encode)
           .asyncMap((bytes) => exchange.write(MultiplexedDataResponse(
               MultiplexerIds.TransactionNotification, bytes)))
+          .map((_) => null);
+
+  Stream<Null> get _peerStateNotifierStream =>
+      Stream.periodic(Duration(seconds: 30))
+          .map((_) => peersManager.publicState)
+          .map(P2PCodecs.publicP2PStateCodec.encode)
+          .asyncMap((bytes) => exchange.write(MultiplexedDataResponse(
+              MultiplexerIds.ConnectedPeersNotification, bytes)))
           .map((_) => null);
 
   final _fulfilledBlocks = <FullBlock>[];
@@ -193,7 +279,11 @@ class PeerHandler {
 
   Future<void> _onPeerNotifiedBlock(BlockId id) async {
     log.info("Remote peer notified block id=${id.show}");
-    // TODO: Check if exists locally
+    final localBlock = await blockchain.dataStores.getFullBlock(id);
+    if (localBlock != null) {
+      log.info("Block id=${id.show} exists locally.  Skipping.");
+      return;
+    }
     await exchange.write(MultiplexedDataRequest(
         MultiplexerIds.BlockRequest, P2PCodecs.blockIdCodec.encode(id)));
   }
@@ -213,17 +303,18 @@ class PeerHandler {
         }
       }
     }
+    _fulfilledBlocks.insert(0, block);
     final localParentId = await blockchain.consensus.localChain
         .blockIdAtHeight(block.header.height - 1);
     if (localParentId == block.header.parentHeaderId) {
       log.info(
           "Found common ancestor.  Validating and attempting adoption of tine.");
-      if (_fulfilledBlocks.isEmpty) {
+      if (_fulfilledBlocks.length == 1) {
         await blockchain.processFullBlock(block);
       } else {
-        _fulfilledBlocks.insert(0, block);
         for (int i = 0; i < _fulfilledBlocks.length - 1; i++) {
-          await blockchain.processFullBlock(block, compareAndAdopt: false);
+          await blockchain.processFullBlock(_fulfilledBlocks[i],
+              compareAndAdopt: false);
         }
         await blockchain.processFullBlock(_fulfilledBlocks.last);
       }
@@ -261,6 +352,11 @@ class PeerHandler {
     _pendingTransactions.remove(id);
     await blockchain.processTransaction(transaction);
   }
+
+  Future<void> _onPeerNotifiedState(PublicP2PState info) async {
+    log.info("Remote peer notified public P2P state");
+    peersManager.onPeerStateGossiped(remotePeerId, info);
+  }
 }
 
 class MultiplexerIds {
@@ -270,4 +366,6 @@ class MultiplexerIds {
 
   static const TransactionRequest = 13;
   static const TransactionNotification = 14;
+
+  static const ConnectedPeersNotification = 15;
 }

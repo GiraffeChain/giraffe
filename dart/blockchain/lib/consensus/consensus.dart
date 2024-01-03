@@ -3,7 +3,6 @@ import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/common/resource.dart';
-import 'package:blockchain/consensus/block_header_to_body_validation.dart';
 import 'package:blockchain/consensus/block_header_validation.dart';
 import 'package:blockchain/consensus/chain_selection.dart';
 import 'package:blockchain/consensus/staker_tracker.dart';
@@ -16,7 +15,6 @@ import 'package:blockchain/data_stores.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
 class Consensus {
-  final BlockHeaderToBodyValidation blockHeaderToBodyValidation;
   final BlockHeaderValidation blockHeaderValidation;
   final ChainSelection chainSelection;
   final StakerTracker stakerTracker;
@@ -25,7 +23,6 @@ class Consensus {
   final LocalChain localChain;
 
   Consensus({
-    required this.blockHeaderToBodyValidation,
     required this.blockHeaderValidation,
     required this.chainSelection,
     required this.stakerTracker,
@@ -91,10 +88,7 @@ class Consensus {
               clock,
               dataStores.headers.getOrRaise);
 
-          final headerToBodyValidation = BlockHeaderToBodyValidationImpl();
-
           return Consensus(
-              blockHeaderToBodyValidation: headerToBodyValidation,
               blockHeaderValidation: headerValidation,
               chainSelection: chainSelection,
               stakerTracker: consensusValidationState,

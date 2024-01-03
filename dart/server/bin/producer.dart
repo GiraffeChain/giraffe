@@ -6,11 +6,9 @@ import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
+import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/isolate_pool.dart';
-import 'package:blockchain/crypto/ed25519.dart' as ed25519;
-import 'package:blockchain/crypto/ed25519vrf.dart' as ed25519VRF;
-import 'package:blockchain/crypto/kes.dart' as kes;
 import 'package:blockchain/minting/minting.dart';
 import 'package:blockchain/rpc/client.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -23,7 +21,6 @@ final BlockchainConfig config = BlockchainConfig(
         stakingDir:
             "${Directory.systemTemp.path}/blockchain-genesis/{genesisId}/stakers/0"));
 Future<void> main() async {
-  assert(config.genesis.localStakerIndex != null);
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
     final _errorSuffix = (record.error != null) ? ": ${record.error}" : "";
@@ -33,20 +30,18 @@ Future<void> main() async {
         '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${_errorSuffix}${_stackTraceSuffix}');
   });
 
-  final log = Logger("BlockchainProducerServer");
+  final log = Logger("BlockProducerServer");
 
-  final resource = IsolatePool.make(Platform.numberOfProcessors)
+  final resource = IsolatePool.make()
       .map((p) => p.isolate)
-      .tap((isolate) {
-    ed25519.ed25519 = ed25519.Ed25519Isolated(isolate);
-    ed25519VRF.ed25519Vrf = ed25519VRF.Ed25519VRFIsolated(isolate);
-    kes.kesProduct = kes.KesProudctIsolated(isolate);
-  }).flatMap((isolate) => RpcClient.makeChannel().evalFlatMap((channel) async {
+      .tap(setComputeFunction)
+      .flatMap((isolate) =>
+          RpcClient.makeChannel().evalFlatMap((channel) async {
             final rpcClient = NodeRpcClient(channel);
             final viewer = BlockchainViewFromRpc(nodeClient: rpcClient);
             final canonicalHeadId = await viewer.canonicalHeadId;
-            final canonicalHeadSlotData =
-                await viewer.getSlotDataOrRaise(canonicalHeadId);
+            final canonicalHead =
+                await viewer.getBlockHeaderOrRaise(canonicalHeadId);
             final protocolSettings = await viewer.protocolSettings;
 
             final genesisBlockId = await viewer.genesisBlockId;
@@ -67,11 +62,11 @@ Future<void> main() async {
                   config.staking.stakingDir, genesisBlockId)),
               protocolSettings,
               clock,
-              canonicalHeadSlotData,
+              canonicalHead,
               viewer.adoptions.map((id) {
                 log.info("Remote peer adopted block id=${id.show}");
                 return id;
-              }).asyncMap(viewer.getSlotDataOrRaise),
+              }).asyncMap(viewer.getBlockHeaderOrRaise),
               leaderElection,
               rpcClient,
               stakerSupportClient,
@@ -94,5 +89,6 @@ Future<void> main() async {
                 )));
           }));
 
-  await resource.use((_) => ProcessSignal.sigint.watch().first);
+  await resource.use((subscription) => Future.any(
+      [subscription.asFuture(), ProcessSignal.sigint.watch().first]));
 }

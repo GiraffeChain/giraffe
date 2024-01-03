@@ -6,13 +6,10 @@ import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_page.dart';
 import 'package:blockchain_app/widgets/pages/transaction_page.dart';
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/crypto/kes.dart' as kes;
 import 'package:blockchain/crypto/utils.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'package:blockchain/crypto/ed25519.dart' as ed25519;
-import 'package:blockchain/crypto/ed25519vrf.dart' as ed25519VRF;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 var _isolate = LocalCompute;
@@ -27,9 +24,7 @@ void main() async {
     final computePool = IsolatePool(Platform.numberOfProcessors);
     _isolate = computePool.isolate;
   }
-  ed25519.ed25519 = ed25519.Ed25519Isolated(_isolate);
-  ed25519VRF.ed25519Vrf = ed25519VRF.Ed25519VRFIsolated(_isolate);
-  kes.kesProduct = kes.KesProudctIsolated(_isolate);
+  setComputeFunction(_isolate);
 
   WidgetsFlutterBinding.ensureInitialized();
 

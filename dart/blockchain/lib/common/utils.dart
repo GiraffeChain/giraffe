@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/models/unsigned.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
@@ -44,7 +45,6 @@ extension BlockHeaderOps on BlockHeader {
         parentHeaderId,
         parentSlot,
         txRoot,
-        bloomFilter,
         timestamp,
         height,
         slot,
@@ -56,6 +56,8 @@ extension BlockHeaderOps on BlockHeader {
         metadata,
         address,
       );
+
+  SlotId get slotId => SlotId(slot: slot, blockId: id);
 }
 
 extension TransactionOps on Transaction {

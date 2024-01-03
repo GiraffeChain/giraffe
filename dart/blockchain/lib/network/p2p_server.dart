@@ -17,7 +17,7 @@ class P2PServer {
     this.handleSocket,
   );
 
-  Resource<void> start() => Resource.make(
+  Resource<Future<void>> start() => Resource.make(
           () => ServerSocket.bind(bindHost, bindPort),
           (server) => server.close())
       .flatMap((server) =>
@@ -26,7 +26,7 @@ class P2PServer {
                     "Inbound connection initializing from ${socket.remoteAddress}");
                 handleSocket(socket);
               })))
-      .voidResult;
+      .map((sub) => sub.asFuture());
 
   Future<void> connectOutbound(String host, int port) async {
     log.info("Outbound connection initializing to $host:$port");

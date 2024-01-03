@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:blockchain/crypto/ed25519.dart';
+import 'package:blockchain/crypto/ed25519vrf.dart';
+import 'package:blockchain/crypto/impl/kes_product.dart';
 import 'package:collection/collection.dart';
 import 'package:hashlib/hashlib.dart';
 
@@ -29,3 +32,9 @@ typedef DComputeImpl = Future<R> Function<Q, R>(
 Future<R> LocalCompute<Q, R>(DComputeCallback<Q, R> callback, Q message,
         {String? debugLabel}) async =>
     callback(message);
+
+void setComputeFunction(DComputeImpl isolate) {
+  ed25519 = Ed25519Isolated(isolate);
+  ed25519Vrf = Ed25519VRFIsolated(isolate);
+  kesProduct = KesProudctIsolated(isolate);
+}

@@ -10,6 +10,7 @@ import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/genesis.dart';
 import 'package:blockchain/ledger/ledger.dart';
+import 'package:blockchain/network/util.dart';
 import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
@@ -214,6 +215,10 @@ class BlockchainCore {
 
     await throwErrors();
 
+    errors.addAll(await ledger.headerToBodyValidation.validate(block));
+
+    await throwErrors();
+
     errors.addAll(await ledger.bodySyntaxValidation.validate(block.body));
     await throwErrors();
     final bodyValidationContext = BodyValidationContext(
@@ -273,28 +278,8 @@ class BlockchainRpc {
           .serveRpcs(
             config.rpc.bindHost,
             config.rpc.bindPort,
-            rpc.NodeRpcServiceImpl(
-              traversal: blockchain.traversal,
-              dataStores: blockchain.dataStores,
-              onBroadcastTransaction: blockchain.processTransaction,
-              blockIdAtHeight: blockchain.consensus.localChain.blockIdAtHeight,
-            ),
-            rpc.StakerSupportRpcImpl(
-              onBroadcastBlock: blockchain.processBlock,
-              stakerTracker: blockchain.consensus.stakerTracker,
-              packBlock: (parentBlockId, targetSlot) => Stream.fromFuture(
-                      blockchain.dataStores.headers.getOrRaise(parentBlockId))
-                  .map((h) => h.height)
-                  .asyncExpand((parentHeight) => blockchain.ledger.blockPacker
-                      .streamed(parentBlockId, parentHeight + 1, targetSlot)
-                      .map((fullBody) => BlockBody(
-                          transactionIds:
-                              fullBody.transactions.map((t) => t.id)))),
-              calculateEta: (parentId, slot) => blockchain.dataStores.slotData
-                  .getOrRaise(parentId)
-                  .then((parentSlotData) => blockchain.consensus.etaCalculation
-                      .etaToBe(parentSlotData.slotId, slot)),
-            ),
+            rpc.NodeRpcServiceImpl(blockchain: blockchain),
+            rpc.StakerSupportRpcImpl(blockchain: blockchain),
           )
           .tapLog(
               log,
@@ -305,47 +290,64 @@ class BlockchainRpc {
 
 class BlockchainP2P {
   static final log = Logger("Blockchain.P2P");
-  static Resource<void> make(
+  static Resource<Future<void>> make(
           BlockchainCore blockchain, BlockchainConfig config) =>
-      Resource.make(() async {
-        log.info("Preparing P2P Network");
+      Resource.pure(())
+          .evalFlatMap((_) async {
+            log.info("Preparing P2P Network");
 
-        final p2pKey = await ed25519.generateKeyPair();
-        final peersManager = PeersManager(
-          localPeerKeyPair: p2pKey,
-          magicBytes: config.p2p.magicBytes,
-          blockchain: blockchain,
-        );
-        return P2PServer(
-          config.p2p.bindHost,
-          config.p2p.bindPort,
-          (socket) => Resource.make(() async {
+            final p2pKey = await ed25519.generateKeyPair();
+            final localPeerId = PeerId(value: p2pKey.vk);
             log.info(
-                "Socket connected at host=${socket.remoteAddress} port=${socket.remotePort}");
-            return (
-              socket: socket,
-              remoteAddress: socket.remoteAddress,
-              remotePort: socket.remotePort
+                "Local peer id=${localPeerId.show} publicHost=${config.p2p.publicHost} publicPort=${config.p2p.publicPort}");
+            final localPeer = ConnectedPeer(
+              peerId: localPeerId,
+              host: config.p2p.publicHost.stringValue,
+              port: config.p2p.publicPort.uint32Value,
             );
-          }, (t) async {
-            log.info(
-                "Socket closing at host=${t.remoteAddress} port=${t.remotePort}");
-            t.socket.destroy();
-            await t.socket.done;
-          }).map((t) => t.socket).use(peersManager.handleConnection),
-        );
-      }, (_) async {})
-          .flatMap((p2pServer) => p2pServer.start().product(
-              Resource.forStreamSubscription(() =>
-                  Stream.fromIterable(config.p2p.knownPeers)
-                      .map((s) => s.split(":"))
-                      .map((parsed) => p2pServer.connectOutbound(
-                          parsed[0], int.parse(parsed[1])))
-                      .listen((_) {}))))
-          .tapLog(
-              log,
-              (_) =>
-                  "Served on host=${config.p2p.bindHost} port=${config.p2p.bindPort}")
-          .tapLogFinalize(log, "Terminating")
-          .voidResult;
+            void Function(String, int) connect = (_, __) {};
+            final socketHandlerResource =
+                (Socket socket) => Resource.make(() async {
+                      log.info(
+                          "Socket connected at host=${socket.remoteAddress} port=${socket.remotePort}");
+                      return (
+                        socket: socket,
+                        remoteAddress: socket.remoteAddress,
+                        remotePort: socket.remotePort
+                      );
+                    }, (t) async {
+                      log.info(
+                          "Socket closing at host=${t.remoteAddress} port=${t.remotePort}");
+                      t.socket.destroy();
+                      await t.socket.done;
+                    }).map((t) => t.socket);
+            return PeersManager.make(
+              localPeer: localPeer,
+              localPeerKeyPair: p2pKey,
+              magicBytes: config.p2p.magicBytes,
+              blockchain: blockchain,
+              connect: (host, port) => connect(host, port),
+            )
+                .map((peersManager) => P2PServer(
+                      config.p2p.bindHost,
+                      config.p2p.bindPort,
+                      (socket) => socketHandlerResource(socket)
+                          .use(
+                            (socket) => peersManager
+                                .handleConnection(socket)
+                                .onError((e, stacktrace) => log.warning(
+                                    "P2P Connection Error", e, stacktrace)),
+                          )
+                          .ignore(),
+                    ))
+                .tap((server) => connect = server.connectOutbound);
+          })
+          .flatMap((p2pServer) => p2pServer.start().flatMap((f1) =>
+              Resource.forStreamSubscription(() => Stream.fromIterable(
+                      config.p2p.knownPeers)
+                  .map((s) => s.split(":"))
+                  .map((parsed) => p2pServer.connectOutbound(parsed[0], int.parse(parsed[1])).ignore())
+                  .listen((_) {})).map((subscription) => subscription.asFuture()).map((f2) => Future.wait([f1, f2]))))
+          .tapLog(log, (_) => "Served on host=${config.p2p.bindHost} port=${config.p2p.bindPort}")
+          .tapLogFinalize(log, "Terminating");
 }

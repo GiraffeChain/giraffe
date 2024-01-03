@@ -33,15 +33,14 @@ const BlockHeader$json = {
     {'1': 'parentHeaderId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '8': {}, '10': 'parentHeaderId'},
     {'1': 'parentSlot', '3': 2, '4': 1, '5': 4, '10': 'parentSlot'},
     {'1': 'txRoot', '3': 3, '4': 1, '5': 12, '8': {}, '10': 'txRoot'},
-    {'1': 'bloomFilter', '3': 4, '4': 1, '5': 12, '8': {}, '10': 'bloomFilter'},
-    {'1': 'timestamp', '3': 5, '4': 1, '5': 4, '10': 'timestamp'},
-    {'1': 'height', '3': 6, '4': 1, '5': 4, '10': 'height'},
-    {'1': 'slot', '3': 7, '4': 1, '5': 4, '10': 'slot'},
-    {'1': 'eligibilityCertificate', '3': 8, '4': 1, '5': 11, '6': '.com.blockchain.models.EligibilityCertificate', '8': {}, '10': 'eligibilityCertificate'},
-    {'1': 'operationalCertificate', '3': 9, '4': 1, '5': 11, '6': '.com.blockchain.models.OperationalCertificate', '8': {}, '10': 'operationalCertificate'},
-    {'1': 'metadata', '3': 10, '4': 1, '5': 12, '8': {}, '10': 'metadata'},
-    {'1': 'address', '3': 11, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingAddress', '8': {}, '10': 'address'},
-    {'1': 'settings', '3': 13, '4': 3, '5': 11, '6': '.com.blockchain.models.BlockHeader.SettingsEntry', '10': 'settings'},
+    {'1': 'timestamp', '3': 4, '4': 1, '5': 4, '10': 'timestamp'},
+    {'1': 'height', '3': 5, '4': 1, '5': 4, '10': 'height'},
+    {'1': 'slot', '3': 6, '4': 1, '5': 4, '10': 'slot'},
+    {'1': 'eligibilityCertificate', '3': 7, '4': 1, '5': 11, '6': '.com.blockchain.models.EligibilityCertificate', '8': {}, '10': 'eligibilityCertificate'},
+    {'1': 'operationalCertificate', '3': 8, '4': 1, '5': 11, '6': '.com.blockchain.models.OperationalCertificate', '8': {}, '10': 'operationalCertificate'},
+    {'1': 'metadata', '3': 9, '4': 1, '5': 12, '8': {}, '10': 'metadata'},
+    {'1': 'address', '3': 10, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingAddress', '8': {}, '10': 'address'},
+    {'1': 'settings', '3': 11, '4': 3, '5': 11, '6': '.com.blockchain.models.BlockHeader.SettingsEntry', '10': 'settings'},
   ],
   '3': [BlockHeader_SettingsEntry$json],
 };
@@ -61,18 +60,17 @@ final $typed_data.Uint8List blockHeaderDescriptor = $convert.base64Decode(
     'CgtCbG9ja0hlYWRlchI6CghoZWFkZXJJZBgMIAEoCzIeLmNvbS5ibG9ja2NoYWluLm1vZGVscy'
     '5CbG9ja0lkUghoZWFkZXJJZBJQCg5wYXJlbnRIZWFkZXJJZBgBIAEoCzIeLmNvbS5ibG9ja2No'
     'YWluLm1vZGVscy5CbG9ja0lkQgj6QgWKAQIQAVIOcGFyZW50SGVhZGVySWQSHgoKcGFyZW50U2'
-    'xvdBgCIAEoBFIKcGFyZW50U2xvdBIfCgZ0eFJvb3QYAyABKAxCB/pCBHoCaCBSBnR4Um9vdBIq'
-    'CgtibG9vbUZpbHRlchgEIAEoDEII+kIFegNogAJSC2Jsb29tRmlsdGVyEhwKCXRpbWVzdGFtcB'
-    'gFIAEoBFIJdGltZXN0YW1wEhYKBmhlaWdodBgGIAEoBFIGaGVpZ2h0EhIKBHNsb3QYByABKARS'
-    'BHNsb3QSbwoWZWxpZ2liaWxpdHlDZXJ0aWZpY2F0ZRgIIAEoCzItLmNvbS5ibG9ja2NoYWluLm'
-    '1vZGVscy5FbGlnaWJpbGl0eUNlcnRpZmljYXRlQgj6QgWKAQIQAVIWZWxpZ2liaWxpdHlDZXJ0'
-    'aWZpY2F0ZRJvChZvcGVyYXRpb25hbENlcnRpZmljYXRlGAkgASgLMi0uY29tLmJsb2NrY2hhaW'
-    '4ubW9kZWxzLk9wZXJhdGlvbmFsQ2VydGlmaWNhdGVCCPpCBYoBAhABUhZvcGVyYXRpb25hbENl'
-    'cnRpZmljYXRlEiMKCG1ldGFkYXRhGAogASgMQgf6QgR6AhggUghtZXRhZGF0YRJJCgdhZGRyZX'
-    'NzGAsgASgLMiUuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlN0YWtpbmdBZGRyZXNzQgj6QgWKAQIQ'
-    'AVIHYWRkcmVzcxJMCghzZXR0aW5ncxgNIAMoCzIwLmNvbS5ibG9ja2NoYWluLm1vZGVscy5CbG'
-    '9ja0hlYWRlci5TZXR0aW5nc0VudHJ5UghzZXR0aW5ncxo7Cg1TZXR0aW5nc0VudHJ5EhAKA2tl'
-    'eRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAE=');
+    'xvdBgCIAEoBFIKcGFyZW50U2xvdBIfCgZ0eFJvb3QYAyABKAxCB/pCBHoCaCBSBnR4Um9vdBIc'
+    'Cgl0aW1lc3RhbXAYBCABKARSCXRpbWVzdGFtcBIWCgZoZWlnaHQYBSABKARSBmhlaWdodBISCg'
+    'RzbG90GAYgASgEUgRzbG90Em8KFmVsaWdpYmlsaXR5Q2VydGlmaWNhdGUYByABKAsyLS5jb20u'
+    'YmxvY2tjaGFpbi5tb2RlbHMuRWxpZ2liaWxpdHlDZXJ0aWZpY2F0ZUII+kIFigECEAFSFmVsaW'
+    'dpYmlsaXR5Q2VydGlmaWNhdGUSbwoWb3BlcmF0aW9uYWxDZXJ0aWZpY2F0ZRgIIAEoCzItLmNv'
+    'bS5ibG9ja2NoYWluLm1vZGVscy5PcGVyYXRpb25hbENlcnRpZmljYXRlQgj6QgWKAQIQAVIWb3'
+    'BlcmF0aW9uYWxDZXJ0aWZpY2F0ZRIjCghtZXRhZGF0YRgJIAEoDEIH+kIEegIYIFIIbWV0YWRh'
+    'dGESSQoHYWRkcmVzcxgKIAEoCzIlLmNvbS5ibG9ja2NoYWluLm1vZGVscy5TdGFraW5nQWRkcm'
+    'Vzc0II+kIFigECEAFSB2FkZHJlc3MSTAoIc2V0dGluZ3MYCyADKAsyMC5jb20uYmxvY2tjaGFp'
+    'bi5tb2RlbHMuQmxvY2tIZWFkZXIuU2V0dGluZ3NFbnRyeVIIc2V0dGluZ3MaOwoNU2V0dGluZ3'
+    'NFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
 
 @$core.Deprecated('Use eligibilityCertificateDescriptor instead')
 const EligibilityCertificate$json = {
@@ -446,4 +444,48 @@ final $typed_data.Uint8List keyDescriptor = $convert.base64Decode(
     'CgNLZXkSPgoHZWQyNTUxORgBIAEoCzIiLmNvbS5ibG9ja2NoYWluLm1vZGVscy5LZXkuRWQyNT'
     'UxOUgAUgdlZDI1NTE5GicKB0VkMjU1MTkSHAoJc2lnbmF0dXJlGAEgASgMUglzaWduYXR1cmVC'
     'BwoFdmFsdWU=');
+
+@$core.Deprecated('Use peerIdDescriptor instead')
+const PeerId$json = {
+  '1': 'PeerId',
+  '2': [
+    {'1': 'value', '3': 1, '4': 1, '5': 12, '8': {}, '10': 'value'},
+  ],
+};
+
+/// Descriptor for `PeerId`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List peerIdDescriptor = $convert.base64Decode(
+    'CgZQZWVySWQSHQoFdmFsdWUYASABKAxCB/pCBHoCaCBSBXZhbHVl');
+
+@$core.Deprecated('Use publicP2PStateDescriptor instead')
+const PublicP2PState$json = {
+  '1': 'PublicP2PState',
+  '2': [
+    {'1': 'localPeer', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.ConnectedPeer', '10': 'localPeer'},
+    {'1': 'peers', '3': 2, '4': 3, '5': 11, '6': '.com.blockchain.models.ConnectedPeer', '10': 'peers'},
+  ],
+};
+
+/// Descriptor for `PublicP2PState`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List publicP2PStateDescriptor = $convert.base64Decode(
+    'Cg5QdWJsaWNQMlBTdGF0ZRJCCglsb2NhbFBlZXIYASABKAsyJC5jb20uYmxvY2tjaGFpbi5tb2'
+    'RlbHMuQ29ubmVjdGVkUGVlclIJbG9jYWxQZWVyEjoKBXBlZXJzGAIgAygLMiQuY29tLmJsb2Nr'
+    'Y2hhaW4ubW9kZWxzLkNvbm5lY3RlZFBlZXJSBXBlZXJz');
+
+@$core.Deprecated('Use connectedPeerDescriptor instead')
+const ConnectedPeer$json = {
+  '1': 'ConnectedPeer',
+  '2': [
+    {'1': 'peerId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.PeerId', '10': 'peerId'},
+    {'1': 'host', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.StringValue', '10': 'host'},
+    {'1': 'port', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.UInt32Value', '10': 'port'},
+  ],
+};
+
+/// Descriptor for `ConnectedPeer`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List connectedPeerDescriptor = $convert.base64Decode(
+    'Cg1Db25uZWN0ZWRQZWVyEjUKBnBlZXJJZBgBIAEoCzIdLmNvbS5ibG9ja2NoYWluLm1vZGVscy'
+    '5QZWVySWRSBnBlZXJJZBIwCgRob3N0GAIgASgLMhwuZ29vZ2xlLnByb3RvYnVmLlN0cmluZ1Zh'
+    'bHVlUgRob3N0EjAKBHBvcnQYAyABKAsyHC5nb29nbGUucHJvdG9idWYuVUludDMyVmFsdWVSBH'
+    'BvcnQ=');
 

@@ -1,12 +1,43 @@
 import 'dart:async';
 
+import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain/codecs.dart';
+import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain/wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 import 'package:flutter/services.dart';
+
+class StreamedTransactView extends StatefulWidget {
+  final BlockchainView view;
+  final BlockchainWriter writer;
+
+  StreamedTransactView({super.key, required this.view, required this.writer});
+  @override
+  State<StatefulWidget> createState() => StreamedTransactViewState();
+}
+
+class StreamedTransactViewState extends State<StreamedTransactView>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return StreamBuilder(
+      stream: Wallet.streamed(widget.view),
+      builder: (context, snapshot) => snapshot.hasData
+          ? TransactView(
+              wallet: snapshot.data!,
+              processTransaction: widget.writer.submitTransaction,
+            )
+          : const CircularProgressIndicator(),
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+}
 
 class TransactView extends StatefulWidget {
   final Wallet wallet;

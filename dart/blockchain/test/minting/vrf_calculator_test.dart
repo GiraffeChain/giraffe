@@ -19,8 +19,8 @@ void main() {
       final skVrf = Int8List(32);
       final config = ProtocolSettings.defaultSettings
           .mergeFromMap({"vrf-ldd-cutoff": "15"});
-      final calculator = VrfCalculatorImpl(skVrf, MockClockAlgebra(),
-          MockLeaderElectionValidationAlgebra(), config);
+      final calculator =
+          VrfCalculatorImpl(skVrf, MockClock(), MockLeaderElection(), config);
 
       final eta = Int8List(32);
       final proof = await calculator.proofForSlot(Int64(10), eta);

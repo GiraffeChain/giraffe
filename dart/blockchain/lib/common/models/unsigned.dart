@@ -5,7 +5,6 @@ class UnsignedBlockHeader {
   final BlockId parentHeaderId;
   final Int64 parentSlot;
   final List<int> txRoot;
-  final List<int> bloomFilter;
   final Int64 timestamp;
   final Int64 height;
   final Int64 slot;
@@ -18,7 +17,6 @@ class UnsignedBlockHeader {
       this.parentHeaderId,
       this.parentSlot,
       this.txRoot,
-      this.bloomFilter,
       this.timestamp,
       this.height,
       this.slot,

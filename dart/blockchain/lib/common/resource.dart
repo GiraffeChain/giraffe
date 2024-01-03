@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 
 abstract class Resource<A> {
@@ -98,7 +99,16 @@ class BindResource<S, A> extends Resource<A> {
   Future<(A, Future<void> Function())> allocated() async {
     final (sourceA, sourceFinalizer) = await source.allocated();
     final rA = fs(sourceA);
-    final (a, rAFinalizer) = await rA.allocated();
+    late final A a;
+    late final Future<void> Function() rAFinalizer;
+    try {
+      final r = await rA.allocated();
+      a = r.$1;
+      rAFinalizer = r.$2;
+    } catch (e) {
+      await sourceFinalizer();
+      rethrow;
+    }
     bool isFinalized = false;
     return (
       a,
@@ -121,10 +131,37 @@ class ParBindResources<A> extends Resource<A> {
 
   @override
   Future<(A, Future<void> Function())> allocated() async {
+    final allocatedSourcesFutures = sources
+        .map((s) => s
+            .allocated()
+            .then((r) => right<Object, (dynamic, Future<void> Function())>(r))
+            .catchError((e) =>
+                left<Object, (dynamic, Future<void> Function())>((e, s))))
+        .toList();
+    final allocatedSourcesEithers = await Future.wait(allocatedSourcesFutures);
+    Object? error;
+    for (final either in allocatedSourcesEithers) {
+      if (either.isLeft()) error = either.getLeft().toNullable()!;
+    }
+    if (error != null) {
+      for (final either in allocatedSourcesEithers) {
+        if (either.isRight()) await either.getRight().toNullable()!.$2;
+      }
+      throw error;
+    }
     final allocatedSources =
-        await Future.wait(sources.map((s) => s.allocated()).toList());
+        allocatedSourcesEithers.map((e) => e.getRight().toNullable()!).toList();
     final rA = fs(allocatedSources.map((s) => s.$1).toList());
-    final (a, rAFinalizer) = await rA.allocated();
+    late final A a;
+    late final Future<void> Function() rAFinalizer;
+    try {
+      final r = await rA.allocated();
+      a = r.$1;
+      rAFinalizer = r.$2;
+    } catch (e) {
+      await Future.wait(allocatedSources.map((r) => r.$2()).toList());
+      rethrow;
+    }
     bool isFinalized = false;
     return (
       a,

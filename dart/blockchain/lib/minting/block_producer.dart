@@ -6,6 +6,7 @@ import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/unsigned.dart';
 import 'package:async/async.dart';
 import 'package:blockchain/common/utils.dart';
+import 'package:blockchain/ledger/block_header_to_body_validation.dart';
 import 'package:blockchain/ledger/block_packer.dart';
 import 'package:blockchain/minting/models/vrf_hit.dart';
 import 'package:blockchain/minting/staking.dart';
@@ -18,7 +19,7 @@ abstract class BlockProducer {
 }
 
 class BlockProducerImpl extends BlockProducer {
-  final Stream<SlotData> parentHeaders;
+  final Stream<BlockHeader> parentHeaders;
   final Staking staker;
   final Clock clock;
   final BlockPacker blockPacker;
@@ -32,7 +33,7 @@ class BlockProducerImpl extends BlockProducer {
   @override
   Stream<FullBlock> get blocks {
     final transformer =
-        StreamTransformer((Stream<SlotData> stream, cancelOnError) {
+        StreamTransformer((Stream<BlockHeader> stream, cancelOnError) {
       CancelableCompleter<FullBlock?>? currentOperation = null;
       final controller = StreamController<FullBlock>(sync: true);
       controller.onListen = () {
@@ -60,10 +61,10 @@ class BlockProducerImpl extends BlockProducer {
     return parentHeaders.transform(transformer);
   }
 
-  CancelableCompleter<FullBlock?> _makeChild(SlotData parentSlotData) {
+  CancelableCompleter<FullBlock?> _makeChild(BlockHeader parentHeader) {
     List<Future<void> Function()> _cancelOps = [
-      () => Future.sync(() => log.info(
-          "Abandoning attempt on parentId=${parentSlotData.slotId.blockId.show}"))
+      () => Future.sync(() =>
+          log.info("Abandoning attempt on parentId=${parentHeader.id.show}"))
     ];
 
     final CancelableCompleter<FullBlock?> completer = CancelableCompleter(
@@ -71,22 +72,25 @@ class BlockProducerImpl extends BlockProducer {
 
     StreamSubscription? packOperation;
 
+    final parentSlotId =
+        SlotId(slot: parentHeader.slot, blockId: parentHeader.id);
+
     Future<void> go() async {
       try {
-        Int64 fromSlot = parentSlotData.slotId.slot + 1;
+        Int64 fromSlot = parentHeader.slot + 1;
         if (fromSlot < _nextSlotMinimum) fromSlot = _nextSlotMinimum;
         log.info("Calculating eligibility for" +
-            " parentId=${parentSlotData.slotId.blockId.show}" +
-            " parentSlot=${parentSlotData.slotId.slot}");
+            " parentId=${parentHeader.id.show}" +
+            " parentSlot=${parentHeader.slot}");
         final nextHit = await log.timedInfoAsync(
-            () => _nextEligibility(parentSlotData.slotId, fromSlot),
+            () => _nextEligibility(parentSlotId, fromSlot),
             messageF: (duration) => "Eligibility calculation took $duration");
         if (nextHit != null && !completer.isCanceled) {
           log.info("Packing block for slot=${nextHit.slot}");
           FullBlockBody bodyTmp = FullBlockBody();
           packOperation = blockPacker
-              .streamed(parentSlotData.slotId.blockId,
-                  parentSlotData.height + 1, nextHit.slot)
+              .streamed(
+                  parentSlotId.blockId, parentHeader.height + 1, nextHit.slot)
               .takeWhile((_) =>
                   clock.globalSlot <= nextHit.slot && !completer.isCanceled)
               .listen((b) => bodyTmp = b,
@@ -104,10 +108,10 @@ class BlockProducerImpl extends BlockProducer {
               final timestamp =
                   Int64(min(slotEnd.toInt(), max(now, slotStart.toInt())));
               final maybeHeader = await staker.certifyBlock(
-                  parentSlotData.slotId,
+                  parentSlotId,
                   nextHit.slot,
                   _prepareUnsignedBlock(
-                    parentSlotData,
+                    parentHeader,
                     body,
                     timestamp,
                     nextHit,
@@ -158,16 +162,16 @@ class BlockProducerImpl extends BlockProducer {
   }
 
   UnsignedBlockHeader Function(PartialOperationalCertificate)
-      _prepareUnsignedBlock(SlotData parentSlotData, FullBlockBody fullBody,
+      _prepareUnsignedBlock(BlockHeader parentHeader, FullBlockBody fullBody,
               Int64 timestamp, VrfHit nextHit) =>
           (PartialOperationalCertificate partialOperationalCertificate) =>
               UnsignedBlockHeader(
-                parentSlotData.slotId.blockId,
-                parentSlotData.slotId.slot,
-                [], // TODO
-                [], // TODO
+                parentHeader.id,
+                parentHeader.slot,
+                TxRoot.calculateFromTransactions(
+                    parentHeader.txRoot, fullBody.transactions),
                 timestamp,
-                parentSlotData.height + 1,
+                parentHeader.height + 1,
                 nextHit.slot,
                 nextHit.cert,
                 partialOperationalCertificate,

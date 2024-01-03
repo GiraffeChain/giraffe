@@ -2,6 +2,7 @@ import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/data_stores.dart';
+import 'package:blockchain/ledger/block_header_to_body_validation.dart';
 import 'package:blockchain/ledger/block_packer.dart';
 import 'package:blockchain/ledger/body_authorization_validation.dart';
 import 'package:blockchain/ledger/body_semantic_validation.dart';
@@ -20,6 +21,7 @@ class Ledger {
   final BodySyntaxValidation bodySyntaxValidation;
   final BodySemanticValidation bodySemanticValidation;
   final BodyAuthorizationValidation bodyAuthorizationValidation;
+  final BlockHeaderToBodyValidation headerToBodyValidation;
   final BoxState boxState;
   final MempoolImpl mempool;
   final BlockPackerImpl blockPacker;
@@ -31,6 +33,7 @@ class Ledger {
     required this.bodySyntaxValidation,
     required this.bodySemanticValidation,
     required this.bodyAuthorizationValidation,
+    required this.headerToBodyValidation,
     required this.boxState,
     required this.mempool,
     required this.blockPacker,
@@ -64,6 +67,9 @@ class Ledger {
         final bodyAuthorizationValidation = BodyAuthorizationValidationImpl(
             dataStores.transactions.getOrRaise,
             transactionAuthorizationValidation);
+
+        final headerToBodyValidation = BlockHeaderToBodyValidationImpl(
+            fetchHeader: dataStores.headers.getOrRaise);
         return MempoolImpl.make(
                 dataStores.bodies.getOrRaise,
                 parentChildTree,
@@ -85,6 +91,7 @@ class Ledger {
             bodySyntaxValidation: bodySyntaxValidation,
             bodySemanticValidation: bodySemanticValidation,
             bodyAuthorizationValidation: bodyAuthorizationValidation,
+            headerToBodyValidation: headerToBodyValidation,
             boxState: boxState,
             mempool: mempool,
             blockPacker: blockPacker,
