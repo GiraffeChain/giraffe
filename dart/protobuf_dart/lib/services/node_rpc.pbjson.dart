@@ -35,32 +35,6 @@ const BroadcastTransactionRes$json = {
 final $typed_data.Uint8List broadcastTransactionResDescriptor = $convert.base64Decode(
     'ChdCcm9hZGNhc3RUcmFuc2FjdGlvblJlcw==');
 
-@$core.Deprecated('Use getSlotDataReqDescriptor instead')
-const GetSlotDataReq$json = {
-  '1': 'GetSlotDataReq',
-  '2': [
-    {'1': 'blockId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'blockId'},
-  ],
-};
-
-/// Descriptor for `GetSlotDataReq`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSlotDataReqDescriptor = $convert.base64Decode(
-    'Cg5HZXRTbG90RGF0YVJlcRI4CgdibG9ja0lkGAEgASgLMh4uY29tLmJsb2NrY2hhaW4ubW9kZW'
-    'xzLkJsb2NrSWRSB2Jsb2NrSWQ=');
-
-@$core.Deprecated('Use getSlotDataResDescriptor instead')
-const GetSlotDataRes$json = {
-  '1': 'GetSlotDataRes',
-  '2': [
-    {'1': 'slotData', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.SlotData', '10': 'slotData'},
-  ],
-};
-
-/// Descriptor for `GetSlotDataRes`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSlotDataResDescriptor = $convert.base64Decode(
-    'Cg5HZXRTbG90RGF0YVJlcxI7CghzbG90RGF0YRgBIAEoCzIfLmNvbS5ibG9ja2NoYWluLm1vZG'
-    'Vscy5TbG90RGF0YVIIc2xvdERhdGE=');
-
 @$core.Deprecated('Use getBlockHeaderReqDescriptor instead')
 const GetBlockHeaderReq$json = {
   '1': 'GetBlockHeaderReq',

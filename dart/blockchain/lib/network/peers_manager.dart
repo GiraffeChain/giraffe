@@ -219,17 +219,23 @@ class PeerHandler {
     }
   }
 
-  Stream<Null> get _blockNotifierStream => blockchain
-      .consensus.localChain.adoptions
-      .map(P2PCodecs.blockIdCodec.encode)
-      .asyncMap((bytes) => exchange
-          .write(MultiplexedDataResponse(MultiplexerIds.BlockAdoption, bytes)))
-      .map((_) => null);
+  Stream<Null> get _blockNotifierStream =>
+      Stream.fromFuture(blockchain.consensus.localChain.currentHead)
+          .concatWith([blockchain.consensus.localChain.adoptions])
+          .map(P2PCodecs.blockIdCodec.encode)
+          .asyncMap((bytes) => exchange.write(
+              MultiplexedDataResponse(MultiplexerIds.BlockAdoption, bytes)))
+          .map((_) => null);
 
   Stream<Null> get _transactionNotifierStream =>
-      blockchain.ledger.mempool.changes
-          .whereType<MempoolAdded>()
-          .map((a) => a.id)
+      Stream.fromFuture(blockchain.consensus.localChain.currentHead)
+          .asyncMap(blockchain.ledger.mempool.read)
+          .expand((i) => i)
+          .concatWith([
+            blockchain.ledger.mempool.changes
+                .whereType<MempoolAdded>()
+                .map((a) => a.id),
+          ])
           .map(P2PCodecs.transactionIdCodec.encode)
           .asyncMap((bytes) => exchange.write(MultiplexedDataResponse(
               MultiplexerIds.TransactionNotification, bytes)))
@@ -289,6 +295,7 @@ class PeerHandler {
   }
 
   Future<void> _onPeerDeliveredBlock(FullBlock block) async {
+    block.header.embedId();
     log.info("Remote peer delivered block id=${block.header.id.show}");
     if (_fulfilledBlocks.isNotEmpty) {
       final latest = _fulfilledBlocks.last;
@@ -346,6 +353,7 @@ class PeerHandler {
   }
 
   Future<void> _onPeerDeliveredTransaction(Transaction transaction) async {
+    transaction.embedId();
     final id = transaction.id;
     if (!_pendingTransactions.contains(id))
       throw ArgumentError("Unexpected transaction");

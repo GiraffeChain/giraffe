@@ -42,20 +42,19 @@ class Consensus {
           DComputeImpl isolate) =>
       Resource.pure(()).evalFlatMap((_) async {
         final genesisBlockId = genesisBlock.header.id;
-        final etaCalculation = EtaCalculationImpl(
-            dataStores.slotData.getOrRaise,
-            clock,
-            genesisBlock.header.eligibilityCertificate.eta);
+        final etaCalculation = EtaCalculationImpl(dataStores.headers.getOrRaise,
+            clock, genesisBlock.header.eligibilityCertificate.eta);
 
         final leaderElection = LeaderElectionImpl(protocolSettings, isolate);
 
         final epochBoundaryState = epochBoundariesEventSourcedState(
-            clock,
-            await currentEventIdGetterSetters.epochBoundaries.get(),
-            parentChildTree,
-            currentEventIdGetterSetters.epochBoundaries.set,
-            dataStores.epochBoundaries,
-            dataStores.slotData.getOrRaise);
+          clock,
+          await currentEventIdGetterSetters.epochBoundaries.get(),
+          parentChildTree,
+          currentEventIdGetterSetters.epochBoundaries.set,
+          dataStores.epochBoundaries,
+          dataStores.headers.getOrRaise,
+        );
         final consensusDataState = consensusDataEventSourcedState(
             await currentEventIdGetterSetters.consensusData.get(),
             parentChildTree,
@@ -72,14 +71,14 @@ class Consensus {
                 genesisBlockId,
                 await currentEventIdGetterSetters.canonicalHead.get(),
                 blockHeightTree,
-                (id) async => (await dataStores.slotData.getOrRaise(id)).height)
+                (id) async => (await dataStores.headers.getOrRaise(id)).height)
             .flatTap((localChain) => Resource.forStreamSubscription(() =>
                 localChain.adoptions
                     .asyncMap(currentEventIdGetterSetters.canonicalHead.set)
                     .listen(null)))
             .map((localChain) {
           final chainSelection =
-              ChainSelectionImpl(dataStores.slotData.getOrRaise);
+              ChainSelectionImpl(dataStores.headers.getOrRaise);
           final headerValidation = BlockHeaderValidationImpl(
               genesisBlockId,
               etaCalculation,

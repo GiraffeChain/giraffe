@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
@@ -23,14 +22,6 @@ extension RatioOps on Rational {
 }
 
 extension BlockHeaderOps on BlockHeader {
-  Future<SlotData> get slotData async => SlotData()
-    ..slotId = (SlotId()
-      ..blockId = await id
-      ..slot = slot)
-    ..parentSlotId = (SlotId()
-      ..blockId = parentHeaderId
-      ..slot = parentSlot)
-    ..rho = await ed25519Vrf.proofToHash(eligibilityCertificate.vrfSig)
-    ..eta = eligibilityCertificate.eta
-    ..height = height;
+  Future<Uint8List> get rho =>
+      ed25519Vrf.proofToHash(eligibilityCertificate.vrfSig);
 }

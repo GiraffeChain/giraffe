@@ -14,7 +14,8 @@ class StreamedTransactView extends StatefulWidget {
   final BlockchainView view;
   final BlockchainWriter writer;
 
-  StreamedTransactView({super.key, required this.view, required this.writer});
+  const StreamedTransactView(
+      {super.key, required this.view, required this.writer});
   @override
   State<StatefulWidget> createState() => StreamedTransactViewState();
 }

@@ -72,7 +72,7 @@ class MempoolImpl extends Mempool {
                     }
                   })),
           (timer) async => timer.cancel(),
-        ).map((_) => MempoolImpl._(state, fetchBlockBody, eventSourcedState,
+        ).as(MempoolImpl._(state, fetchBlockBody, eventSourcedState,
             mempoolChangesController, expirationDuration));
       });
 

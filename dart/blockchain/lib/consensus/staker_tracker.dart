@@ -202,22 +202,22 @@ EventSourcedState<EpochBoundariesState, BlockId>
         ParentChildTree<BlockId> parentChildTree,
         Future<void> Function(BlockId) currentEventChanged,
         EpochBoundariesState initialState,
-        Future<SlotData> Function(BlockId) fetchSlotData) {
+        Future<BlockHeader> Function(BlockId) fetchHeader) {
   Future<EpochBoundariesState> applyBlock(
       EpochBoundariesState state, BlockId blockId) async {
-    final slotData = await fetchSlotData(blockId);
-    final epoch = clock.epochOfSlot(slotData.slotId.slot);
+    final header = await fetchHeader(blockId);
+    final epoch = clock.epochOfSlot(header.slotId.slot);
     await state.put(epoch, blockId);
     return state;
   }
 
   Future<EpochBoundariesState> unapplyBlock(
       EpochBoundariesState state, BlockId blockId) async {
-    final slotData = await fetchSlotData(blockId);
-    final epoch = clock.epochOfSlot(slotData.slotId.slot);
-    final parentEpoch = clock.epochOfSlot(slotData.parentSlotId.slot);
+    final header = await fetchHeader(blockId);
+    final epoch = clock.epochOfSlot(header.slotId.slot);
+    final parentEpoch = clock.epochOfSlot(header.parentSlot);
     if (epoch == parentEpoch)
-      await state.put(epoch, slotData.parentSlotId.blockId);
+      await state.put(epoch, header.parentHeaderId);
     else
       state.remove(epoch);
     return state;

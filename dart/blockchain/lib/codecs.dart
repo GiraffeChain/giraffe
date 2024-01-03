@@ -30,8 +30,15 @@ extension BlockHeaderCodecs on BlockHeader {
     ..addAll(operationalCertificate.immutableBytes)
     ..addAll(metadata)
     ..addAll(address.value);
-  BlockId get id =>
+
+  BlockId get id => hasHeaderId() ? headerId : computeId;
+
+  BlockId get computeId =>
       BlockId()..value = Uint8List.fromList(immutableBytes.hash256);
+
+  void embedId() => headerId = computeId;
+
+  bool get containsValidId => headerId == computeId;
 }
 
 BlockId decodeBlockId(String input) {
@@ -137,8 +144,14 @@ extension TransactionCodecs on Transaction {
   List<int> get immutableBytes => inputs.immutableBytes((i) => i.immutableBytes)
     ..addAll(outputs.immutableBytes((o) => o.immutableBytes));
 
-  TransactionId get id =>
+  TransactionId get id => hasTransactionId() ? transactionId : computeId;
+
+  TransactionId get computeId =>
       TransactionId()..value = blake2b256.convert(immutableBytes).bytes;
+
+  void embedId() => transactionId = computeId;
+
+  bool get containsValidId => transactionId == computeId;
 }
 
 extension TransactionInputCodecs on TransactionInput {

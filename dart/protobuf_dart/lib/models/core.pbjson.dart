@@ -158,26 +158,6 @@ final $typed_data.Uint8List signatureKesProductDescriptor = $convert.base64Decod
     'VLZXNTdW1CCPpCBYoBAhABUgxzdWJTaWduYXR1cmUSIQoHc3ViUm9vdBgDIAEoDEIH+kIEegJo'
     'IFIHc3ViUm9vdA==');
 
-@$core.Deprecated('Use slotDataDescriptor instead')
-const SlotData$json = {
-  '1': 'SlotData',
-  '2': [
-    {'1': 'slotId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.SlotId', '8': {}, '10': 'slotId'},
-    {'1': 'parentSlotId', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.SlotId', '8': {}, '10': 'parentSlotId'},
-    {'1': 'rho', '3': 3, '4': 1, '5': 12, '8': {}, '10': 'rho'},
-    {'1': 'eta', '3': 4, '4': 1, '5': 12, '8': {}, '10': 'eta'},
-    {'1': 'height', '3': 5, '4': 1, '5': 4, '10': 'height'},
-  ],
-};
-
-/// Descriptor for `SlotData`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List slotDataDescriptor = $convert.base64Decode(
-    'CghTbG90RGF0YRI/CgZzbG90SWQYASABKAsyHS5jb20uYmxvY2tjaGFpbi5tb2RlbHMuU2xvdE'
-    'lkQgj6QgWKAQIQAVIGc2xvdElkEksKDHBhcmVudFNsb3RJZBgCIAEoCzIdLmNvbS5ibG9ja2No'
-    'YWluLm1vZGVscy5TbG90SWRCCPpCBYoBAhABUgxwYXJlbnRTbG90SWQSGQoDcmhvGAMgASgMQg'
-    'f6QgR6AmhAUgNyaG8SGQoDZXRhGAQgASgMQgf6QgR6AmggUgNldGESFgoGaGVpZ2h0GAUgASgE'
-    'UgZoZWlnaHQ=');
-
 @$core.Deprecated('Use slotIdDescriptor instead')
 const SlotId$json = {
   '1': 'SlotId',
@@ -276,16 +256,18 @@ final $typed_data.Uint8List transactionIdDescriptor = $convert.base64Decode(
 const Transaction$json = {
   '1': 'Transaction',
   '2': [
-    {'1': 'inputs', '3': 1, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionInput', '10': 'inputs'},
-    {'1': 'outputs', '3': 2, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionOutput', '10': 'outputs'},
+    {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionId', '10': 'transactionId'},
+    {'1': 'inputs', '3': 2, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionInput', '10': 'inputs'},
+    {'1': 'outputs', '3': 3, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionOutput', '10': 'outputs'},
   ],
 };
 
 /// Descriptor for `Transaction`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionDescriptor = $convert.base64Decode(
-    'CgtUcmFuc2FjdGlvbhI/CgZpbnB1dHMYASADKAsyJy5jb20uYmxvY2tjaGFpbi5tb2RlbHMuVH'
-    'JhbnNhY3Rpb25JbnB1dFIGaW5wdXRzEkIKB291dHB1dHMYAiADKAsyKC5jb20uYmxvY2tjaGFp'
-    'bi5tb2RlbHMuVHJhbnNhY3Rpb25PdXRwdXRSB291dHB1dHM=');
+    'CgtUcmFuc2FjdGlvbhJKCg10cmFuc2FjdGlvbklkGAEgASgLMiQuY29tLmJsb2NrY2hhaW4ubW'
+    '9kZWxzLlRyYW5zYWN0aW9uSWRSDXRyYW5zYWN0aW9uSWQSPwoGaW5wdXRzGAIgAygLMicuY29t'
+    'LmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uSW5wdXRSBmlucHV0cxJCCgdvdXRwdXRzGA'
+    'MgAygLMiguY29tLmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UgdvdXRwdXRz');
 
 @$core.Deprecated('Use transactionInputDescriptor instead')
 const TransactionInput$json = {

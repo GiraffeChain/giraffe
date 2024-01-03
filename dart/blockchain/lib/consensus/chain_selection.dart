@@ -12,25 +12,25 @@ abstract class ChainSelection {
 }
 
 class ChainSelectionImpl extends ChainSelection {
-  final Future<SlotData> Function(BlockId) fetchSlotData;
+  final Future<BlockHeader> Function(BlockId) fetchHeader;
 
-  ChainSelectionImpl(this.fetchSlotData);
+  ChainSelectionImpl(this.fetchHeader);
 
   @override
   Future<BlockId> select(BlockId a, BlockId b) async {
     // TODO: Density chain selection
-    final slotDataA = await fetchSlotData(a);
-    final slotDataB = await fetchSlotData(b);
-    if (slotDataA.height > slotDataB.height)
+    final headerA = await fetchHeader(a);
+    final headerB = await fetchHeader(b);
+    if (headerA.height > headerB.height)
       return a;
-    else if (slotDataB.height > slotDataA.height)
+    else if (headerB.height > headerA.height)
       return b;
-    else if (slotDataA.slotId.slot < slotDataB.slotId.slot)
+    else if (headerA.slotId.slot < headerB.slotId.slot)
       return a;
-    else if (slotDataB.slotId.slot < slotDataA.slotId.slot)
+    else if (headerB.slotId.slot < headerA.slotId.slot)
       return b;
-    else if (slotDataA.rho.rhoTestHash.toBigInt >
-        slotDataB.rho.rhoTestHash.toBigInt)
+    else if ((await headerA.rho).rhoTestHash.toBigInt >
+        (await headerB.rho).rhoTestHash.toBigInt)
       return a;
     else
       return b;

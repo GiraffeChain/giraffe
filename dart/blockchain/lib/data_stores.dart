@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/common/store.dart';
-import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
@@ -12,7 +11,6 @@ import 'package:logging/logging.dart';
 class DataStores {
   final Store<BlockId, (Int64, BlockId)> parentChildTree;
   final Store<int, BlockId> currentEventIds;
-  final Store<BlockId, SlotData> slotData;
   final Store<BlockId, BlockHeader> headers;
   final Store<BlockId, BlockBody> bodies;
   final Store<TransactionId, Transaction> transactions;
@@ -27,7 +25,6 @@ class DataStores {
   DataStores({
     required this.parentChildTree,
     required this.currentEventIds,
-    required this.slotData,
     required this.headers,
     required this.bodies,
     required this.transactions,
@@ -51,7 +48,6 @@ class DataStores {
         () async => DataStores(
               parentChildTree: makeDb(),
               currentEventIds: makeDb(),
-              slotData: makeDb(),
               headers: makeDb(),
               bodies: makeDb(),
               transactions: makeDb(),
@@ -84,112 +80,100 @@ class DataStores {
                   (bytes) => bytes[0],
                   PersistenceCodecs.decodeBlockId)
               .flatMap(
-            (currentEventIds) => HiveStore.make<BlockId, SlotData>(
-                    "slot-data",
+            (currentEventIds) => HiveStore.make<BlockId, BlockHeader>(
+                    "block-header",
                     hive,
                     PersistenceCodecs.encodeBlockId,
                     (value) => value.writeToBuffer(),
                     PersistenceCodecs.decodeBlockId,
-                    SlotData.fromBuffer)
+                    BlockHeader.fromBuffer)
                 .flatMap(
-              (slotData) => HiveStore.make<BlockId, BlockHeader>(
-                      "block-header",
+              (headers) => HiveStore.make<BlockId, BlockBody>(
+                      "block-body",
                       hive,
                       PersistenceCodecs.encodeBlockId,
                       (value) => value.writeToBuffer(),
                       PersistenceCodecs.decodeBlockId,
-                      BlockHeader.fromBuffer)
+                      BlockBody.fromBuffer)
                   .flatMap(
-                (headers) => HiveStore.make<BlockId, BlockBody>(
-                        "block-body",
+                (bodies) => HiveStore.make<TransactionId, Transaction>(
+                        "transactions",
                         hive,
-                        PersistenceCodecs.encodeBlockId,
+                        PersistenceCodecs.encodeTransactionId,
                         (value) => value.writeToBuffer(),
-                        PersistenceCodecs.decodeBlockId,
-                        BlockBody.fromBuffer)
+                        PersistenceCodecs.decodeTransactionId,
+                        Transaction.fromBuffer)
                     .flatMap(
-                  (bodies) => HiveStore.make<TransactionId, Transaction>(
-                          "transactions",
-                          hive,
-                          PersistenceCodecs.encodeTransactionId,
-                          (value) => value.writeToBuffer(),
-                          PersistenceCodecs.decodeTransactionId,
-                          Transaction.fromBuffer)
-                      .flatMap(
-                    (transactions) => HiveStore.make<TransactionId, Uint32List>(
-                      "spendable-box-ids",
-                      hive,
-                      PersistenceCodecs.encodeTransactionId,
-                      (value) => value.buffer.asUint8List(),
-                      PersistenceCodecs.decodeTransactionId,
-                      (bytes) => bytes.buffer.asUint32List(),
-                    ).flatMap(
-                      (spendableBoxIds) => HiveStore.make<Int64, BlockId>(
-                              "epoch-boundaries",
+                  (transactions) => HiveStore.make<TransactionId, Uint32List>(
+                    "spendable-box-ids",
+                    hive,
+                    PersistenceCodecs.encodeTransactionId,
+                    (value) => value.buffer.asUint8List(),
+                    PersistenceCodecs.decodeTransactionId,
+                    (bytes) => bytes.buffer.asUint32List(),
+                  ).flatMap(
+                    (spendableBoxIds) => HiveStore.make<Int64, BlockId>(
+                            "epoch-boundaries",
+                            hive,
+                            (key) => Uint8List.fromList(key.toBytes()),
+                            PersistenceCodecs.encodeBlockId,
+                            Int64.fromBytes,
+                            PersistenceCodecs.decodeBlockId)
+                        .flatMap(
+                      (epochBoundaries) => HiveStore.make<void, Int64>(
+                              "active-stake",
                               hive,
-                              (key) => Uint8List.fromList(key.toBytes()),
-                              PersistenceCodecs.encodeBlockId,
-                              Int64.fromBytes,
-                              PersistenceCodecs.decodeBlockId)
+                              (_) => Uint8List(1),
+                              (value) => Uint8List.fromList(value.toBytes()),
+                              (_) {},
+                              Int64.fromBytes)
                           .flatMap(
-                        (epochBoundaries) => HiveStore.make<void, Int64>(
-                                "active-stake",
+                        (activeStake) => HiveStore.make<void, Int64>(
+                                "inactive-stake",
                                 hive,
                                 (_) => Uint8List(1),
                                 (value) => Uint8List.fromList(value.toBytes()),
                                 (_) {},
                                 Int64.fromBytes)
                             .flatMap(
-                          (activeStake) => HiveStore.make<void, Int64>(
-                                  "inactive-stake",
-                                  hive,
-                                  (_) => Uint8List(1),
-                                  (value) =>
-                                      Uint8List.fromList(value.toBytes()),
-                                  (_) {},
-                                  Int64.fromBytes)
-                              .flatMap(
-                            (inactiveStake) =>
-                                HiveStore.make<StakingAddress, ActiveStaker>(
-                                        "active-stakers",
-                                        hive,
-                                        (key) => key.writeToBuffer(),
-                                        (value) => value.writeToBuffer(),
-                                        StakingAddress.fromBuffer,
-                                        ActiveStaker.fromBuffer)
-                                    .flatMap(
-                              (activeStakers) => HiveStore.make<Int64, BlockId>(
-                                      "block-height-tree",
+                          (inactiveStake) =>
+                              HiveStore.make<StakingAddress, ActiveStaker>(
+                                      "active-stakers",
                                       hive,
-                                      (key) =>
-                                          Uint8List.fromList(key.toBytes()),
-                                      PersistenceCodecs.encodeBlockId,
-                                      Int64.fromBytes,
-                                      PersistenceCodecs.decodeBlockId)
+                                      (key) => key.writeToBuffer(),
+                                      (value) => value.writeToBuffer(),
+                                      StakingAddress.fromBuffer,
+                                      ActiveStaker.fromBuffer)
                                   .flatMap(
-                                (blockHeightTree) =>
-                                    HiveStore.make<int, List<int>>(
-                                        "metadata",
-                                        hive,
-                                        (key) => Uint8List.fromList([key]),
-                                        Uint8List.fromList,
-                                        (bytes) => bytes[0],
-                                        (bytes) => bytes).map(
-                                  (metadata) => DataStores(
-                                    parentChildTree: parentChildTree,
-                                    currentEventIds: currentEventIds,
-                                    slotData: slotData,
-                                    headers: headers,
-                                    bodies: bodies,
-                                    transactions: transactions,
-                                    spendableBoxIds: spendableBoxIds,
-                                    epochBoundaries: epochBoundaries,
-                                    activeStake: activeStake,
-                                    inactiveStake: inactiveStake,
-                                    activeStakers: activeStakers,
-                                    blockHeightTree: blockHeightTree,
-                                    metadata: metadata,
-                                  ),
+                            (activeStakers) => HiveStore.make<Int64, BlockId>(
+                                    "block-height-tree",
+                                    hive,
+                                    (key) => Uint8List.fromList(key.toBytes()),
+                                    PersistenceCodecs.encodeBlockId,
+                                    Int64.fromBytes,
+                                    PersistenceCodecs.decodeBlockId)
+                                .flatMap(
+                              (blockHeightTree) =>
+                                  HiveStore.make<int, List<int>>(
+                                      "metadata",
+                                      hive,
+                                      (key) => Uint8List.fromList([key]),
+                                      Uint8List.fromList,
+                                      (bytes) => bytes[0],
+                                      (bytes) => bytes).map(
+                                (metadata) => DataStores(
+                                  parentChildTree: parentChildTree,
+                                  currentEventIds: currentEventIds,
+                                  headers: headers,
+                                  bodies: bodies,
+                                  transactions: transactions,
+                                  spendableBoxIds: spendableBoxIds,
+                                  epochBoundaries: epochBoundaries,
+                                  activeStake: activeStake,
+                                  inactiveStake: inactiveStake,
+                                  activeStakers: activeStakers,
+                                  blockHeightTree: blockHeightTree,
+                                  metadata: metadata,
                                 ),
                               ),
                             ),
@@ -236,7 +220,6 @@ class DataStores {
       await currentEventIds.put(key, genesisBlock.header.parentHeaderId);
     }
 
-    await slotData.put(genesisBlockId, await genesisBlock.header.slotData);
     await headers.put(genesisBlockId, genesisBlock.header);
     await bodies.put(
         genesisBlockId,

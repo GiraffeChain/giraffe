@@ -65,43 +65,26 @@ message OperationalCertificate {
     bytes childVK = 3 [(validate.rules).bytes.len = 32];
     // The signature of the block
     bytes childSignature = 4 [(validate.rules).bytes.len = 64];
-  }
-  
-  message VerificationKeyKesProduct {
-      // length = 32
-      bytes value = 1 [(validate.rules).bytes.len = 32];
-      uint32 step = 2;
-  }
-  
-  message SignatureKesSum {
-      bytes verificationKey = 1 [(validate.rules).bytes.len = 32];
-      bytes signature = 2 [(validate.rules).bytes.len = 64];
-      // item length = 32
-      repeated bytes witness = 3 [(validate.rules).repeated.items.bytes.len = 32];
-  }
-  
-  message SignatureKesProduct {
-      SignatureKesSum superSignature = 1 [(validate.rules).message.required = true];
-      SignatureKesSum subSignature = 2 [(validate.rules).message.required = true];
-      // length = 32
-      bytes subRoot = 3 [(validate.rules).bytes.len = 32];
-  }
+}
 
-
-// Represents a "mini" block header, containing just a subset of its data needed to quickly inspect consensus characteristics of a block
-message SlotData {
-    // The slot ID corresponding to "this" block
-    SlotId slotId = 1 [(validate.rules).message.required = true];
-    // The slot ID corresponding to "this" block's parent
-    SlotId parentSlotId = 2 [(validate.rules).message.required = true];
-    // The "rho" corresponding to "this" block
-    // length = 64
-    bytes rho = 3 [(validate.rules).bytes.len = 64];
-    // The "eta" corresponding to "this" block
+message VerificationKeyKesProduct {
     // length = 32
-    bytes eta = 4 [(validate.rules).bytes.len = 32];
-    // The height of "this" block
-    uint64 height = 5;
+    bytes value = 1 [(validate.rules).bytes.len = 32];
+    uint32 step = 2;
+}
+
+message SignatureKesSum {
+    bytes verificationKey = 1 [(validate.rules).bytes.len = 32];
+    bytes signature = 2 [(validate.rules).bytes.len = 64];
+    // item length = 32
+    repeated bytes witness = 3 [(validate.rules).repeated.items.bytes.len = 32];
+}
+
+message SignatureKesProduct {
+    SignatureKesSum superSignature = 1 [(validate.rules).message.required = true];
+    SignatureKesSum subSignature = 2 [(validate.rules).message.required = true];
+    // length = 32
+    bytes subRoot = 3 [(validate.rules).bytes.len = 32];
 }
 
 // A glorified tuple
@@ -152,8 +135,9 @@ message TransactionId {
 }
 
 message Transaction {
-    repeated TransactionInput inputs = 1;
-    repeated TransactionOutput outputs = 2;
+    TransactionId transactionId = 1;
+    repeated TransactionInput inputs = 2;
+    repeated TransactionOutput outputs = 3;
 }
 
 message TransactionInput {

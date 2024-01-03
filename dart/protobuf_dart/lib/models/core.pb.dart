@@ -712,124 +712,6 @@ class SignatureKesProduct extends $pb.GeneratedMessage {
   void clearSubRoot() => clearField(3);
 }
 
-/// Represents a "mini" block header, containing just a subset of its data needed to quickly inspect consensus characteristics of a block
-class SlotData extends $pb.GeneratedMessage {
-  factory SlotData({
-    SlotId? slotId,
-    SlotId? parentSlotId,
-    $core.List<$core.int>? rho,
-    $core.List<$core.int>? eta,
-    $fixnum.Int64? height,
-  }) {
-    final $result = create();
-    if (slotId != null) {
-      $result.slotId = slotId;
-    }
-    if (parentSlotId != null) {
-      $result.parentSlotId = parentSlotId;
-    }
-    if (rho != null) {
-      $result.rho = rho;
-    }
-    if (eta != null) {
-      $result.eta = eta;
-    }
-    if (height != null) {
-      $result.height = height;
-    }
-    return $result;
-  }
-  SlotData._() : super();
-  factory SlotData.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory SlotData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SlotData', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..aOM<SlotId>(1, _omitFieldNames ? '' : 'slotId', protoName: 'slotId', subBuilder: SlotId.create)
-    ..aOM<SlotId>(2, _omitFieldNames ? '' : 'parentSlotId', protoName: 'parentSlotId', subBuilder: SlotId.create)
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'rho', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'eta', $pb.PbFieldType.OY)
-    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  SlotData clone() => SlotData()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  SlotData copyWith(void Function(SlotData) updates) => super.copyWith((message) => updates(message as SlotData)) as SlotData;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static SlotData create() => SlotData._();
-  SlotData createEmptyInstance() => create();
-  static $pb.PbList<SlotData> createRepeated() => $pb.PbList<SlotData>();
-  @$core.pragma('dart2js:noInline')
-  static SlotData getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SlotData>(create);
-  static SlotData? _defaultInstance;
-
-  /// The slot ID corresponding to "this" block
-  @$pb.TagNumber(1)
-  SlotId get slotId => $_getN(0);
-  @$pb.TagNumber(1)
-  set slotId(SlotId v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasSlotId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearSlotId() => clearField(1);
-  @$pb.TagNumber(1)
-  SlotId ensureSlotId() => $_ensure(0);
-
-  /// The slot ID corresponding to "this" block's parent
-  @$pb.TagNumber(2)
-  SlotId get parentSlotId => $_getN(1);
-  @$pb.TagNumber(2)
-  set parentSlotId(SlotId v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasParentSlotId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearParentSlotId() => clearField(2);
-  @$pb.TagNumber(2)
-  SlotId ensureParentSlotId() => $_ensure(1);
-
-  /// The "rho" corresponding to "this" block
-  /// length = 64
-  @$pb.TagNumber(3)
-  $core.List<$core.int> get rho => $_getN(2);
-  @$pb.TagNumber(3)
-  set rho($core.List<$core.int> v) { $_setBytes(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasRho() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearRho() => clearField(3);
-
-  /// The "eta" corresponding to "this" block
-  /// length = 32
-  @$pb.TagNumber(4)
-  $core.List<$core.int> get eta => $_getN(3);
-  @$pb.TagNumber(4)
-  set eta($core.List<$core.int> v) { $_setBytes(3, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasEta() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearEta() => clearField(4);
-
-  /// The height of "this" block
-  @$pb.TagNumber(5)
-  $fixnum.Int64 get height => $_getI64(4);
-  @$pb.TagNumber(5)
-  set height($fixnum.Int64 v) { $_setInt64(4, v); }
-  @$pb.TagNumber(5)
-  $core.bool hasHeight() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearHeight() => clearField(5);
-}
-
 /// A glorified tuple
 class SlotId extends $pb.GeneratedMessage {
   factory SlotId({
@@ -1238,10 +1120,14 @@ class TransactionId extends $pb.GeneratedMessage {
 
 class Transaction extends $pb.GeneratedMessage {
   factory Transaction({
+    TransactionId? transactionId,
     $core.Iterable<TransactionInput>? inputs,
     $core.Iterable<TransactionOutput>? outputs,
   }) {
     final $result = create();
+    if (transactionId != null) {
+      $result.transactionId = transactionId;
+    }
     if (inputs != null) {
       $result.inputs.addAll(inputs);
     }
@@ -1255,8 +1141,9 @@ class Transaction extends $pb.GeneratedMessage {
   factory Transaction.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Transaction', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..pc<TransactionInput>(1, _omitFieldNames ? '' : 'inputs', $pb.PbFieldType.PM, subBuilder: TransactionInput.create)
-    ..pc<TransactionOutput>(2, _omitFieldNames ? '' : 'outputs', $pb.PbFieldType.PM, subBuilder: TransactionOutput.create)
+    ..aOM<TransactionId>(1, _omitFieldNames ? '' : 'transactionId', protoName: 'transactionId', subBuilder: TransactionId.create)
+    ..pc<TransactionInput>(2, _omitFieldNames ? '' : 'inputs', $pb.PbFieldType.PM, subBuilder: TransactionInput.create)
+    ..pc<TransactionOutput>(3, _omitFieldNames ? '' : 'outputs', $pb.PbFieldType.PM, subBuilder: TransactionOutput.create)
     ..hasRequiredFields = false
   ;
 
@@ -1282,10 +1169,21 @@ class Transaction extends $pb.GeneratedMessage {
   static Transaction? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<TransactionInput> get inputs => $_getList(0);
+  TransactionId get transactionId => $_getN(0);
+  @$pb.TagNumber(1)
+  set transactionId(TransactionId v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasTransactionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTransactionId() => clearField(1);
+  @$pb.TagNumber(1)
+  TransactionId ensureTransactionId() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $core.List<TransactionOutput> get outputs => $_getList(1);
+  $core.List<TransactionInput> get inputs => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.List<TransactionOutput> get outputs => $_getList(2);
 }
 
 class TransactionInput extends $pb.GeneratedMessage {

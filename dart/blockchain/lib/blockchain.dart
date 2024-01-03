@@ -15,7 +15,6 @@ import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
-import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/ledger/models/body_validation_context.dart';
@@ -106,17 +105,17 @@ class BlockchainCore {
               return Resource.eval(() async {
                 final canonicalHeadId =
                     await currentEventIdGetterSetters.canonicalHead.get();
-                final canonicalHeadSlotData =
-                    await dataStores.slotData.getOrRaise(canonicalHeadId);
+                final canonicalHead =
+                    await dataStores.headers.getOrRaise(canonicalHeadId);
                 log.info(
-                    "Canonical head id=${canonicalHeadId.show} height=${canonicalHeadSlotData.height} slot=${canonicalHeadSlotData.slotId.slot}");
+                    "Canonical head id=${canonicalHeadId.show} height=${canonicalHead.height} slot=${canonicalHead.slot}");
               })
                   .evalMap(
                       (_) => currentEventIdGetterSetters.blockHeightTree.get())
                   .map((eventId) => makeBlockHeightTree(
                       dataStores.blockHeightTree,
                       eventId,
-                      dataStores.slotData,
+                      dataStores.headers.getOrRaise,
                       parentChildTree,
                       currentEventIdGetterSetters.blockHeightTree.set))
                   .flatMap(
@@ -200,14 +199,12 @@ class BlockchainCore {
 
   Future<void> validateBlock(BlockId id, Block block) async {
     await parentChildTree.assocate(id, block.header.parentHeaderId);
-    await dataStores.slotData.put(id, await block.header.slotData);
     await dataStores.headers.put(id, block.header);
 
     final errors = await consensus.blockHeaderValidation.validate(block.header);
     throwErrors() async {
       if (errors.isNotEmpty) {
         // TODO: ParentChildTree disassociate
-        await dataStores.slotData.remove(id);
         await dataStores.headers.remove(id);
         throw Exception("Invalid block. reason=$errors");
       }

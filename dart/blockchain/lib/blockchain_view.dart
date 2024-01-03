@@ -7,7 +7,6 @@ import 'package:fixnum/fixnum.dart';
 import 'package:rxdart/transformers.dart';
 
 abstract class BlockchainView {
-  Future<SlotData?> getSlotData(BlockId blockId);
   Future<BlockHeader?> getBlockHeader(BlockId blockId);
   Future<BlockBody?> getBlockBody(BlockId blockId);
   Future<Transaction?> getTransaction(TransactionId transactionId);
@@ -19,9 +18,6 @@ abstract class BlockchainView {
 
   Stream<BlockId> get adoptions =>
       traversal.whereType<TraversalStep_Applied>().map((t) => t.blockId);
-
-  Future<SlotData> getSlotDataOrRaise(BlockId blockId) =>
-      getSlotData(blockId).then((v) => v!);
 
   Future<BlockHeader> getBlockHeaderOrRaise(BlockId blockId) =>
       getBlockHeader(blockId).then((v) => v!);
@@ -104,10 +100,6 @@ class BlockchainViewFromBlockchain extends BlockchainView {
       blockchain.consensus.localChain.blockIdAtHeight(height);
 
   @override
-  Future<SlotData?> getSlotData(BlockId blockId) =>
-      blockchain.dataStores.slotData.get(blockId);
-
-  @override
   Future<Transaction?> getTransaction(TransactionId transactionId) =>
       blockchain.dataStores.transactions.get(transactionId);
 
@@ -148,11 +140,6 @@ class BlockchainViewFromRpc extends BlockchainView {
   Future<BlockId?> getBlockIdAtHeight(Int64 height) => nodeClient
       .getBlockIdAtHeight(GetBlockIdAtHeightReq(height: height))
       .then((v) => v.hasBlockId() ? v.blockId : null);
-
-  @override
-  Future<SlotData?> getSlotData(BlockId blockId) => nodeClient
-      .getSlotData(GetSlotDataReq(blockId: blockId))
-      .then((v) => v.hasSlotData() ? v.slotData : null);
 
   @override
   Future<Transaction?> getTransaction(TransactionId transactionId) => nodeClient

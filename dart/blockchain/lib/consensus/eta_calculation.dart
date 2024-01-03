@@ -16,11 +16,11 @@ abstract class EtaCalculation {
 }
 
 class EtaCalculationImpl extends EtaCalculation {
-  final Future<SlotData> Function(BlockId) fetchSlotData;
+  final Future<BlockHeader> Function(BlockId) fetchHeader;
   final Clock clock;
   final Eta genesisEta;
 
-  EtaCalculationImpl(this.fetchSlotData, this.clock, this.genesisEta);
+  EtaCalculationImpl(this.fetchHeader, this.clock, this.genesisEta);
 
   final log = Logger("EtaCalculation");
 
@@ -29,37 +29,37 @@ class EtaCalculationImpl extends EtaCalculation {
     if (childSlot > clock.slotsPerEpoch) return genesisEta;
     final parentEpoch = clock.epochOfSlot(parentSlotId.slot);
     final childEpoch = clock.epochOfSlot(childSlot);
-    final parentSlotData = await fetchSlotData(parentSlotId.blockId);
+    final parentHeader = await fetchHeader(parentSlotId.blockId);
     if (parentEpoch == childEpoch)
-      return parentSlotData.eta;
+      return parentHeader.eligibilityCertificate.eta;
     else if (childEpoch - parentEpoch > 1)
       throw Exception("Empty Epoch");
     else
-      return _calculate(await _locateTwoThirdsBest(parentSlotData));
+      return _calculate(await _locateTwoThirdsBest(parentHeader));
   }
 
-  _locateTwoThirdsBest(SlotData from) async {
+  _locateTwoThirdsBest(BlockHeader from) async {
     if (_isWithinTwoThirds(from))
       return from;
     else
-      return _locateTwoThirdsBest(
-          await fetchSlotData(from.parentSlotId.blockId));
+      return _locateTwoThirdsBest(await fetchHeader(from.parentHeaderId));
   }
 
-  _isWithinTwoThirds(SlotData from) =>
+  _isWithinTwoThirds(BlockHeader from) =>
       from.slotId.slot % clock.slotsPerEpoch <= (clock.slotsPerEpoch * 2 ~/ 3);
 
-  Future<Eta> _calculate(SlotData twoThirdsBest) async {
+  Future<Eta> _calculate(BlockHeader twoThirdsBest) async {
     // TODO: Caching
     final epoch = clock.epochOfSlot(twoThirdsBest.slotId.slot);
     final epochRange = clock.epochRange(epoch);
-    final epochData = [twoThirdsBest];
-    while (epochData.first.parentSlotId.slot >= epochRange.$1) {
-      epochData.insert(
-          0, await fetchSlotData(epochData.first.parentSlotId.blockId));
+    final rhoValues = <Uint8List>[];
+    BlockHeader currentHeader = twoThirdsBest;
+    while (currentHeader.parentSlot >= epochRange.$1) {
+      rhoValues.insert(0, await currentHeader.rho);
+      currentHeader = await fetchHeader(currentHeader.parentHeaderId);
     }
-    final rhoValues = epochData.map((slotData) => slotData.rho);
-    return _calculateFromValues(twoThirdsBest.eta, epoch + 1, rhoValues);
+    return _calculateFromValues(
+        twoThirdsBest.eligibilityCertificate.eta, epoch + 1, rhoValues);
   }
 
   Eta _calculateFromValues(

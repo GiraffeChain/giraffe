@@ -28,7 +28,9 @@ abstract class Resource<A> {
       make(() => Future.sync(() => makeController()),
           (controller) => controller.close());
 
-  Resource<void> get voidResult => map((_) => ());
+  Resource<void> get voidResult => as(());
+
+  Resource<U> as<U>(U u) => map((_) => u);
 
   Resource<U> map<U>(U Function(A) f) => flatMap((t) => PureResource(a: f(t)));
 
@@ -46,7 +48,7 @@ abstract class Resource<A> {
   }
 
   Resource<A> flatTap<U>(Resource Function(A) f) {
-    return BindResource<A, A>(source: this, fs: (a) => f(a).map((_) => a));
+    return BindResource<A, A>(source: this, fs: (a) => f(a).as(a));
   }
 
   Resource<A> tapLog(Logger log, String Function(A) messageF) => map((a) {
@@ -87,6 +89,10 @@ abstract class Resource<A> {
 
   Resource<(A, A2)> product<A2>(Resource<A2> rA2) => ParBindResources(
       sources: [this, rA2], fs: (vs) => pure((vs[0] as A, vs[1] as A2)));
+
+  Resource<A> productL<A2>(Resource<A2> rA2) => product(rA2).map((t) => t.$1);
+
+  Resource<A2> productR<A2>(Resource<A2> rA2) => product(rA2).map((t) => t.$2);
 }
 
 class BindResource<S, A> extends Resource<A> {
@@ -206,4 +212,8 @@ class EvalResource<A> extends Resource<A> {
     final a = await aF();
     return (a, () => Future.value());
   }
+}
+
+extension ResourceRecord2Ops<T1, T2> on (Resource<T1>, Resource<T2>) {
+  Resource<(T1, T2)> get tupled => $1.product($2);
 }

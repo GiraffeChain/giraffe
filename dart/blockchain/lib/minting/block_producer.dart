@@ -117,6 +117,7 @@ class BlockProducerImpl extends BlockProducer {
                     nextHit,
                   ));
               if (maybeHeader != null) {
+                maybeHeader.embedId();
                 final headerId = maybeHeader.id;
                 final transactionIds = body.transactions.map((tx) => tx.id);
                 log.info(

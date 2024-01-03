@@ -7,7 +7,7 @@ import 'package:blockchain/isolate_pool.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 
-final timestamp = 1704241140953;
+final timestamp = 1704247535528;
 
 final conf.BlockchainConfig config1 = conf.BlockchainConfig(
     genesis: conf.BlockchainGenesis(
@@ -56,9 +56,9 @@ Future<void> main() async {
       .flatMap((isolate) => BlockchainCore.make(config, isolate))
       .flatMap(
         (blockchain) => BlockchainRpc.make(blockchain, config)
-            .product(BlockchainP2P.make(blockchain, config)),
+            .productR(BlockchainP2P.make(blockchain, config)),
       );
 
   await resource
-      .use((f) => Future.any([f.$2, ProcessSignal.sigint.watch().first]));
+      .use((f) => Future.any([f, ProcessSignal.sigint.watch().first]));
 }

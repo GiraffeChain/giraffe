@@ -17,6 +17,7 @@ var _isolate = LocalCompute;
 void main() async {
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
+    // ignore: avoid_print
     print(
         '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}');
   });

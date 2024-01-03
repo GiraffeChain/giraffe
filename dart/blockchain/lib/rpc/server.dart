@@ -1,6 +1,7 @@
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
@@ -36,6 +37,7 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
   Future<BroadcastTransactionRes> broadcastTransaction(
       ServiceCall call, BroadcastTransactionReq request) async {
     assert(request.hasTransaction());
+    request.transaction.embedId();
     log.info("Received transaction id=${request.transaction.id.show}");
     await blockchain.processTransaction(request.transaction);
     return BroadcastTransactionRes();
@@ -81,14 +83,6 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
         await blockchain.consensus.localChain.blockIdAtHeight(request.height);
     return GetBlockIdAtHeightRes(blockId: blockId);
   }
-
-  @override
-  Future<GetSlotDataRes> getSlotData(
-      ServiceCall call, GetSlotDataReq request) async {
-    assert(request.hasBlockId());
-    final slotData = await blockchain.dataStores.slotData.get(request.blockId);
-    return GetSlotDataRes(slotData: slotData);
-  }
 }
 
 class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
@@ -102,6 +96,7 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
   Future<BroadcastBlockRes> broadcastBlock(
       ServiceCall call, BroadcastBlockReq request) async {
     assert(request.hasBlock());
+    request.block.header.embedId();
     log.info("Received block id=${request.block.header.id.show}");
     await blockchain.processBlock(request.block);
     return BroadcastBlockRes();
@@ -138,10 +133,10 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
   @override
   Future<CalculateEtaRes> calculateEta(
       ServiceCall call, CalculateEtaReq request) async {
-    final parentSlotData =
-        await blockchain.dataStores.slotData.getOrRaise(request.parentBlockId);
+    final parentHeader =
+        await blockchain.dataStores.headers.getOrRaise(request.parentBlockId);
     final eta = await blockchain.consensus.etaCalculation
-        .etaToBe(parentSlotData.slotId, request.slot);
+        .etaToBe(parentHeader.slotId, request.slot);
     return CalculateEtaRes(eta: eta);
   }
 
