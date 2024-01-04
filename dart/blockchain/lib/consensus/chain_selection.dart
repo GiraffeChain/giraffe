@@ -1,38 +1,84 @@
 import 'dart:async';
 
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/utils.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:fixnum/fixnum.dart';
 
-abstract class ChainSelection {
+class ChainSelection {
+  final ProtocolSettings protocolSettings;
+
+  ChainSelection({required this.protocolSettings});
   /**
-   * Selects the "better" of the two block IDs
+   * Selects the "better" of the two blocks
    */
-  Future<BlockId> select(BlockId a, BlockId b);
-}
+  Future<ChainSelectionOutcome> select(
+    BlockHeader headerA,
+    BlockHeader headerB,
+    BlockHeader commonAncestor,
+    Future<BlockHeader?> Function(Int64) headerAtHeightA,
+    Future<BlockHeader?> Function(Int64) headerAtHeightB,
+  ) async {
+    if (headerA.height - commonAncestor.height <=
+            protocolSettings.chainSelectionKLookback &&
+        headerB.height - commonAncestor.height <=
+            protocolSettings.chainSelectionKLookback)
+      return maxValidBg(headerA, headerB);
+    // Create but don't immediately await, to allow calculations in parallel
+    final aDensityFuture = calculateDensity(commonAncestor, headerAtHeightA);
+    final bDensityFuture = calculateDensity(commonAncestor, headerAtHeightB);
+    final aDensity = await aDensityFuture;
+    final bDensity = await bDensityFuture;
+    if (bDensity > aDensity) return DensitySelectionOutcome(id: headerB.id);
+    return DensitySelectionOutcome(id: headerA.id);
+  }
 
-class ChainSelectionImpl extends ChainSelection {
-  final Future<BlockHeader> Function(BlockId) fetchHeader;
+  // Calculates the number of blocks past the common ancestor point within the density slot window
+  Future<Int64> calculateDensity(BlockHeader commonAncestor,
+      Future<BlockHeader?> Function(Int64) headerAtHeight) async {
+    Int64 h = commonAncestor.height;
+    while (true) {
+      final next = await headerAtHeight(h + 1);
+      if (next == null) break;
+      if (next.slot - commonAncestor.slot >=
+          protocolSettings.chainSelectionSWindow) break;
+      h++;
+    }
+    return h - commonAncestor.height;
+  }
 
-  ChainSelectionImpl(this.fetchHeader);
-
-  @override
-  Future<BlockId> select(BlockId a, BlockId b) async {
-    // TODO: Density chain selection
-    final headerA = await fetchHeader(a);
-    final headerB = await fetchHeader(b);
+  Future<ChainSelectionOutcome> maxValidBg(
+      BlockHeader headerA, BlockHeader headerB) async {
+    late final BlockId id;
     if (headerA.height > headerB.height)
-      return a;
+      id = headerA.id;
     else if (headerB.height > headerA.height)
-      return b;
+      id = headerB.id;
     else if (headerA.slotId.slot < headerB.slotId.slot)
-      return a;
+      id = headerA.id;
     else if (headerB.slotId.slot < headerA.slotId.slot)
-      return b;
+      id = headerB.id;
     else if ((await headerA.rho).rhoTestHash.toBigInt >
         (await headerB.rho).rhoTestHash.toBigInt)
-      return a;
+      id = headerA.id;
     else
-      return b;
+      id = headerB.id;
+    return StandardSelectionOutcome(id: id);
   }
+}
+
+sealed class ChainSelectionOutcome {
+  final BlockId id;
+
+  ChainSelectionOutcome({required this.id});
+}
+
+class StandardSelectionOutcome extends ChainSelectionOutcome {
+  StandardSelectionOutcome({required super.id});
+}
+
+class DensitySelectionOutcome extends ChainSelectionOutcome {
+  DensitySelectionOutcome({required super.id});
 }

@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -6,13 +7,16 @@ import 'package:async/async.dart';
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/consensus/chain_selection.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/ledger/mempool.dart';
 import 'package:blockchain/network/framing.dart';
 import 'package:blockchain/network/handshake.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
+import 'package:rational/rational.dart';
 import 'package:rxdart/rxdart.dart';
 
 class PeersManager {
@@ -86,22 +90,24 @@ class PeersManager {
     final exchange = MultiplexedDataExchange(
         MultiplexedIOForFramedIO(SocketBasedFramedIO(socket, chunkedReader)));
 
-    final peerHandler = PeerHandler(
-      blockchain: blockchain,
-      remotePeerId: handshakeResult.peerId,
-      exchange: exchange,
-      peersManager: this,
-    );
-
     await Resource.onFinalize(
             () async => connectedPeers.remove(handshakeResult.peerId))
-        .flatMap((_) => Resource.forStreamSubscription(() => StreamGroup.merge(
-                [peerHandler.run(), Stream.fromFuture(socket.done)])
-            .listen(null,
-                onError: (e) => socket.flush().then((_) => socket.destroy()),
-                cancelOnError: true)))
-        .use((subscription) =>
-            Future.any([subscription.asFuture(), socket.done]));
+        .flatMap((_) => PeerBlockchainInterface.make(
+            blockchain: blockchain,
+            remotePeerId: handshakeResult.peerId,
+            exchange: exchange,
+            peersManager: this))
+        .flatMap((interfaceWithBackground) => Resource.forStreamSubscription(
+            () => PeerHandler(
+                    blockchain: blockchain,
+                    remotePeerId: handshakeResult.peerId,
+                    exchange: exchange,
+                    peersManager: this,
+                    interface: interfaceWithBackground.$1)
+                .run()
+                .listen(null)).map((sub) =>
+            Future.any([interfaceWithBackground.$2, sub.asFuture(), socket.done])))
+        .use_;
   }
 
   PublicP2PState get publicState => PublicP2PState(
@@ -123,215 +129,226 @@ class P2PCodecs {
   static final int64Codec = Codec<Int64>((v) => v.toBytes(), Int64.fromBytes);
   static final blockIdCodec =
       Codec<BlockId>((v) => v.value, (v) => BlockId(value: v));
+
+  static final blockIdOptCodec = optCodec<BlockId>(blockIdCodec);
   static final transactionIdCodec =
       Codec<TransactionId>((v) => v.value, (v) => TransactionId(value: v));
-  static final fullBlockOptCodec = Codec<FullBlock?>(
-      (v) => (v == null) ? [0] : [1]
-        ..addAll(v!.writeToBuffer()),
-      (bytes) =>
-          (bytes[0] == 0) ? null : FullBlock.fromBuffer(bytes.sublist(1)));
 
-  static final transactionOptCodec = Codec<Transaction?>(
-      (v) => (v == null) ? [0] : [1]
-        ..addAll(v!.writeToBuffer()),
-      (bytes) =>
-          (bytes[0] == 0) ? null : Transaction.fromBuffer(bytes.sublist(1)));
+  static final fullBlockCodec =
+      Codec<FullBlock>((v) => v.writeToBuffer(), FullBlock.fromBuffer);
+
+  static final fullBlockOptCodec = optCodec<FullBlock>(fullBlockCodec);
+
+  static final transactionCodec =
+      Codec<Transaction>((v) => v.writeToBuffer(), Transaction.fromBuffer);
+
+  static final transactionOptCodec = optCodec<Transaction>(transactionCodec);
 
   static final publicP2PStateCodec = Codec<PublicP2PState>(
       (v) => v.writeToBuffer(), PublicP2PState.fromBuffer);
+
+  static Codec<T?> optCodec<T>(Codec<T> baseCodec) => Codec<T?>(
+      (v) => (v == null) ? [0] : [1]
+        ..addAll(baseCodec.encode(v!)),
+      (bytes) => (bytes[0] == 0) ? null : baseCodec.decode(bytes.sublist(1)));
 }
 
-class PeerHandler {
+class PeerBlockchainInterface {
   final BlockchainCore blockchain;
   final PeerId remotePeerId;
   final MultiplexedDataExchange exchange;
   final Logger log;
   final PeersManager peersManager;
 
-  PeerHandler({
+  PeerBlockchainInterface({
     required this.blockchain,
     required this.remotePeerId,
     required this.exchange,
     required this.peersManager,
   }) : log = Logger("Blockchain.P2P.Peer(${remotePeerId.show})");
 
-  Stream<Null> run() => ConcatStream([
-        _verifyGenesisAgreement(),
-        StreamGroup.merge([
-          _blockNotifierStream,
-          _syncStream,
-          _transactionNotifierStream,
-          _peerStateNotifierStream,
-        ])
-      ]);
+  static Resource<(PeerBlockchainInterface interface, Future<void> doneSignal)>
+      make({
+    required BlockchainCore blockchain,
+    required PeerId remotePeerId,
+    required MultiplexedDataExchange exchange,
+    required PeersManager peersManager,
+  }) =>
+          Resource.pure(PeerBlockchainInterface(
+                  blockchain: blockchain,
+                  remotePeerId: remotePeerId,
+                  exchange: exchange,
+                  peersManager: peersManager))
+              .flatMap((interface) => Resource.forStreamSubscription(
+                      () => interface.background.listen(null))
+                  .map((sub) => (interface, sub.asFuture())));
 
-  Stream<Null> get _syncStream async* {
-    log.info("Starting background sync process");
+  CancelableCompleter<PublicP2PState>? _p2pStateResponse;
+
+  CancelableCompleter<BlockId>? _blockAdoptionResponse;
+
+  CancelableCompleter<TransactionId>? _transactionAdoptionResponse;
+
+  Queue<CancelableCompleter<BlockId?>> _blockIdAtHeightResponses = Queue();
+
+  Queue<CancelableCompleter<Transaction?>> _transactionResponses = Queue();
+
+  Queue<CancelableCompleter<FullBlock?>> _fullBlockResponses = Queue();
+
+  Stream<Unit> get background async* {
+    log.info("Starting background message handler");
     while (true) {
       final nextMessage = await exchange.read();
-      yield null;
-      if (nextMessage is MultiplexedDataRequest) {
-        await handleRequest(nextMessage);
-      } else if (nextMessage is MultiplexedDataResponse) {
-        await handleResponse(nextMessage);
-      }
-      yield null;
+      yield unit;
+      await handleMessage(nextMessage);
+      yield unit;
+    }
+  }
+
+  Future<void> handleMessage(MultiplexedDataExchangePacket message) async {
+    if (message is MultiplexedDataRequest) {
+      await handleRequest(message);
+    } else if (message is MultiplexedDataResponse) {
+      await handleResponse(message);
     }
   }
 
   Future<void> handleRequest(MultiplexedDataRequest request) async {
     switch (request.port) {
+      case MultiplexerIds.BlockIdAtHeightRequest:
+        final decoded = P2PCodecs.int64Codec.decode(request.value);
+        await _onPeerRequestedBlockIdAtHeight(decoded);
+        break;
       case MultiplexerIds.BlockRequest:
         final decoded = P2PCodecs.blockIdCodec.decode(request.value);
         await _onPeerRequestedBlock(decoded);
         break;
+      case MultiplexerIds.BlockAdoptionRequest:
+        await _onPeerRequestedBlockAdoption();
+        break;
       case MultiplexerIds.TransactionRequest:
         final decoded = P2PCodecs.transactionIdCodec.decode(request.value);
         await _onPeerRequestedTransaction(decoded);
+        break;
+      case MultiplexerIds.TransactionNotificationRequest:
+        await _onPeerRequestedTransactionNotification();
+        break;
+      case MultiplexerIds.PeerStateRequest:
+        await _onPeerRequestedState();
         break;
     }
   }
 
   Future<void> handleResponse(MultiplexedDataResponse response) async {
     switch (response.port) {
+      case MultiplexerIds.BlockIdAtHeightRequest:
+        final decoded = P2PCodecs.blockIdOptCodec.decode(response.value);
+        await _onPeerDelivieredBlockIdAtHeight(decoded);
+        break;
       case MultiplexerIds.BlockRequest:
         final decoded = P2PCodecs.fullBlockOptCodec.decode(response.value);
         if (decoded == null) throw ArgumentError.notNull("Remote FullBlock");
         await _onPeerDeliveredBlock(decoded);
         break;
-      case MultiplexerIds.BlockAdoption:
+      case MultiplexerIds.BlockAdoptionRequest:
         final decoded = P2PCodecs.blockIdCodec.decode(response.value);
-        await _onPeerNotifiedBlock(decoded);
+        await _onPeerDeliveredBlockAdoption(decoded);
         break;
       case MultiplexerIds.TransactionRequest:
         final decoded = P2PCodecs.transactionOptCodec.decode(response.value);
         if (decoded == null) throw ArgumentError.notNull("Remote Transaction");
         await _onPeerDeliveredTransaction(decoded);
         break;
-      case MultiplexerIds.TransactionNotification:
+      case MultiplexerIds.TransactionNotificationRequest:
         final decoded = P2PCodecs.transactionIdCodec.decode(response.value);
-        await _onPeerNotifiedTransaction(decoded);
+        await _onPeerDeliveredTransactionNotification(decoded);
         break;
-      case MultiplexerIds.ConnectedPeersNotification:
+      case MultiplexerIds.PeerStateRequest:
         final decoded = P2PCodecs.publicP2PStateCodec.decode(response.value);
-        await _onPeerNotifiedState(decoded);
+        await _onPeerDeliveredState(decoded);
         break;
     }
   }
 
-  Stream<Null> get _blockNotifierStream =>
-      Stream.fromFuture(blockchain.consensus.localChain.currentHead)
-          .concatWith([blockchain.consensus.localChain.adoptions])
-          .map(P2PCodecs.blockIdCodec.encode)
-          .asyncMap((bytes) => exchange.write(
-              MultiplexedDataResponse(MultiplexerIds.BlockAdoption, bytes)))
-          .map((_) => null);
-
-  Stream<Null> get _transactionNotifierStream =>
-      Stream.fromFuture(blockchain.consensus.localChain.currentHead)
-          .asyncMap(blockchain.ledger.mempool.read)
-          .expand((i) => i)
-          .concatWith([
-            blockchain.ledger.mempool.changes
-                .whereType<MempoolAdded>()
-                .map((a) => a.id),
-          ])
-          .map(P2PCodecs.transactionIdCodec.encode)
-          .asyncMap((bytes) => exchange.write(MultiplexedDataResponse(
-              MultiplexerIds.TransactionNotification, bytes)))
-          .map((_) => null);
-
-  Stream<Null> get _peerStateNotifierStream =>
-      Stream.periodic(Duration(seconds: 30))
-          .map((_) => peersManager.publicState)
-          .map(P2PCodecs.publicP2PStateCodec.encode)
-          .asyncMap((bytes) => exchange.write(MultiplexedDataResponse(
-              MultiplexerIds.ConnectedPeersNotification, bytes)))
-          .map((_) => null);
-
-  final _fulfilledBlocks = <FullBlock>[];
-  final _pendingTransactions = <TransactionId>{};
-
-  Stream<Null> _verifyGenesisAgreement() async* {
-    log.info("Verifying genesis agreement");
-    await exchange.write(MultiplexedDataRequest(MultiplexerIds.BlockIdAtHeight,
-        P2PCodecs.int64Codec.encode(Int64.ONE)));
-    yield null;
-    final m1 = await exchange.read();
-    assert(m1.port == MultiplexerIds.BlockIdAtHeight);
-    assert(m1 is MultiplexedDataRequest);
-    final requestedHeight =
-        P2PCodecs.int64Codec.decode((m1 as MultiplexedDataRequest).value);
-    assert(requestedHeight == Int64.ONE);
-    final localGenesisId = blockchain.consensus.localChain.genesis;
-    await exchange.write(MultiplexedDataResponse(MultiplexerIds.BlockIdAtHeight,
-        P2PCodecs.blockIdCodec.encode(localGenesisId)));
-    yield null;
-    final remoteGenesis = _parseBlockIdAtHeightResponse(await exchange.read());
-    assert(localGenesisId == remoteGenesis);
-    log.info("Genesis is agreed");
-    yield null;
+  Future<BlockId> get nextBlockAdoption async {
+    if (_blockAdoptionResponse != null)
+      return (await _blockAdoptionResponse!.operation.valueOrCancellation())!;
+    final completer = CancelableCompleter<BlockId>();
+    _blockAdoptionResponse = completer;
+    await exchange
+        .write(MultiplexedDataRequest(MultiplexerIds.BlockAdoptionRequest, []));
+    return (await completer.operation.valueOrCancellation(null))!;
   }
 
-  BlockId _parseBlockIdAtHeightResponse(MultiplexedDataExchangePacket m1) =>
-      P2PCodecs.blockIdCodec.decode((m1 as MultiplexedDataResponse).value);
+  Future<TransactionId> get nextTransactionNotification async {
+    if (_transactionAdoptionResponse != null)
+      return (await _transactionAdoptionResponse!.operation
+          .valueOrCancellation())!;
+    final completer = CancelableCompleter<TransactionId>();
+    _transactionAdoptionResponse = completer;
+    await exchange.write(MultiplexedDataRequest(
+        MultiplexerIds.TransactionNotificationRequest, []));
+    return (await completer.operation.valueOrCancellation(null))!;
+  }
+
+  Future<BlockHeader?> fetchHeader(BlockId id) async {
+    // TODO
+    final fullBlock = await fetchFullBlock(id);
+    return fullBlock?.header;
+  }
+
+  Future<FullBlock?> fetchFullBlock(BlockId id) async {
+    final completer = CancelableCompleter<FullBlock?>();
+    _fullBlockResponses.add(completer);
+    await exchange.write(MultiplexedDataRequest(
+        MultiplexerIds.BlockRequest, P2PCodecs.blockIdCodec.encode(id)));
+    return completer.operation.valueOrCancellation(null);
+  }
+
+  Future<Transaction?> fetchTransaction(TransactionId id) async {
+    final completer = CancelableCompleter<Transaction?>();
+    _transactionResponses.add(completer);
+    await exchange.write(MultiplexedDataRequest(
+        MultiplexerIds.BlockRequest, P2PCodecs.transactionIdCodec.encode(id)));
+    return completer.operation.valueOrCancellation(null);
+  }
+
+  Future<BlockId?> remoteBlockIdAtHeight(Int64 height) async {
+    final completer = CancelableCompleter<BlockId?>();
+    _blockIdAtHeightResponses.add(completer);
+    await exchange.write(MultiplexedDataRequest(
+        MultiplexerIds.BlockIdAtHeightRequest,
+        P2PCodecs.int64Codec.encode(height)));
+    return completer.operation.valueOrCancellation(null);
+  }
+
+  Future<BlockId> get commonAncestor async {
+    final currentHeadId = await blockchain.consensus.localChain.currentHead;
+    final currentHead =
+        await blockchain.dataStores.headers.getOrRaise(currentHeadId);
+    final currentHeight = currentHead.height;
+    final intersection = await narySearch(
+        blockchain.consensus.localChain.blockIdAtHeight,
+        remoteBlockIdAtHeight,
+        Rational.fromInt(2, 3),
+        Int64.ONE,
+        currentHeight);
+    return intersection!;
+  }
+
+  Future<void> _onPeerRequestedBlockIdAtHeight(Int64 height) async {
+    final localBlockId =
+        await blockchain.consensus.localChain.blockIdAtHeight(height);
+    final encoded = P2PCodecs.blockIdOptCodec.encode(localBlockId);
+    await exchange.write(MultiplexedDataResponse(
+        MultiplexerIds.BlockIdAtHeightRequest, encoded));
+  }
 
   Future<void> _onPeerRequestedBlock(BlockId id) async {
     final localBlock = await blockchain.dataStores.getFullBlock(id);
     final encoded = P2PCodecs.fullBlockOptCodec.encode(localBlock);
     await exchange
         .write(MultiplexedDataResponse(MultiplexerIds.BlockRequest, encoded));
-  }
-
-  Future<void> _onPeerNotifiedBlock(BlockId id) async {
-    log.info("Remote peer notified block id=${id.show}");
-    final localBlock = await blockchain.dataStores.getFullBlock(id);
-    if (localBlock != null) {
-      log.info("Block id=${id.show} exists locally.  Skipping.");
-      return;
-    }
-    await exchange.write(MultiplexedDataRequest(
-        MultiplexerIds.BlockRequest, P2PCodecs.blockIdCodec.encode(id)));
-  }
-
-  Future<void> _onPeerDeliveredBlock(FullBlock block) async {
-    block.header.embedId();
-    log.info("Remote peer delivered block id=${block.header.id.show}");
-    if (_fulfilledBlocks.isNotEmpty) {
-      final latest = _fulfilledBlocks.last;
-      if (block.header.height > latest.header.height) {
-        // Check if the tine is reset
-        if (block.header.parentHeaderId != latest.header.id) {
-          _fulfilledBlocks.clear();
-        } else {
-          // Otherwise, this is an extension, so add the block and return immediately
-          _fulfilledBlocks.add(block);
-          return;
-        }
-      }
-    }
-    _fulfilledBlocks.insert(0, block);
-    final localParentId = await blockchain.consensus.localChain
-        .blockIdAtHeight(block.header.height - 1);
-    if (localParentId == block.header.parentHeaderId) {
-      log.info(
-          "Found common ancestor.  Validating and attempting adoption of tine.");
-      if (_fulfilledBlocks.length == 1) {
-        await blockchain.processFullBlock(block);
-      } else {
-        for (int i = 0; i < _fulfilledBlocks.length - 1; i++) {
-          await blockchain.processFullBlock(_fulfilledBlocks[i],
-              compareAndAdopt: false);
-        }
-        await blockchain.processFullBlock(_fulfilledBlocks.last);
-      }
-      _fulfilledBlocks.clear();
-    } else {
-      log.info(
-          "Requesting missing parent block id=${block.header.parentHeaderId.show}");
-      await exchange.write(MultiplexedDataRequest(MultiplexerIds.BlockRequest,
-          P2PCodecs.blockIdCodec.encode(block.header.parentHeaderId)));
-    }
   }
 
   Future<void> _onPeerRequestedTransaction(TransactionId id) async {
@@ -341,39 +358,229 @@ class PeerHandler {
         MultiplexedDataResponse(MultiplexerIds.TransactionRequest, encoded));
   }
 
-  Future<void> _onPeerNotifiedTransaction(TransactionId id) async {
-    log.info("Remote peer notified transaction id=${id.show}");
-    if (await blockchain.dataStores.transactions.contains(id)) return;
+  Future<void> _onPeerRequestedState() async {
+    final value = peersManager.publicState;
+    final encoded = P2PCodecs.publicP2PStateCodec.encode(value);
+    await exchange.write(
+        MultiplexedDataResponse(MultiplexerIds.PeerStateRequest, encoded));
+  }
 
-    _pendingTransactions.add(id);
+  Future<void> _onPeerRequestedBlockAdoption() async {
+    // TODO: cache/buffer
+    final value = await blockchain.consensus.localChain.adoptions.first;
+    final encoded = P2PCodecs.blockIdCodec.encode(value);
+    await exchange.write(
+        MultiplexedDataResponse(MultiplexerIds.BlockAdoptionRequest, encoded));
+  }
 
-    await exchange.write(MultiplexedDataRequest(
-        MultiplexerIds.TransactionRequest,
-        P2PCodecs.transactionIdCodec.encode(id)));
+  Future<void> _onPeerRequestedTransactionNotification() async {
+    // TODO: cache/buffer
+    final value = await blockchain.ledger.mempool.changes
+        .whereType<MempoolAdded>()
+        .map((a) => a.id)
+        .first;
+    final encoded = P2PCodecs.transactionIdCodec.encode(value);
+    await exchange.write(
+        MultiplexedDataResponse(MultiplexerIds.BlockAdoptionRequest, encoded));
+  }
+
+  Future<void> _onPeerDeliveredBlockAdoption(BlockId id) async {
+    assert(_blockAdoptionResponse != null,
+        "Unexpected block adoption notification");
+    _blockAdoptionResponse!.complete(id);
+    _blockAdoptionResponse = null;
+  }
+
+  Future<void> _onPeerDelivieredBlockIdAtHeight(BlockId? id) async {
+    assert(_blockIdAtHeightResponses.isNotEmpty, "Unexpected blockIdAtHeight");
+    _blockIdAtHeightResponses.removeFirst().complete(id);
+  }
+
+  Future<void> _onPeerDeliveredBlock(FullBlock block) async {
+    assert(_fullBlockResponses.isNotEmpty, "Unexpected block");
+    block.header.embedId();
+    _fullBlockResponses.removeFirst().complete(block);
+  }
+
+  Future<void> _onPeerDeliveredTransactionNotification(TransactionId id) async {
+    assert(_transactionAdoptionResponse != null,
+        "Unexpected transaction notification");
+    _transactionAdoptionResponse!.complete(id);
+    _transactionAdoptionResponse = null;
   }
 
   Future<void> _onPeerDeliveredTransaction(Transaction transaction) async {
+    assert(_transactionResponses.isNotEmpty, "Unexpected transaction");
     transaction.embedId();
-    final id = transaction.id;
-    if (!_pendingTransactions.contains(id))
-      throw ArgumentError("Unexpected transaction");
-    _pendingTransactions.remove(id);
-    await blockchain.processTransaction(transaction);
+    _transactionResponses.removeFirst().complete(transaction);
   }
 
-  Future<void> _onPeerNotifiedState(PublicP2PState info) async {
-    log.info("Remote peer notified public P2P state");
-    peersManager.onPeerStateGossiped(remotePeerId, info);
+  Future<void> _onPeerDeliveredState(PublicP2PState info) async {
+    assert(_p2pStateResponse != null, "Unexpected p2p state notification");
+    _p2pStateResponse!.complete(info);
+    _p2pStateResponse = null;
   }
 }
 
+class PeerHandler {
+  final BlockchainCore blockchain;
+  final PeerId remotePeerId;
+  final MultiplexedDataExchange exchange;
+  final Logger log;
+  final PeersManager peersManager;
+  final PeerBlockchainInterface interface;
+
+  PeerHandler({
+    required this.blockchain,
+    required this.remotePeerId,
+    required this.exchange,
+    required this.peersManager,
+    required this.interface,
+  }) : log = Logger("Blockchain.P2P.Peer(${remotePeerId.show})");
+
+  Stream<Unit> run() => _verifyGenesisAgreement;
+
+  Stream<Unit> get _verifyGenesisAgreement async* {
+    log.info("Verifying genesis agreement");
+    final remoteGenesisId = await interface.remoteBlockIdAtHeight(Int64.ONE);
+    final localGenesisId = blockchain.consensus.localChain.genesis;
+    assert(localGenesisId == remoteGenesisId);
+    log.info("Genesis is agreed");
+    yield unit;
+    await for (final _ in _syncCheck);
+  }
+
+  Stream<Unit> get _syncCheck async* {
+    final commonAncestorId = await interface.commonAncestor;
+    final commonAncestor =
+        await blockchain.dataStores.headers.getOrRaise(commonAncestorId);
+    final remoteHeadId = (await interface.remoteBlockIdAtHeight(Int64.ZERO))!;
+    log.info("Remote peer head id=${remoteHeadId.show}");
+    final remoteHead = (await interface.fetchHeader(remoteHeadId))!;
+    final remoteBlockIdAtHeight = (Int64 height) async {
+      final id = await interface.remoteBlockIdAtHeight(height);
+      if (id == null) return null;
+      return (await interface.fetchFullBlock(id))!.header;
+    };
+    final localHeadId = await blockchain.consensus.localChain.currentHead;
+    final localHead =
+        await blockchain.dataStores.headers.getOrRaise(localHeadId);
+    final localBlockAtHeight = (Int64 height) async {
+      final id = await blockchain.consensus.localChain.blockIdAtHeight(height);
+      if (id == null) return null;
+      return blockchain.dataStores.headers.getOrRaise(id);
+    };
+    final chainSelectionResult = await blockchain.consensus.chainSelection
+        .select(localHead, remoteHead, commonAncestor, localBlockAtHeight,
+            remoteBlockIdAtHeight);
+    if (chainSelectionResult is StandardSelectionOutcome) {
+      if (chainSelectionResult.id == localHeadId) {
+        log.info("Remote peer is up-to-date but local chain is better.");
+        await for (final _ in _waitingForBetterBlock);
+      } else {
+        log.info("Local peer is up-to-date but remote chain is better.");
+        await for (final _ in _sync(commonAncestor));
+      }
+    } else if (chainSelectionResult is DensitySelectionOutcome) {
+      if (chainSelectionResult.id == localHeadId) {
+        log.info("Remote peer is out-of-sync but local chain is better");
+        await for (final _ in _waitingForBetterBlock);
+      } else {
+        log.info("Local peer out-of-sync and remote chain is better");
+        await for (final _ in _sync(commonAncestor));
+      }
+    }
+  }
+
+  Stream<Unit> get _waitingForBetterBlock async* {
+    // TODO: Transaction/mempool sync
+    BlockId next = await interface.nextBlockAdoption;
+    late Stream<Unit> nextOperation;
+    while (true) {
+      yield unit;
+      final localHeader = await blockchain.dataStores.headers.get(next);
+      if (localHeader != null) {
+        // Already-known block can be ignored
+        next = await interface.nextBlockAdoption;
+      } else {
+        final remoteHeader = (await interface.fetchHeader(next))!;
+        final localHeadId = await blockchain.consensus.localChain.currentHead;
+        if (remoteHeader.parentHeaderId == localHeadId) {
+          await _processSimpleExtension(remoteHeader);
+        } else {
+          nextOperation = _syncCheck;
+          break;
+        }
+      }
+    }
+    await for (final _ in nextOperation);
+  }
+
+  Stream<Unit> _sync(BlockHeader commonAncestor) async* {
+    Int64 h = commonAncestor.height + 1;
+    BlockId next = (await interface.remoteBlockIdAtHeight(h))!;
+    while (true) {
+      final header = (await interface.fetchHeader(next))!;
+      final maybeNext = await interface.remoteBlockIdAtHeight(++h);
+      await _processSimpleExtension(header, andAdopt: maybeNext == null);
+      if (maybeNext == null) break;
+      next = maybeNext;
+    }
+    await for (final _ in _waitingForBetterBlock);
+  }
+
+  Future<void> _processSimpleExtension(BlockHeader header,
+      {bool andAdopt = true}) async {
+    final headerErrors =
+        await blockchain.consensus.blockHeaderValidation.validate(header);
+    if (headerErrors.isNotEmpty) throw headerErrors[0];
+    await blockchain.dataStores.headers.put(header.id, header);
+    final fullBlock = (await interface.fetchFullBlock(header.id))!;
+    await blockchain.validateBlockBody(fullBlock);
+    if (andAdopt) {
+      final localHeadId = await blockchain.consensus.localChain.currentHead;
+      if (header.parentHeaderId == localHeadId) ;
+      await blockchain.consensus.localChain.adopt(header.id);
+    }
+  }
+}
+
+Future<T?> narySearch<T>(
+    Future<T> Function(Int64) getLocal,
+    Future<T?> Function(Int64) getRemote,
+    Rational searchSpaceTarget,
+    Int64 min,
+    Int64 max) async {
+  Future<T?> f(Int64 min, Int64 max, T? ifNull) async {
+    if (min == max) {
+      final localValue = await getLocal(min);
+      final remoteValue = await getRemote(min);
+      if (localValue == remoteValue)
+        return localValue;
+      else
+        return null;
+    } else {
+      final targetHeight = (min + (max - min) * searchSpaceTarget.toDouble());
+      final localValue = await getLocal(targetHeight);
+      final remoteValue = await getRemote(targetHeight);
+      if (remoteValue == localValue) {
+        return f(targetHeight + 1, max, remoteValue);
+      } else {
+        return f(min, targetHeight, ifNull);
+      }
+    }
+  }
+
+  return f(min, max, null);
+}
+
 class MultiplexerIds {
-  static const BlockIdAtHeight = 10;
+  static const BlockIdAtHeightRequest = 10;
   static const BlockRequest = 11;
-  static const BlockAdoption = 12;
+  static const BlockAdoptionRequest = 12;
 
   static const TransactionRequest = 13;
-  static const TransactionNotification = 14;
+  static const TransactionNotificationRequest = 14;
 
-  static const ConnectedPeersNotification = 15;
+  static const PeerStateRequest = 15;
 }

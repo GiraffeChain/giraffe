@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/resource.dart';
-import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/consensus.dart';
 import 'package:blockchain/consensus/models/protocol_settings.dart';
@@ -150,55 +149,31 @@ class BlockchainCore {
         .tapLog(log, (_) => "Initialized");
   }
 
-  Future<void> processBlock(Block block, {bool compareAndAdopt = true}) async {
-    final transactions = await Future.wait(
-        block.body.transactionIds.map(dataStores.transactions.getOrRaise));
-    final fullBlock = FullBlock(
-        header: block.header,
-        fullBody: FullBlockBody(transactions: transactions));
-    return await processFullBlock(fullBlock, compareAndAdopt: compareAndAdopt);
-  }
-
-  Future<void> processFullBlock(FullBlock block,
-      {bool compareAndAdopt = true}) async {
-    final id = await block.header.id;
-    final localBlockAtHeight =
-        await consensus.localChain.blockIdAtHeight(block.header.height);
-    if (id == localBlockAtHeight) {
-      log.info("Block id=${id.show} is already adopted");
-      return;
-    }
-    try {
-      log.info("Validating id=${id.show}");
-      await log.timedInfoAsync(() => validateBlock(id, block),
-          messageF: (duration) => "Validation took $duration");
-    } on Exception catch (e) {
-      log.warning("Failed to validate block", e);
-      rethrow;
-    }
-    if (compareAndAdopt) {
-      final currentHead = await consensus.localChain.currentHead;
-      final selectedChain = await log.timedInfoAsync(
-          () => consensus.chainSelection.select(id, currentHead),
-          messageF: (duration) => "Chain Selection took $duration");
-      if (selectedChain == id) {
-        await consensus.localChain.adopt(id);
-        log.info(
-            "Adopted id=${id.show} height=${block.header.height} slot=${block.header.slot} transactionCount=${block.fullBody.transactions.length} stakingAddress=${block.header.address.show}");
-      } else {
-        log.info(
-            "Current local head id=${currentHead.show} is better than remote id=${id.show}");
-      }
-    }
-  }
-
-  Future<void> validateBlock(BlockId id, FullBlock fullBlock) async {
-    await parentChildTree.assocate(id, fullBlock.header.parentHeaderId);
-    await dataStores.headers.put(id, fullBlock.header);
+  Future<void> validateBlock(FullBlock fullBlock) async {
+    final id = fullBlock.header.id;
+    log.info("Validating id=${id.show}");
 
     final errors =
         await consensus.blockHeaderValidation.validate(fullBlock.header);
-    throwErrors() async {
+    if (errors.isNotEmpty) {
+      // TODO: ParentChildTree disassociate
+      await dataStores.headers.remove(id);
+      await dataStores.bodies.remove(id);
+      throw Exception("Invalid block. reason=$errors");
+    }
+    await parentChildTree.assocate(id, fullBlock.header.parentHeaderId);
+    await dataStores.headers.put(id, fullBlock.header);
+
+    await validateBlockBody(fullBlock);
+  }
+
+  Future<void> validateBlockBody(FullBlock fullBlock) async {
+    final id = fullBlock.header.id;
+    final body = BlockBody(
+        transactionIds: fullBlock.fullBody.transactions.map((t) => t.id));
+    final block = Block(header: fullBlock.header, body: body);
+    throwErrors(Future<List<String>> f) async {
+      final errors = await f;
       if (errors.isNotEmpty) {
         // TODO: ParentChildTree disassociate
         await dataStores.headers.remove(id);
@@ -207,30 +182,19 @@ class BlockchainCore {
       }
     }
 
-    await throwErrors();
-
-    final body = BlockBody(
-        transactionIds: fullBlock.fullBody.transactions.map((t) => t.id));
-    final block = Block(header: fullBlock.header, body: body);
-
-    errors.addAll(await ledger.headerToBodyValidation.validate(block));
-
-    await throwErrors();
+    await throwErrors(ledger.headerToBodyValidation.validate(block));
 
     for (final tx in fullBlock.fullBody.transactions) {
       await dataStores.transactions.put(tx.id, tx);
     }
 
-    errors.addAll(await ledger.bodySyntaxValidation.validate(block.body));
-    await throwErrors();
+    await ledger.bodySyntaxValidation.validate(block.body);
     final bodyValidationContext = BodyValidationContext(
         block.header.parentHeaderId, block.header.height, block.header.slot);
-    errors.addAll(await ledger.bodySemanticValidation
+    await await throwErrors(ledger.bodySemanticValidation
         .validate(block.body, bodyValidationContext));
-    await throwErrors();
-    errors
-        .addAll(await ledger.bodyAuthorizationValidation.validate(block.body));
-    await throwErrors();
+    await await throwErrors(
+        ledger.bodyAuthorizationValidation.validate(block.body));
     await dataStores.bodies.put(id, body);
   }
 

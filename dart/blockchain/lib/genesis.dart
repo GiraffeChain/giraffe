@@ -39,16 +39,25 @@ class Genesis {
     final header =
         BlockHeader.fromBuffer(await load("$blockIdStr.header.pbuf"));
 
-    final body = BlockBody.fromBuffer(await load("$blockIdStr.body.pbuf"));
+    header.embedId();
 
-    final transactions = [
-      for (final transactionId in body.transactionIds)
-        await Transaction.fromBuffer(
-            await load("${transactionId.show}.transaction.pbuf"))
-    ];
+    assert(header.id == blockId);
+
+    final body = BlockBody.fromBuffer(await load("$blockIdStr.body.pbuf"));
+    final transactions = <Transaction>[];
+
+    for (final transactionId in body.transactionIds) {
+      final tx = Transaction.fromBuffer(
+          await load("${transactionId.show}.transaction.pbuf"));
+      tx.embedId();
+      assert(tx.id == transactionId);
+      transactions.add(tx);
+    }
 
     final fullBody = FullBlockBody(transactions: transactions);
-    // TODO: Verify
+    final expectedTxRoot =
+        TxRoot.calculateFromTransactions(Uint8List(32), transactions);
+    assert(expectedTxRoot.sameElements(header.txRoot));
     return FullBlock(header: header, fullBody: fullBody);
   }
 }

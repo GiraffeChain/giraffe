@@ -78,7 +78,7 @@ class Consensus {
                     .listen(null)))
             .map((localChain) {
           final chainSelection =
-              ChainSelectionImpl(dataStores.headers.getOrRaise);
+              ChainSelection(protocolSettings: protocolSettings);
           final headerValidation = BlockHeaderValidationImpl(
               genesisBlockId,
               etaCalculation,

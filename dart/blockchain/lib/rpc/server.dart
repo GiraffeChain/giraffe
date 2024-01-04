@@ -96,9 +96,28 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
   Future<BroadcastBlockRes> broadcastBlock(
       ServiceCall call, BroadcastBlockReq request) async {
     assert(request.hasBlock());
-    request.block.header.embedId();
-    log.info("Received block id=${request.block.header.id.show}");
-    await blockchain.processBlock(request.block);
+    final block = request.block;
+    block.header.embedId();
+    log.info("Received block id=${block.header.id.show}");
+    final currentHeadId = await blockchain.consensus.localChain.currentHead;
+    final currentHead =
+        await blockchain.dataStores.headers.getOrRaise(currentHeadId);
+    if (block.header.height == currentHead.height)
+      assert(block.header.parentHeaderId == currentHead.parentHeaderId);
+    else {
+      assert(block.header.parentHeaderId == currentHeadId);
+    }
+    final selectedId = (await blockchain.consensus.chainSelection
+            .maxValidBg(currentHead, block.header))
+        .id;
+    assert(selectedId == block.header.id);
+    final fullBlockBody = FullBlockBody(
+        transactions: await Future.wait(block.body.transactionIds
+            .map(blockchain.dataStores.transactions.getOrRaise)
+            .toList()));
+    final fullBlock = FullBlock(header: block.header, fullBody: fullBlockBody);
+    await blockchain.validateBlock(fullBlock);
+    await blockchain.consensus.localChain.adopt(block.header.id);
     return BroadcastBlockRes();
   }
 
