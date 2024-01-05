@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -127,9 +128,25 @@ class MultiplexedDataResponse extends MultiplexedDataExchangePacket {
   MultiplexedDataResponse(int port, this.value) : super(port);
 }
 
-class Codec<T> {
-  final List<int> Function(T) encode;
-  final T Function(List<int>) decode;
+class PortQueues<Request, Response> {
+  final Queue<Request> requests = Queue();
+  final Queue<CancelableCompleter<Response>> responses = Queue();
 
-  Codec(this.encode, this.decode);
+  Future<void> processRequest(
+      Request request, Future<void> Function(Request) subProcessor) async {
+    requests.add(request);
+    if (requests.length > 1) {
+      return;
+    }
+    while (requests.isNotEmpty) {
+      final request = requests.first;
+      await subProcessor(request);
+      requests.removeFirst();
+    }
+  }
+
+  void processResponse(Response response, String ifUnexpectedMessage) {
+    assert(responses.isNotEmpty, ifUnexpectedMessage);
+    responses.removeFirst().complete(response);
+  }
 }

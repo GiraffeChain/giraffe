@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/event_sourced_state.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:logging/logging.dart';
 
 abstract class LocalChain {
   Future<void> adopt(BlockId newHead);
@@ -27,6 +29,8 @@ class LocalChainImpl extends LocalChain {
 
   final StreamController<BlockId> _streamController;
 
+  final log = Logger("Blockchain.LocalChain");
+
   static Resource<LocalChainImpl> make(
           BlockId genesis,
           BlockId initialHead,
@@ -39,6 +43,7 @@ class LocalChainImpl extends LocalChain {
   @override
   Future<void> adopt(BlockId newHead) async {
     if (_currentHead != newHead) {
+      log.info("Adopted head block id=${newHead.show}");
       _currentHead = newHead;
       _streamController.add(newHead);
     }

@@ -7,11 +7,12 @@ import 'package:blockchain/isolate_pool.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 
-final timestamp = 0;
+final timestamp =
+    Int64(DateTime.now().add(Duration(seconds: 5)).millisecondsSinceEpoch);
 
 final conf.BlockchainConfig config1 = conf.BlockchainConfig(
     genesis: conf.BlockchainGenesis(
-  timestamp: null,
+  timestamp: timestamp,
   localStakerIndex: -1,
 ));
 
@@ -19,7 +20,7 @@ final conf.BlockchainConfig config2 = conf.BlockchainConfig(
     data: conf.BlockchainData(
         dataDir: "${Directory.systemTemp.path}/blockchain2/{genesisId}"),
     genesis: conf.BlockchainGenesis(
-      timestamp: Int64(timestamp),
+      timestamp: timestamp,
       localStakerIndex: -1,
     ),
     rpc: conf.BlockchainRPC(bindPort: 2034),
@@ -33,13 +34,12 @@ final conf.BlockchainConfig config3 = conf.BlockchainConfig(
     data: conf.BlockchainData(
         dataDir: "${Directory.systemTemp.path}/blockchain3/{genesisId}"),
     genesis: conf.BlockchainGenesis(
-      timestamp: Int64(timestamp),
+      timestamp: timestamp,
       localStakerIndex: -1,
     ),
     rpc: conf.BlockchainRPC(bindPort: 2044),
     p2p: conf.BlockchainP2P(bindPort: 2043, knownPeers: ["localhost:2023"]));
 
-final config = config3;
 Future<void> main() async {
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
@@ -53,12 +53,16 @@ Future<void> main() async {
   final resource = IsolatePool.make()
       .map((p) => p.isolate)
       .tap(setComputeFunction)
-      .flatMap((isolate) => BlockchainCore.make(config, isolate))
-      .flatMap(
-        (blockchain) => BlockchainRpc.make(blockchain, config)
-            .productR(BlockchainP2P.make(blockchain, config)),
-      );
+      .flatMap((isolate) {
+    runChain(conf.BlockchainConfig config) =>
+        BlockchainCore.make(config, isolate).flatMap(
+          (blockchain) => BlockchainRpc.make(blockchain, config)
+              .productR(BlockchainP2P.make(blockchain, config)),
+        );
+    return runChain(config1).flatMap((f) => runChain(config2)
+        .flatMap((f1) => runChain(config3).map((f2) => [f, f1, f2])));
+  });
 
   await resource
-      .use((f) => Future.any([f, ProcessSignal.sigint.watch().first]));
+      .use((fs) => Future.any([ProcessSignal.sigint.watch().first, ...fs]));
 }

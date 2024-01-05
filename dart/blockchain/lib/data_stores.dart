@@ -162,17 +162,26 @@ class DataStores {
                                       (bytes) => bytes[0],
                                       (bytes) => bytes).map(
                                 (metadata) => DataStores(
-                                  parentChildTree: parentChildTree,
-                                  currentEventIds: currentEventIds,
-                                  headers: headers,
-                                  bodies: bodies,
-                                  transactions: transactions,
-                                  spendableBoxIds: spendableBoxIds,
-                                  epochBoundaries: epochBoundaries,
-                                  activeStake: activeStake,
-                                  inactiveStake: inactiveStake,
-                                  activeStakers: activeStakers,
-                                  blockHeightTree: blockHeightTree,
+                                  parentChildTree:
+                                      parentChildTree.cached(maximumSize: 512),
+                                  currentEventIds:
+                                      currentEventIds.cached(maximumSize: 32),
+                                  headers: headers.cached(maximumSize: 512),
+                                  bodies: bodies.cached(maximumSize: 512),
+                                  transactions:
+                                      transactions.cached(maximumSize: 512),
+                                  spendableBoxIds:
+                                      spendableBoxIds.cached(maximumSize: 512),
+                                  epochBoundaries:
+                                      epochBoundaries.cached(maximumSize: 16),
+                                  activeStake:
+                                      activeStake.cached(maximumSize: 1),
+                                  inactiveStake:
+                                      inactiveStake.cached(maximumSize: 1),
+                                  activeStakers:
+                                      activeStakers.cached(maximumSize: 512),
+                                  blockHeightTree:
+                                      blockHeightTree.cached(maximumSize: 512),
                                   metadata: metadata,
                                 ),
                               ),
@@ -310,4 +319,8 @@ class GetterSetter {
   factory GetterSetter.forByte(Store<int, BlockId> store, int byte) =>
       GetterSetter(
           () => store.getOrRaise(byte), (value) => store.put(byte, value));
+}
+
+class MetadataIndices {
+  static const p2pSk = 1;
 }

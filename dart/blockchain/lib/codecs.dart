@@ -243,3 +243,42 @@ class PersistenceCodecs {
   static TransactionId decodeTransactionId(Uint8List bytes) =>
       TransactionId(value: bytes);
 }
+
+class Codec<T> {
+  final List<int> Function(T) encode;
+  final T Function(List<int>) decode;
+
+  Codec(this.encode, this.decode);
+}
+
+class P2PCodecs {
+  static final int64Codec = Codec<Int64>((v) => v.toBytes(), Int64.fromBytes);
+  static final blockIdCodec =
+      Codec<BlockId>((v) => v.value, (v) => BlockId(value: v));
+
+  static final blockIdOptCodec = optCodec<BlockId>(blockIdCodec);
+  static final transactionIdCodec =
+      Codec<TransactionId>((v) => v.value, (v) => TransactionId(value: v));
+
+  static final headerCodec =
+      Codec<BlockHeader>((v) => v.writeToBuffer(), BlockHeader.fromBuffer);
+
+  static final headerOptCodec = optCodec<BlockHeader>(headerCodec);
+
+  static final bodyCodec =
+      Codec<BlockBody>((v) => v.writeToBuffer(), BlockBody.fromBuffer);
+
+  static final bodyOptCodec = optCodec<BlockBody>(bodyCodec);
+
+  static final transactionCodec =
+      Codec<Transaction>((v) => v.writeToBuffer(), Transaction.fromBuffer);
+
+  static final transactionOptCodec = optCodec<Transaction>(transactionCodec);
+
+  static final publicP2PStateCodec = Codec<PublicP2PState>(
+      (v) => v.writeToBuffer(), PublicP2PState.fromBuffer);
+
+  static Codec<T?> optCodec<T>(Codec<T> baseCodec) => Codec<T?>(
+      (v) => (v == null) ? [0] : [1, ...baseCodec.encode(v)],
+      (bytes) => (bytes[0] == 0) ? null : baseCodec.decode(bytes.sublist(1)));
+}

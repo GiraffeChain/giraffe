@@ -13,10 +13,18 @@ abstract class Resource<A> {
     });
   }
 
+  static Resource par(List<Resource> resources) =>
+      ParBindResources(sources: resources, fs: Resource.pure);
+
   static Resource<A> eval<A>(Future<A> Function() aF) => EvalResource(aF: aF);
 
   static Resource<void> onFinalize(Future<void> Function() f) =>
       make(() => Future.value(), (_) => f());
+
+  static Resource<(Future<void>, Future<void> Function())> backgroundStream(
+          Stream s) =>
+      forStreamSubscription(() => s.listen(null, cancelOnError: true))
+          .map((s) => (s.asFuture(), s.cancel));
 
   static Resource<StreamSubscription<T>> forStreamSubscription<T>(
           StreamSubscription<T> Function() subscriptionF) =>

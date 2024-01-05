@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blockchain_protobuf/google/protobuf/wrappers.pb.dart';
@@ -22,4 +23,9 @@ extension NullableStringOps on String? {
 extension NullableIntOps on int? {
   UInt32Value? get uint32Value =>
       (this != null) ? UInt32Value(value: this!) : null;
+}
+
+extension SocketOps on Socket {
+  String get show =>
+      "Socket(remote=${remoteAddress.host}:${remotePort} to local=${remoteAddress.host}:${port})";
 }

@@ -263,7 +263,17 @@ class BlockchainP2P {
           .evalFlatMap((_) async {
             log.info("Preparing P2P Network");
 
-            final p2pKey = await ed25519.generateKeyPair();
+            late Ed25519KeyPair p2pKey;
+            final maybeSk =
+                await blockchain.dataStores.metadata.get(MetadataIndices.p2pSk);
+            if (maybeSk != null) {
+              final vk = await ed25519.getVerificationKey(maybeSk);
+              p2pKey = Ed25519KeyPair(maybeSk, vk);
+            } else {
+              p2pKey = await ed25519.generateKeyPair();
+              await blockchain.dataStores.metadata
+                  .put(MetadataIndices.p2pSk, p2pKey.sk);
+            }
             final localPeerId = PeerId(value: p2pKey.vk);
             log.info(
                 "Local peer id=${localPeerId.show} publicHost=${config.p2p.publicHost} publicPort=${config.p2p.publicPort}");
@@ -275,16 +285,14 @@ class BlockchainP2P {
             void Function(String, int) connect = (_, __) {};
             final socketHandlerResource =
                 (Socket socket) => Resource.make(() async {
-                      log.info(
-                          "Socket connected at host=${socket.remoteAddress} port=${socket.remotePort}");
+                      log.info("Connected ${socket.show}");
                       return (
                         socket: socket,
                         remoteAddress: socket.remoteAddress,
                         remotePort: socket.remotePort
                       );
                     }, (t) async {
-                      log.info(
-                          "Socket closing at host=${t.remoteAddress} port=${t.remotePort}");
+                      log.info("Disconnecting ${socket.show}");
                       t.socket.destroy();
                       await t.socket.done;
                     }).map((t) => t.socket);

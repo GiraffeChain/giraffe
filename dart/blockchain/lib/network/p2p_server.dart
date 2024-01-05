@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/network/util.dart';
 import 'package:logging/logging.dart';
 
 class P2PServer {
@@ -22,8 +23,7 @@ class P2PServer {
           (server) => server.close())
       .flatMap((server) =>
           Resource.forStreamSubscription(() => server.listen((socket) {
-                log.info(
-                    "Inbound connection initializing from ${socket.remoteAddress}");
+                log.info("Inbound connection initializing from ${socket.show}");
                 handleSocket(socket);
               })))
       .map((sub) => sub.asFuture());
