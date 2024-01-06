@@ -4,6 +4,7 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/event_sourced_state.dart';
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/genesis.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
@@ -57,19 +58,17 @@ class LocalChainImpl extends LocalChain {
 
   @override
   Future<BlockId?> blockIdAtHeight(Int64 height) async {
-    if (height == Int64.ONE)
+    if (height == Genesis.height)
       return genesis;
-    else if (height > 1) {
+    else if (height > Genesis.height) {
       return _blockHeightTree.useStateAt(await currentHead, (s) => s(height));
+    } else if (height == Int64.ZERO) {
+      return currentHead;
     } else {
-      final headId = await currentHead;
-      final headHeight = await _heightOfBlock(headId);
-      final depth = height.abs();
-      if (headHeight >= depth)
-        return _blockHeightTree.useStateAt(
-            await currentHead, (s) => s(headHeight - depth));
-      else
-        return null;
+      final headHeight = await _heightOfBlock(await currentHead);
+      final targetHeight = headHeight + height;
+      if (targetHeight < Genesis.height) return null;
+      return blockIdAtHeight(targetHeight);
     }
   }
 }

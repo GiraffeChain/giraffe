@@ -3,69 +3,52 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:async/async.dart';
+import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/network/util.dart';
 
-abstract class FramedIO {
-  Future<void> close();
-  Future<List<int>> read();
-  Future<void> write(List<int> data);
+extension SocketOps on Socket {
+  Resource<ChunkedStreamReader<int>> get chunkedResource => Resource.make(
+      () => Future.value(ChunkedStreamReader(this)),
+      (chunked) => chunked.cancel());
 }
 
-class SocketBasedFramedIO extends FramedIO {
+class FramedIO {
   final Socket socket;
   final ChunkedStreamReader<int> chunkedStreamReader;
 
-  SocketBasedFramedIO(this.socket, this.chunkedStreamReader);
+  FramedIO(this.socket, this.chunkedStreamReader);
 
-  factory SocketBasedFramedIO.forSocket(Socket socket) {
-    final chunked = ChunkedStreamReader(socket);
-    return SocketBasedFramedIO(socket, chunked);
-  }
-
-  @override
-  Future<void> close() async {
-    socket.destroy();
-  }
-
-  @override
-  Future<List<int>> read() async {
-    final lengthBytes =
-        Uint8List.fromList(await chunkedStreamReader.readChunk(4));
+  Future<Uint8List?> read() async {
+    final rawLengthBytes = await chunkedStreamReader.readBytes(4);
+    if (rawLengthBytes.length < 4) return null;
+    final lengthBytes = Uint8List.fromList(rawLengthBytes);
     final length = bytesToUint(lengthBytes);
-    return await chunkedStreamReader.readChunk(length);
+    final chunk = await chunkedStreamReader.readBytes(length);
+    if (chunk.length < length) return null;
+    return chunk;
   }
 
-  @override
   Future<void> write(List<int> data) async {
     socket.add(uintToBytes(data.length));
     socket.add(data);
+    await socket.flush().timeout(Duration(seconds: 5));
   }
 }
 
-abstract class MultiplexedIO {
-  Future<void> close();
-  Future<MultiplexedData> read();
-  Future<void> write(MultiplexedData data);
-}
-
-class MultiplexedIOForFramedIO extends MultiplexedIO {
+class MultiplexedIO {
   final FramedIO framed;
 
-  MultiplexedIOForFramedIO(this.framed);
+  MultiplexedIO(this.framed);
 
-  @override
-  Future<void> close() => framed.close();
-
-  @override
-  Future<MultiplexedData> read() async {
-    final frame = Uint8List.fromList(await framed.read());
+  Future<MultiplexedData?> read() async {
+    final frame = await framed.read();
+    if (frame == null) return null;
     final portBytes = frame.sublist(0, 4);
     final port = bytesToUint(portBytes);
     final data = frame.sublist(4);
     return MultiplexedData(port, data);
   }
 
-  @override
   Future<void> write(MultiplexedData data) async {
     final frame = <int>[]
       ..addAll(uintToBytes(data.port))
@@ -86,10 +69,9 @@ class MultiplexedDataExchange {
 
   MultiplexedDataExchange(this.multiplexer);
 
-  Future<void> close() => multiplexer.close();
-
-  Future<MultiplexedDataExchangePacket> read() async {
+  Future<MultiplexedDataExchangePacket?> read() async {
     final data = await multiplexer.read();
+    if (data == null) return null;
     final isRequest = data.data[0] == 0;
     final tail = data.data.sublist(1);
     return isRequest
@@ -148,5 +130,11 @@ class PortQueues<Request, Response> {
   void processResponse(Response response, String ifUnexpectedMessage) {
     assert(responses.isNotEmpty, ifUnexpectedMessage);
     responses.removeFirst().complete(response);
+  }
+
+  Future<void> cancelAll(Object error) async {
+    final rList = responses.toList();
+    responses.removeWhere((_) => true);
+    rList.forEach((r) => r.completeError(error));
   }
 }

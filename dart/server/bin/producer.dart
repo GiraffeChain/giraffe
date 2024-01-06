@@ -4,6 +4,7 @@ import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/crypto/utils.dart';
@@ -19,16 +20,9 @@ import 'package:logging/logging.dart';
 final BlockchainConfig config = BlockchainConfig(
     staking: BlockchainStaking(
         stakingDir:
-            "${Directory.systemTemp.path}/blockchain-genesis/{genesisId}/stakers/0"));
+            "${Directory.systemTemp.path}/blockchain-genesis/{genesisId}/stakers/1"));
 Future<void> main() async {
-  Logger.root.level = Level.INFO;
-  Logger.root.onRecord.listen((record) {
-    final _errorSuffix = (record.error != null) ? ": ${record.error}" : "";
-    final _stackTraceSuffix =
-        (record.stackTrace != null) ? "\n${record.stackTrace}" : "";
-    print(
-        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${_errorSuffix}${_stackTraceSuffix}');
-  });
+  initRootLogger();
 
   final log = Logger("BlockProducerServer");
 
@@ -36,17 +30,21 @@ Future<void> main() async {
       .map((p) => p.isolate)
       .tap(setComputeFunction)
       .flatMap((isolate) =>
-          RpcClient.makeChannel().evalFlatMap((channel) async {
+          RpcClient.makeChannel(port: 2034).evalFlatMap((channel) async {
             final rpcClient = NodeRpcClient(channel);
             final viewer = BlockchainViewFromRpc(nodeClient: rpcClient);
             final canonicalHeadId = await viewer.canonicalHeadId;
             final canonicalHead =
                 await viewer.getBlockHeaderOrRaise(canonicalHeadId);
+            log.info(
+                "Canonical head id=${canonicalHeadId.show} height=${canonicalHead.height} slot=${canonicalHead.slot}");
             final protocolSettings = await viewer.protocolSettings;
 
             final genesisBlockId = await viewer.genesisBlockId;
             final genesisHeader =
                 await viewer.getBlockHeaderOrRaise(genesisBlockId);
+            log.info(
+                "Genesis id=${genesisBlockId.show} height=${genesisHeader.height} slot=${genesisHeader.slot}");
             final stakerSupportClient = StakerSupportRpcClient(channel);
             final clock = ClockImpl(
               protocolSettings.slotDuration,

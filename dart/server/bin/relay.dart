@@ -1,17 +1,20 @@
 import 'dart:io';
 
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart' as conf;
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/isolate_pool.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:logging/logging.dart';
 
-final timestamp = 0;
+// final timestamp = null;
+final timestamp = Int64(1704573652491);
+final stakes = [Int64(10000), Int64(20000)];
 
 final conf.BlockchainConfig config1 = conf.BlockchainConfig(
     genesis: conf.BlockchainGenesis(
-  timestamp: null,
+  timestamp: timestamp,
+  stakes: stakes,
   localStakerIndex: -1,
 ));
 
@@ -19,7 +22,8 @@ final conf.BlockchainConfig config2 = conf.BlockchainConfig(
     data: conf.BlockchainData(
         dataDir: "${Directory.systemTemp.path}/blockchain2/{genesisId}"),
     genesis: conf.BlockchainGenesis(
-      timestamp: Int64(timestamp),
+      timestamp: timestamp,
+      stakes: stakes,
       localStakerIndex: -1,
     ),
     rpc: conf.BlockchainRPC(bindPort: 2034),
@@ -33,7 +37,8 @@ final conf.BlockchainConfig config3 = conf.BlockchainConfig(
     data: conf.BlockchainData(
         dataDir: "${Directory.systemTemp.path}/blockchain3/{genesisId}"),
     genesis: conf.BlockchainGenesis(
-      timestamp: Int64(timestamp),
+      timestamp: timestamp,
+      stakes: stakes,
       localStakerIndex: -1,
     ),
     rpc: conf.BlockchainRPC(bindPort: 2044),
@@ -41,15 +46,7 @@ final conf.BlockchainConfig config3 = conf.BlockchainConfig(
 
 final config = config3;
 Future<void> main() async {
-  Logger.root.level = Level.INFO;
-  Logger.root.onRecord.listen((record) {
-    final _errorSuffix = (record.error != null) ? ": ${record.error}" : "";
-    final _stackTraceSuffix =
-        (record.stackTrace != null) ? "\n${record.stackTrace}" : "";
-    print(
-        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${_errorSuffix}${_stackTraceSuffix}');
-  });
-
+  initRootLogger();
   final resource = IsolatePool.make()
       .map((p) => p.isolate)
       .tap(setComputeFunction)
@@ -59,6 +56,5 @@ Future<void> main() async {
             .productR(BlockchainP2P.make(blockchain, config)),
       );
 
-  await resource
-      .use((f) => Future.any([f, ProcessSignal.sigint.watch().first]));
+  await resource.use((f) => f.race(ProcessSignal.sigint.watch().first));
 }

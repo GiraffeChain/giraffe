@@ -283,19 +283,13 @@ class BlockchainP2P {
               port: config.p2p.publicPort.uint32Value,
             );
             void Function(String, int) connect = (_, __) {};
-            final socketHandlerResource =
-                (Socket socket) => Resource.make(() async {
-                      log.info("Connected ${socket.show}");
-                      return (
-                        socket: socket,
-                        remoteAddress: socket.remoteAddress,
-                        remotePort: socket.remotePort
-                      );
-                    }, (t) async {
-                      log.info("Disconnecting ${socket.show}");
-                      t.socket.destroy();
-                      await t.socket.done;
-                    }).map((t) => t.socket);
+            final socketHandlerResource = (Socket socket) {
+              final shown = socket.show;
+              return Resource.pure(socket).onFinalize((socket) async {
+                log.info("Disconnecting $shown");
+                socket.destroy();
+              }).tapLog(log, (socket) => "Connected $shown");
+            };
             return PeersManager.make(
               localPeer: localPeer,
               localPeerKeyPair: p2pKey,
@@ -317,12 +311,17 @@ class BlockchainP2P {
                     ))
                 .tap((server) => connect = server.connectOutbound);
           })
-          .flatMap((p2pServer) => p2pServer.start().flatMap((f1) =>
-              Resource.forStreamSubscription(() => Stream.fromIterable(
-                      config.p2p.knownPeers)
-                  .map((s) => s.split(":"))
-                  .map((parsed) => p2pServer.connectOutbound(parsed[0], int.parse(parsed[1])).ignore())
-                  .listen((_) {})).map((subscription) => subscription.asFuture()).map((f2) => Future.wait([f1, f2]))))
-          .tapLog(log, (_) => "Served on host=${config.p2p.bindHost} port=${config.p2p.bindPort}")
+          .flatMap(
+            (p2pServer) => p2pServer.start().tap((_) => config.p2p.knownPeers
+                .map((s) => s.split(":"))
+                .forEach((parsed) => p2pServer
+                    .connectOutbound(parsed[0], int.parse(parsed[1]))
+                    .ignore())),
+          )
+          .map((backgroundHandler) => backgroundHandler.done)
+          .tapLog(
+              log,
+              (_) =>
+                  "Served on host=${config.p2p.bindHost} port=${config.p2p.bindPort}")
           .tapLogFinalize(log, "Terminating");
 }

@@ -50,7 +50,7 @@ class BlockchainGenesis {
             Int64(DateTime.now()
                 .add(Duration(seconds: 5))
                 .millisecondsSinceEpoch),
-        stakes = [Int64(1000000)],
+        stakes = stakes ?? [Int64(1000000)],
         localStakerIndex = localStakerIndex ?? 0;
 }
 

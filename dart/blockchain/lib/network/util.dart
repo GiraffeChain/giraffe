@@ -27,5 +27,5 @@ extension NullableIntOps on int? {
 
 extension SocketOps on Socket {
   String get show =>
-      "Socket(remote=${remoteAddress.host}:${remotePort} to local=${remoteAddress.host}:${port})";
+      "Socket(remote=${remoteAddress.host}:${remotePort}, local=${address.host}:${port})";
 }

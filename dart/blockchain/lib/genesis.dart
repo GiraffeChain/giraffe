@@ -9,6 +9,9 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
 class Genesis {
+  static const height = Int64.ONE;
+  static const slot = Int64.ZERO;
+  static final parentSlot = Int64(-1);
   static Future<void> save(Directory directory, FullBlock block) async {
     await directory.create(recursive: true);
     final blockIdStr = block.header.id.show;
@@ -86,11 +89,11 @@ class GenesisConfig {
       ..eta = eta;
     final header = BlockHeader()
       ..parentHeaderId = GenesisParentId
-      ..parentSlot = Int64(-1)
+      ..parentSlot = Genesis.parentSlot
       ..txRoot = TxRoot.calculateFromTransactions(Uint8List(32), transactions)
       ..timestamp = timestamp
-      ..height = Int64.ONE
-      ..slot = Int64.ZERO
+      ..height = Genesis.height
+      ..slot = Genesis.slot
       ..eligibilityCertificate = eligibilityCertificate
       ..operationalCertificate = GenesisOperationalCertificate
       ..address = (StakingAddress()..value = _emptyBytes(32));

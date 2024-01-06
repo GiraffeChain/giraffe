@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:blockchain/common/utils.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 
@@ -18,13 +19,25 @@ abstract class Resource<A> {
 
   static Resource<A> eval<A>(Future<A> Function() aF) => EvalResource(aF: aF);
 
-  static Resource<void> onFinalize(Future<void> Function() f) =>
-      make(() => Future.value(), (_) => f());
-
-  static Resource<(Future<void>, Future<void> Function())> backgroundStream(
-          Stream s) =>
-      forStreamSubscription(() => s.listen(null, cancelOnError: true))
-          .map((s) => (s.asFuture(), s.cancel));
+  static Resource<BackgroundHandler> backgroundStream(Stream s) =>
+      Resource.pure(Completer())
+          .flatMap((outcome) => forStreamSubscription(() => s.listen(
+                    null,
+                    onError: (Object e, StackTrace s) =>
+                        outcome.completeError(e, s),
+                    onDone: () => outcome.complete(),
+                    cancelOnError: true,
+                  )).map((s) {
+                bool isCanceled = false;
+                return BackgroundHandler(
+                    done: outcome.future,
+                    cancel: () async {
+                      if (isCanceled) return;
+                      isCanceled = true;
+                      s.cancel();
+                      if (!outcome.isCompleted) outcome.complete();
+                    });
+              }));
 
   static Resource<StreamSubscription<T>> forStreamSubscription<T>(
           StreamSubscription<T> Function() subscriptionF) =>
@@ -51,21 +64,22 @@ abstract class Resource<A> {
     return BindResource<A, U>(source: this, fs: f);
   }
 
+  Resource<A> onFinalize(Future Function(A) f) =>
+      flatTap((a) => Resource.make(() async {}, (_) => f(a)));
+
   Resource<U> evalFlatMap<U>(Future<Resource<U>> Function(A) f) {
     return evalMap(f).flatMap((r) => r);
   }
 
-  Resource<A> flatTap<U>(Resource Function(A) f) {
-    return BindResource<A, A>(source: this, fs: (a) => f(a).as(a));
-  }
+  Resource<A> flatTap<U>(Resource Function(A) f) => flatMap((a) => f(a).as(a));
 
   Resource<A> tapLog(Logger log, String Function(A) messageF) => map((a) {
         log.info(messageF(a));
         return a;
       });
 
-  Resource<A> tapLogFinalize(Logger log, String message) => flatTap(
-      (a) => Resource.onFinalize(() => Future.sync(() => log.info(message))));
+  Resource<A> tapLogFinalize(Logger log, String message) =>
+      onFinalize((_) => Future.sync(() => log.info(message)));
 
   Future<T> use<T>(Future<T> Function(A) f) async {
     final (a, finalizer) = await allocated();
@@ -73,14 +87,16 @@ abstract class Resource<A> {
     try {
       r = await f(a);
     } finally {
-      await finalizer();
+      await finalizer()
+          .logError(_log, "Resource finalization failed")
+          .voidError;
     }
     return r;
   }
 
   Future<A> get use_ async {
     final (a, finalizer) = await allocated();
-    await finalizer();
+    await finalizer().logError(_log, "Resource finalization failed").voidError;
     return a;
   }
 
@@ -103,6 +119,8 @@ abstract class Resource<A> {
   Resource<A2> productR<A2>(Resource<A2> rA2) => product(rA2).map((t) => t.$2);
 }
 
+final _log = Logger("Resource");
+
 class BindResource<S, A> extends Resource<A> {
   final Resource<S> source;
   final Resource<A> Function(S) fs;
@@ -120,7 +138,9 @@ class BindResource<S, A> extends Resource<A> {
       a = r.$1;
       rAFinalizer = r.$2;
     } catch (e) {
-      await sourceFinalizer();
+      await sourceFinalizer()
+          .logError(_log, "Resource finalization failed")
+          .voidError;
       rethrow;
     }
     bool isFinalized = false;
@@ -173,7 +193,9 @@ class ParBindResources<A> extends Resource<A> {
       a = r.$1;
       rAFinalizer = r.$2;
     } catch (e) {
-      await Future.wait(allocatedSources.map((r) => r.$2()).toList());
+      await Future.wait(allocatedSources.map((r) => r.$2()).toList())
+          .logError(_log, "Resource finalization failed")
+          .voidError;
       rethrow;
     }
     bool isFinalized = false;
@@ -224,4 +246,11 @@ class EvalResource<A> extends Resource<A> {
 
 extension ResourceRecord2Ops<T1, T2> on (Resource<T1>, Resource<T2>) {
   Resource<(T1, T2)> get tupled => $1.product($2);
+}
+
+class BackgroundHandler {
+  final Future<void> done;
+  final Future Function() cancel;
+
+  BackgroundHandler({required this.done, required this.cancel});
 }

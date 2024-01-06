@@ -3,6 +3,7 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/models/unsigned.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 
 // Source: https://github.com/dart-lang/sdk/issues/32803#issuecomment-1228291047
@@ -91,4 +92,28 @@ extension LogOps on Logger {
     info(message);
     return r;
   }
+}
+
+extension FutureOps<T> on Future<T> {
+  Future<T> get voidError => onError((_, __) => (null as T));
+
+  Future<T> logError(Logger log, String message) =>
+      onError<Object>((e, stackTrace) async {
+        log.warning(message, e, stackTrace);
+        throw e;
+      });
+
+  Future<Either<T, O>> race<O>(Future<O> f) => Future.any(
+      [then((res) => left<T, O>(res)), f.then((res) => right<T, O>(res))]);
+}
+
+initRootLogger() {
+  Logger.root.level = Level.INFO;
+  Logger.root.onRecord.listen((record) {
+    final _errorSuffix = (record.error != null) ? ": ${record.error}" : "";
+    final _stackTraceSuffix =
+        (record.stackTrace != null) ? "\n${record.stackTrace}" : "";
+    print(
+        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${_errorSuffix}${_stackTraceSuffix}');
+  });
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart' as conf;
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/isolate_pool.dart';
@@ -41,14 +42,7 @@ final conf.BlockchainConfig config3 = conf.BlockchainConfig(
     p2p: conf.BlockchainP2P(bindPort: 2043, knownPeers: ["localhost:2023"]));
 
 Future<void> main() async {
-  Logger.root.level = Level.INFO;
-  Logger.root.onRecord.listen((record) {
-    final _errorSuffix = (record.error != null) ? ": ${record.error}" : "";
-    final _stackTraceSuffix =
-        (record.stackTrace != null) ? "\n${record.stackTrace}" : "";
-    print(
-        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${_errorSuffix}${_stackTraceSuffix}');
-  });
+  initRootLogger();
 
   final resource = IsolatePool.make()
       .map((p) => p.isolate)

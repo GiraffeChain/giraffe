@@ -13,6 +13,7 @@ import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/ledger/mempool.dart';
 import 'package:blockchain/network/framing.dart';
 import 'package:blockchain/network/handshake.dart';
+import 'package:blockchain/network/merge_stream_eager_complete.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:fpdart/fpdart.dart';
@@ -25,12 +26,14 @@ class PeersManager {
   final Ed25519KeyPair localPeerKeyPair;
   final Uint8List magicBytes;
   final BlockchainCore blockchain;
+  final void Function(String, int) connectOutbound;
 
   PeersManager({
     required this.localPeer,
     required this.localPeerKeyPair,
     required this.magicBytes,
     required this.blockchain,
+    required this.connectOutbound,
   });
 
   static Resource<PeersManager> make({
@@ -41,103 +44,103 @@ class PeersManager {
     required void Function(String, int) connect,
   }) =>
       Resource.pure(PeersManager(
-              localPeer: localPeer,
-              localPeerKeyPair: localPeerKeyPair,
-              magicBytes: magicBytes,
-              blockchain: blockchain))
+        localPeer: localPeer,
+        localPeerKeyPair: localPeerKeyPair,
+        magicBytes: magicBytes,
+        blockchain: blockchain,
+        connectOutbound: connect,
+      ))
           .tapLogFinalize(log, "Terminating")
-          .flatTap(
-              (manager) => Resource.onFinalize(() async => manager.close()))
+          .onFinalize((manager) => manager.close())
           .flatTap((manager) => Resource.backgroundStream(
               manager.connectionInitializer(connect)));
 
   final connectedPeers = <PeerId, PeerState>{};
-  final closeSignal = Completer();
+
+  final disconnectedPeers = <PeerId, PeerState>{};
 
   static final log = Logger("Blockchain.P2P.PeersManager");
 
   PeerId get localPeerId => PeerId(value: localPeerKeyPair.vk);
 
-  void close() {
-    closeSignal.complete();
-    for (final peer in connectedPeers.values) {
-      peer.sendCloseSignal();
-      peer.socket.destroy();
-    }
-  }
+  Future<void> close() =>
+      Future.wait(connectedPeers.values.map((peer) => peer.close()));
 
   Stream<Unit> connectionInitializer(Function(String, int) connect) =>
-      Stream.periodic(Duration(seconds: 30), (_) {
-        log.info(
-            "Connected peers count=${connectedPeers.length} ids=${connectedPeers.keys.map((id) => id.show).join(",")}");
-        final targets = Map.fromEntries(connectedPeers.values
-            .expand((s) => s.publicState.peers)
-            .where((p) => p.hasHost() && p.hasPort())
-            .map((p) => MapEntry(p.peerId, p)));
+      Stream.periodic(Duration(seconds: 30), (_) => connectNext())
+          .map((_) => unit);
 
-        targets.remove(localPeer.peerId);
+  void connectNext() {
+    log.info(
+        "Connected peers count=${connectedPeers.length} ids=${connectedPeers.keys.map((id) => id.show).join(",")}");
+    final targets = Map.fromEntries(connectedPeers.values
+        .expand((s) => s.publicState.peers)
+        .where((p) => p.hasHost() && p.hasPort())
+        .map((p) => MapEntry(p.peerId, p)));
 
-        for (final connectedId in connectedPeers.keys)
-          targets.remove(connectedId);
-        final targetsList = targets.values.toList();
-        if (targetsList.isNotEmpty) {
-          final selected = targetsList[Random().nextInt(targetsList.length)];
-          connect(selected.host.value, selected.port.value);
-        }
-        return unit;
-      });
+    targets.remove(localPeer.peerId);
+
+    for (final connectedId in connectedPeers.keys) targets.remove(connectedId);
+    final targetsList = targets.values.toList();
+    if (targetsList.isNotEmpty) {
+      final selected = targetsList[Random().nextInt(targetsList.length)];
+      connectOutbound(selected.host.value, selected.port.value);
+    }
+  }
 
   Future<void> handleConnection(Socket socket) async {
     log.info(
         "Initializing handshake with remote=${socket.remoteAddress.address}:${socket.remotePort}");
-    final chunkedReader = ChunkedStreamReader(socket);
-    final handshakeResult = await handshake(chunkedReader.readBytes,
-        (data) async => socket.add(data), localPeerKeyPair, magicBytes);
 
-    final peerId = handshakeResult.peerId;
+    try {
+      await socket.chunkedResource.use((chunkedReader) async {
+        final handshakeResult = await handshake(chunkedReader.readChunk,
+            (data) async => socket.add(data), localPeerKeyPair, magicBytes);
+        final peerId = handshakeResult.peerId;
 
-    final state = PeerState(
-      socket: socket,
-      publicState: PublicP2PState(localPeer: ConnectedPeer(peerId: peerId)),
-    );
+        log.info("Handshake success with peerId=${peerId.show}");
 
-    connectedPeers[peerId] = state;
-
-    log.info("Handshake success with peerId=${peerId.show}");
-
-    final exchange = MultiplexedDataExchange(
-        MultiplexedIOForFramedIO(SocketBasedFramedIO(socket, chunkedReader)));
-
-    await Resource.onFinalize(() async {
-      log.info("Connection closed with peerId=${peerId.show}");
-      connectedPeers.remove(peerId);
-      state.sendCloseSignal();
-    })
-        .flatMap((_) => PeerBlockchainInterface.make(
-              blockchain: blockchain,
-              remotePeerState: state,
-              exchange: exchange,
-              peersManager: this,
-            ))
-        .flatMap(
-          (interfaceWithBackground) => Resource.backgroundStream(
-            PeerHandler(
+        await PeerState.make(
+          socket: socket,
+          publicState: PublicP2PState(localPeer: ConnectedPeer(peerId: peerId)),
+        ).onFinalize((state) async {
+          log.info(
+              "Connection closed with peerId=${state.publicState.localPeer.peerId.show}");
+          connectedPeers.remove(state.publicState.localPeer.peerId);
+        }).use((state) async {
+          connectedPeers[peerId] = state;
+          final exchange = MultiplexedDataExchange(
+              MultiplexedIO(FramedIO(socket, chunkedReader)));
+          await PeerBlockchainInterface.make(
+            blockchain: blockchain,
+            remotePeerState: state,
+            exchange: exchange,
+            peersManager: this,
+          ).use((interface) => Resource.backgroundStream(
+                MergeStreamEagerComplete([
+                  interface.background
+                      .doOnDone(() => log.info("Background done")),
+                  PeerHandler(
                     blockchain: blockchain,
-                    remotePeerId: peerId,
-                    exchange: exchange,
+                    remotePeerId: state.publicState.localPeer.peerId,
                     peersManager: this,
-                    interface: interfaceWithBackground.$1)
-                .run(),
-          ).tap((sub) => state.addCloseSignal(sub.$2)).map(
-                (sub) => Future.any([
-                  interfaceWithBackground.$2,
-                  sub.$1,
-                  socket.done,
-                  closeSignal.future,
+                    interface: interface,
+                  ).run().doOnDone(() => log.info("Peer handler done")),
                 ]),
-              ),
-        )
-        .use((f) => f);
+              )
+                  .tap((sub) => state.addCloseHandler(sub.cancel))
+                  .tapLogFinalize(log, "Closing")
+                  .use((backgroundHandler) async {
+                log.info("Running");
+                await Future.any([backgroundHandler.done, socket.done]);
+                log.info("Done running");
+              }));
+        });
+      });
+    } on GracefulPeerTermination {
+    } catch (e) {
+      log.warning("Peer error", e);
+    }
   }
 
   PublicP2PState get publicState => PublicP2PState(
@@ -147,20 +150,37 @@ class PeersManager {
 
   void onPeerStateGossiped(PeerId peerId, PublicP2PState publicState) {
     connectedPeers[peerId]!.publicState = publicState;
+    connectNext();
   }
 }
 
 class PeerState {
   final Socket socket;
   PublicP2PState publicState;
-  Future<void> Function() sendCloseSignal = () async {};
+  final _closeHandlers = <Future<void> Function()>[];
   PeerState({required this.socket, required this.publicState});
 
-  void addCloseSignal(Future<void> Function() f) {
-    final previous = sendCloseSignal;
-    sendCloseSignal = () => previous().then((_) => f());
+  PeerId get peerId => publicState.localPeer.peerId;
+
+  static Resource<PeerState> make(
+          {required Socket socket, required PublicP2PState publicState}) =>
+      Resource.pure(PeerState(socket: socket, publicState: publicState))
+          .onFinalize((s) => s.close());
+
+  Future<void> close() async {
+    final log = Logger("Blockchain.P2P.Peer(${peerId.show})");
+    log.info("Cleaning up PeerState");
+    for (final h in _closeHandlers) {
+      await h();
+    }
+  }
+
+  void addCloseHandler(Future<void> Function() f) {
+    _closeHandlers.add(f);
   }
 }
+
+const DefaultRequestTimeout = Duration(seconds: 5);
 
 class PeerBlockchainInterface {
   final BlockchainCore blockchain;
@@ -177,35 +197,19 @@ class PeerBlockchainInterface {
   }) : log = Logger(
             "Blockchain.P2P.Peer(${remotePeerState.publicState.localPeer.peerId.show})");
 
-  static Resource<(PeerBlockchainInterface interface, Future<void> doneSignal)>
-      make({
+  static Resource<PeerBlockchainInterface> make({
     required BlockchainCore blockchain,
     required PeerState remotePeerState,
     required MultiplexedDataExchange exchange,
     required PeersManager peersManager,
   }) =>
-          Resource.pure(PeerBlockchainInterface(
-                  blockchain: blockchain,
-                  remotePeerState: remotePeerState,
-                  exchange: exchange,
-                  peersManager: peersManager))
-              .tap((interface) => remotePeerState.addCloseSignal(() async {
-                    if (!interface.asyncErrorCompleter.isCompleted)
-                      interface.asyncErrorCompleter.complete();
-                  }))
-              .flatMap((interface) =>
-                  Resource.backgroundStream(interface.background)
-                      .tap((sub) => remotePeerState.addCloseSignal(sub.$2))
-                      .map((sub) => (
-                            interface,
-                            Future.any([
-                              sub.$1,
-                              interface.asyncErrorCompleter.operation
-                                  .valueOrCancellation()
-                            ])
-                          )));
-
-  final asyncErrorCompleter = CancelableCompleter();
+      Resource.pure(PeerBlockchainInterface(
+              blockchain: blockchain,
+              remotePeerState: remotePeerState,
+              exchange: exchange,
+              peersManager: peersManager))
+          .onFinalize((interface) => interface.close())
+          .tap((interface) => remotePeerState.addCloseHandler(interface.close));
 
   final _p2pStateQueues = PortQueues<void, PublicP2PState>();
   final _blockAdoptionQueues = PortQueues<void, BlockId>();
@@ -216,24 +220,59 @@ class PeerBlockchainInterface {
   final _bodyQueues = PortQueues<BlockId, BlockBody?>();
   final _transactionQueues = PortQueues<TransactionId, Transaction?>();
 
-  Stream<Unit> get background async* {
+  List<PortQueues> get allPortQueues => [
+        _p2pStateQueues,
+        _blockAdoptionQueues,
+        _transactionAdoptionQueues,
+        _pingPongQueues,
+        _blockAdoptionQueues,
+        _headerQueues,
+        _bodyQueues,
+        _transactionAdoptionQueues,
+      ];
+
+  final _asyncErrorCompleter = Completer();
+
+  bool _closed = false;
+
+  Future<void> close() async {
+    if (_closed) return;
+    _closed = true;
+    log.info("Closing");
+    if (!_asyncErrorCompleter.isCompleted) {
+      _asyncErrorCompleter.complete();
+    }
+    allPortQueues
+        .forEach((p) => p.cancelAll(GracefulPeerTermination.instance).ignore());
+  }
+
+  Stream<Unit> get background => MergeStreamEagerComplete([
+        _background.doOnDone(() => log.info("Interface stream done")),
+        Stream.fromFuture(_asyncErrorCompleter.future)
+            .map((_) => unit)
+            .doOnDone(() => log.info("Interface async completer done")),
+      ])
+          .doOnCancel(() => log.info("Interface stream canceled"))
+          .doOnDone(() => close().ignore());
+
+  Stream<Unit> get _background async* {
     log.info("Starting background message handler");
-    try {
-      while (!asyncErrorCompleter.isCompleted) {
-        final nextMessage = await Future.any<MultiplexedDataExchangePacket?>([
-          asyncErrorCompleter.operation.valueOrCancellation().then((_) => null),
-          exchange.read().timeout(Duration(seconds: 10))
-        ]);
-        if (nextMessage == null) return;
-        yield unit;
-        handleMessage(nextMessage).onError<Object>((e, stackTrace) {
-          if (!asyncErrorCompleter.isCompleted)
-            asyncErrorCompleter.completeError(e, stackTrace);
-        });
+    while (true) {
+      if (_asyncErrorCompleter.isCompleted) {
+        await _asyncErrorCompleter.future;
+        return;
       }
-    } catch (e) {
-      if (!asyncErrorCompleter.isCompleted)
-        asyncErrorCompleter.completeError(e);
+      final nextMessage = await exchange.read().timeout(Duration(seconds: 10));
+      yield unit;
+      if (nextMessage == null) {
+        log.info("Remote peer closed the connection");
+        if (!_asyncErrorCompleter.isCompleted) _asyncErrorCompleter.complete();
+        break;
+      }
+      handleMessage(nextMessage).onError<Object>((e, stackTrace) {
+        if (!_asyncErrorCompleter.isCompleted)
+          _asyncErrorCompleter.completeError(e, stackTrace);
+      }).ignore();
     }
   }
 
@@ -322,7 +361,9 @@ class PeerBlockchainInterface {
     _p2pStateQueues.responses.add(completer);
     await exchange
         .write(MultiplexedDataRequest(MultiplexerIds.PeerStateRequest, []));
-    return (await completer.operation.valueOrCancellation(null))!;
+    return (await completer.operation
+        .valueOrCancellation(null)
+        .timeout(DefaultRequestTimeout))!;
   }
 
   Future<BlockId> get nextBlockAdoption async {
@@ -352,7 +393,9 @@ class PeerBlockchainInterface {
     _headerQueues.responses.add(completer);
     await exchange.write(MultiplexedDataRequest(
         MultiplexerIds.HeaderRequest, P2PCodecs.blockIdCodec.encode(id)));
-    return completer.operation.valueOrCancellation(null);
+    return completer.operation
+        .valueOrCancellation(null)
+        .timeout(DefaultRequestTimeout);
   }
 
   Future<BlockBody?> fetchBody(BlockId id) async {
@@ -360,15 +403,20 @@ class PeerBlockchainInterface {
     _bodyQueues.responses.add(completer);
     await exchange.write(MultiplexedDataRequest(
         MultiplexerIds.BodyRequest, P2PCodecs.blockIdCodec.encode(id)));
-    return completer.operation.valueOrCancellation(null);
+    return completer.operation
+        .valueOrCancellation(null)
+        .timeout(DefaultRequestTimeout);
   }
 
   Future<Transaction?> fetchTransaction(TransactionId id) async {
     final completer = CancelableCompleter<Transaction?>();
     _transactionQueues.responses.add(completer);
     await exchange.write(MultiplexedDataRequest(
-        MultiplexerIds.BodyRequest, P2PCodecs.transactionIdCodec.encode(id)));
-    return completer.operation.valueOrCancellation(null);
+        MultiplexerIds.TransactionRequest,
+        P2PCodecs.transactionIdCodec.encode(id)));
+    return completer.operation
+        .valueOrCancellation(null)
+        .timeout(DefaultRequestTimeout);
   }
 
   Future<BlockId?> remoteBlockIdAtHeight(Int64 height) async {
@@ -377,7 +425,9 @@ class PeerBlockchainInterface {
     await exchange.write(MultiplexedDataRequest(
         MultiplexerIds.BlockIdAtHeightRequest,
         P2PCodecs.int64Codec.encode(height)));
-    return completer.operation.valueOrCancellation(null);
+    return completer.operation
+        .valueOrCancellation(null)
+        .timeout(DefaultRequestTimeout);
   }
 
   Future<List<int>> ping(List<int> message) async {
@@ -385,7 +435,9 @@ class PeerBlockchainInterface {
     _pingPongQueues.responses.add(completer);
     await exchange
         .write(MultiplexedDataRequest(MultiplexerIds.PingRequest, message));
-    return (await completer.operation.valueOrCancellation(null))!;
+    return (await completer.operation
+        .valueOrCancellation(null)
+        .timeout(DefaultRequestTimeout))!;
   }
 
   Future<BlockId> get commonAncestor async {
@@ -508,7 +560,6 @@ class PeerBlockchainInterface {
 class PeerHandler {
   final BlockchainCore blockchain;
   final PeerId remotePeerId;
-  final MultiplexedDataExchange exchange;
   final Logger log;
   final PeersManager peersManager;
   final PeerBlockchainInterface interface;
@@ -516,25 +567,36 @@ class PeerHandler {
   PeerHandler({
     required this.blockchain,
     required this.remotePeerId,
-    required this.exchange,
     required this.peersManager,
     required this.interface,
   }) : log = Logger("Blockchain.P2P.Peer(${remotePeerId.show})");
 
   Stream<Unit>? _dynamicStream;
+  Completer? _mempoolSyncPauser = Completer();
+  Completer _stop = Completer();
 
-  Stream<Unit> run() => MergeStream([
-        _pingPong,
-        _peerState,
-        _dynamicStreamProcessor,
-      ]);
+  Stream<Unit> run() => MergeStreamEagerComplete([
+        _pingPong
+            .doOnDone(() => log.info("Ping pong stream unexpectedly done")),
+        _peerState
+            .doOnDone(() => log.info("State sync stream unexpectedly done")),
+        _dynamicStreamProcessor
+            .doOnDone(() => log.info("Dynamic stream unexpectedly done")),
+        _mempoolSync.doOnDone(() => log.info("Mempool sync unexpectedly done")),
+      ])
+          .doOnCancel(() => log.info("Peer Handler canceled"))
+          .doOnCancel(() => _sendStopSignal())
+          .doOnDone(() => _sendStopSignal())
+          .doOnError((_, __) => _sendStopSignal());
+
+  _sendStopSignal() {
+    if (!_stop.isCompleted) _stop.complete();
+  }
 
   Stream<Unit> get _dynamicStreamProcessor async* {
     _dynamicStream = _verifyGenesisAgreement;
     while (_dynamicStream != null) {
-      await for (final v in _dynamicStream!) {
-        yield v;
-      }
+      yield* _dynamicStream!;
     }
   }
 
@@ -561,10 +623,13 @@ class PeerHandler {
     assert(localGenesisId == remoteGenesisId);
     log.info("Genesis is agreed");
     yield unit;
+    _unpauseMempoolSync();
     _dynamicStream = _syncCheck;
   }
 
   Stream<Unit> get _syncCheck async* {
+    _pauseMempoolSync();
+    log.info("Finding common ancestor");
     final commonAncestorId = await interface.commonAncestor;
     log.info("Common ancestor id=${commonAncestorId.show}");
     final commonAncestor =
@@ -610,13 +675,18 @@ class PeerHandler {
   }
 
   Stream<Unit> get _waitingForBetterBlock async* {
+    _unpauseMempoolSync();
     // TODO: Transaction/mempool sync
     while (true) {
-      log.info("Awaiting next block from remote peer");
-      final next = await interface.nextBlockAdoption;
       yield unit;
-      final localHeader = await blockchain.dataStores.headers.get(next);
-      if (localHeader == null) {
+      log.info("Awaiting next block from remote peer");
+      final nextEither = await interface.nextBlockAdoption.race(_stop.future);
+      if (nextEither.isRight()) return;
+      final next = nextEither.getLeft().toNullable()!;
+      yield unit;
+      final localHeaderExists =
+          await blockchain.dataStores.headers.contains(next);
+      if (!localHeaderExists) {
         final remoteHeader = (await interface.fetchHeader(next))!;
         final localHeadId = await blockchain.consensus.localChain.currentHead;
         if (remoteHeader.parentHeaderId == localHeadId) {
@@ -635,6 +705,7 @@ class PeerHandler {
   }
 
   Stream<Unit> _sync(BlockHeader commonAncestor) async* {
+    _pauseMempoolSync();
     log.info("Synchronizing from commonAncestor id=${commonAncestor.id.show}");
     Int64 h = commonAncestor.height + 1;
     BlockId? lastProcessed;
@@ -655,6 +726,45 @@ class PeerHandler {
       await blockchain.consensus.localChain.adopt(lastProcessed);
     yield unit;
     _dynamicStream = _waitingForBetterBlock;
+  }
+
+  Stream<Unit> get _mempoolSync async* {
+    log.info("Starting mempool sync");
+    while (true) {
+      if (_mempoolSyncPauser != null) {
+        log.info("Pausing next mempool tx sync");
+        await _mempoolSyncPauser?.future;
+        log.info("Resuming next mempool tx sync");
+      }
+      yield unit;
+      final nextEither =
+          await interface.nextTransactionNotification.race(_stop.future);
+      if (nextEither.isRight()) {
+        log.info("Mempool sync stopping");
+        return;
+      }
+      final next = nextEither.getLeft().toNullable()!;
+      yield unit;
+      final localTxExists =
+          await blockchain.dataStores.transactions.contains(next);
+      yield unit;
+      if (!localTxExists) {
+        final tx = (await interface.fetchTransaction(next))!;
+        log.info("Processing transaction id=${next.show}");
+        yield unit;
+        await blockchain.processTransaction(tx);
+        yield unit;
+      }
+    }
+  }
+
+  void _pauseMempoolSync() {
+    if (_mempoolSyncPauser == null) _mempoolSyncPauser = Completer();
+  }
+
+  void _unpauseMempoolSync() {
+    _mempoolSyncPauser?.complete();
+    _mempoolSyncPauser = null;
   }
 
   Future<void> _fetchVerifyPersist(BlockHeader header) async {
@@ -714,4 +824,13 @@ class MultiplexerIds {
   static const TransactionNotificationRequest = 15;
   static const PeerStateRequest = 16;
   static const PingRequest = 17;
+}
+
+class GracefulPeerTermination {
+  static const instance = GracefulPeerTermination();
+
+  const GracefulPeerTermination();
+
+  @override
+  String toString() => "GraceulPeerTermination";
 }

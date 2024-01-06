@@ -7,7 +7,7 @@ class RpcClient {
       Resource.make(
           () => Future.sync(() => ClientChannel(
                 host,
-                port: 2024,
+                port: port,
                 options: ChannelOptions(
                   credentials: secure
                       ? ChannelCredentials.secure()
