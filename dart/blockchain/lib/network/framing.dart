@@ -129,7 +129,8 @@ class PortQueues<Request, Response> {
 
   void processResponse(Response response, String ifUnexpectedMessage) {
     assert(responses.isNotEmpty, ifUnexpectedMessage);
-    responses.removeFirst().complete(response);
+    final completer = responses.removeFirst();
+    if (!completer.operation.isCompleted) completer.complete(response);
   }
 
   Future<void> cancelAll(Object error) async {

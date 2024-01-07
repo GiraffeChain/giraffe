@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/consensus.dart';
 import 'package:blockchain/consensus/models/protocol_settings.dart';
@@ -153,18 +154,19 @@ class BlockchainCore {
     final id = fullBlock.header.id;
     log.info("Validating id=${id.show}");
 
-    final errors =
-        await consensus.blockHeaderValidation.validate(fullBlock.header);
-    if (errors.isNotEmpty) {
-      // TODO: ParentChildTree disassociate
-      await dataStores.headers.remove(id);
-      await dataStores.bodies.remove(id);
-      throw Exception("Invalid block. reason=$errors");
-    }
-    await parentChildTree.assocate(id, fullBlock.header.parentHeaderId);
-    await dataStores.headers.put(id, fullBlock.header);
+    await log.timedInfoAsync(() async {
+      await parentChildTree.assocate(id, fullBlock.header.parentHeaderId);
+      await dataStores.headers.put(id, fullBlock.header);
+      final errors =
+          await consensus.blockHeaderValidation.validate(fullBlock.header);
+      if (errors.isNotEmpty) {
+        await dataStores.headers.remove(id);
+        // TODO: Parent Child Tree Disassociate
+        throw Exception("Invalid block. reason=$errors");
+      }
 
-    await validateBlockBody(fullBlock);
+      await validateBlockBody(fullBlock);
+    }, messageF: (duration) => "Full block validation took $duration");
   }
 
   Future<void> validateBlockBody(FullBlock fullBlock) async {

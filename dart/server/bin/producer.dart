@@ -87,6 +87,8 @@ Future<void> main() async {
                 )));
           }));
 
-  await resource.use((subscription) => Future.any(
-      [subscription.asFuture(), ProcessSignal.sigint.watch().first]));
+  await resource
+      .use((subscription) => Future.any(
+          [subscription.asFuture(), ProcessSignal.sigint.watch().first]))
+      .onError<Object>((e, s) => log.warning("Production failed", e, s));
 }

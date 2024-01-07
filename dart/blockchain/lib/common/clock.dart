@@ -29,21 +29,34 @@ abstract class Clock {
   Timer timerUntilSlot(Int64 slot, void Function() onComplete) =>
       timerUntilTimestamp(slotToTimestamps(slot).$1, onComplete);
 
-  Int64 epochOfSlot(Int64 slot) => slot ~/ slotsPerEpoch;
+  Int64 epochOfSlot(Int64 slot) {
+    if (slot == Int64.ZERO)
+      return Int64(-1);
+    else if (slot < Int64.ZERO)
+      return Int64(-2);
+    else
+      return (slot - 1) ~/ slotsPerEpoch;
+  }
+
   Int64 get globalEpoch => epochOfSlot(globalSlot);
+
   (Int64, Int64) epochRange(Int64 epoch) {
-    final spe = slotsPerEpoch;
-    return (epoch * spe, (epoch + 1) * spe - 1);
+    if (epoch == Int64(-1))
+      return const (Int64.ZERO, Int64.ZERO);
+    else if (epoch < Int64(-1))
+      return (Int64(-1), Int64(-1));
+    else
+      return ((epoch * slotsPerEpoch + 1), (epoch + 1) * slotsPerEpoch);
   }
 
   Int64 operationalPeriodOfSlot(Int64 slot) =>
-      slot ~/ slotsPerOperationalPeriod;
+      (slot - 1) ~/ slotsPerOperationalPeriod;
 
   Int64 get globalOperationalPeriod => operationalPeriodOfSlot(globalSlot);
 
   (Int64, Int64) operationalPeriodRange(Int64 operationalPeriod) {
     final spor = slotsPerOperationalPeriod;
-    return (operationalPeriod * spor, (spor + 1) * spor - 1);
+    return (operationalPeriod * spor + 1, (operationalPeriod + 1) * spor);
   }
 
   Stream<Slot> get slots async* {

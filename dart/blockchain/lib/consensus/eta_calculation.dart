@@ -10,6 +10,7 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:hashlib/hashlib.dart';
+import 'package:quiver/cache.dart';
 
 abstract class EtaCalculation {
   Future<Eta> etaToBe(SlotId parentSlotId, Int64 childSlot);
@@ -24,9 +25,11 @@ class EtaCalculationImpl extends EtaCalculation {
 
   final log = Logger("EtaCalculation");
 
+  final cache = MapCache<BlockId, Eta>.lru(maximumSize: 32);
+
   @override
   Future<Eta> etaToBe(SlotId parentSlotId, Int64 childSlot) async {
-    if (childSlot > clock.slotsPerEpoch) return genesisEta;
+    if (clock.epochOfSlot(childSlot) == Int64.ZERO) return genesisEta;
     final parentEpoch = clock.epochOfSlot(parentSlotId.slot);
     final childEpoch = clock.epochOfSlot(childSlot);
     final parentHeader = await fetchHeader(parentSlotId.blockId);
@@ -48,19 +51,19 @@ class EtaCalculationImpl extends EtaCalculation {
   _isWithinTwoThirds(BlockHeader from) =>
       from.slotId.slot % clock.slotsPerEpoch <= (clock.slotsPerEpoch * 2 ~/ 3);
 
-  Future<Eta> _calculate(BlockHeader twoThirdsBest) async {
-    // TODO: Caching
-    final epoch = clock.epochOfSlot(twoThirdsBest.slotId.slot);
-    final epochRange = clock.epochRange(epoch);
-    final rhoValues = <Uint8List>[];
-    BlockHeader currentHeader = twoThirdsBest;
-    while (currentHeader.parentSlot >= epochRange.$1) {
-      rhoValues.insert(0, await currentHeader.rho);
-      currentHeader = await fetchHeader(currentHeader.parentHeaderId);
-    }
-    return _calculateFromValues(
-        twoThirdsBest.eligibilityCertificate.eta, epoch + 1, rhoValues);
-  }
+  Future<Eta> _calculate(BlockHeader twoThirdsBest) async =>
+      (await cache.get(twoThirdsBest.id, ifAbsent: (_) async {
+        final epoch = clock.epochOfSlot(twoThirdsBest.slotId.slot);
+        final epochRange = clock.epochRange(epoch);
+        final rhoValues = <Uint8List>[];
+        BlockHeader currentHeader = twoThirdsBest;
+        while (currentHeader.parentSlot >= epochRange.$1) {
+          rhoValues.insert(0, await currentHeader.rho);
+          currentHeader = await fetchHeader(currentHeader.parentHeaderId);
+        }
+        return _calculateFromValues(
+            twoThirdsBest.eligibilityCertificate.eta, epoch + 1, rhoValues);
+      }))!;
 
   Eta _calculateFromValues(
       Eta previousEta, Int64 epoch, Iterable<Rho> rhoValues) {

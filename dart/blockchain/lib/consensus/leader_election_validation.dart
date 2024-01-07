@@ -7,6 +7,7 @@ import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/consensus/numeric_utils.dart';
 import 'package:blockchain/consensus/utils.dart';
 import 'package:blockchain/crypto/utils.dart';
+import 'package:quiver/cache.dart';
 import 'package:rational/rational.dart';
 import 'package:fixnum/fixnum.dart';
 
@@ -33,7 +34,8 @@ class LeaderElectionImpl extends LeaderElection {
 
 final NormalizationConstant = BigInt.from(2).pow(512);
 
-final _thresholdCache = <(Rational, Int64), Rational>{};
+final _thresholdCache =
+    MapCache<(Rational, Int64), Rational>.lru(maximumSize: 1024);
 
 Future<Rational> _getThreshold(Rational relativeStake, Int64 slotDiff,
     ProtocolSettings protocolSettings) async {
@@ -41,24 +43,22 @@ Future<Rational> _getThreshold(Rational relativeStake, Int64 slotDiff,
     relativeStake,
     Int64(min(protocolSettings.vrfLddCutoff + 1, slotDiff.toInt()))
   );
-  final previous = _thresholdCache[cacheKey];
-  if (previous != null) return previous;
-  final difficultyCurve = (slotDiff > protocolSettings.vrfLddCutoff)
-      ? protocolSettings.vrfBaselineDifficulty
-      : (Rational(
-              slotDiff.toBigInt, BigInt.from(protocolSettings.vrfLddCutoff)) *
-          protocolSettings.vrfAmpltitude);
+  return (await _thresholdCache.get(cacheKey, ifAbsent: (_) {
+    final difficultyCurve = (slotDiff > protocolSettings.vrfLddCutoff)
+        ? protocolSettings.vrfBaselineDifficulty
+        : (Rational(
+                slotDiff.toBigInt, BigInt.from(protocolSettings.vrfLddCutoff)) *
+            protocolSettings.vrfAmpltitude);
 
-  if (difficultyCurve == Rational.one) {
-    _thresholdCache[cacheKey] = difficultyCurve;
-    return difficultyCurve;
-  } else {
-    final coefficient = log1p(Rational.fromInt(-1) * difficultyCurve);
-    final expResult = exp(coefficient * relativeStake);
-    final result = Rational.one - expResult;
-    _thresholdCache[cacheKey] = result;
-    return result;
-  }
+    if (difficultyCurve == Rational.one) {
+      return difficultyCurve;
+    } else {
+      final coefficient = log1p(Rational.fromInt(-1) * difficultyCurve);
+      final expResult = exp(coefficient * relativeStake);
+      final result = Rational.one - expResult;
+      return result;
+    }
+  }))!;
 }
 
 Future<bool> _isSlotLeaderForThreshold(Rational threshold, Rho rho) async {

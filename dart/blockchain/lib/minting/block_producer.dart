@@ -140,7 +140,10 @@ class BlockProducerImpl extends BlockProducer {
             }
           });
           _cancelOps.add(() async => timer.cancel());
-        } else if (nextHit == null) completer.complete(null);
+        } else if (nextHit == null) {
+          log.warning("No eligibilities found");
+          completer.complete(null);
+        }
       } on Exception catch (e) {
         completer.completeError(e);
       }

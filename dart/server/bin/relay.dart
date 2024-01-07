@@ -8,7 +8,7 @@ import 'package:blockchain/isolate_pool.dart';
 import 'package:fixnum/fixnum.dart';
 
 // final timestamp = null;
-final timestamp = Int64(1704573652491);
+final timestamp = Int64(1704592531291 - (3 * 60 * 60 * 1000));
 final stakes = [Int64(10000), Int64(20000)];
 
 final conf.BlockchainConfig config1 = conf.BlockchainConfig(

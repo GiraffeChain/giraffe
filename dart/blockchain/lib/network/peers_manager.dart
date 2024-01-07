@@ -253,7 +253,8 @@ class PeerBlockchainInterface {
             .doOnDone(() => log.info("Interface async completer done")),
       ])
           .doOnCancel(() => log.info("Interface stream canceled"))
-          .doOnDone(() => close().ignore());
+          .doOnDone(() => close().ignore())
+          .doOnCancel(() => close().ignore());
 
   Stream<Unit> get _background async* {
     log.info("Starting background message handler");
@@ -357,35 +358,33 @@ class PeerBlockchainInterface {
     if (_p2pStateQueues.responses.isNotEmpty)
       return (await _p2pStateQueues.responses.first.operation
           .valueOrCancellation())!;
-    final completer = CancelableCompleter<PublicP2PState>();
-    _p2pStateQueues.responses.add(completer);
     await exchange
         .write(MultiplexedDataRequest(MultiplexerIds.PeerStateRequest, []));
+    final completer = CancelableCompleter<PublicP2PState>();
+    _p2pStateQueues.responses.add(completer);
     return (await completer.operation
         .valueOrCancellation(null)
         .timeout(DefaultRequestTimeout))!;
   }
 
-  Future<BlockId> get nextBlockAdoption async {
-    if (_blockAdoptionQueues.responses.isNotEmpty)
-      return (await _blockAdoptionQueues.responses.first.operation
-          .valueOrCancellation())!;
+  Stream<BlockId> get nextBlockAdoption {
     final completer = CancelableCompleter<BlockId>();
     _blockAdoptionQueues.responses.add(completer);
-    await exchange
-        .write(MultiplexedDataRequest(MultiplexerIds.BlockAdoptionRequest, []));
-    return (await completer.operation.valueOrCancellation(null))!;
+    return Stream.fromFuture(exchange
+            .write(
+                MultiplexedDataRequest(MultiplexerIds.BlockAdoptionRequest, []))
+            .onError(completer.completeError))
+        .asyncExpand((_) => completer.operation.asStream());
   }
 
-  Future<TransactionId> get nextTransactionNotification async {
-    if (_transactionAdoptionQueues.responses.isNotEmpty)
-      return (await _transactionAdoptionQueues.responses.first.operation
-          .valueOrCancellation())!;
+  Stream<TransactionId> get nextTransactionNotification {
     final completer = CancelableCompleter<TransactionId>();
     _transactionAdoptionQueues.responses.add(completer);
-    await exchange.write(MultiplexedDataRequest(
-        MultiplexerIds.TransactionNotificationRequest, []));
-    return (await completer.operation.valueOrCancellation(null))!;
+    return Stream.fromFuture(exchange
+            .write(MultiplexedDataRequest(
+                MultiplexerIds.TransactionNotificationRequest, []))
+            .onError(completer.completeError))
+        .asyncExpand((_) => completer.operation.asStream());
   }
 
   Future<BlockHeader?> fetchHeader(BlockId id) async {
@@ -587,7 +586,9 @@ class PeerHandler {
           .doOnCancel(() => log.info("Peer Handler canceled"))
           .doOnCancel(() => _sendStopSignal())
           .doOnDone(() => _sendStopSignal())
-          .doOnError((_, __) => _sendStopSignal());
+          .doOnError((_, __) => _sendStopSignal())
+          .handleError((_) {},
+              test: (error) => error is GracefulPeerTermination);
 
   _sendStopSignal() {
     if (!_stop.isCompleted) _stop.complete();
@@ -676,13 +677,11 @@ class PeerHandler {
 
   Stream<Unit> get _waitingForBetterBlock async* {
     _unpauseMempoolSync();
-    // TODO: Transaction/mempool sync
     while (true) {
       yield unit;
       log.info("Awaiting next block from remote peer");
-      final nextEither = await interface.nextBlockAdoption.race(_stop.future);
-      if (nextEither.isRight()) return;
-      final next = nextEither.getLeft().toNullable()!;
+      late BlockId next;
+      await for (final a in interface.nextBlockAdoption) next = a;
       yield unit;
       final localHeaderExists =
           await blockchain.dataStores.headers.contains(next);
@@ -737,13 +736,8 @@ class PeerHandler {
         log.info("Resuming next mempool tx sync");
       }
       yield unit;
-      final nextEither =
-          await interface.nextTransactionNotification.race(_stop.future);
-      if (nextEither.isRight()) {
-        log.info("Mempool sync stopping");
-        return;
-      }
-      final next = nextEither.getLeft().toNullable()!;
+      late TransactionId next;
+      await for (final v in interface.nextTransactionNotification) next = v;
       yield unit;
       final localTxExists =
           await blockchain.dataStores.transactions.contains(next);

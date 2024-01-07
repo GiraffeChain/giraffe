@@ -184,10 +184,9 @@ class StakerTrackerImpl extends StakerTracker {
   Future<Res> _useStateAtTargetBoundary<Res>(BlockId currentBlockId, Slot slot,
       Future<Res> Function(ConsensusData) f) async {
     final epoch = clock.epochOfSlot(slot);
-    final targetEpoch = epoch - 2;
-    final boundaryBlockId = (targetEpoch >= 0)
+    final boundaryBlockId = (epoch > 1)
         ? await epochBoundaryState.useStateAt(
-            currentBlockId, (s) => s.getOrRaise(targetEpoch))
+            currentBlockId, (s) => s.getOrRaise(epoch - 2))
         : genesisBlockId;
     return consensusDataState.useStateAt(boundaryBlockId, f);
   }
