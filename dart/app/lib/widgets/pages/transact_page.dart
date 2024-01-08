@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain/codecs.dart';
+import 'package:blockchain/ledger/models/transaction_validation_context.dart';
+import 'package:blockchain/ledger/utils.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain/wallet/wallet.dart';
@@ -30,7 +32,8 @@ class StreamedTransactViewState extends State<StreamedTransactView>
       builder: (context, snapshot) => snapshot.hasData
           ? TransactView(
               wallet: snapshot.data!,
-              processTransaction: widget.writer.submitTransaction,
+              view: widget.view,
+              writer: widget.writer,
             )
           : const CircularProgressIndicator(),
     );
@@ -42,10 +45,10 @@ class StreamedTransactViewState extends State<StreamedTransactView>
 
 class TransactView extends StatefulWidget {
   final Wallet wallet;
-  final Future<void> Function(Transaction) processTransaction;
+  final BlockchainView view;
+  final BlockchainWriter writer;
 
-  const TransactView(
-      {super.key, required this.wallet, required this.processTransaction});
+  const TransactView({super.key, required this.wallet, required this.view, required this.writer});
   @override
   State<StatefulWidget> createState() => TransactViewState();
 }
@@ -99,11 +102,9 @@ class TransactViewState extends State<TransactView> {
 
     for (final ref in _selectedInputs) {
       final output = widget.wallet.spendableOutputs[ref]!;
-      final lock = widget.wallet.locks[output.lockAddress]!;
       final input = TransactionInput()
         ..value = output.value
-        ..reference = ref
-        ..lock = lock;
+        ..reference = ref;
       tx.inputs.add(input);
     }
 
@@ -115,10 +116,11 @@ class TransactViewState extends State<TransactView> {
         ..value = value;
       tx.outputs.add(output);
     }
-    for (final ref in _selectedInputs.toList()) {
-      final output = widget.wallet.spendableOutputs[ref]!;
-      final signer = widget.wallet.signers[output.lockAddress]!;
-      tx = await signer(tx);
+    final witnessContext = WitnessContext(height: Int64.ONE, slot: Int64.ONE, messageToSign: tx.immutableBytes);
+    for (final lockAddress in await tx.expectedAttestations(widget.view.getTransactionOrRaise)) {
+      final signer = widget.wallet.signers[lockAddress]!;
+      final witness = await signer(witnessContext);
+      tx.attestation.add(witness);
     }
 
     return tx;
@@ -126,7 +128,7 @@ class TransactViewState extends State<TransactView> {
 
   _transact() async {
     final tx = await _createTransaction();
-    await widget.processTransaction(tx);
+    await widget.writer.submitTransaction(tx);
     setState(() {
       _selectedInputs = {};
       _newOutputEntries = [];

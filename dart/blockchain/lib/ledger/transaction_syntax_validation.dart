@@ -86,13 +86,13 @@ class TransactionSyntaxValidationImpl extends TransactionSyntaxValidation {
   }
 
   static List<String> attestationValidation(Transaction transaction) {
-    List<String> verifyPropositionProofType(Lock lock, Key key) {
+    List<String> verifyLockKeyType(Lock lock, Key key) {
       if (lock.hasEd25519() && !key.hasEd25519()) return ["InvalidKeyType"];
       return <String>[];
     }
 
-    for (final input in transaction.inputs) {
-      final tRes = verifyPropositionProofType(input.lock, input.key);
+    for (final witness in transaction.attestation) {
+      final tRes = verifyLockKeyType(witness.lock, witness.key);
       if (tRes.isNotEmpty) return tRes;
     }
     return [];

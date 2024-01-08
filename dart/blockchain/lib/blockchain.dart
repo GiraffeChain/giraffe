@@ -195,8 +195,6 @@ class BlockchainCore {
         block.header.parentHeaderId, block.header.height, block.header.slot);
     await await throwErrors(ledger.bodySemanticValidation
         .validate(block.body, bodyValidationContext));
-    await await throwErrors(
-        ledger.bodyAuthorizationValidation.validate(block.body));
     await dataStores.bodies.put(id, body);
   }
 

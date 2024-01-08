@@ -2,7 +2,6 @@ import 'dart:collection';
 
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
-import 'package:blockchain/ledger/body_authorization_validation.dart';
 import 'package:blockchain/ledger/body_semantic_validation.dart';
 import 'package:blockchain/ledger/body_syntax_validation.dart';
 import 'package:blockchain/ledger/mempool.dart';
@@ -92,8 +91,7 @@ class BlockPackerImpl extends BlockPacker {
 
   static Future<bool> Function(TransactionValidationContext) makeBodyValidator(
       BodySyntaxValidation bodySyntaxValidation,
-      BodySemanticValidation bodySemanticValidation,
-      BodyAuthorizationValidation bodyAuthorizationValidation) {
+      BodySemanticValidation bodySemanticValidation) {
     final log = Logger("BlockPacker.Validator");
     return (context) async {
       final proposedBody = BlockBody()
@@ -112,11 +110,6 @@ class BlockPackerImpl extends BlockPacker {
           proposedBody, bodyValidationContext));
       if (errors.isNotEmpty) {
         log.fine("Rejecting block body due to semantic errors: $errors");
-        return false;
-      }
-      errors.addAll(await bodyAuthorizationValidation.validate(proposedBody));
-      if (errors.isNotEmpty) {
-        log.fine("Rejecting block body due to authorization errors: $errors");
         return false;
       }
       return true;

@@ -259,6 +259,7 @@ const Transaction$json = {
     {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionId', '10': 'transactionId'},
     {'1': 'inputs', '3': 2, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionInput', '10': 'inputs'},
     {'1': 'outputs', '3': 3, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionOutput', '10': 'outputs'},
+    {'1': 'attestation', '3': 4, '4': 3, '5': 11, '6': '.com.blockchain.models.Witness', '10': 'attestation'},
   ],
 };
 
@@ -267,26 +268,41 @@ final $typed_data.Uint8List transactionDescriptor = $convert.base64Decode(
     'CgtUcmFuc2FjdGlvbhJKCg10cmFuc2FjdGlvbklkGAEgASgLMiQuY29tLmJsb2NrY2hhaW4ubW'
     '9kZWxzLlRyYW5zYWN0aW9uSWRSDXRyYW5zYWN0aW9uSWQSPwoGaW5wdXRzGAIgAygLMicuY29t'
     'LmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uSW5wdXRSBmlucHV0cxJCCgdvdXRwdXRzGA'
-    'MgAygLMiguY29tLmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UgdvdXRwdXRz');
+    'MgAygLMiguY29tLmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UgdvdXRwdXRz'
+    'EkAKC2F0dGVzdGF0aW9uGAQgAygLMh4uY29tLmJsb2NrY2hhaW4ubW9kZWxzLldpdG5lc3NSC2'
+    'F0dGVzdGF0aW9u');
+
+@$core.Deprecated('Use witnessDescriptor instead')
+const Witness$json = {
+  '1': 'Witness',
+  '2': [
+    {'1': 'lockAddress', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.LockAddress', '10': 'lockAddress'},
+    {'1': 'lock', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Lock', '10': 'lock'},
+    {'1': 'key', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Key', '10': 'key'},
+  ],
+};
+
+/// Descriptor for `Witness`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List witnessDescriptor = $convert.base64Decode(
+    'CgdXaXRuZXNzEkQKC2xvY2tBZGRyZXNzGAMgASgLMiIuY29tLmJsb2NrY2hhaW4ubW9kZWxzLk'
+    'xvY2tBZGRyZXNzUgtsb2NrQWRkcmVzcxIvCgRsb2NrGAEgASgLMhsuY29tLmJsb2NrY2hhaW4u'
+    'bW9kZWxzLkxvY2tSBGxvY2sSLAoDa2V5GAIgASgLMhouY29tLmJsb2NrY2hhaW4ubW9kZWxzLk'
+    'tleVIDa2V5');
 
 @$core.Deprecated('Use transactionInputDescriptor instead')
 const TransactionInput$json = {
   '1': 'TransactionInput',
   '2': [
     {'1': 'reference', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionOutputReference', '10': 'reference'},
-    {'1': 'lock', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Lock', '10': 'lock'},
-    {'1': 'key', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.Key', '10': 'key'},
-    {'1': 'value', '3': 4, '4': 1, '5': 11, '6': '.com.blockchain.models.Value', '10': 'value'},
+    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Value', '10': 'value'},
   ],
 };
 
 /// Descriptor for `TransactionInput`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionInputDescriptor = $convert.base64Decode(
     'ChBUcmFuc2FjdGlvbklucHV0Ek8KCXJlZmVyZW5jZRgBIAEoCzIxLmNvbS5ibG9ja2NoYWluLm'
-    '1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZVIJcmVmZXJlbmNlEi8KBGxvY2sYAiAB'
-    'KAsyGy5jb20uYmxvY2tjaGFpbi5tb2RlbHMuTG9ja1IEbG9jaxIsCgNrZXkYAyABKAsyGi5jb2'
-    '0uYmxvY2tjaGFpbi5tb2RlbHMuS2V5UgNrZXkSMgoFdmFsdWUYBCABKAsyHC5jb20uYmxvY2tj'
-    'aGFpbi5tb2RlbHMuVmFsdWVSBXZhbHVl');
+    '1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZVIJcmVmZXJlbmNlEjIKBXZhbHVlGAIg'
+    'ASgLMhwuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlUgV2YWx1ZQ==');
 
 @$core.Deprecated('Use transactionOutputReferenceDescriptor instead')
 const TransactionOutputReference$json = {
@@ -324,6 +340,11 @@ const Value$json = {
   '2': [
     {'1': 'quantity', '3': 1, '4': 1, '5': 4, '8': {}, '10': 'quantity'},
     {'1': 'registration', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingRegistration', '10': 'registration'},
+    {'1': 'vertex', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.Vertex', '9': 0, '10': 'vertex'},
+    {'1': 'edge', '3': 4, '4': 1, '5': 11, '6': '.com.blockchain.models.Edge', '9': 0, '10': 'edge'},
+  ],
+  '8': [
+    {'1': 'graphEntry'},
   ],
 };
 
@@ -331,7 +352,9 @@ const Value$json = {
 final $typed_data.Uint8List valueDescriptor = $convert.base64Decode(
     'CgVWYWx1ZRIkCghxdWFudGl0eRgBIAEoBEII+kIFigECEAFSCHF1YW50aXR5Ek4KDHJlZ2lzdH'
     'JhdGlvbhgCIAEoCzIqLmNvbS5ibG9ja2NoYWluLm1vZGVscy5TdGFraW5nUmVnaXN0cmF0aW9u'
-    'UgxyZWdpc3RyYXRpb24=');
+    'UgxyZWdpc3RyYXRpb24SNwoGdmVydGV4GAMgASgLMh0uY29tLmJsb2NrY2hhaW4ubW9kZWxzLl'
+    'ZlcnRleEgAUgZ2ZXJ0ZXgSMQoEZWRnZRgEIAEoCzIbLmNvbS5ibG9ja2NoYWluLm1vZGVscy5F'
+    'ZGdlSABSBGVkZ2VCDAoKZ3JhcGhFbnRyeQ==');
 
 @$core.Deprecated('Use stakingRegistrationDescriptor instead')
 const StakingRegistration$json = {
@@ -348,6 +371,40 @@ final $typed_data.Uint8List stakingRegistrationDescriptor = $convert.base64Decod
     'luLm1vZGVscy5TaWduYXR1cmVLZXNQcm9kdWN0Qgj6QgWKAQIQAVIJc2lnbmF0dXJlElcKDnN0'
     'YWtpbmdBZGRyZXNzGAIgASgLMiUuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlN0YWtpbmdBZGRyZX'
     'NzQgj6QgWKAQIQAVIOc3Rha2luZ0FkZHJlc3M=');
+
+@$core.Deprecated('Use vertexDescriptor instead')
+const Vertex$json = {
+  '1': 'Vertex',
+  '2': [
+    {'1': 'label', '3': 1, '4': 1, '5': 9, '10': 'label'},
+    {'1': 'data', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'data'},
+    {'1': 'edgeLockAddress', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.LockAddress', '10': 'edgeLockAddress'},
+  ],
+};
+
+/// Descriptor for `Vertex`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List vertexDescriptor = $convert.base64Decode(
+    'CgZWZXJ0ZXgSFAoFbGFiZWwYASABKAlSBWxhYmVsEisKBGRhdGEYAiABKAsyFy5nb29nbGUucH'
+    'JvdG9idWYuU3RydWN0UgRkYXRhEkwKD2VkZ2VMb2NrQWRkcmVzcxgDIAEoCzIiLmNvbS5ibG9j'
+    'a2NoYWluLm1vZGVscy5Mb2NrQWRkcmVzc1IPZWRnZUxvY2tBZGRyZXNz');
+
+@$core.Deprecated('Use edgeDescriptor instead')
+const Edge$json = {
+  '1': 'Edge',
+  '2': [
+    {'1': 'label', '3': 1, '4': 1, '5': 9, '10': 'label'},
+    {'1': 'data', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'data'},
+    {'1': 'a', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionOutputReference', '10': 'a'},
+    {'1': 'b', '3': 4, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionOutputReference', '10': 'b'},
+  ],
+};
+
+/// Descriptor for `Edge`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List edgeDescriptor = $convert.base64Decode(
+    'CgRFZGdlEhQKBWxhYmVsGAEgASgJUgVsYWJlbBIrCgRkYXRhGAIgASgLMhcuZ29vZ2xlLnByb3'
+    'RvYnVmLlN0cnVjdFIEZGF0YRI/CgFhGAMgASgLMjEuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlRy'
+    'YW5zYWN0aW9uT3V0cHV0UmVmZXJlbmNlUgFhEj8KAWIYBCABKAsyMS5jb20uYmxvY2tjaGFpbi'
+    '5tb2RlbHMuVHJhbnNhY3Rpb25PdXRwdXRSZWZlcmVuY2VSAWI=');
 
 @$core.Deprecated('Use activeStakerDescriptor instead')
 const ActiveStaker$json = {

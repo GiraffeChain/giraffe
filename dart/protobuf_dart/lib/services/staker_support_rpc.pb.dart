@@ -14,11 +14,11 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../models/core.pb.dart' as $3;
+import '../models/core.pb.dart' as $4;
 
 class BroadcastBlockReq extends $pb.GeneratedMessage {
   factory BroadcastBlockReq({
-    $3.Block? block,
+    $4.Block? block,
   }) {
     final $result = create();
     if (block != null) {
@@ -31,7 +31,7 @@ class BroadcastBlockReq extends $pb.GeneratedMessage {
   factory BroadcastBlockReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$3.Block>(1, _omitFieldNames ? '' : 'block', subBuilder: $3.Block.create)
+    ..aOM<$4.Block>(1, _omitFieldNames ? '' : 'block', subBuilder: $4.Block.create)
     ..hasRequiredFields = false
   ;
 
@@ -57,15 +57,15 @@ class BroadcastBlockReq extends $pb.GeneratedMessage {
   static BroadcastBlockReq? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $3.Block get block => $_getN(0);
+  $4.Block get block => $_getN(0);
   @$pb.TagNumber(1)
-  set block($3.Block v) { setField(1, v); }
+  set block($4.Block v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasBlock() => $_has(0);
   @$pb.TagNumber(1)
   void clearBlock() => clearField(1);
   @$pb.TagNumber(1)
-  $3.Block ensureBlock() => $_ensure(0);
+  $4.Block ensureBlock() => $_ensure(0);
 }
 
 class BroadcastBlockRes extends $pb.GeneratedMessage {
@@ -102,8 +102,8 @@ class BroadcastBlockRes extends $pb.GeneratedMessage {
 
 class GetStakerReq extends $pb.GeneratedMessage {
   factory GetStakerReq({
-    $3.StakingAddress? stakingAddress,
-    $3.BlockId? parentBlockId,
+    $4.StakingAddress? stakingAddress,
+    $4.BlockId? parentBlockId,
     $fixnum.Int64? slot,
   }) {
     final $result = create();
@@ -123,8 +123,8 @@ class GetStakerReq extends $pb.GeneratedMessage {
   factory GetStakerReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetStakerReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$3.StakingAddress>(1, _omitFieldNames ? '' : 'stakingAddress', protoName: 'stakingAddress', subBuilder: $3.StakingAddress.create)
-    ..aOM<$3.BlockId>(2, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $3.BlockId.create)
+    ..aOM<$4.StakingAddress>(1, _omitFieldNames ? '' : 'stakingAddress', protoName: 'stakingAddress', subBuilder: $4.StakingAddress.create)
+    ..aOM<$4.BlockId>(2, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $4.BlockId.create)
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false
   ;
@@ -151,26 +151,26 @@ class GetStakerReq extends $pb.GeneratedMessage {
   static GetStakerReq? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $3.StakingAddress get stakingAddress => $_getN(0);
+  $4.StakingAddress get stakingAddress => $_getN(0);
   @$pb.TagNumber(1)
-  set stakingAddress($3.StakingAddress v) { setField(1, v); }
+  set stakingAddress($4.StakingAddress v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasStakingAddress() => $_has(0);
   @$pb.TagNumber(1)
   void clearStakingAddress() => clearField(1);
   @$pb.TagNumber(1)
-  $3.StakingAddress ensureStakingAddress() => $_ensure(0);
+  $4.StakingAddress ensureStakingAddress() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $3.BlockId get parentBlockId => $_getN(1);
+  $4.BlockId get parentBlockId => $_getN(1);
   @$pb.TagNumber(2)
-  set parentBlockId($3.BlockId v) { setField(2, v); }
+  set parentBlockId($4.BlockId v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasParentBlockId() => $_has(1);
   @$pb.TagNumber(2)
   void clearParentBlockId() => clearField(2);
   @$pb.TagNumber(2)
-  $3.BlockId ensureParentBlockId() => $_ensure(1);
+  $4.BlockId ensureParentBlockId() => $_ensure(1);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get slot => $_getI64(2);
@@ -184,7 +184,7 @@ class GetStakerReq extends $pb.GeneratedMessage {
 
 class GetStakerRes extends $pb.GeneratedMessage {
   factory GetStakerRes({
-    $3.ActiveStaker? staker,
+    $4.ActiveStaker? staker,
   }) {
     final $result = create();
     if (staker != null) {
@@ -197,7 +197,7 @@ class GetStakerRes extends $pb.GeneratedMessage {
   factory GetStakerRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetStakerRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$3.ActiveStaker>(1, _omitFieldNames ? '' : 'staker', subBuilder: $3.ActiveStaker.create)
+    ..aOM<$4.ActiveStaker>(1, _omitFieldNames ? '' : 'staker', subBuilder: $4.ActiveStaker.create)
     ..hasRequiredFields = false
   ;
 
@@ -223,20 +223,20 @@ class GetStakerRes extends $pb.GeneratedMessage {
   static GetStakerRes? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $3.ActiveStaker get staker => $_getN(0);
+  $4.ActiveStaker get staker => $_getN(0);
   @$pb.TagNumber(1)
-  set staker($3.ActiveStaker v) { setField(1, v); }
+  set staker($4.ActiveStaker v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasStaker() => $_has(0);
   @$pb.TagNumber(1)
   void clearStaker() => clearField(1);
   @$pb.TagNumber(1)
-  $3.ActiveStaker ensureStaker() => $_ensure(0);
+  $4.ActiveStaker ensureStaker() => $_ensure(0);
 }
 
 class GetTotalActiveStakeReq extends $pb.GeneratedMessage {
   factory GetTotalActiveStakeReq({
-    $3.BlockId? parentBlockId,
+    $4.BlockId? parentBlockId,
     $fixnum.Int64? slot,
   }) {
     final $result = create();
@@ -253,7 +253,7 @@ class GetTotalActiveStakeReq extends $pb.GeneratedMessage {
   factory GetTotalActiveStakeReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTotalActiveStakeReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$3.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $3.BlockId.create)
+    ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $4.BlockId.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false
   ;
@@ -280,15 +280,15 @@ class GetTotalActiveStakeReq extends $pb.GeneratedMessage {
   static GetTotalActiveStakeReq? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $3.BlockId get parentBlockId => $_getN(0);
+  $4.BlockId get parentBlockId => $_getN(0);
   @$pb.TagNumber(1)
-  set parentBlockId($3.BlockId v) { setField(1, v); }
+  set parentBlockId($4.BlockId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasParentBlockId() => $_has(0);
   @$pb.TagNumber(1)
   void clearParentBlockId() => clearField(1);
   @$pb.TagNumber(1)
-  $3.BlockId ensureParentBlockId() => $_ensure(0);
+  $4.BlockId ensureParentBlockId() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $fixnum.Int64 get slot => $_getI64(1);
@@ -352,7 +352,7 @@ class GetTotalActiveStakeRes extends $pb.GeneratedMessage {
 
 class CalculateEtaReq extends $pb.GeneratedMessage {
   factory CalculateEtaReq({
-    $3.BlockId? parentBlockId,
+    $4.BlockId? parentBlockId,
     $fixnum.Int64? slot,
   }) {
     final $result = create();
@@ -369,7 +369,7 @@ class CalculateEtaReq extends $pb.GeneratedMessage {
   factory CalculateEtaReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateEtaReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$3.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $3.BlockId.create)
+    ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $4.BlockId.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false
   ;
@@ -396,15 +396,15 @@ class CalculateEtaReq extends $pb.GeneratedMessage {
   static CalculateEtaReq? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $3.BlockId get parentBlockId => $_getN(0);
+  $4.BlockId get parentBlockId => $_getN(0);
   @$pb.TagNumber(1)
-  set parentBlockId($3.BlockId v) { setField(1, v); }
+  set parentBlockId($4.BlockId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasParentBlockId() => $_has(0);
   @$pb.TagNumber(1)
   void clearParentBlockId() => clearField(1);
   @$pb.TagNumber(1)
-  $3.BlockId ensureParentBlockId() => $_ensure(0);
+  $4.BlockId ensureParentBlockId() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $fixnum.Int64 get slot => $_getI64(1);
@@ -468,7 +468,7 @@ class CalculateEtaRes extends $pb.GeneratedMessage {
 
 class PackBlockReq extends $pb.GeneratedMessage {
   factory PackBlockReq({
-    $3.BlockId? parentBlockId,
+    $4.BlockId? parentBlockId,
     $fixnum.Int64? untilSlot,
   }) {
     final $result = create();
@@ -485,7 +485,7 @@ class PackBlockReq extends $pb.GeneratedMessage {
   factory PackBlockReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PackBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$3.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $3.BlockId.create)
+    ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $4.BlockId.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'untilSlot', $pb.PbFieldType.OU6, protoName: 'untilSlot', defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false
   ;
@@ -512,15 +512,15 @@ class PackBlockReq extends $pb.GeneratedMessage {
   static PackBlockReq? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $3.BlockId get parentBlockId => $_getN(0);
+  $4.BlockId get parentBlockId => $_getN(0);
   @$pb.TagNumber(1)
-  set parentBlockId($3.BlockId v) { setField(1, v); }
+  set parentBlockId($4.BlockId v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasParentBlockId() => $_has(0);
   @$pb.TagNumber(1)
   void clearParentBlockId() => clearField(1);
   @$pb.TagNumber(1)
-  $3.BlockId ensureParentBlockId() => $_ensure(0);
+  $4.BlockId ensureParentBlockId() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $fixnum.Int64 get untilSlot => $_getI64(1);
@@ -534,7 +534,7 @@ class PackBlockReq extends $pb.GeneratedMessage {
 
 class PackBlockRes extends $pb.GeneratedMessage {
   factory PackBlockRes({
-    $3.BlockBody? body,
+    $4.BlockBody? body,
   }) {
     final $result = create();
     if (body != null) {
@@ -547,7 +547,7 @@ class PackBlockRes extends $pb.GeneratedMessage {
   factory PackBlockRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PackBlockRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$3.BlockBody>(1, _omitFieldNames ? '' : 'body', subBuilder: $3.BlockBody.create)
+    ..aOM<$4.BlockBody>(1, _omitFieldNames ? '' : 'body', subBuilder: $4.BlockBody.create)
     ..hasRequiredFields = false
   ;
 
@@ -573,15 +573,15 @@ class PackBlockRes extends $pb.GeneratedMessage {
   static PackBlockRes? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $3.BlockBody get body => $_getN(0);
+  $4.BlockBody get body => $_getN(0);
   @$pb.TagNumber(1)
-  set body($3.BlockBody v) { setField(1, v); }
+  set body($4.BlockBody v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasBody() => $_has(0);
   @$pb.TagNumber(1)
   void clearBody() => clearField(1);
   @$pb.TagNumber(1)
-  $3.BlockBody ensureBody() => $_ensure(0);
+  $4.BlockBody ensureBody() => $_ensure(0);
 }
 
 

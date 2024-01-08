@@ -15,40 +15,40 @@ import 'dart:core' as $core;
 import 'package:grpc/service_api.dart' as $grpc;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'node_rpc.pb.dart' as $1;
+import 'node_rpc.pb.dart' as $0;
 
 export 'node_rpc.pb.dart';
 
 @$pb.GrpcServiceName('com.blockchain.services.NodeRpc')
 class NodeRpcClient extends $grpc.Client {
-  static final _$broadcastTransaction = $grpc.ClientMethod<$1.BroadcastTransactionReq, $1.BroadcastTransactionRes>(
+  static final _$broadcastTransaction = $grpc.ClientMethod<$0.BroadcastTransactionReq, $0.BroadcastTransactionRes>(
       '/com.blockchain.services.NodeRpc/BroadcastTransaction',
-      ($1.BroadcastTransactionReq value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $1.BroadcastTransactionRes.fromBuffer(value));
-  static final _$getBlockHeader = $grpc.ClientMethod<$1.GetBlockHeaderReq, $1.GetBlockHeaderRes>(
+      ($0.BroadcastTransactionReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.BroadcastTransactionRes.fromBuffer(value));
+  static final _$getBlockHeader = $grpc.ClientMethod<$0.GetBlockHeaderReq, $0.GetBlockHeaderRes>(
       '/com.blockchain.services.NodeRpc/GetBlockHeader',
-      ($1.GetBlockHeaderReq value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $1.GetBlockHeaderRes.fromBuffer(value));
-  static final _$getBlockBody = $grpc.ClientMethod<$1.GetBlockBodyReq, $1.GetBlockBodyRes>(
+      ($0.GetBlockHeaderReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetBlockHeaderRes.fromBuffer(value));
+  static final _$getBlockBody = $grpc.ClientMethod<$0.GetBlockBodyReq, $0.GetBlockBodyRes>(
       '/com.blockchain.services.NodeRpc/GetBlockBody',
-      ($1.GetBlockBodyReq value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $1.GetBlockBodyRes.fromBuffer(value));
-  static final _$getFullBlock = $grpc.ClientMethod<$1.GetFullBlockReq, $1.GetFullBlockRes>(
+      ($0.GetBlockBodyReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetBlockBodyRes.fromBuffer(value));
+  static final _$getFullBlock = $grpc.ClientMethod<$0.GetFullBlockReq, $0.GetFullBlockRes>(
       '/com.blockchain.services.NodeRpc/GetFullBlock',
-      ($1.GetFullBlockReq value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $1.GetFullBlockRes.fromBuffer(value));
-  static final _$getTransaction = $grpc.ClientMethod<$1.GetTransactionReq, $1.GetTransactionRes>(
+      ($0.GetFullBlockReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetFullBlockRes.fromBuffer(value));
+  static final _$getTransaction = $grpc.ClientMethod<$0.GetTransactionReq, $0.GetTransactionRes>(
       '/com.blockchain.services.NodeRpc/GetTransaction',
-      ($1.GetTransactionReq value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $1.GetTransactionRes.fromBuffer(value));
-  static final _$getBlockIdAtHeight = $grpc.ClientMethod<$1.GetBlockIdAtHeightReq, $1.GetBlockIdAtHeightRes>(
+      ($0.GetTransactionReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetTransactionRes.fromBuffer(value));
+  static final _$getBlockIdAtHeight = $grpc.ClientMethod<$0.GetBlockIdAtHeightReq, $0.GetBlockIdAtHeightRes>(
       '/com.blockchain.services.NodeRpc/GetBlockIdAtHeight',
-      ($1.GetBlockIdAtHeightReq value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $1.GetBlockIdAtHeightRes.fromBuffer(value));
-  static final _$follow = $grpc.ClientMethod<$1.FollowReq, $1.FollowRes>(
+      ($0.GetBlockIdAtHeightReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetBlockIdAtHeightRes.fromBuffer(value));
+  static final _$follow = $grpc.ClientMethod<$0.FollowReq, $0.FollowRes>(
       '/com.blockchain.services.NodeRpc/Follow',
-      ($1.FollowReq value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $1.FollowRes.fromBuffer(value));
+      ($0.FollowReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.FollowRes.fromBuffer(value));
 
   NodeRpcClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
@@ -56,31 +56,31 @@ class NodeRpcClient extends $grpc.Client {
       : super(channel, options: options,
         interceptors: interceptors);
 
-  $grpc.ResponseFuture<$1.BroadcastTransactionRes> broadcastTransaction($1.BroadcastTransactionReq request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.BroadcastTransactionRes> broadcastTransaction($0.BroadcastTransactionReq request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$broadcastTransaction, request, options: options);
   }
 
-  $grpc.ResponseFuture<$1.GetBlockHeaderRes> getBlockHeader($1.GetBlockHeaderReq request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.GetBlockHeaderRes> getBlockHeader($0.GetBlockHeaderReq request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getBlockHeader, request, options: options);
   }
 
-  $grpc.ResponseFuture<$1.GetBlockBodyRes> getBlockBody($1.GetBlockBodyReq request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.GetBlockBodyRes> getBlockBody($0.GetBlockBodyReq request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getBlockBody, request, options: options);
   }
 
-  $grpc.ResponseFuture<$1.GetFullBlockRes> getFullBlock($1.GetFullBlockReq request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.GetFullBlockRes> getFullBlock($0.GetFullBlockReq request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getFullBlock, request, options: options);
   }
 
-  $grpc.ResponseFuture<$1.GetTransactionRes> getTransaction($1.GetTransactionReq request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.GetTransactionRes> getTransaction($0.GetTransactionReq request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getTransaction, request, options: options);
   }
 
-  $grpc.ResponseFuture<$1.GetBlockIdAtHeightRes> getBlockIdAtHeight($1.GetBlockIdAtHeightReq request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.GetBlockIdAtHeightRes> getBlockIdAtHeight($0.GetBlockIdAtHeightReq request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getBlockIdAtHeight, request, options: options);
   }
 
-  $grpc.ResponseStream<$1.FollowRes> follow($1.FollowReq request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseStream<$0.FollowRes> follow($0.FollowReq request, {$grpc.CallOptions? options}) {
     return $createStreamingCall(_$follow, $async.Stream.fromIterable([request]), options: options);
   }
 }
@@ -90,90 +90,90 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
   $core.String get $name => 'com.blockchain.services.NodeRpc';
 
   NodeRpcServiceBase() {
-    $addMethod($grpc.ServiceMethod<$1.BroadcastTransactionReq, $1.BroadcastTransactionRes>(
+    $addMethod($grpc.ServiceMethod<$0.BroadcastTransactionReq, $0.BroadcastTransactionRes>(
         'BroadcastTransaction',
         broadcastTransaction_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $1.BroadcastTransactionReq.fromBuffer(value),
-        ($1.BroadcastTransactionRes value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$1.GetBlockHeaderReq, $1.GetBlockHeaderRes>(
+        ($core.List<$core.int> value) => $0.BroadcastTransactionReq.fromBuffer(value),
+        ($0.BroadcastTransactionRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetBlockHeaderReq, $0.GetBlockHeaderRes>(
         'GetBlockHeader',
         getBlockHeader_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $1.GetBlockHeaderReq.fromBuffer(value),
-        ($1.GetBlockHeaderRes value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$1.GetBlockBodyReq, $1.GetBlockBodyRes>(
+        ($core.List<$core.int> value) => $0.GetBlockHeaderReq.fromBuffer(value),
+        ($0.GetBlockHeaderRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetBlockBodyReq, $0.GetBlockBodyRes>(
         'GetBlockBody',
         getBlockBody_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $1.GetBlockBodyReq.fromBuffer(value),
-        ($1.GetBlockBodyRes value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$1.GetFullBlockReq, $1.GetFullBlockRes>(
+        ($core.List<$core.int> value) => $0.GetBlockBodyReq.fromBuffer(value),
+        ($0.GetBlockBodyRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetFullBlockReq, $0.GetFullBlockRes>(
         'GetFullBlock',
         getFullBlock_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $1.GetFullBlockReq.fromBuffer(value),
-        ($1.GetFullBlockRes value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$1.GetTransactionReq, $1.GetTransactionRes>(
+        ($core.List<$core.int> value) => $0.GetFullBlockReq.fromBuffer(value),
+        ($0.GetFullBlockRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetTransactionReq, $0.GetTransactionRes>(
         'GetTransaction',
         getTransaction_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $1.GetTransactionReq.fromBuffer(value),
-        ($1.GetTransactionRes value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$1.GetBlockIdAtHeightReq, $1.GetBlockIdAtHeightRes>(
+        ($core.List<$core.int> value) => $0.GetTransactionReq.fromBuffer(value),
+        ($0.GetTransactionRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetBlockIdAtHeightReq, $0.GetBlockIdAtHeightRes>(
         'GetBlockIdAtHeight',
         getBlockIdAtHeight_Pre,
         false,
         false,
-        ($core.List<$core.int> value) => $1.GetBlockIdAtHeightReq.fromBuffer(value),
-        ($1.GetBlockIdAtHeightRes value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$1.FollowReq, $1.FollowRes>(
+        ($core.List<$core.int> value) => $0.GetBlockIdAtHeightReq.fromBuffer(value),
+        ($0.GetBlockIdAtHeightRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.FollowReq, $0.FollowRes>(
         'Follow',
         follow_Pre,
         false,
         true,
-        ($core.List<$core.int> value) => $1.FollowReq.fromBuffer(value),
-        ($1.FollowRes value) => value.writeToBuffer()));
+        ($core.List<$core.int> value) => $0.FollowReq.fromBuffer(value),
+        ($0.FollowRes value) => value.writeToBuffer()));
   }
 
-  $async.Future<$1.BroadcastTransactionRes> broadcastTransaction_Pre($grpc.ServiceCall call, $async.Future<$1.BroadcastTransactionReq> request) async {
+  $async.Future<$0.BroadcastTransactionRes> broadcastTransaction_Pre($grpc.ServiceCall call, $async.Future<$0.BroadcastTransactionReq> request) async {
     return broadcastTransaction(call, await request);
   }
 
-  $async.Future<$1.GetBlockHeaderRes> getBlockHeader_Pre($grpc.ServiceCall call, $async.Future<$1.GetBlockHeaderReq> request) async {
+  $async.Future<$0.GetBlockHeaderRes> getBlockHeader_Pre($grpc.ServiceCall call, $async.Future<$0.GetBlockHeaderReq> request) async {
     return getBlockHeader(call, await request);
   }
 
-  $async.Future<$1.GetBlockBodyRes> getBlockBody_Pre($grpc.ServiceCall call, $async.Future<$1.GetBlockBodyReq> request) async {
+  $async.Future<$0.GetBlockBodyRes> getBlockBody_Pre($grpc.ServiceCall call, $async.Future<$0.GetBlockBodyReq> request) async {
     return getBlockBody(call, await request);
   }
 
-  $async.Future<$1.GetFullBlockRes> getFullBlock_Pre($grpc.ServiceCall call, $async.Future<$1.GetFullBlockReq> request) async {
+  $async.Future<$0.GetFullBlockRes> getFullBlock_Pre($grpc.ServiceCall call, $async.Future<$0.GetFullBlockReq> request) async {
     return getFullBlock(call, await request);
   }
 
-  $async.Future<$1.GetTransactionRes> getTransaction_Pre($grpc.ServiceCall call, $async.Future<$1.GetTransactionReq> request) async {
+  $async.Future<$0.GetTransactionRes> getTransaction_Pre($grpc.ServiceCall call, $async.Future<$0.GetTransactionReq> request) async {
     return getTransaction(call, await request);
   }
 
-  $async.Future<$1.GetBlockIdAtHeightRes> getBlockIdAtHeight_Pre($grpc.ServiceCall call, $async.Future<$1.GetBlockIdAtHeightReq> request) async {
+  $async.Future<$0.GetBlockIdAtHeightRes> getBlockIdAtHeight_Pre($grpc.ServiceCall call, $async.Future<$0.GetBlockIdAtHeightReq> request) async {
     return getBlockIdAtHeight(call, await request);
   }
 
-  $async.Stream<$1.FollowRes> follow_Pre($grpc.ServiceCall call, $async.Future<$1.FollowReq> request) async* {
+  $async.Stream<$0.FollowRes> follow_Pre($grpc.ServiceCall call, $async.Future<$0.FollowReq> request) async* {
     yield* follow(call, await request);
   }
 
-  $async.Future<$1.BroadcastTransactionRes> broadcastTransaction($grpc.ServiceCall call, $1.BroadcastTransactionReq request);
-  $async.Future<$1.GetBlockHeaderRes> getBlockHeader($grpc.ServiceCall call, $1.GetBlockHeaderReq request);
-  $async.Future<$1.GetBlockBodyRes> getBlockBody($grpc.ServiceCall call, $1.GetBlockBodyReq request);
-  $async.Future<$1.GetFullBlockRes> getFullBlock($grpc.ServiceCall call, $1.GetFullBlockReq request);
-  $async.Future<$1.GetTransactionRes> getTransaction($grpc.ServiceCall call, $1.GetTransactionReq request);
-  $async.Future<$1.GetBlockIdAtHeightRes> getBlockIdAtHeight($grpc.ServiceCall call, $1.GetBlockIdAtHeightReq request);
-  $async.Stream<$1.FollowRes> follow($grpc.ServiceCall call, $1.FollowReq request);
+  $async.Future<$0.BroadcastTransactionRes> broadcastTransaction($grpc.ServiceCall call, $0.BroadcastTransactionReq request);
+  $async.Future<$0.GetBlockHeaderRes> getBlockHeader($grpc.ServiceCall call, $0.GetBlockHeaderReq request);
+  $async.Future<$0.GetBlockBodyRes> getBlockBody($grpc.ServiceCall call, $0.GetBlockBodyReq request);
+  $async.Future<$0.GetFullBlockRes> getFullBlock($grpc.ServiceCall call, $0.GetFullBlockReq request);
+  $async.Future<$0.GetTransactionRes> getTransaction($grpc.ServiceCall call, $0.GetTransactionReq request);
+  $async.Future<$0.GetBlockIdAtHeightRes> getBlockIdAtHeight($grpc.ServiceCall call, $0.GetBlockIdAtHeightReq request);
+  $async.Stream<$0.FollowRes> follow($grpc.ServiceCall call, $0.FollowReq request);
 }

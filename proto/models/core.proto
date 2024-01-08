@@ -4,6 +4,7 @@ package com.blockchain.models;
 
 import "validate/validate.proto";
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/struct.proto";
 
 message BlockId {
     bytes value = 1;
@@ -138,13 +139,18 @@ message Transaction {
     TransactionId transactionId = 1;
     repeated TransactionInput inputs = 2;
     repeated TransactionOutput outputs = 3;
+    repeated Witness attestation = 4;
+}
+
+message Witness {
+    LockAddress lockAddress = 3;
+    Lock lock = 1;
+    Key key = 2;
 }
 
 message TransactionInput {
     TransactionOutputReference reference = 1;
-    Lock lock = 2;
-    Key key = 3;
-    Value value = 4;
+    Value value = 2;
 }
 
 message TransactionOutputReference {
@@ -161,12 +167,29 @@ message Value {
     uint64 quantity = 1 [(validate.rules).message.required = true];
     // Optional.  If not provided, this token will not be used for staking purposes.
     StakingRegistration registration = 2;
+    oneof graphEntry {
+        Vertex vertex = 3;
+        Edge edge = 4;
+    }
 }
 
 // A proof-of-stake registration
 message StakingRegistration {
     SignatureKesProduct signature = 1 [(validate.rules).message.required = true];
     StakingAddress stakingAddress = 2 [(validate.rules).message.required = true];
+}
+
+message Vertex {
+    string label = 1;
+    google.protobuf.Struct data = 2;
+    LockAddress edgeLockAddress = 3;
+}
+
+message Edge {
+    string label = 1;
+    google.protobuf.Struct data = 2;
+    TransactionOutputReference a = 3;
+    TransactionOutputReference b = 4;
 }
 
 // An active, registered participate in the consensus protocol, for a particular epoch.

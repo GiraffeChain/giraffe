@@ -3,27 +3,31 @@ import 'dart:typed_data';
 import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/crypto/ed25519.dart';
+import 'package:blockchain/ledger/models/transaction_validation_context.dart';
 import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:collection/collection.dart';
 import 'package:fpdart/fpdart.dart';
 
-typedef Signer = Future<Transaction> Function(Transaction);
+typedef Signer = Future<Witness> Function(WitnessContext);
 
 const _mapEq = MapEquality();
 
 class Wallet {
   final Map<TransactionOutputReference, TransactionOutput> spendableOutputs;
+  final Map<TransactionOutputReference, TransactionOutput> spentOutputs;
   final Map<LockAddress, Lock> locks;
   final Map<LockAddress, Signer> signers;
 
   Wallet(
       {required this.spendableOutputs,
+      required this.spentOutputs,
       required this.locks,
       required this.signers});
 
   factory Wallet.empty() {
-    return Wallet(spendableOutputs: {}, locks: {}, signers: {});
+    return Wallet(
+        spendableOutputs: {}, spentOutputs: {}, locks: {}, signers: {});
   }
 
   static Stream<Wallet> streamed(BlockchainView blockchain) async* {
@@ -89,11 +93,9 @@ class Wallet {
     }
 
     for (final input in transaction.inputs.reversed) {
-      final lockAddress = input.lock.address;
-      if (locks.containsKey(lockAddress)) {
-        spendableOutputs[input.reference] = TransactionOutput()
-          ..lockAddress = lockAddress
-          ..value = input.value;
+      if (spentOutputs.containsKey(input.reference)) {
+        spendableOutputs[input.reference] = spentOutputs[input.reference]!;
+        spentOutputs.remove(input.reference);
       }
     }
   }
@@ -102,16 +104,15 @@ class Wallet {
     final genesisKeyPair = await ed25519.generateKeyPairFromSeed(Uint8List(32));
     final lock = Lock()..ed25519 = (Lock_Ed25519()..vk = genesisKeyPair.vk);
     final lockAddress = lock.address;
-    final Signer signer = (tx) async {
-      final bytesToSign = tx.immutableBytes;
-      for (final input in tx.inputs) {
-        if (input.lock == lock)
-          input.key = (Key()
-            ..ed25519 = (Key_Ed25519()
-              ..signature =
-                  await ed25519.sign(bytesToSign, genesisKeyPair.sk)));
-      }
-      return tx;
+    final Signer signer = (context) async {
+      return Witness(
+        lock: lock,
+        lockAddress: lockAddress,
+        key: (Key()
+          ..ed25519 = (Key_Ed25519()
+            ..signature =
+                await ed25519.sign(context.messageToSign, genesisKeyPair.sk))),
+      );
     };
     locks[lockAddress] = lock;
     signers[lockAddress] = signer;

@@ -130,6 +130,7 @@ extension BlockIdCodecs on BlockId {
 }
 
 extension TransactionIdCodecs on TransactionId {
+  List<int> get immutableBytes => List.from(value);
   String get show => "t_${this.value.base58}";
 }
 
@@ -154,9 +155,13 @@ extension TransactionCodecs on Transaction {
   bool get containsValidId => transactionId == computeId;
 }
 
+extension TransactionOutputReferenceCodecs on TransactionOutputReference {
+  List<int> get immutableBytes => <int>[]..addAll(transactionId.immutableBytes)..addAll(index.immutableBytes);
+}
+
 extension TransactionInputCodecs on TransactionInput {
   List<int> get immutableBytes => <int>[]
-    ..addAll(lock.immutableBytes)
+    ..addAll(reference.immutableBytes)
     ..addAll(value.immutableBytes);
 }
 
