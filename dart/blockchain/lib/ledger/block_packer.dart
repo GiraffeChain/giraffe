@@ -2,10 +2,8 @@ import 'dart:collection';
 
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
-import 'package:blockchain/ledger/body_semantic_validation.dart';
-import 'package:blockchain/ledger/body_syntax_validation.dart';
+import 'package:blockchain/ledger/body_validation.dart';
 import 'package:blockchain/ledger/mempool.dart';
-import 'package:blockchain/ledger/models/body_validation_context.dart';
 import 'package:blockchain/ledger/models/transaction_validation_context.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
@@ -24,7 +22,8 @@ class BlockPackerImpl extends BlockPacker {
   final Clock clock;
   final Future<Transaction> Function(TransactionId) fetchTransaction;
   final Future<bool> Function(TransactionId) transactionExistsLocally;
-  final Future<bool> Function(TransactionValidationContext) validateTransaction;
+  final Future<bool> Function(BlockBody, TransactionValidationContext)
+      validateTransaction;
 
   final log = Logger("BlockPacker");
 
@@ -66,9 +65,10 @@ class BlockPackerImpl extends BlockPacker {
       final fullBody = FullBlockBody()
         ..transactions.addAll(current.transactions)
         ..transactions.add(transaction);
-      final context = TransactionValidationContext(
-          parentBlockId, fullBody.transactions, height, slot);
-      final validationResult = await validateTransaction(context);
+      final body =
+          BlockBody(transactionIds: fullBody.transactions.map((t) => t.id));
+      final context = TransactionValidationContext(parentBlockId, height, slot);
+      final validationResult = await validateTransaction(body, context);
       if (validationResult) return fullBody;
       if (!queue.isEmpty) return improve(current);
       return null;
@@ -89,27 +89,14 @@ class BlockPackerImpl extends BlockPacker {
     }
   }
 
-  static Future<bool> Function(TransactionValidationContext) makeBodyValidator(
-      BodySyntaxValidation bodySyntaxValidation,
-      BodySemanticValidation bodySemanticValidation) {
+  static Future<bool> Function(BlockBody, TransactionValidationContext)
+      makeBodyValidator(BodyValidation bodyValidation) {
     final log = Logger("BlockPacker.Validator");
-    return (context) async {
-      final proposedBody = BlockBody()
-        ..transactionIds.addAll(context.prefix.map((t) => t.id));
+    return (proposedBody, context) async {
       final errors = <String>[];
-
-      errors.addAll(await bodySyntaxValidation.validate(proposedBody));
+      errors.addAll(await bodyValidation.validate(proposedBody, context));
       if (errors.isNotEmpty) {
-        log.fine("Rejecting block body due to syntax errors: $errors");
-        return false;
-      }
-
-      final bodyValidationContext = BodyValidationContext(
-          context.parentHeaderId, context.height, context.slot);
-      errors.addAll(await bodySemanticValidation.validate(
-          proposedBody, bodyValidationContext));
-      if (errors.isNotEmpty) {
-        log.fine("Rejecting block body due to semantic errors: $errors");
+        log.fine("Rejecting block body due to errors=$errors");
         return false;
       }
       return true;

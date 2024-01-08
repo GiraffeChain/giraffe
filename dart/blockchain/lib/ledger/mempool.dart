@@ -9,15 +9,13 @@ import 'package:fpdart/fpdart.dart';
 abstract class Mempool {
   Future<Set<TransactionId>> read(BlockId currentHead);
   Future<void> add(TransactionId transactionId);
-  Future<void> remove(TransactionId transactionId);
   Stream<MempoolChange> get changes;
 }
 
 class MempoolImpl extends Mempool {
   final Map<TransactionId, MempoolEntry> _state;
   final Future<BlockBody> Function(BlockId) fetchBlockBody;
-  final EventSourcedState<Map<TransactionId, MempoolEntry>, BlockId>
-      eventSourcedState;
+  final BlockSourcedState<Map<TransactionId, MempoolEntry>> eventSourcedState;
   final StreamController<MempoolChange> mempoolChangesController;
   final Duration expirationDuration;
 
@@ -41,7 +39,7 @@ class MempoolImpl extends Mempool {
         final _add = (TransactionId transactionId) => state[transactionId] =
             MempoolEntry(transactionId, DateTime.now().add(expirationDuration));
         final eventSourcedState =
-            EventTreeStateImpl<Map<TransactionId, MempoolEntry>, BlockId>(
+            BlockSourcedState<Map<TransactionId, MempoolEntry>>(
           (state, blockId) async {
             final blockBody = await fetchBlockBody(blockId);
             blockBody.transactionIds.forEach(state.remove);
@@ -86,12 +84,6 @@ class MempoolImpl extends Mempool {
   @override
   Future<Set<TransactionId>> read(BlockId currentHead) => eventSourcedState
       .useStateAt(currentHead, (state) async => state.keys.toSet());
-
-  @override
-  Future<void> remove(TransactionId transactionId) async {
-    _state.remove(transactionId);
-    mempoolChangesController.add(MempoolExpired(id: transactionId));
-  }
 
   @override
   Stream<MempoolChange> get changes => mempoolChangesController.stream;

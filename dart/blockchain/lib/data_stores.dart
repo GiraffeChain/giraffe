@@ -14,7 +14,7 @@ class DataStores {
   final Store<BlockId, BlockHeader> headers;
   final Store<BlockId, BlockBody> bodies;
   final Store<TransactionId, Transaction> transactions;
-  final Store<TransactionId, Uint32List> spendableBoxIds;
+  final Store<TransactionId, Uint32List> spendableTransactionOutputs;
   final Store<Int64, BlockId> epochBoundaries;
   final Store<void, Int64> activeStake;
   final Store<void, Int64> inactiveStake;
@@ -28,7 +28,7 @@ class DataStores {
     required this.headers,
     required this.bodies,
     required this.transactions,
-    required this.spendableBoxIds,
+    required this.spendableTransactionOutputs,
     required this.epochBoundaries,
     required this.activeStake,
     required this.inactiveStake,
@@ -51,7 +51,7 @@ class DataStores {
               headers: makeDb(),
               bodies: makeDb(),
               transactions: makeDb(),
-              spendableBoxIds: makeDb(),
+              spendableTransactionOutputs: makeDb(),
               epochBoundaries: makeDb(),
               activeStake: makeDb(),
               inactiveStake: makeDb(),
@@ -105,21 +105,22 @@ class DataStores {
                         Transaction.fromBuffer)
                     .flatMap(
                   (transactions) => HiveStore.make<TransactionId, Uint32List>(
-                    "spendable-box-ids",
+                    "spendable-transaction-outputs",
                     hive,
                     PersistenceCodecs.encodeTransactionId,
                     (value) => value.buffer.asUint8List(),
                     PersistenceCodecs.decodeTransactionId,
                     (bytes) => bytes.buffer.asUint32List(),
                   ).flatMap(
-                    (spendableBoxIds) => HiveStore.make<Int64, BlockId>(
-                            "epoch-boundaries",
-                            hive,
-                            (key) => Uint8List.fromList(key.toBytes()),
-                            PersistenceCodecs.encodeBlockId,
-                            Int64.fromBytes,
-                            PersistenceCodecs.decodeBlockId)
-                        .flatMap(
+                    (spendableTransactionOutputs) =>
+                        HiveStore.make<Int64, BlockId>(
+                                "epoch-boundaries",
+                                hive,
+                                (key) => Uint8List.fromList(key.toBytes()),
+                                PersistenceCodecs.encodeBlockId,
+                                Int64.fromBytes,
+                                PersistenceCodecs.decodeBlockId)
+                            .flatMap(
                       (epochBoundaries) => HiveStore.make<void, Int64>(
                               "active-stake",
                               hive,
@@ -170,8 +171,9 @@ class DataStores {
                                   bodies: bodies.cached(maximumSize: 512),
                                   transactions:
                                       transactions.cached(maximumSize: 512),
-                                  spendableBoxIds:
-                                      spendableBoxIds.cached(maximumSize: 512),
+                                  spendableTransactionOutputs:
+                                      spendableTransactionOutputs.cached(
+                                          maximumSize: 512),
                                   epochBoundaries:
                                       epochBoundaries.cached(maximumSize: 16),
                                   activeStake:
@@ -223,7 +225,7 @@ class DataStores {
     for (final key in [
       CurreventEventIdGetterSetterIndices.ConsensusData,
       CurreventEventIdGetterSetterIndices.EpochBoundaries,
-      CurreventEventIdGetterSetterIndices.BoxState,
+      CurreventEventIdGetterSetterIndices.SpendableTransactionOutputs,
       CurreventEventIdGetterSetterIndices.Mempool,
     ]) {
       await currentEventIds.put(key, genesisBlock.header.parentHeaderId);
@@ -282,7 +284,7 @@ class CurreventEventIdGetterSetterIndices {
   static const ConsensusData = 1;
   static const EpochBoundaries = 2;
   static const BlockHeightTree = 3;
-  static const BoxState = 4;
+  static const SpendableTransactionOutputs = 4;
   static const Mempool = 5;
 }
 
@@ -303,8 +305,8 @@ class CurrentEventIdGetterSetters {
   GetterSetter get blockHeightTree => GetterSetter.forByte(
       store, CurreventEventIdGetterSetterIndices.BlockHeightTree);
 
-  GetterSetter get boxState =>
-      GetterSetter.forByte(store, CurreventEventIdGetterSetterIndices.BoxState);
+  GetterSetter get transactionOutputs => GetterSetter.forByte(
+      store, CurreventEventIdGetterSetterIndices.SpendableTransactionOutputs);
 
   GetterSetter get mempool =>
       GetterSetter.forByte(store, CurreventEventIdGetterSetterIndices.Mempool);

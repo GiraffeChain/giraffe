@@ -34,14 +34,14 @@ class ConsensusData {
       this.totalActiveStake, this.totalInactiveStake, this.registrations);
 }
 
-EventSourcedState<ConsensusData, BlockId> consensusDataEventSourcedState(
+BlockSourcedState<ConsensusData> consensusDataEventSourcedState(
     BlockId initialBlockId,
     ParentChildTree<BlockId> parentChildTree,
     Future<void> Function(BlockId) currentEventChanged,
     ConsensusData initialState,
     Future<BlockBody> Function(BlockId) fetchBlockBody,
     Future<Transaction> Function(TransactionId) fetchTransaction) {
-  return EventTreeStateImpl(
+  return BlockSourcedState(
       _applyBlock(fetchBlockBody, fetchTransaction),
       _unapplyBlock(fetchBlockBody, fetchTransaction),
       parentChildTree,
@@ -163,8 +163,8 @@ Int64 _inactiveQuantityOf(Iterable<Value> values) => values
 
 class StakerTrackerImpl extends StakerTracker {
   final BlockId genesisBlockId;
-  final EventSourcedState<EpochBoundariesState, BlockId> epochBoundaryState;
-  final EventSourcedState<ConsensusData, BlockId> consensusDataState;
+  final BlockSourcedState<EpochBoundariesState> epochBoundaryState;
+  final BlockSourcedState<ConsensusData> consensusDataState;
   final Clock clock;
 
   StakerTrackerImpl(this.genesisBlockId, this.epochBoundaryState,
@@ -194,14 +194,13 @@ class StakerTrackerImpl extends StakerTracker {
 
 typedef EpochBoundariesState = Store<Epoch, BlockId>;
 
-EventSourcedState<EpochBoundariesState, BlockId>
-    epochBoundariesEventSourcedState(
-        Clock clock,
-        BlockId initialBlockId,
-        ParentChildTree<BlockId> parentChildTree,
-        Future<void> Function(BlockId) currentEventChanged,
-        EpochBoundariesState initialState,
-        Future<BlockHeader> Function(BlockId) fetchHeader) {
+BlockSourcedState<EpochBoundariesState> epochBoundariesEventSourcedState(
+    Clock clock,
+    BlockId initialBlockId,
+    ParentChildTree<BlockId> parentChildTree,
+    Future<void> Function(BlockId) currentEventChanged,
+    EpochBoundariesState initialState,
+    Future<BlockHeader> Function(BlockId) fetchHeader) {
   Future<EpochBoundariesState> applyBlock(
       EpochBoundariesState state, BlockId blockId) async {
     final header = await fetchHeader(blockId);
@@ -222,6 +221,6 @@ EventSourcedState<EpochBoundariesState, BlockId>
     return state;
   }
 
-  return EventTreeStateImpl(applyBlock, unapplyBlock, parentChildTree,
+  return BlockSourcedState(applyBlock, unapplyBlock, parentChildTree,
       initialState, initialBlockId, currentEventChanged);
 }

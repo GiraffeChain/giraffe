@@ -23,7 +23,7 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
 
   @override
   Stream<FollowRes> follow(ServiceCall call, FollowReq request) {
-    return blockchain.traversal.map((t) {
+    return blockchain.consensus.localChain.traversal.map((t) {
       if (t is TraversalStep_Applied) {
         return FollowRes(adopted: t.blockId);
       } else if (t is TraversalStep_Unapplied) {

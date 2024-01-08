@@ -10,6 +10,7 @@ import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/genesis.dart';
 import 'package:blockchain/ledger/ledger.dart';
+import 'package:blockchain/ledger/models/transaction_validation_context.dart';
 import 'package:blockchain/network/util.dart';
 import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain/codecs.dart';
@@ -17,16 +18,11 @@ import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/utils.dart';
-import 'package:blockchain/ledger/models/body_validation_context.dart';
 import 'package:blockchain/network/p2p_server.dart';
 import 'package:blockchain/network/peers_manager.dart';
-import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain/rpc/server.dart' as rpc;
-import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
-import 'package:rxdart/streams.dart';
 
 class BlockchainCore {
   final Clock clock;
@@ -128,21 +124,24 @@ class BlockchainCore {
                             parentChildTree,
                             blockHeightTree,
                             isolate)
+                        .flatTap((consensus) =>
+                            blockHeightTree.followChain(consensus.localChain))
                         .flatMap(
-                      (consensus) => Ledger.make(
-                        dataStores,
-                        currentEventIdGetterSetters,
-                        parentChildTree,
-                        clock,
-                      ).map((ledger) => BlockchainCore(
-                            clock: clock,
-                            dataStores: dataStores,
-                            parentChildTree: parentChildTree,
-                            blockHeightTree: blockHeightTree,
-                            consensus: consensus,
-                            ledger: ledger,
-                          )),
-                    ),
+                          (consensus) => Ledger.make(
+                                  dataStores,
+                                  currentEventIdGetterSetters,
+                                  parentChildTree,
+                                  clock,
+                                  consensus.localChain)
+                              .map((ledger) => BlockchainCore(
+                                    clock: clock,
+                                    dataStores: dataStores,
+                                    parentChildTree: parentChildTree,
+                                    blockHeightTree: blockHeightTree,
+                                    consensus: consensus,
+                                    ledger: ledger,
+                                  )),
+                        ),
                   );
             }),
           ),
@@ -189,52 +188,22 @@ class BlockchainCore {
     for (final tx in fullBlock.fullBody.transactions) {
       await dataStores.transactions.put(tx.id, tx);
     }
-
-    await ledger.bodySyntaxValidation.validate(block.body);
-    final bodyValidationContext = BodyValidationContext(
+    final validationContext = TransactionValidationContext(
         block.header.parentHeaderId, block.header.height, block.header.slot);
-    await await throwErrors(ledger.bodySemanticValidation
-        .validate(block.body, bodyValidationContext));
+
+    await throwErrors(
+        ledger.bodyValidation.validate(block.body, validationContext));
     await dataStores.bodies.put(id, body);
   }
 
   Future<void> processTransaction(Transaction transaction) async {
     final validationErrors =
-        await ledger.transactionSyntaxValidation.validate(transaction);
+        ledger.transactionSyntaxValidation.validate(transaction);
     if (validationErrors.isNotEmpty)
       throw ArgumentError.value(transaction, validationErrors.first);
     await dataStores.transactions.put(transaction.id, transaction);
     await ledger.mempool.add(transaction.id);
   }
-
-  Stream<TraversalStep> get traversal {
-    BlockId? lastId = null;
-    return consensus.localChain.adoptions
-        .asyncExpand((id) => (lastId == null)
-            ? Stream.value(TraversalStep_Applied(id))
-            : traversalBetween(lastId!, id))
-        .map((step) {
-      lastId = step.blockId;
-      return step;
-    });
-  }
-
-  Stream<TraversalStep> get traversalFromGenesis =>
-      Stream.fromFuture(consensus.localChain.blockIdAtHeight(Int64(1)))
-          .asyncExpand((genesisId) =>
-              Stream.fromFuture(consensus.localChain.currentHead)
-                  .asyncExpand((head) => traversalBetween(genesisId!, head)))
-          .concatWith([traversal]);
-
-  Stream<TraversalStep> traversalBetween(BlockId a, BlockId b) =>
-      Stream.fromFuture(parentChildTree.findCommmonAncestor(a, b)).expand(
-          (unapplyApply) => <TraversalStep>[]
-            ..addAll(unapplyApply.$1.tail
-                .toNullable()!
-                .map((id) => TraversalStep_Unapplied(id)))
-            ..addAll(unapplyApply.$2.tail
-                .toNullable()!
-                .map((id) => TraversalStep_Applied(id))));
 }
 
 class BlockchainRpc {

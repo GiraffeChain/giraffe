@@ -103,7 +103,8 @@ class BlockchainViewFromBlockchain extends BlockchainView {
       blockchain.dataStores.transactions.get(transactionId);
 
   @override
-  Stream<TraversalStep> get traversal => blockchain.traversal;
+  Stream<TraversalStep> get traversal =>
+      blockchain.consensus.localChain.traversal;
 }
 
 class BlockchainViewFromRpc extends BlockchainView {

@@ -5,10 +5,9 @@ import 'package:blockchain/common/event_sourced_state.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/common/store.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:fpdart/fpdart.dart';
 
-abstract class BoxState {
-  Future<bool> boxExistsAt(
+abstract class TransactionOutputState {
+  Future<bool> transactionOutputIsSpendable(
       BlockId blockId, TransactionOutputReference outputReference);
 }
 
@@ -16,27 +15,28 @@ typedef State = Store<TransactionId, Uint32List>;
 typedef FetchBlockBody = Future<BlockBody> Function(BlockId);
 typedef FetchTransaction = Future<Transaction> Function(TransactionId);
 
-class BoxStateImpl extends BoxState {
-  final EventSourcedState<State, BlockId> eventSourcedState;
+class TransactionOutputStateImpl extends TransactionOutputState {
+  final BlockSourcedState<State> eventSourcedState;
 
-  BoxStateImpl(this.eventSourcedState);
+  TransactionOutputStateImpl(this.eventSourcedState);
 
   @override
-  Future<bool> boxExistsAt(
-      BlockId blockId, TransactionOutputReference boxId) async {
+  Future<bool> transactionOutputIsSpendable(
+      BlockId blockId, TransactionOutputReference outputReference) async {
     final spendableIndices = await eventSourcedState.useStateAt(
-        blockId, (state) => state.get(boxId.transactionId));
-    return spendableIndices != null && spendableIndices.contains(boxId.index);
+        blockId, (state) => state.get(outputReference.transactionId));
+    return spendableIndices != null &&
+        spendableIndices.contains(outputReference.index);
   }
 
-  factory BoxStateImpl.make(
+  factory TransactionOutputStateImpl.make(
       State initialState,
       BlockId currentBlockId,
       Future<BlockBody> Function(BlockId) fetchBlockBody,
       Future<Transaction> Function(TransactionId) fetchTransaction,
       ParentChildTree<BlockId> parentChildTree,
       Future<void> Function(BlockId) currentEventChanged) {
-    final eventState = EventTreeStateImpl<State, BlockId>(
+    final eventState = BlockSourcedState<State>(
       (state, blockId) => _applyBlock(
         fetchBlockBody,
         fetchTransaction,
@@ -54,7 +54,7 @@ class BoxStateImpl extends BoxState {
       currentBlockId,
       currentEventChanged,
     );
-    return BoxStateImpl(eventState);
+    return TransactionOutputStateImpl(eventState);
   }
 }
 
@@ -104,48 +104,4 @@ Future<State> _unapplyBlock(FetchBlockBody fetchBlockBody,
     }
   }
   return state;
-}
-
-class AugmentedBoxState extends BoxState {
-  final BoxState boxState;
-  final StateAugmentation stateAugmentation;
-
-  AugmentedBoxState(this.boxState, this.stateAugmentation);
-  @override
-  Future<bool> boxExistsAt(
-      BlockId blockId, TransactionOutputReference boxId) async {
-    if (stateAugmentation.newBoxIds.contains(boxId))
-      return true;
-    else if (stateAugmentation.spentBoxIds.contains(boxId))
-      return false;
-    else
-      return boxState.boxExistsAt(blockId, boxId);
-  }
-}
-
-class StateAugmentation {
-  final Set<TransactionOutputReference> spentBoxIds;
-  final Set<TransactionOutputReference> newBoxIds;
-
-  StateAugmentation(this.spentBoxIds, this.newBoxIds);
-
-  StateAugmentation.empty()
-      : spentBoxIds = {},
-        newBoxIds = {};
-
-  Future<StateAugmentation> augment(Transaction transaction) async {
-    final transactionSpentBoxIds =
-        transaction.inputs.map((i) => i.reference).toSet();
-    final transactionId = await transaction.id;
-    final transactionNewBoxIds = transaction.outputs
-        .mapWithIndex((t, index) => TransactionOutputReference()
-          ..index = index
-          ..transactionId = transactionId)
-        .toSet();
-
-    transactionNewBoxIds.addAll(newBoxIds);
-    transactionNewBoxIds.removeAll(transactionSpentBoxIds);
-    return StateAugmentation(
-        transactionSpentBoxIds..addAll(spentBoxIds), transactionNewBoxIds);
-  }
 }

@@ -145,6 +145,10 @@ extension TransactionCodecs on Transaction {
   List<int> get immutableBytes => inputs.immutableBytes((i) => i.immutableBytes)
     ..addAll(outputs.immutableBytes((o) => o.immutableBytes));
 
+  List<int> get signableBytes =>
+      <int>[]..addAll(inputs.immutableBytes((i) => i.immutableBytes)
+        ..addAll(outputs.immutableBytes((o) => o.immutableBytes)));
+
   TransactionId get id => hasTransactionId() ? transactionId : computeId;
 
   TransactionId get computeId =>
@@ -156,7 +160,9 @@ extension TransactionCodecs on Transaction {
 }
 
 extension TransactionOutputReferenceCodecs on TransactionOutputReference {
-  List<int> get immutableBytes => <int>[]..addAll(transactionId.immutableBytes)..addAll(index.immutableBytes);
+  List<int> get immutableBytes => <int>[]
+    ..addAll(transactionId.immutableBytes)
+    ..addAll(index.immutableBytes);
 }
 
 extension TransactionInputCodecs on TransactionInput {

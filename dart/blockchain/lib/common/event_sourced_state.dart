@@ -1,10 +1,22 @@
 import 'package:blockchain/common/parent_child_tree.dart';
+import 'package:blockchain/common/resource.dart';
+import 'package:blockchain/consensus/local_chain.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mutex/mutex.dart';
 
 abstract class EventSourcedState<State, Id> {
   Future<State> stateAt(Id eventId);
   Future<U> useStateAt<U>(Id eventId, Future<U> Function(State) f);
+}
+
+class BlockSourcedState<State> extends EventTreeStateImpl<State, BlockId> {
+  BlockSourcedState(super.applyEvent, super.unapplyEvent, super.parentChildTree,
+      super.currentState, super.currentEventId, super.currentEventChanged);
+
+  Resource<BackgroundHandler> followChain(LocalChain localChain) =>
+      Resource.backgroundStream(
+          localChain.adoptions.asyncMap(stateAt).map((_) {}));
 }
 
 class EventTreeStateImpl<State, Id> extends EventSourcedState<State, Id> {

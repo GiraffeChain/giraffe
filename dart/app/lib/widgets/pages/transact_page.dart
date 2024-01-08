@@ -121,7 +121,10 @@ class TransactViewState extends State<TransactView> {
       tx.outputs.add(output);
     }
     final witnessContext = WitnessContext(
-        height: Int64.ONE, slot: Int64.ONE, messageToSign: tx.immutableBytes);
+      height: Int64.ONE, // TODO
+      slot: Int64.ONE, // TODO
+      messageToSign: tx.signableBytes,
+    );
     for (final lockAddress
         in await tx.requiredWitnesses(widget.view.getTransactionOrRaise)) {
       final signer = widget.wallet.signers[lockAddress]!;

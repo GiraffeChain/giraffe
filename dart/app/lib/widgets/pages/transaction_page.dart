@@ -140,10 +140,6 @@ class TransactionPage extends StatelessWidget {
                         Text("#${t.reference.index}"),
                       ])),
                       DataCell(Text(t.value.quantity.toString())),
-                      DataCell(SizedBox.square(
-                          dimension: 32,
-                          child: Text(
-                              "N/A"))), // TODO BitMapViewer.forLockAddress(t.lock.address))),
                       DataCell(t.value.hasRegistration()
                           ? const Icon(Icons.app_registration_rounded)
                           : Container()),
@@ -164,6 +160,7 @@ class TransactionPage extends StatelessWidget {
             columns: const [
               DataColumn(label: Text("Quantity")),
               DataColumn(label: Text("Address")),
+              DataColumn(label: Text("Graph Entry")),
               DataColumn(label: Text("Registration")),
             ],
             rows: transaction.outputs
@@ -172,6 +169,11 @@ class TransactionPage extends StatelessWidget {
                       DataCell(SizedBox.square(
                           dimension: 32,
                           child: BitMapViewer.forLockAddress(t.lockAddress))),
+                      DataCell(t.value.hasVertex()
+                          ? const Icon(Icons.circle)
+                          : t.value.hasEdge()
+                              ? const Icon(Icons.compare_arrows_outlined)
+                              : Container()),
                       DataCell(t.value.hasRegistration()
                           ? const Icon(Icons.account_box)
                           : Container()),

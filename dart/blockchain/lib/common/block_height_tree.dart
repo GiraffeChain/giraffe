@@ -6,9 +6,9 @@ import 'package:fixnum/fixnum.dart';
 
 typedef BlockHeightTreeState = Future<BlockId?> Function(Int64);
 
-typedef BlockHeightTree = EventTreeStateImpl<BlockHeightTreeState, BlockId>;
+typedef BlockHeightTree = BlockSourcedState<BlockHeightTreeState>;
 
-EventTreeStateImpl<BlockHeightTreeState, BlockId> makeBlockHeightTree(
+BlockHeightTree makeBlockHeightTree(
   Store<Int64, BlockId> store,
   BlockId currentEventId,
   Future<BlockHeader> Function(BlockId) fetchHeader,
@@ -31,11 +31,6 @@ EventTreeStateImpl<BlockHeightTreeState, BlockId> makeBlockHeightTree(
     return state;
   }
 
-  return EventTreeStateImpl<BlockHeightTreeState, BlockId>(
-      applyBlock,
-      unapplyBlock,
-      parentChildTree,
-      store.get,
-      currentEventId,
-      currentEventChanged);
+  return BlockSourcedState<BlockHeightTreeState>(applyBlock, unapplyBlock,
+      parentChildTree, store.get, currentEventId, currentEventChanged);
 }

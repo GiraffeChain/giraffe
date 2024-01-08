@@ -64,14 +64,17 @@ class Consensus {
             dataStores.bodies.getOrRaise,
             dataStores.transactions.getOrRaise);
 
-        final consensusValidationState = StakerTrackerImpl(
+        final stakerTracker = StakerTrackerImpl(
             genesisBlockId, epochBoundaryState, consensusDataState, clock);
 
         return LocalChainImpl.make(
                 genesisBlockId,
                 await currentEventIdGetterSetters.canonicalHead.get(),
                 blockHeightTree,
-                (id) async => (await dataStores.headers.getOrRaise(id)).height)
+                (id) async => (await dataStores.headers.getOrRaise(id)).height,
+                parentChildTree)
+            .flatTap((localChain) =>
+                stakerTracker.epochBoundaryState.followChain(localChain))
             .flatTap((localChain) => Resource.forStreamSubscription(() =>
                 localChain.adoptions
                     .asyncMap(currentEventIdGetterSetters.canonicalHead.set)
@@ -82,7 +85,7 @@ class Consensus {
           final headerValidation = BlockHeaderValidationImpl(
               genesisBlockId,
               etaCalculation,
-              consensusValidationState,
+              stakerTracker,
               leaderElection,
               clock,
               dataStores.headers.getOrRaise);
@@ -90,7 +93,7 @@ class Consensus {
           return Consensus(
               blockHeaderValidation: headerValidation,
               chainSelection: chainSelection,
-              stakerTracker: consensusValidationState,
+              stakerTracker: stakerTracker,
               etaCalculation: etaCalculation,
               leaderElection: leaderElection,
               localChain: localChain);
