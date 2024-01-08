@@ -48,7 +48,11 @@ class TransactView extends StatefulWidget {
   final BlockchainView view;
   final BlockchainWriter writer;
 
-  const TransactView({super.key, required this.wallet, required this.view, required this.writer});
+  const TransactView(
+      {super.key,
+      required this.wallet,
+      required this.view,
+      required this.writer});
   @override
   State<StatefulWidget> createState() => TransactViewState();
 }
@@ -116,8 +120,10 @@ class TransactViewState extends State<TransactView> {
         ..value = value;
       tx.outputs.add(output);
     }
-    final witnessContext = WitnessContext(height: Int64.ONE, slot: Int64.ONE, messageToSign: tx.immutableBytes);
-    for (final lockAddress in await tx.expectedAttestations(widget.view.getTransactionOrRaise)) {
+    final witnessContext = WitnessContext(
+        height: Int64.ONE, slot: Int64.ONE, messageToSign: tx.immutableBytes);
+    for (final lockAddress
+        in await tx.requiredWitnesses(widget.view.getTransactionOrRaise)) {
       final signer = widget.wallet.signers[lockAddress]!;
       final witness = await signer(witnessContext);
       tx.attestation.add(witness);

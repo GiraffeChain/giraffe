@@ -142,7 +142,8 @@ class TransactionPage extends StatelessWidget {
                       DataCell(Text(t.value.quantity.toString())),
                       DataCell(SizedBox.square(
                           dimension: 32,
-                          child: Text("N/A"))),// BitMapViewer.forLockAddress(t.lock.address))),
+                          child: Text(
+                              "N/A"))), // TODO BitMapViewer.forLockAddress(t.lock.address))),
                       DataCell(t.value.hasRegistration()
                           ? const Icon(Icons.app_registration_rounded)
                           : Container()),

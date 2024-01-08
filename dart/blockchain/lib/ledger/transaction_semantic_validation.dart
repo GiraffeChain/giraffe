@@ -59,10 +59,10 @@ class TransactionSemanticValidationImpl extends TransactionSemanticValidation {
     final providedLockAddressesList =
         transaction.attestation.map((w) => w.lockAddress).toList();
     final providedLockAddresses = providedLockAddressesList.toSet();
-    if (providedLockAddressesList.length != providedLockAddresses)
+    if (providedLockAddressesList.length != providedLockAddresses.length)
       return ["Duplicate witness"];
     final expectedLockAddresses =
-        await transaction.expectedAttestations(fetchTransaction);
+        await transaction.requiredWitnesses(fetchTransaction);
     if (!_lockAddressSetEq.equals(expectedLockAddresses, providedLockAddresses))
       return ["Insufficient attestation"];
     final witnessContext = WitnessContext(

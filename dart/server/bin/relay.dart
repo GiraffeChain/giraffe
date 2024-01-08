@@ -7,9 +7,9 @@ import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/isolate_pool.dart';
 import 'package:fixnum/fixnum.dart';
 
-// final timestamp = null;
-final timestamp = Int64(1704645930997);
-final stakes = [Int64(10000), Int64(20000)];
+final timestamp = null;
+// final timestamp = Int64(0);
+final stakes = [Int64(20000), Int64(10000)];
 
 final conf.BlockchainConfig config1 = conf.BlockchainConfig(
     genesis: conf.BlockchainGenesis(
@@ -44,7 +44,7 @@ final conf.BlockchainConfig config3 = conf.BlockchainConfig(
     rpc: conf.BlockchainRPC(bindPort: 2044),
     p2p: conf.BlockchainP2P(bindPort: 2043, knownPeers: ["localhost:2023"]));
 
-final config = config2;
+final config = config1;
 Future<void> main() async {
   initRootLogger();
   final resource = IsolatePool.make()

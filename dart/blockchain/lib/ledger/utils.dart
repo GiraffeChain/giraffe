@@ -1,17 +1,16 @@
-import 'package:blockchain/ledger/models/transaction_validation_context.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
 extension TransactionOps on Transaction {
-
-  Future<Set<LockAddress>> expectedAttestations(Future<Transaction> Function(TransactionId) fetchTransaction) async {
+  Future<Set<LockAddress>> requiredWitnesses(
+      Future<Transaction> Function(TransactionId) fetchTransaction) async {
     final result = <LockAddress>{};
-    for(final input in inputs) {
+    for (final input in inputs) {
       final tx = await fetchTransaction(input.reference.transactionId);
       final out = tx.outputs[input.reference.index];
       result.add(out.lockAddress);
     }
-    for(final output in outputs) {
-      if(output.value.hasEdge()) {
+    for (final output in outputs) {
+      if (output.value.hasEdge()) {
         final edge = output.value.edge;
         final aTx = await fetchTransaction(edge.a.transactionId);
         final aTxO = aTx.outputs[edge.a.index];
@@ -20,9 +19,6 @@ extension TransactionOps on Transaction {
         final bTxO = bTx.outputs[edge.b.index];
         result.add(bTxO.value.vertex.edgeLockAddress);
       }
-    }
-    for(final witness in attestation) {
-      result.remove(witness.lockAddress);
     }
     return result;
   }
