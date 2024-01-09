@@ -126,6 +126,7 @@ extension Int128Codecs on List<int> {
 }
 
 extension BlockIdCodecs on BlockId {
+  List<int> get immutableBytes => value;
   String get show => "b_${this.value.base58}";
 }
 
@@ -143,7 +144,9 @@ TransactionId decodeTransactionId(String input) {
 
 extension TransactionCodecs on Transaction {
   List<int> get immutableBytes => inputs.immutableBytes((i) => i.immutableBytes)
-    ..addAll(outputs.immutableBytes((o) => o.immutableBytes));
+    ..addAll(outputs.immutableBytes((o) => o.immutableBytes))
+    ..addAll(
+        hasRewardParentBlockId() ? rewardParentBlockId.immutableBytes : []);
 
   List<int> get signableBytes =>
       <int>[]..addAll(inputs.immutableBytes((i) => i.immutableBytes)

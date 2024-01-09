@@ -26,7 +26,7 @@ class PrivateTestnet {
         await stakerInitializers(timestamp, stakes.length, kesTreeHeight);
     final c = await config(timestamp, initializers, stakes);
 
-    final genesis = await c.block;
+    final genesis = c.block;
 
     final genesisId = genesis.header.id;
 

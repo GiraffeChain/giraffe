@@ -20,6 +20,7 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:logging/logging.dart';
 import 'package:rxdart/streams.dart';
 import 'package:rxdart/transformers.dart';
 
@@ -36,6 +37,8 @@ class Minting {
     required this.vrfCalculator,
   });
 
+  static final log = Logger("Blockchain.Minting");
+
   static Resource<Minting> make(
     Directory stakingDir,
     ProtocolSettings protocolSettings,
@@ -46,6 +49,7 @@ class Minting {
     EtaCalculation etaCalculation,
     LeaderElection leaderElection,
     StakerTracker stakerTracker,
+    LockAddress? rewardAddress,
   ) =>
       Resource.pure(Directory("${stakingDir.path}/kes"))
           .map((kesDir) => DiskSecureStore(baseDir: kesDir))
@@ -72,11 +76,13 @@ class Minting {
           stakerTracker,
           leaderElection,
         ).map((staking) {
+          if (rewardAddress == null) log.warning("Reward Address not set.");
           final blockProducer = BlockProducerImpl(
             ConcatEagerStream([Stream.value(canonicalHead), adoptedHeaders]),
             staking,
             clock,
             blockPacker,
+            rewardAddress,
           );
 
           return Minting(
@@ -96,17 +102,20 @@ class Minting {
     BlockPacker blockPacker,
     BlockHeader canonicalHead,
     Stream<BlockHeader> adoptedHeaders,
+    LockAddress? rewardAddress,
   ) =>
       make(
-          stakingDir,
-          protocolSettings,
-          clock,
-          blockPacker,
-          canonicalHead,
-          adoptedHeaders,
-          consensus.etaCalculation,
-          consensus.leaderElection,
-          consensus.stakerTracker);
+        stakingDir,
+        protocolSettings,
+        clock,
+        blockPacker,
+        canonicalHead,
+        adoptedHeaders,
+        consensus.etaCalculation,
+        consensus.leaderElection,
+        consensus.stakerTracker,
+        rewardAddress,
+      );
 
   static Resource<Minting> makeForRpc(
     Directory stakingDir,
@@ -117,6 +126,7 @@ class Minting {
     LeaderElection leaderElection,
     NodeRpcClient nodeClient,
     StakerSupportRpcClient stakerSupportClient,
+    LockAddress? rewardAddress,
   ) =>
       make(
         stakingDir,
@@ -129,6 +139,7 @@ class Minting {
         EtaCalculationForStakerSupportRpc(client: stakerSupportClient),
         leaderElection,
         StakerTrackerForStakerSupportRpc(client: stakerSupportClient),
+        rewardAddress,
       );
 }
 

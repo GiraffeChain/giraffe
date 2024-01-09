@@ -16,9 +16,9 @@ class DataStores {
   final Store<TransactionId, Transaction> transactions;
   final Store<TransactionId, Uint32List> spendableTransactionOutputs;
   final Store<Int64, BlockId> epochBoundaries;
-  final Store<void, Int64> activeStake;
-  final Store<void, Int64> inactiveStake;
-  final Store<StakingAddress, ActiveStaker> activeStakers;
+  final Store<void, Int64> delayedActiveStake;
+  final Store<void, Int64> delayedInactiveStake;
+  final Store<StakingAddress, ActiveStaker> delayedActiveStakers;
   final Store<Int64, BlockId> blockHeightTree;
   final Store<int, List<int>> metadata;
 
@@ -30,9 +30,9 @@ class DataStores {
     required this.transactions,
     required this.spendableTransactionOutputs,
     required this.epochBoundaries,
-    required this.activeStake,
-    required this.inactiveStake,
-    required this.activeStakers,
+    required this.delayedActiveStake,
+    required this.delayedInactiveStake,
+    required this.delayedActiveStakers,
     required this.blockHeightTree,
     required this.metadata,
   });
@@ -53,9 +53,9 @@ class DataStores {
               transactions: makeDb(),
               spendableTransactionOutputs: makeDb(),
               epochBoundaries: makeDb(),
-              activeStake: makeDb(),
-              inactiveStake: makeDb(),
-              activeStakers: makeDb(),
+              delayedActiveStake: makeDb(),
+              delayedInactiveStake: makeDb(),
+              delayedActiveStakers: makeDb(),
               blockHeightTree: makeDb(),
               metadata: makeDb(),
             ),
@@ -63,142 +63,136 @@ class DataStores {
   }
 
   static Resource<DataStores> makePersistent(Directory directory) =>
-      HiveStore.makeHive(directory).flatMap(
-        (hive) => HiveStore.make<BlockId, (Int64, BlockId)>(
-                "parent-child-tree",
+      HiveStore.makeHive(directory).flatMap((hive) {
+        final parentChildTreeR = HiveStore.make<BlockId, (Int64, BlockId)>(
+            "parent-child-tree",
+            hive,
+            PersistenceCodecs.encodeBlockId,
+            PersistenceCodecs.encodeHeightBlockId,
+            PersistenceCodecs.decodeBlockId,
+            PersistenceCodecs.decodeHeightBlockId);
+        final currentEventIdsR = HiveStore.make<int, BlockId>(
+            "current-event-ids",
+            hive,
+            (key) => Uint8List.fromList([key]),
+            PersistenceCodecs.encodeBlockId,
+            (bytes) => bytes[0],
+            PersistenceCodecs.decodeBlockId);
+        final headersR = HiveStore.make<BlockId, BlockHeader>(
+            "block-header",
+            hive,
+            PersistenceCodecs.encodeBlockId,
+            (value) => value.writeToBuffer(),
+            PersistenceCodecs.decodeBlockId,
+            BlockHeader.fromBuffer);
+        final bodiesR = HiveStore.make<BlockId, BlockBody>(
+            "block-body",
+            hive,
+            PersistenceCodecs.encodeBlockId,
+            (value) => value.writeToBuffer(),
+            PersistenceCodecs.decodeBlockId,
+            BlockBody.fromBuffer);
+        final transactionsR = HiveStore.make<TransactionId, Transaction>(
+            "transactions",
+            hive,
+            PersistenceCodecs.encodeTransactionId,
+            (value) => value.writeToBuffer(),
+            PersistenceCodecs.decodeTransactionId,
+            Transaction.fromBuffer);
+        final spendableTransactionoutputsR =
+            HiveStore.make<TransactionId, Uint32List>(
+          "spendable-transaction-outputs",
+          hive,
+          PersistenceCodecs.encodeTransactionId,
+          (value) => value.buffer.asUint8List(),
+          PersistenceCodecs.decodeTransactionId,
+          (bytes) => bytes.buffer.asUint32List(),
+        );
+        final epochBoundariesR = HiveStore.make<Int64, BlockId>(
+            "epoch-boundaries",
+            hive,
+            (key) => Uint8List.fromList(key.toBytes()),
+            PersistenceCodecs.encodeBlockId,
+            Int64.fromBytes,
+            PersistenceCodecs.decodeBlockId);
+        final delayedActiveStakeR = HiveStore.make<void, Int64>(
+            "delayed-active-stake",
+            hive,
+            (_) => Uint8List(1),
+            (value) => Uint8List.fromList(value.toBytes()),
+            (_) {},
+            Int64.fromBytes);
+        final delayedInactiveStakeR = HiveStore.make<void, Int64>(
+            "delayed-inactive-stake",
+            hive,
+            (_) => Uint8List(1),
+            (value) => Uint8List.fromList(value.toBytes()),
+            (_) {},
+            Int64.fromBytes);
+        final delayedActiveStakersR =
+            HiveStore.make<StakingAddress, ActiveStaker>(
+                "delayed-active-stakers",
                 hive,
-                PersistenceCodecs.encodeBlockId,
-                PersistenceCodecs.encodeHeightBlockId,
-                PersistenceCodecs.decodeBlockId,
-                PersistenceCodecs.decodeHeightBlockId)
-            .flatMap(
-          (parentChildTree) => HiveStore.make<int, BlockId>(
-                  "current-event-ids",
-                  hive,
-                  (key) => Uint8List.fromList([key]),
-                  PersistenceCodecs.encodeBlockId,
-                  (bytes) => bytes[0],
-                  PersistenceCodecs.decodeBlockId)
-              .flatMap(
-            (currentEventIds) => HiveStore.make<BlockId, BlockHeader>(
-                    "block-header",
-                    hive,
-                    PersistenceCodecs.encodeBlockId,
-                    (value) => value.writeToBuffer(),
-                    PersistenceCodecs.decodeBlockId,
-                    BlockHeader.fromBuffer)
-                .flatMap(
-              (headers) => HiveStore.make<BlockId, BlockBody>(
-                      "block-body",
-                      hive,
-                      PersistenceCodecs.encodeBlockId,
-                      (value) => value.writeToBuffer(),
-                      PersistenceCodecs.decodeBlockId,
-                      BlockBody.fromBuffer)
-                  .flatMap(
-                (bodies) => HiveStore.make<TransactionId, Transaction>(
-                        "transactions",
-                        hive,
-                        PersistenceCodecs.encodeTransactionId,
-                        (value) => value.writeToBuffer(),
-                        PersistenceCodecs.decodeTransactionId,
-                        Transaction.fromBuffer)
-                    .flatMap(
-                  (transactions) => HiveStore.make<TransactionId, Uint32List>(
-                    "spendable-transaction-outputs",
-                    hive,
-                    PersistenceCodecs.encodeTransactionId,
-                    (value) => value.buffer.asUint8List(),
-                    PersistenceCodecs.decodeTransactionId,
-                    (bytes) => bytes.buffer.asUint32List(),
-                  ).flatMap(
-                    (spendableTransactionOutputs) =>
-                        HiveStore.make<Int64, BlockId>(
-                                "epoch-boundaries",
-                                hive,
-                                (key) => Uint8List.fromList(key.toBytes()),
-                                PersistenceCodecs.encodeBlockId,
-                                Int64.fromBytes,
-                                PersistenceCodecs.decodeBlockId)
-                            .flatMap(
-                      (epochBoundaries) => HiveStore.make<void, Int64>(
-                              "active-stake",
-                              hive,
-                              (_) => Uint8List(1),
-                              (value) => Uint8List.fromList(value.toBytes()),
-                              (_) {},
-                              Int64.fromBytes)
-                          .flatMap(
-                        (activeStake) => HiveStore.make<void, Int64>(
-                                "inactive-stake",
-                                hive,
-                                (_) => Uint8List(1),
-                                (value) => Uint8List.fromList(value.toBytes()),
-                                (_) {},
-                                Int64.fromBytes)
-                            .flatMap(
-                          (inactiveStake) =>
-                              HiveStore.make<StakingAddress, ActiveStaker>(
-                                      "active-stakers",
-                                      hive,
-                                      (key) => key.writeToBuffer(),
-                                      (value) => value.writeToBuffer(),
-                                      StakingAddress.fromBuffer,
-                                      ActiveStaker.fromBuffer)
-                                  .flatMap(
-                            (activeStakers) => HiveStore.make<Int64, BlockId>(
-                                    "block-height-tree",
-                                    hive,
-                                    (key) => Uint8List.fromList(key.toBytes()),
-                                    PersistenceCodecs.encodeBlockId,
-                                    Int64.fromBytes,
-                                    PersistenceCodecs.decodeBlockId)
-                                .flatMap(
-                              (blockHeightTree) =>
-                                  HiveStore.make<int, List<int>>(
-                                      "metadata",
-                                      hive,
-                                      (key) => Uint8List.fromList([key]),
-                                      Uint8List.fromList,
-                                      (bytes) => bytes[0],
-                                      (bytes) => bytes).map(
-                                (metadata) => DataStores(
-                                  parentChildTree:
-                                      parentChildTree.cached(maximumSize: 512),
-                                  currentEventIds:
-                                      currentEventIds.cached(maximumSize: 32),
-                                  headers: headers.cached(maximumSize: 512),
-                                  bodies: bodies.cached(maximumSize: 512),
-                                  transactions:
-                                      transactions.cached(maximumSize: 512),
-                                  spendableTransactionOutputs:
-                                      spendableTransactionOutputs.cached(
-                                          maximumSize: 512),
-                                  epochBoundaries:
-                                      epochBoundaries.cached(maximumSize: 16),
-                                  activeStake:
-                                      activeStake.cached(maximumSize: 1),
-                                  inactiveStake:
-                                      inactiveStake.cached(maximumSize: 1),
-                                  activeStakers:
-                                      activeStakers.cached(maximumSize: 512),
-                                  blockHeightTree:
-                                      blockHeightTree.cached(maximumSize: 512),
-                                  metadata: metadata,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
+                (key) => key.writeToBuffer(),
+                (value) => value.writeToBuffer(),
+                StakingAddress.fromBuffer,
+                ActiveStaker.fromBuffer);
+        final blockHeightTreeR = HiveStore.make<Int64, BlockId>(
+            "block-height-tree",
+            hive,
+            (key) => Uint8List.fromList(key.toBytes()),
+            PersistenceCodecs.encodeBlockId,
+            Int64.fromBytes,
+            PersistenceCodecs.decodeBlockId);
+        final metadataR = HiveStore.make<int, List<int>>(
+            "delayed-metadata",
+            hive,
+            (key) => Uint8List.fromList([key]),
+            Uint8List.fromList,
+            (bytes) => bytes[0],
+            (bytes) => bytes);
+        return (
+          parentChildTreeR,
+          currentEventIdsR,
+          headersR,
+          bodiesR,
+          transactionsR,
+          spendableTransactionoutputsR,
+          epochBoundariesR,
+          delayedActiveStakeR,
+          delayedInactiveStakeR,
+          delayedActiveStakersR,
+          blockHeightTreeR,
+          metadataR
+        ).mapN12((parentChildTree,
+                currentEventIds,
+                headers,
+                bodies,
+                transactions,
+                spendableTransactionOutputs,
+                epochBoundaries,
+                delayedActiveStake,
+                delayedInactiveStake,
+                delayedActiveStakers,
+                blockHeightTree,
+                metadata) =>
+            DataStores(
+              parentChildTree: parentChildTree.cached(maximumSize: 512),
+              currentEventIds: currentEventIds.cached(maximumSize: 32),
+              headers: headers.cached(maximumSize: 512),
+              bodies: bodies.cached(maximumSize: 512),
+              transactions: transactions.cached(maximumSize: 512),
+              spendableTransactionOutputs:
+                  spendableTransactionOutputs.cached(maximumSize: 512),
+              epochBoundaries: epochBoundaries.cached(maximumSize: 16),
+              delayedActiveStake: delayedActiveStake.cached(maximumSize: 1),
+              delayedInactiveStake: delayedInactiveStake.cached(maximumSize: 1),
+              delayedActiveStakers:
+                  delayedActiveStakers.cached(maximumSize: 512),
+              blockHeightTree: blockHeightTree.cached(maximumSize: 512),
+              metadata: metadata,
+            ));
+      });
 
   Future<bool> isInitialized(BlockId genesisId) async {
     final storeGenesisId = await blockHeightTree.get(Int64.ONE);
@@ -245,11 +239,11 @@ class DataStores {
       await transactions.put(await transaction.id, transaction);
     }
     await blockHeightTree.put(Int64.ONE, genesisBlock.header.id);
-    if (!await activeStake.contains("")) {
-      await activeStake.put("", Int64.ZERO);
+    if (!await delayedActiveStake.contains("")) {
+      await delayedActiveStake.put("", Int64.ZERO);
     }
-    if (!await inactiveStake.contains("")) {
-      await inactiveStake.put("", Int64.ZERO);
+    if (!await delayedInactiveStake.contains("")) {
+      await delayedInactiveStake.put("", Int64.ZERO);
     }
     await parentChildTree.put(genesisBlock.header.id,
         (genesisBlock.header.height, genesisBlock.header.parentHeaderId));

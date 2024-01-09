@@ -1125,6 +1125,7 @@ class Transaction extends $pb.GeneratedMessage {
     $core.Iterable<TransactionInput>? inputs,
     $core.Iterable<TransactionOutput>? outputs,
     $core.Iterable<Witness>? attestation,
+    BlockId? rewardParentBlockId,
   }) {
     final $result = create();
     if (transactionId != null) {
@@ -1139,6 +1140,9 @@ class Transaction extends $pb.GeneratedMessage {
     if (attestation != null) {
       $result.attestation.addAll(attestation);
     }
+    if (rewardParentBlockId != null) {
+      $result.rewardParentBlockId = rewardParentBlockId;
+    }
     return $result;
   }
   Transaction._() : super();
@@ -1150,6 +1154,7 @@ class Transaction extends $pb.GeneratedMessage {
     ..pc<TransactionInput>(2, _omitFieldNames ? '' : 'inputs', $pb.PbFieldType.PM, subBuilder: TransactionInput.create)
     ..pc<TransactionOutput>(3, _omitFieldNames ? '' : 'outputs', $pb.PbFieldType.PM, subBuilder: TransactionOutput.create)
     ..pc<Witness>(4, _omitFieldNames ? '' : 'attestation', $pb.PbFieldType.PM, subBuilder: Witness.create)
+    ..aOM<BlockId>(5, _omitFieldNames ? '' : 'rewardParentBlockId', protoName: 'rewardParentBlockId', subBuilder: BlockId.create)
     ..hasRequiredFields = false
   ;
 
@@ -1185,6 +1190,7 @@ class Transaction extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   TransactionId ensureTransactionId() => $_ensure(0);
 
+  /// If this is a reward transaction, this field should be empty
   @$pb.TagNumber(2)
   $core.List<TransactionInput> get inputs => $_getList(1);
 
@@ -1193,6 +1199,19 @@ class Transaction extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(4)
   $core.List<Witness> get attestation => $_getList(3);
+
+  /// User transactions should leave this empty.
+  /// When not null, this Transaction is assumed to be a reward transaction, and the value of this field should be the parent block ID
+  @$pb.TagNumber(5)
+  BlockId get rewardParentBlockId => $_getN(4);
+  @$pb.TagNumber(5)
+  set rewardParentBlockId(BlockId v) { setField(5, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasRewardParentBlockId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRewardParentBlockId() => clearField(5);
+  @$pb.TagNumber(5)
+  BlockId ensureRewardParentBlockId() => $_ensure(4);
 }
 
 class Witness extends $pb.GeneratedMessage {
@@ -1481,31 +1500,25 @@ class TransactionOutput extends $pb.GeneratedMessage {
   Value ensureValue() => $_ensure(1);
 }
 
-enum Value_GraphEntry {
-  vertex, 
-  edge, 
-  notSet
-}
-
 class Value extends $pb.GeneratedMessage {
   factory Value({
     $fixnum.Int64? quantity,
+    StakingAddress? staker,
     StakingRegistration? registration,
-    Vertex? vertex,
-    Edge? edge,
+    GraphEntry? graphEntry,
   }) {
     final $result = create();
     if (quantity != null) {
       $result.quantity = quantity;
     }
+    if (staker != null) {
+      $result.staker = staker;
+    }
     if (registration != null) {
       $result.registration = registration;
     }
-    if (vertex != null) {
-      $result.vertex = vertex;
-    }
-    if (edge != null) {
-      $result.edge = edge;
+    if (graphEntry != null) {
+      $result.graphEntry = graphEntry;
     }
     return $result;
   }
@@ -1513,17 +1526,11 @@ class Value extends $pb.GeneratedMessage {
   factory Value.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Value.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static const $core.Map<$core.int, Value_GraphEntry> _Value_GraphEntryByTag = {
-    3 : Value_GraphEntry.vertex,
-    4 : Value_GraphEntry.edge,
-    0 : Value_GraphEntry.notSet
-  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Value', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
-    ..oo(0, [3, 4])
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'quantity', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOM<StakingRegistration>(2, _omitFieldNames ? '' : 'registration', subBuilder: StakingRegistration.create)
-    ..aOM<Vertex>(3, _omitFieldNames ? '' : 'vertex', subBuilder: Vertex.create)
-    ..aOM<Edge>(4, _omitFieldNames ? '' : 'edge', subBuilder: Edge.create)
+    ..aOM<StakingAddress>(2, _omitFieldNames ? '' : 'staker', subBuilder: StakingAddress.create)
+    ..aOM<StakingRegistration>(3, _omitFieldNames ? '' : 'registration', subBuilder: StakingRegistration.create)
+    ..aOM<GraphEntry>(4, _omitFieldNames ? '' : 'graphEntry', protoName: 'graphEntry', subBuilder: GraphEntry.create)
     ..hasRequiredFields = false
   ;
 
@@ -1548,9 +1555,6 @@ class Value extends $pb.GeneratedMessage {
   static Value getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Value>(create);
   static Value? _defaultInstance;
 
-  Value_GraphEntry whichGraphEntry() => _Value_GraphEntryByTag[$_whichOneof(0)]!;
-  void clearGraphEntry() => clearField($_whichOneof(0));
-
   @$pb.TagNumber(1)
   $fixnum.Int64 get quantity => $_getI64(0);
   @$pb.TagNumber(1)
@@ -1562,37 +1566,39 @@ class Value extends $pb.GeneratedMessage {
 
   /// Optional.  If not provided, this token will not be used for staking purposes.
   @$pb.TagNumber(2)
-  StakingRegistration get registration => $_getN(1);
+  StakingAddress get staker => $_getN(1);
   @$pb.TagNumber(2)
-  set registration(StakingRegistration v) { setField(2, v); }
+  set staker(StakingAddress v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasRegistration() => $_has(1);
+  $core.bool hasStaker() => $_has(1);
   @$pb.TagNumber(2)
-  void clearRegistration() => clearField(2);
+  void clearStaker() => clearField(2);
   @$pb.TagNumber(2)
-  StakingRegistration ensureRegistration() => $_ensure(1);
+  StakingAddress ensureStaker() => $_ensure(1);
 
+  /// Optional.  If provided, introduces a new staker to the chain.
   @$pb.TagNumber(3)
-  Vertex get vertex => $_getN(2);
+  StakingRegistration get registration => $_getN(2);
   @$pb.TagNumber(3)
-  set vertex(Vertex v) { setField(3, v); }
+  set registration(StakingRegistration v) { setField(3, v); }
   @$pb.TagNumber(3)
-  $core.bool hasVertex() => $_has(2);
+  $core.bool hasRegistration() => $_has(2);
   @$pb.TagNumber(3)
-  void clearVertex() => clearField(3);
+  void clearRegistration() => clearField(3);
   @$pb.TagNumber(3)
-  Vertex ensureVertex() => $_ensure(2);
+  StakingRegistration ensureRegistration() => $_ensure(2);
 
+  /// Optional
   @$pb.TagNumber(4)
-  Edge get edge => $_getN(3);
+  GraphEntry get graphEntry => $_getN(3);
   @$pb.TagNumber(4)
-  set edge(Edge v) { setField(4, v); }
+  set graphEntry(GraphEntry v) { setField(4, v); }
   @$pb.TagNumber(4)
-  $core.bool hasEdge() => $_has(3);
+  $core.bool hasGraphEntry() => $_has(3);
   @$pb.TagNumber(4)
-  void clearEdge() => clearField(4);
+  void clearGraphEntry() => clearField(4);
   @$pb.TagNumber(4)
-  Edge ensureEdge() => $_ensure(3);
+  GraphEntry ensureGraphEntry() => $_ensure(3);
 }
 
 /// A proof-of-stake registration
@@ -1662,6 +1668,89 @@ class StakingRegistration extends $pb.GeneratedMessage {
   void clearStakingAddress() => clearField(2);
   @$pb.TagNumber(2)
   StakingAddress ensureStakingAddress() => $_ensure(1);
+}
+
+enum GraphEntry_Entry {
+  vertex, 
+  edge, 
+  notSet
+}
+
+class GraphEntry extends $pb.GeneratedMessage {
+  factory GraphEntry({
+    Vertex? vertex,
+    Edge? edge,
+  }) {
+    final $result = create();
+    if (vertex != null) {
+      $result.vertex = vertex;
+    }
+    if (edge != null) {
+      $result.edge = edge;
+    }
+    return $result;
+  }
+  GraphEntry._() : super();
+  factory GraphEntry.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GraphEntry.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static const $core.Map<$core.int, GraphEntry_Entry> _GraphEntry_EntryByTag = {
+    1 : GraphEntry_Entry.vertex,
+    2 : GraphEntry_Entry.edge,
+    0 : GraphEntry_Entry.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GraphEntry', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOM<Vertex>(1, _omitFieldNames ? '' : 'vertex', subBuilder: Vertex.create)
+    ..aOM<Edge>(2, _omitFieldNames ? '' : 'edge', subBuilder: Edge.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GraphEntry clone() => GraphEntry()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GraphEntry copyWith(void Function(GraphEntry) updates) => super.copyWith((message) => updates(message as GraphEntry)) as GraphEntry;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GraphEntry create() => GraphEntry._();
+  GraphEntry createEmptyInstance() => create();
+  static $pb.PbList<GraphEntry> createRepeated() => $pb.PbList<GraphEntry>();
+  @$core.pragma('dart2js:noInline')
+  static GraphEntry getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GraphEntry>(create);
+  static GraphEntry? _defaultInstance;
+
+  GraphEntry_Entry whichEntry() => _GraphEntry_EntryByTag[$_whichOneof(0)]!;
+  void clearEntry() => clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  Vertex get vertex => $_getN(0);
+  @$pb.TagNumber(1)
+  set vertex(Vertex v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasVertex() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVertex() => clearField(1);
+  @$pb.TagNumber(1)
+  Vertex ensureVertex() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  Edge get edge => $_getN(1);
+  @$pb.TagNumber(2)
+  set edge(Edge v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasEdge() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEdge() => clearField(2);
+  @$pb.TagNumber(2)
+  Edge ensureEdge() => $_ensure(1);
 }
 
 class Vertex extends $pb.GeneratedMessage {
@@ -1849,6 +1938,7 @@ class ActiveStaker extends $pb.GeneratedMessage {
   factory ActiveStaker({
     StakingRegistration? registration,
     $fixnum.Int64? quantity,
+    BlockId? registrationBlock,
   }) {
     final $result = create();
     if (registration != null) {
@@ -1856,6 +1946,9 @@ class ActiveStaker extends $pb.GeneratedMessage {
     }
     if (quantity != null) {
       $result.quantity = quantity;
+    }
+    if (registrationBlock != null) {
+      $result.registrationBlock = registrationBlock;
     }
     return $result;
   }
@@ -1865,7 +1958,8 @@ class ActiveStaker extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ActiveStaker', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
     ..aOM<StakingRegistration>(1, _omitFieldNames ? '' : 'registration', subBuilder: StakingRegistration.create)
-    ..aInt64(3, _omitFieldNames ? '' : 'quantity')
+    ..aInt64(2, _omitFieldNames ? '' : 'quantity')
+    ..aOM<BlockId>(3, _omitFieldNames ? '' : 'registrationBlock', protoName: 'registrationBlock', subBuilder: BlockId.create)
     ..hasRequiredFields = false
   ;
 
@@ -1890,7 +1984,7 @@ class ActiveStaker extends $pb.GeneratedMessage {
   static ActiveStaker getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ActiveStaker>(create);
   static ActiveStaker? _defaultInstance;
 
-  /// the staker's registration
+  /// The staker's registration.  If not provided, the StakingAddress is not associated with a StakingRegistration
   @$pb.TagNumber(1)
   StakingRegistration get registration => $_getN(0);
   @$pb.TagNumber(1)
@@ -1903,14 +1997,26 @@ class ActiveStaker extends $pb.GeneratedMessage {
   StakingRegistration ensureRegistration() => $_ensure(0);
 
   /// the quantity of staked tokens for the epoch
-  @$pb.TagNumber(3)
+  @$pb.TagNumber(2)
   $fixnum.Int64 get quantity => $_getI64(1);
-  @$pb.TagNumber(3)
+  @$pb.TagNumber(2)
   set quantity($fixnum.Int64 v) { $_setInt64(1, v); }
-  @$pb.TagNumber(3)
+  @$pb.TagNumber(2)
   $core.bool hasQuantity() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearQuantity() => clearField(2);
+
+  /// The block in which the staker is registered.
   @$pb.TagNumber(3)
-  void clearQuantity() => clearField(3);
+  BlockId get registrationBlock => $_getN(2);
+  @$pb.TagNumber(3)
+  set registrationBlock(BlockId v) { setField(3, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasRegistrationBlock() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRegistrationBlock() => clearField(3);
+  @$pb.TagNumber(3)
+  BlockId ensureRegistrationBlock() => $_ensure(2);
 }
 
 class LockAddress extends $pb.GeneratedMessage {

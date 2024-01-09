@@ -134,13 +134,6 @@ class MockClock extends _i1.Mock implements _i5.Clock {
       ) as _i2.Int64);
 
   @override
-  int get forwardBiasedSlotWindow => (super.noSuchMethod(
-        Invocation.getter(#forwardBiasedSlotWindow),
-        returnValue: 0,
-        returnValueForMissingStub: 0,
-      ) as int);
-
-  @override
   _i2.Int64 get globalEpoch => (super.noSuchMethod(
         Invocation.getter(#globalEpoch),
         returnValue: _FakeInt64_1(

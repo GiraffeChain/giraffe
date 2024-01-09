@@ -26,27 +26,43 @@ class ChainSelection {
         headerB.height - commonAncestor.height <=
             protocolSettings.chainSelectionKLookback)
       return maxValidBg(headerA, headerB);
-    // Create but don't immediately await, to allow calculations in parallel
-    final aDensityFuture = calculateDensity(commonAncestor, headerAtHeightA);
-    final bDensityFuture = calculateDensity(commonAncestor, headerAtHeightB);
-    final aDensity = await aDensityFuture;
-    final bDensity = await bDensityFuture;
-    if (bDensity > aDensity) return DensitySelectionOutcome(id: headerB.id);
-    return DensitySelectionOutcome(id: headerA.id);
+    final aDensityBoundary =
+        await densityBoundaryBlock(commonAncestor, headerAtHeightA);
+    final bAtA = await headerAtHeightB(aDensityBoundary.height);
+    if (bAtA == null ||
+        bAtA.slot >
+            commonAncestor.slot + protocolSettings.chainSelectionSWindow)
+      return DensitySelectionOutcome(id: headerA.id);
+    else {
+      final bAtA1 = await headerAtHeightB(aDensityBoundary.height + 1);
+      if (bAtA1 == null ||
+          bAtA1.slot >
+              commonAncestor.slot + protocolSettings.chainSelectionSWindow) {
+        // Tie
+        final tieBreaker = await maxValidBg(aDensityBoundary, bAtA1!);
+        if (tieBreaker.id == aDensityBoundary.id) {
+          return DensitySelectionOutcome(id: headerA.id);
+        } else {
+          return DensitySelectionOutcome(id: headerB.id);
+        }
+      } else {
+        return DensitySelectionOutcome(id: headerB.id);
+      }
+    }
   }
 
-  // Calculates the number of blocks past the common ancestor point within the density slot window
-  Future<Int64> calculateDensity(BlockHeader commonAncestor,
+  // Calculates the latest block within the protocol's sWindow
+  Future<BlockHeader> densityBoundaryBlock(BlockHeader commonAncestor,
       Future<BlockHeader?> Function(Int64) headerAtHeight) async {
-    Int64 h = commonAncestor.height;
+    BlockHeader h = commonAncestor;
     while (true) {
-      final next = await headerAtHeight(h + 1);
+      final next = await headerAtHeight(h.height + 1);
       if (next == null) break;
       if (next.slot - commonAncestor.slot >=
           protocolSettings.chainSelectionSWindow) break;
-      h++;
+      h = next;
     }
-    return h - commonAncestor.height;
+    return h;
   }
 
   Future<ChainSelectionOutcome> maxValidBg(

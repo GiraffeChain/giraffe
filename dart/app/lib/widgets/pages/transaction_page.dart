@@ -169,11 +169,11 @@ class TransactionPage extends StatelessWidget {
                       DataCell(SizedBox.square(
                           dimension: 32,
                           child: BitMapViewer.forLockAddress(t.lockAddress))),
-                      DataCell(t.value.hasVertex()
-                          ? const Icon(Icons.circle)
-                          : t.value.hasEdge()
-                              ? const Icon(Icons.compare_arrows_outlined)
-                              : Container()),
+                      DataCell(t.value.hasGraphEntry()
+                          ? (t.value.graphEntry.hasVertex()
+                              ? const Icon(Icons.circle)
+                              : const Icon(Icons.compare_arrows_outlined))
+                          : Container()),
                       DataCell(t.value.hasRegistration()
                           ? const Icon(Icons.account_box)
                           : Container()),

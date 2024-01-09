@@ -1,4 +1,5 @@
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -45,6 +46,9 @@ abstract class BlockchainView {
   Future<FullBlock> getFullBlockOrRaise(BlockId blockId) =>
       getFullBlock(blockId).then((v) => v!);
 
+  Future<BlockHeader> get genesisHeader =>
+      genesisBlockId.then(getBlockHeaderOrRaise);
+
   Future<FullBlock> get genesisBlock =>
       genesisBlockId.then(getFullBlockOrRaise);
 
@@ -68,6 +72,25 @@ abstract class BlockchainView {
 
   Stream<FullBlock> get replayBlocks =>
       replay.asyncMap(getFullBlock).whereNotNull();
+
+  Future<BlockHeader> get canonicalHead async =>
+      getBlockHeaderOrRaise(await canonicalHeadId);
+
+  Clock? _clock;
+
+  Future<Clock> get clock async {
+    if (_clock != null) return _clock!;
+    final protocol = await protocolSettings;
+    final genesisTimestamp = (await genesisHeader).timestamp;
+    final c = ClockImpl(
+      protocol.slotDuration,
+      protocol.epochLength,
+      protocol.operationalPeriodLength,
+      genesisTimestamp,
+    );
+    _clock = c;
+    return c;
+  }
 }
 
 class BlockchainViewFromBlockchain extends BlockchainView {

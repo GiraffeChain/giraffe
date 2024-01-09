@@ -23,10 +23,16 @@ class BlockProducerImpl extends BlockProducer {
   final Staking staker;
   final Clock clock;
   final BlockPacker blockPacker;
+  final LockAddress? rewardAddress;
   Int64 _nextSlotMinimum = Int64.ZERO;
 
   BlockProducerImpl(
-      this.parentHeaders, this.staker, this.clock, this.blockPacker);
+    this.parentHeaders,
+    this.staker,
+    this.clock,
+    this.blockPacker,
+    this.rewardAddress,
+  );
 
   final log = Logger("BlockProducer");
 
@@ -101,7 +107,8 @@ class BlockProducerImpl extends BlockProducer {
               // TODO: gRPC stream bug that does not properly respect stream cancelation
               // await packOperation?.cancel();
               packOperation = null;
-              final body = bodyTmp;
+              final bodyWithoutReward = bodyTmp;
+              final body = insertReward(bodyWithoutReward, parentHeader.id);
               log.info("Constructing block for slot=${nextHit.slot}");
               final now = DateTime.now().millisecondsSinceEpoch;
               final (slotStart, slotEnd) = clock.slotToTimestamps(nextHit.slot);
@@ -182,4 +189,21 @@ class BlockProducerImpl extends BlockProducer {
                 [],
                 staker.address,
               );
+
+  FullBlockBody insertReward(FullBlockBody base, BlockId parentId) {
+    if (rewardAddress != null) {
+      assert(
+          base.transactions.where((t) => t.hasRewardParentBlockId()).length ==
+              0,
+          "Block already contains reward");
+      Int64 maximumQuantity = Int64.ZERO;
+      for (final tx in base.transactions) maximumQuantity += tx.reward;
+      final output = TransactionOutput(
+          lockAddress: rewardAddress, value: Value(quantity: maximumQuantity));
+      final rewardTx =
+          Transaction(outputs: [output], rewardParentBlockId: parentId);
+      return FullBlockBody(transactions: [...base.transactions, rewardTx]);
+    } else
+      return base;
+  }
 }

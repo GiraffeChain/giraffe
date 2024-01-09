@@ -4,7 +4,7 @@ import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart' as conf;
 import 'package:blockchain/crypto/utils.dart';
-import 'package:blockchain/isolate_pool.dart';
+import 'package:blockchain/common/isolate_pool.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 

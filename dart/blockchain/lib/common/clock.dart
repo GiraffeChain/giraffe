@@ -10,7 +10,6 @@ abstract class Clock {
   Int64 get slotsPerOperationalPeriod;
   Int64 get globalSlot;
   Int64 get localTimestamp;
-  int get forwardBiasedSlotWindow;
   Int64 timestampToSlot(Int64 timestamp);
   // Returns an inclusive range (minimum, maximum) of valid timestamps for the given slot
   (Int64, Int64) slotToTimestamps(Int64 slot);
@@ -74,14 +73,12 @@ class ClockImpl extends Clock {
   final Int64 slotsPerEpoch;
   final Int64 slotsPerOperationalPeriod;
   final Int64 _genesisTimestamp;
-  final int forwardBiasedSlotWindow;
 
   ClockImpl(
     this.slotLength,
     this.slotsPerEpoch,
     this.slotsPerOperationalPeriod,
     this._genesisTimestamp,
-    this.forwardBiasedSlotWindow,
   );
 
   @override

@@ -36,10 +36,9 @@ class BlockPackerImpl extends BlockPacker {
     final queue = Queue<Transaction>();
 
     populateQueue(FullBlockBody current) async {
-      final mempoolTransactionIds = await mempool.read(parentBlockId);
+      final mempoolTransactions = await mempool.read(parentBlockId);
       final unsortedTransactions =
-          (await Future.wait(mempoolTransactionIds.map(fetchTransaction)))
-              .where((tx) => !current.transactions.contains(tx));
+          mempoolTransactions.where((tx) => !current.transactions.contains(tx));
       final transactionsWithLocalParents = <Transaction>[];
       for (final transaction in unsortedTransactions) {
         final spentIds =

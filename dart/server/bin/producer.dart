@@ -9,7 +9,7 @@ import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/data_stores.dart';
-import 'package:blockchain/isolate_pool.dart';
+import 'package:blockchain/common/isolate_pool.dart';
 import 'package:blockchain/minting/minting.dart';
 import 'package:blockchain/rpc/client.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -20,7 +20,7 @@ import 'package:logging/logging.dart';
 final BlockchainConfig config = BlockchainConfig(
     staking: BlockchainStaking(
         stakingDir:
-            "${Directory.systemTemp.path}/blockchain-genesis/{genesisId}/stakers/0"));
+            "${Directory.systemTemp.path}/blockchain-genesis/{genesisId}/stakers/1"));
 Future<void> main() async {
   initRootLogger();
 
@@ -30,7 +30,7 @@ Future<void> main() async {
       .map((p) => p.isolate)
       .tap(setComputeFunction)
       .flatMap((isolate) =>
-          RpcClient.makeChannel(port: 2024).evalFlatMap((channel) async {
+          RpcClient.makeChannel(port: 2034).evalFlatMap((channel) async {
             final rpcClient = NodeRpcClient(channel);
             final viewer = BlockchainViewFromRpc(nodeClient: rpcClient);
             final canonicalHeadId = await viewer.canonicalHeadId;
@@ -51,7 +51,6 @@ Future<void> main() async {
               protocolSettings.epochLength,
               protocolSettings.operationalPeriodLength,
               genesisHeader.timestamp,
-              protocolSettings.forwardBiasedSlotWindow,
             );
             final leaderElection =
                 LeaderElectionImpl(protocolSettings, isolate);
@@ -68,6 +67,7 @@ Future<void> main() async {
               leaderElection,
               rpcClient,
               stakerSupportClient,
+              config.staking.rewardAddress,
             ).flatMap((minting) => Resource.forStreamSubscription(() => minting
                 .blockProducer.blocks
                 .asyncMap((block) => stakerSupportClient

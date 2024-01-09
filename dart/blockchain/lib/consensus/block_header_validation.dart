@@ -10,6 +10,7 @@ import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:blockchain/crypto/kes.dart';
 import 'package:blockchain/crypto/utils.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:rational/rational.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -28,6 +29,8 @@ class BlockHeaderValidationImpl extends BlockHeaderValidation {
   final LeaderElection leaderElectionValidation;
   final Clock clock;
   final Future<BlockHeader> Function(BlockId) fetchHeader;
+
+  static final _maximumSlotDesync = Int64(5);
 
   BlockHeaderValidationImpl(
       this.genesisBlockId,
@@ -84,8 +87,8 @@ class BlockHeaderValidationImpl extends BlockHeaderValidation {
   List<String> _timeSlotVerification(BlockHeader header) {
     if (clock.timestampToSlot(header.timestamp) != header.slot)
       return ["TimestampSlotMismatch"];
-    if (header.slot > (clock.globalSlot + clock.forwardBiasedSlotWindow))
-      return ["SlotBeyondForwardBiasedSlotWindow"];
+    if (header.slot > (clock.globalSlot + _maximumSlotDesync))
+      return ["SlotClockDesync"];
     return [];
   }
 

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
 class BlockchainConfig {
@@ -32,8 +33,9 @@ class BlockchainData {
 
 class BlockchainStaking {
   final String stakingDir;
+  final LockAddress? rewardAddress;
 
-  BlockchainStaking({String? stakingDir})
+  BlockchainStaking({String? stakingDir, LockAddress? this.rewardAddress})
       : stakingDir = stakingDir ?? "/tmp/bifrost/staking/{genesisId}";
 }
 

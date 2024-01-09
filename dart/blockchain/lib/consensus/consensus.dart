@@ -55,12 +55,14 @@ class Consensus {
           dataStores.epochBoundaries,
           dataStores.headers.getOrRaise,
         );
-        final consensusDataState = consensusDataEventSourcedState(
+        final consensusDataState = ConsensusData.eventSourcedState(
             await currentEventIdGetterSetters.consensusData.get(),
             parentChildTree,
             currentEventIdGetterSetters.consensusData.set,
-            ConsensusData(dataStores.activeStake, dataStores.inactiveStake,
-                dataStores.activeStakers),
+            ConsensusData(
+                dataStores.delayedActiveStake,
+                dataStores.delayedInactiveStake,
+                dataStores.delayedActiveStakers),
             dataStores.bodies.getOrRaise,
             dataStores.transactions.getOrRaise);
 

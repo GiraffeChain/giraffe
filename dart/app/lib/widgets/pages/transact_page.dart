@@ -120,9 +120,11 @@ class TransactViewState extends State<TransactView> {
         ..value = value;
       tx.outputs.add(output);
     }
+    final head = await widget.view.canonicalHead;
+    final slot = (await widget.view.clock).globalSlot;
     final witnessContext = WitnessContext(
-      height: Int64.ONE, // TODO
-      slot: Int64.ONE, // TODO
+      height: head.height + 1,
+      slot: slot,
       messageToSign: tx.signableBytes,
     );
     for (final lockAddress

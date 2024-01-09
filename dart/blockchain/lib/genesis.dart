@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blockchain/codecs.dart';
+import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/ledger/block_header_to_body_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -12,6 +13,34 @@ class Genesis {
   static const height = Int64.ONE;
   static const slot = Int64.ZERO;
   static final parentSlot = Int64(-1);
+
+  static final parentId = BlockId()..value = Int8List(32);
+  static final operationalCertificate = OperationalCertificate()
+    ..parentVK = (VerificationKeyKesProduct()
+      ..value = _emptyBytes(32)
+      ..step = 0)
+    ..parentSignature = (SignatureKesProduct()
+      ..superSignature = (SignatureKesSum()..verificationKey = _emptyBytes(32))
+      ..subSignature = (SignatureKesSum()..verificationKey = _emptyBytes(32))
+      ..subRoot = _emptyBytes(32))
+    ..childVK = _emptyBytes(32)
+    ..childSignature = _emptyBytes(64);
+
+  static final stakingAddress = StakingAddress(value: _emptyBytes(32));
+
+  static Eta eta(List<int> prefix, Iterable<TransactionId> transactionIds) {
+    final bytes = <int>[]..addAll(prefix);
+    for (final id in transactionIds) bytes.addAll(id.value);
+    return bytes.hash256;
+  }
+
+  static EligibilityCertificate eligibilityCertificate(Eta eta) =>
+      EligibilityCertificate()
+        ..vrfSig = _emptyBytes(80)
+        ..vrfVK = _emptyBytes(32)
+        ..thresholdEvidence = _emptyBytes(32)
+        ..eta = eta;
+
   static Future<void> save(Directory directory, FullBlock block) async {
     await directory.create(recursive: true);
     final blockIdStr = block.header.id.show;
@@ -76,27 +105,20 @@ class GenesisConfig {
 
   static final DefaultEtaPrefix = utf8.encode("genesis");
 
-  Future<FullBlock> get block async {
-    final eta = await (etaPrefix +
-            transactions
-                .map((t) => t.id.value)
-                .fold(Uint8List(0), (a, b) => a + b))
-        .hash256;
-    final eligibilityCertificate = EligibilityCertificate()
-      ..vrfSig = _emptyBytes(80)
-      ..vrfVK = _emptyBytes(32)
-      ..thresholdEvidence = _emptyBytes(32)
-      ..eta = eta;
+  FullBlock get block {
+    final transactionIds = transactions.map((tx) => tx.id);
     final header = BlockHeader()
-      ..parentHeaderId = GenesisParentId
+      ..parentHeaderId = Genesis.parentId
       ..parentSlot = Genesis.parentSlot
-      ..txRoot = TxRoot.calculateFromTransactions(Uint8List(32), transactions)
+      ..txRoot =
+          TxRoot.calculateFromTransactionIds(Uint8List(32), transactionIds)
       ..timestamp = timestamp
       ..height = Genesis.height
       ..slot = Genesis.slot
-      ..eligibilityCertificate = eligibilityCertificate
-      ..operationalCertificate = GenesisOperationalCertificate
-      ..address = (StakingAddress()..value = _emptyBytes(32));
+      ..eligibilityCertificate =
+          Genesis.eligibilityCertificate(Genesis.eta(etaPrefix, transactionIds))
+      ..operationalCertificate = Genesis.operationalCertificate
+      ..address = Genesis.stakingAddress;
 
     header.settings.addAll(settings);
 
@@ -105,17 +127,5 @@ class GenesisConfig {
       ..fullBody = (FullBlockBody()..transactions.addAll(transactions));
   }
 }
-
-final GenesisParentId = BlockId()..value = Int8List(32);
-final GenesisOperationalCertificate = OperationalCertificate()
-  ..parentVK = (VerificationKeyKesProduct()
-    ..value = _emptyBytes(32)
-    ..step = 0)
-  ..parentSignature = (SignatureKesProduct()
-    ..superSignature = (SignatureKesSum()..verificationKey = _emptyBytes(32))
-    ..subSignature = (SignatureKesSum()..verificationKey = _emptyBytes(32))
-    ..subRoot = _emptyBytes(32))
-  ..childVK = _emptyBytes(32)
-  ..childSignature = _emptyBytes(64);
 
 Int8List _emptyBytes(int length) => Int8List(length);

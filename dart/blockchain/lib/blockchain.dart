@@ -96,7 +96,6 @@ class BlockchainCore {
                 protocolSettings.epochLength,
                 protocolSettings.operationalPeriodLength,
                 genesisTimestamp,
-                protocolSettings.forwardBiasedSlotWindow,
               );
               return Resource.eval(() async {
                 final canonicalHeadId =
@@ -202,7 +201,7 @@ class BlockchainCore {
     if (validationErrors.isNotEmpty)
       throw ArgumentError.value(transaction, validationErrors.first);
     await dataStores.transactions.put(transaction.id, transaction);
-    await ledger.mempool.add(transaction.id);
+    await ledger.mempool.add(transaction);
   }
 }
 

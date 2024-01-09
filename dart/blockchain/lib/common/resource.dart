@@ -248,6 +248,99 @@ extension ResourceRecord2Ops<T1, T2> on (Resource<T1>, Resource<T2>) {
   Resource<(T1, T2)> get tupled => $1.product($2);
 }
 
+extension ResourceRecord11Ops<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> on (
+  Resource<T1>,
+  Resource<T2>,
+  Resource<T3>,
+  Resource<T4>,
+  Resource<T5>,
+  Resource<T6>,
+  Resource<T7>,
+  Resource<T8>,
+  Resource<T9>,
+  Resource<T10>,
+  Resource<T11>
+) {
+  Resource<O> mapN<O>(
+          O Function(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11) f) =>
+      $1.flatMap(
+        (v1) => $2.flatMap(
+          (v2) => $3.flatMap(
+            (v3) => $4.flatMap(
+              (v4) => $5.flatMap(
+                (v5) => $6.flatMap(
+                  (v6) => $7.flatMap(
+                    (v7) => $8.flatMap(
+                      (v8) => $9.flatMap(
+                        (v9) => $10.flatMap(
+                          (v10) => $11.flatMap((v11) => Resource.pure(
+                              f(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11))),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+extension ResourceRecord12Ops<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+    on (
+  Resource<T1>,
+  Resource<T2>,
+  Resource<T3>,
+  Resource<T4>,
+  Resource<T5>,
+  Resource<T6>,
+  Resource<T7>,
+  Resource<T8>,
+  Resource<T9>,
+  Resource<T10>,
+  Resource<T11>,
+  Resource<T12>,
+) {
+  Resource<O> mapN12<O>(
+          O Function(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12) f) =>
+      $1.flatMap(
+        (v1) => $2.flatMap(
+          (v2) => $3.flatMap(
+            (v3) => $4.flatMap(
+              (v4) => $5.flatMap(
+                (v5) => $6.flatMap(
+                  (v6) => $7.flatMap(
+                    (v7) => $8.flatMap(
+                      (v8) => $9.flatMap(
+                        (v9) => $10.flatMap(
+                          (v10) => $11.flatMap(
+                              (v11) => $12.flatMap((v12) => Resource.pure(f(
+                                    v1,
+                                    v2,
+                                    v3,
+                                    v4,
+                                    v5,
+                                    v6,
+                                    v7,
+                                    v8,
+                                    v9,
+                                    v10,
+                                    v11,
+                                    v12,
+                                  )))),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
 class BackgroundHandler {
   final Future<void> done;
   final Future Function() cancel;

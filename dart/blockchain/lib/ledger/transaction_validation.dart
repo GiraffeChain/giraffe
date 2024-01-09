@@ -178,8 +178,8 @@ class TransactionSemanticValidationImpl extends TransactionSemanticValidation {
 
   Future<List<String>> _graphValidation(
       TransactionOutput output, TransactionValidationContext context) async {
-    if (output.value.hasEdge()) {
-      final edge = output.value.edge;
+    if (output.value.hasGraphEntry() && output.value.graphEntry.hasEdge()) {
+      final edge = output.value.graphEntry.edge;
 
       if (!(await transactionOutputState.transactionOutputIsSpendable(
           context.parentHeaderId, edge.a))) return ["Edge.A Not Spendable"];
@@ -187,10 +187,14 @@ class TransactionSemanticValidationImpl extends TransactionSemanticValidation {
           context.parentHeaderId, edge.b))) return ["Edge.B Not Spendable"];
 
       final aTx = await fetchTransaction(edge.a.transactionId);
-      if (!aTx.outputs[edge.a.index].value.hasVertex())
+      final aOutput = aTx.outputs[edge.a.index];
+      if (!aOutput.value.hasGraphEntry() ||
+          !aOutput.value.graphEntry.hasVertex())
         return ["Edge.A is not a vertex"];
       final bTx = await fetchTransaction(edge.b.transactionId);
-      if (!bTx.outputs[edge.b.index].value.hasVertex())
+      final bOutput = bTx.outputs[edge.b.index];
+      if (!bOutput.value.hasGraphEntry() ||
+          !bOutput.value.graphEntry.hasVertex())
         return ["Edge.B is not a vertex"];
     }
     return [];

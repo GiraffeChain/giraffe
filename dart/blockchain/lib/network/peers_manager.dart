@@ -514,7 +514,7 @@ class PeerBlockchainInterface {
         // TODO: cache/buffer
         final value = await blockchain.ledger.mempool.changes
             .whereType<MempoolAdded>()
-            .map((a) => a.id)
+            .map((a) => a.transaction.id)
             .first;
         final encoded = P2PCodecs.transactionIdCodec.encode(value);
         await exchange.write(MultiplexedDataResponse(

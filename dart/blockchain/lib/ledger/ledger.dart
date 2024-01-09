@@ -10,6 +10,7 @@ import 'package:blockchain/ledger/transaction_output_state.dart';
 import 'package:blockchain/ledger/mempool.dart';
 import 'package:blockchain/ledger/transaction_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:fixnum/fixnum.dart';
 
 class Ledger {
   final TransactionSyntaxValidation transactionSyntaxValidation;
@@ -55,18 +56,22 @@ class Ledger {
           fetchTransaction: dataStores.transactions.getOrRaise,
           transactionSyntaxValidation: transactionSyntaxValidation,
           transactionSemanticValidation: transactionSemanticValidation,
+          inflation: Int64(50),
         );
 
         final headerToBodyValidation = BlockHeaderToBodyValidationImpl(
             fetchHeader: dataStores.headers.getOrRaise);
         return MempoolImpl.make(
-                dataStores.bodies.getOrRaise,
-                parentChildTree,
-                await currentEventIdGetterSetters.mempool.get(),
-                Duration(minutes: 5))
+          dataStores.bodies.getOrRaise,
+          dataStores.transactions.getOrRaise,
+          parentChildTree,
+          await currentEventIdGetterSetters.mempool.get(),
+          Duration(minutes: 1),
+          localChain,
+        )
             .flatTap(
                 (mempool) => mempool.eventSourcedState.followChain(localChain))
-            .map((mempool) {
+            .flatMap((mempool) {
           final blockPacker = BlockPackerImpl(
             mempool,
             clock,
@@ -74,7 +79,7 @@ class Ledger {
             dataStores.transactions.contains,
             BlockPackerImpl.makeBodyValidator(bodyValidation),
           );
-          return Ledger(
+          return Resource.pure(Ledger(
             transactionSyntaxValidation: transactionSyntaxValidation,
             transactionSemanticValidation: transactionSemanticValidation,
             bodyValidation: bodyValidation,
@@ -82,7 +87,7 @@ class Ledger {
             transactionOutputState: transactionOutputState,
             mempool: mempool,
             blockPacker: blockPacker,
-          );
+          ));
         });
       });
 }
