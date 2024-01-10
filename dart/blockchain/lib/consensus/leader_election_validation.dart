@@ -48,7 +48,7 @@ Future<Rational> _getThreshold(Rational relativeStake, Int64 slotDiff,
         ? protocolSettings.vrfBaselineDifficulty
         : (Rational(
                 slotDiff.toBigInt, BigInt.from(protocolSettings.vrfLddCutoff)) *
-            protocolSettings.vrfAmpltitude);
+            protocolSettings.vrfAmplitude);
 
     if (difficultyCurve == Rational.one) {
       return difficultyCurve;

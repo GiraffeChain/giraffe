@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package com.blockchain.services;
+package blockchain.services;
 
 import 'models/core.proto';
 
@@ -16,25 +16,25 @@ service StakerSupportRpc {
 
 
 message BroadcastBlockReq {
-    com.blockchain.models.Block block = 1;
+    blockchain.models.Block block = 1;
 }
 
 message BroadcastBlockRes {}
 
 
 message GetStakerReq {
-    com.blockchain.models.StakingAddress stakingAddress = 1;
-    com.blockchain.models.BlockId parentBlockId = 2;
+    blockchain.models.StakingAddress stakingAddress = 1;
+    blockchain.models.BlockId parentBlockId = 2;
     uint64 slot = 3;
 }
 
 message GetStakerRes {
-    com.blockchain.models.ActiveStaker staker = 1;
+    blockchain.models.ActiveStaker staker = 1;
 }
 
 
 message GetTotalActiveStakeReq {
-    com.blockchain.models.BlockId parentBlockId = 1;
+    blockchain.models.BlockId parentBlockId = 1;
     uint64 slot = 2;
 }
 
@@ -44,7 +44,7 @@ message GetTotalActiveStakeRes {
 
 
 message CalculateEtaReq {
-    com.blockchain.models.BlockId parentBlockId = 1;
+    blockchain.models.BlockId parentBlockId = 1;
     uint64 slot = 2;
 }
 
@@ -53,10 +53,10 @@ message CalculateEtaRes {
 }
 
 message PackBlockReq {
-    com.blockchain.models.BlockId parentBlockId = 1;
+    blockchain.models.BlockId parentBlockId = 1;
     uint64 untilSlot = 2;
 }
 
 message PackBlockRes {
-    com.blockchain.models.BlockBody body = 1;
+    blockchain.models.BlockBody body = 1;
 }

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package com.blockchain.models;
+package blockchain.models;
 
 import "validate/validate.proto";
 import "google/protobuf/wrappers.proto";
@@ -169,7 +169,7 @@ message TransactionOutput {
 }
 
 message Value {
-    uint64 quantity = 1 [(validate.rules).message.required = true];
+    uint64 quantity = 1;
     // Optional.  If not provided, this token will not be used for staking purposes.
     StakingAddress staker = 2;
     // Optional.  If provided, introduces a new staker to the chain.
@@ -209,7 +209,7 @@ message ActiveStaker {
     // The staker's registration.  If not provided, the StakingAddress is not associated with a StakingRegistration
     StakingRegistration registration = 1 [(validate.rules).message.required = true];
     // the quantity of staked tokens for the epoch
-    int64 quantity = 2 [(validate.rules).message.required = true];
+    int64 quantity = 2;
     // The block in which the staker is registered.
     BlockId registrationBlock = 3 [(validate.rules).message.required = true];
 }
