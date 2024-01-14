@@ -25,6 +25,10 @@ object Dependencies {
   val bouncycastle = Seq(
     "org.bouncycastle" % "bcprov-jdk18on" % "1.77"
   )
+
+  val scodec = Seq(
+    "org.scodec" %% "scodec-core" % "2.2.2"
+  )
 }
 
 object Versions {

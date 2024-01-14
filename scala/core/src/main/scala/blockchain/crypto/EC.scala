@@ -2,7 +2,8 @@ package blockchain.crypto
 
 import java.security.MessageDigest
 import java.util
-import scala.util.control.Breaks._
+import scala.util.boundary
+import scala.util.control.Breaks.*
 
 /*
   Ed25519 is EdDSA instantiated with:
@@ -216,12 +217,13 @@ trait EC {
   }
 
   private[crypto] def gte256(x: Array[Int], y: Array[Int]): Boolean = {
-    for (i <- 7 to 0 by -1) {
-      val x_i = x(i) ^ Integer.MIN_VALUE
-      val y_i = y(i) ^ Integer.MIN_VALUE
-      if (x_i < y_i) return false
-      if (x_i > y_i) return true
-    }
+    boundary:
+      for (i <- 7 to 0 by -1) {
+        val x_i = x(i) ^ Integer.MIN_VALUE
+        val y_i = y(i) ^ Integer.MIN_VALUE
+        if (x_i < y_i) boundary.break(false)
+        if (x_i > y_i) boundary.break(true)
+      }
     true
   }
 

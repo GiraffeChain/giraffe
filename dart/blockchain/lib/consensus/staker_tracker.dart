@@ -14,6 +14,7 @@ abstract class StakerTracker {
 
   Future<ActiveStaker?> staker(
       BlockId currentBlockId, Int64 slot, StakingAddress address);
+
   Future<Rational?> operatorRelativeStake(
       BlockId currentBlockId, Int64 slot, StakingAddress address) async {
     final s = await staker(currentBlockId, slot, address);

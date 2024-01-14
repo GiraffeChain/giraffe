@@ -1,6 +1,6 @@
 package blockchain.crypto
 
-import blockchain.crypto.KesBinaryTree._
+import blockchain.crypto.KesBinaryTree.*
 
 import java.security.SecureRandom
 
@@ -130,7 +130,7 @@ case class SecretKeyKesProduct(
 ) {
 
   override def equals(obj: Any): Boolean =
-    obj match {
+    obj.asInstanceOf[Matchable] match {
       case s: SecretKeyKesProduct =>
         superTree == s.superTree &&
         subTree == s.subTree &&
@@ -167,14 +167,15 @@ case class SignatureKesProduct(
     r
   }
 
-  override def equals(other: Any): Boolean = other match {
-    case kesProduct: SignatureKesProduct =>
-      superSignature == kesProduct.superSignature &&
-      subSignature == kesProduct.subSignature &&
-      subRoot.sameElements(kesProduct.subRoot)
+  override def equals(other: Any): Boolean =
+    other.asInstanceOf[Matchable] match {
+      case kesProduct: SignatureKesProduct =>
+        superSignature == kesProduct.superSignature &&
+        subSignature == kesProduct.subSignature &&
+        subRoot.sameElements(kesProduct.subRoot)
 
-    case _ => false
-  }
+      case _ => false
+    }
 }
 
 case class VerificationKeyKesProduct(value: Array[Byte], step: Int) {
@@ -186,12 +187,13 @@ case class VerificationKeyKesProduct(value: Array[Byte], step: Int) {
     r
   }
 
-  override def equals(other: Any): Boolean = other match {
-    case vk: VerificationKeyKesProduct =>
-      value.sameElements(vk.value) &&
-      step == vk.step
-    case _ => false
-  }
+  override def equals(other: Any): Boolean =
+    other.asInstanceOf[Matchable] match {
+      case vk: VerificationKeyKesProduct =>
+        value.sameElements(vk.value) &&
+        step == vk.step
+      case _ => false
+    }
 }
 
 /** Credit to Aaron Schutza

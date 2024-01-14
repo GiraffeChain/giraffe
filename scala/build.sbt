@@ -42,7 +42,10 @@ lazy val core = project
   .in(file("core"))
   .settings(
     name := "blockchain-core",
-    libraryDependencies ++= Dependencies.logging ++ Dependencies.cats ++ Dependencies.scalaCache ++ Dependencies.bouncycastle
+    libraryDependencies ++= Dependencies.logging ++ Dependencies.cats ++ Dependencies.scalaCache ++ Dependencies.bouncycastle ++ Dependencies.scodec,
+    scalacOptions ++= Seq(
+      "-source:future"
+    )
   )
   .dependsOn(protobuf)
 
@@ -68,8 +71,8 @@ lazy val protobuf =
       ),
       // This task copies all .proto files from the repository root into a directory that can be referenced by ScalaPB
       copyProtobufTask := {
-        import java.nio.file._
-        import scala.jdk.CollectionConverters._
+        import java.nio.file.*
+        import scala.jdk.CollectionConverters.*
         // The files will be copied into protobuf-fs2/target/protobuf-tmp
         val destinationBase =
           Paths.get((Compile / target).value.toString, "protobuf-tmp")
@@ -130,7 +133,9 @@ lazy val protobuf =
         val files = (Compile / managedSources).value
         files.map { f => (f, f.relativeTo(base).get.getPath) }
       },
-      scalapbCodeGeneratorOptions += CodeGeneratorOption.FlatPackage,
+      scalapbCodeGeneratorOptions ++= Seq(
+        CodeGeneratorOption.FlatPackage
+      ),
       Compile / PB.targets := scalapbCodeGenerators.value
         .map(_.copy(outputPath = (Compile / sourceManaged).value))
         .:+(

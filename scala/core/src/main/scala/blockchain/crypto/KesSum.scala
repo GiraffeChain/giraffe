@@ -1,6 +1,6 @@
 package blockchain.crypto
 
-import blockchain.crypto.KesBinaryTree._
+import blockchain.crypto.KesBinaryTree.*
 
 import java.security.SecureRandom
 import scala.annotation.tailrec
@@ -74,14 +74,15 @@ case class SignatureKesSum(
     r
   }
 
-  override def equals(other: Any): Boolean = other match {
-    case kesSum: SignatureKesSum =>
-      verificationKey.sameElements(kesSum.verificationKey) &&
-      signature.sameElements(kesSum.signature) &&
-      witness.zip(kesSum.witness).forall { case (x, y) => x.sameElements(y) }
+  override def equals(other: Any): Boolean =
+    other.asInstanceOf[Matchable] match {
+      case kesSum: SignatureKesSum =>
+        verificationKey.sameElements(kesSum.verificationKey) &&
+        signature.sameElements(kesSum.signature) &&
+        witness.zip(kesSum.witness).forall { case (x, y) => x.sameElements(y) }
 
-    case _ => false
-  }
+      case _ => false
+    }
 }
 
 case class VerificationKeyKesSum(value: Array[Byte], step: Int) {
@@ -93,12 +94,13 @@ case class VerificationKeyKesSum(value: Array[Byte], step: Int) {
     r
   }
 
-  override def equals(other: Any): Boolean = other match {
-    case vk: VerificationKeyKesSum =>
-      value.sameElements(vk.value) &&
-      step == vk.step
-    case _ => false
-  }
+  override def equals(other: Any): Boolean =
+    other.asInstanceOf[Matchable] match {
+      case vk: VerificationKeyKesSum =>
+        value.sameElements(vk.value) &&
+        step == vk.step
+      case _ => false
+    }
 }
 
 /** AMS 2021: Implementation of the MMM construction: Malkin, T., Micciancio, D.

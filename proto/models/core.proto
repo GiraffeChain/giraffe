@@ -35,8 +35,8 @@ message BlockHeader {
   // Optional metadata stamped by the operator.  Must be latin-1 encoded, and must be at most 32 bytes in length.
   // optional
   bytes metadata = 9 [(validate.rules).bytes.max_len = 32];
-  // The operator's staking address
-  StakingAddress address = 10 [(validate.rules).message.required = true];
+  // The operator's staking account location
+  TransactionOutputReference account = 10 [(validate.rules).message.required = true];
   // Configuration or protocol changes
   map<string, string> settings = 11;
 }
@@ -148,34 +148,39 @@ message Transaction {
 }
 
 message Witness {
-    LockAddress lockAddress = 3;
-    Lock lock = 1;
-    Key key = 2;
+    LockAddress lockAddress = 3 [(validate.rules).message.required = true];
+    Lock lock = 1 [(validate.rules).message.required = true];
+    Key key = 2 [(validate.rules).message.required = true];
 }
 
 message TransactionInput {
-    TransactionOutputReference reference = 1;
-    Value value = 2;
+    TransactionOutputReference reference = 1 [(validate.rules).message.required = true];
+    Value value = 2 [(validate.rules).message.required = true];
 }
 
 message TransactionOutputReference {
-    TransactionId transactionId = 1;
+    TransactionId transactionId = 1 [(validate.rules).message.required = true];
     uint32 index = 2;
 }
 
 message TransactionOutput {
-    LockAddress lockAddress = 1;
-    Value value = 2;
+    LockAddress lockAddress = 1 [(validate.rules).message.required = true];
+    Value value = 2 [(validate.rules).message.required = true];
+    // Optional
+    TransactionOutputReference account = 3;
 }
 
 message Value {
     uint64 quantity = 1;
-    // Optional.  If not provided, this token will not be used for staking purposes.
-    StakingAddress staker = 2;
-    // Optional.  If provided, introduces a new staker to the chain.
-    StakingRegistration registration = 3;
+    AccountRegistration accountRegistration = 2;
     // Optional
-    GraphEntry graphEntry = 4;
+    GraphEntry graphEntry = 3;
+}
+
+message AccountRegistration {
+    LockAddress associationLock = 1 [(validate.rules).message.required = true];
+    // Optional.  If provided, introduces a new staker to the chain.
+    StakingRegistration stakingRegistration = 2;
 }
 
 // A proof-of-stake registration
@@ -200,8 +205,8 @@ message Vertex {
 message Edge {
     string label = 1;
     google.protobuf.Struct data = 2;
-    TransactionOutputReference a = 3;
-    TransactionOutputReference b = 4;
+    TransactionOutputReference a = 3 [(validate.rules).message.required = true];
+    TransactionOutputReference b = 4 [(validate.rules).message.required = true];
 }
 
 // An active, registered participate in the consensus protocol, for a particular epoch.
@@ -210,8 +215,6 @@ message ActiveStaker {
     StakingRegistration registration = 1 [(validate.rules).message.required = true];
     // the quantity of staked tokens for the epoch
     int64 quantity = 2;
-    // The block in which the staker is registered.
-    BlockId registrationBlock = 3 [(validate.rules).message.required = true];
 }
 
 message LockAddress {
@@ -245,12 +248,12 @@ message PeerId {
 }
 
 message PublicP2PState {
-    ConnectedPeer localPeer = 1;
+    ConnectedPeer localPeer = 1 [(validate.rules).message.required = true];
     repeated ConnectedPeer peers = 2;
 }
 
 message ConnectedPeer {
-    PeerId peerId = 1;
+    PeerId peerId = 1 [(validate.rules).message.required = true];
     google.protobuf.StringValue host = 2;
     google.protobuf.UInt32Value port = 3;
 }

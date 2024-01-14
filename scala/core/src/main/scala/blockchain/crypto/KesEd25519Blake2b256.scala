@@ -133,21 +133,21 @@ trait BinaryTree[+A] {
   import scala.annotation.tailrec
 
   def value: Option[A] = this match {
-    case n: Node[A] => Some(n.v)
-    case l: Leaf[A] => Some(l.v)
-    case Empty      => None
+    case n: Node[A @unchecked] => Some(n.v)
+    case l: Leaf[A @unchecked] => Some(l.v)
+    case Empty                 => None
   }
 
   def left: Option[BinaryTree[A]] = this match {
-    case n: Node[A] => Some(n.l)
-    case _: Leaf[A] => None
-    case Empty      => None
+    case n: Node[A @unchecked] => Some(n.l)
+    case _: Leaf[_]            => None
+    case Empty                 => None
   }
 
   def right: Option[BinaryTree[A]] = this match {
-    case n: Node[A] => Some(n.r)
-    case _: Leaf[A] => None
-    case Empty      => None
+    case n: Node[A @unchecked] => Some(n.r)
+    case _: Leaf[_]            => None
+    case Empty                 => None
   }
 
   /** Represents a deferred evaluation of a node value
@@ -161,13 +161,13 @@ trait BinaryTree[+A] {
       f: (B, A) => B
   )(o: (Node[A], List[BinaryTree[A]]) => List[BinaryTree[A]]): B =
     a match {
-      case (n: Node[A]) :: tl =>
+      case (n: Node[A @unchecked]) :: tl =>
         foldLoop(o(n, tl), z)(f)(
           o
         ) // never directly evaluate nodes, function o will create new accumulator
-      case (l: Leaf[A]) :: tl =>
+      case (l: Leaf[A @unchecked]) :: tl =>
         foldLoop(tl, f(z, l.v))(f)(o) // always evaluate Leaf
-      case (e: Eval[A]) :: tl =>
+      case (e: Eval[A @unchecked]) :: tl =>
         foldLoop(tl, f(z, e.v))(f)(o) // always evaluate Eval
       case Empty :: tl => foldLoop(tl, z)(f)(o) // ignore Empty
       case _           => z // will be Nil (empty list)
@@ -247,9 +247,10 @@ trait BinaryTree[+A] {
     */
   def height: Int = {
     def loop(t: BinaryTree[A]): Int = t match {
-      case _: Leaf[A] => 1
-      case n: Node[A] => Seq(loop(n.left.get), loop(n.right.get)).max + 1
-      case _          => 0
+      case _: Leaf[_] => 1
+      case n: Node[A @unchecked] =>
+        Seq(loop(n.left.get), loop(n.right.get)).max + 1
+      case _ => 0
     }
     loop(this) - 1
   }
@@ -259,10 +260,11 @@ trait BinaryTree[+A] {
   def leafCount: Int = {
     @tailrec
     def loop(t: List[BinaryTree[A]], z: Int): Int = t match {
-      case (_: Leaf[A]) :: tl => loop(tl, z + 1)
-      case (n: Node[A]) :: tl => loop(n.left.get :: n.right.get :: tl, z)
-      case _ :: tl            => loop(tl, z)
-      case _                  => z
+      case (_: Leaf[_]) :: tl => loop(tl, z + 1)
+      case (n: Node[A @unchecked]) :: tl =>
+        loop(n.left.get :: n.right.get :: tl, z)
+      case _ :: tl => loop(tl, z)
+      case _       => z
     }
     loop(List(this), 0)
   }
@@ -328,7 +330,7 @@ object KesBinaryTree {
   ) extends KesBinaryTree {
 
     override def equals(obj: Any): Boolean =
-      obj match {
+      obj.asInstanceOf[Matchable] match {
         case m: MerkleNode =>
           java.util.Arrays.equals(seed, m.seed) &&
           java.util.Arrays.equals(witnessLeft, m.witnessLeft) &&
@@ -354,7 +356,7 @@ object KesBinaryTree {
       extends KesBinaryTree {
 
     override def equals(obj: Any): Boolean =
-      obj match {
+      obj.asInstanceOf[Matchable] match {
         case s: SigningLeaf =>
           java.util.Arrays.equals(sk, s.sk) &&
           java.util.Arrays.equals(vk, s.vk)
