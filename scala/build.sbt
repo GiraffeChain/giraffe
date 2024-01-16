@@ -42,7 +42,14 @@ lazy val core = project
   .in(file("core"))
   .settings(
     name := "blockchain-core",
-    libraryDependencies ++= Dependencies.logging ++ Dependencies.cats ++ Dependencies.scalaCache ++ Dependencies.bouncycastle ++ Dependencies.scodec,
+    libraryDependencies ++=
+      Dependencies.logging ++
+        Dependencies.cats ++
+        Dependencies.scalaCache ++
+        Dependencies.bouncycastle ++
+        Dependencies.scodec ++
+        Dependencies.levelDbJni ++
+        Dependencies.fs2,
     scalacOptions ++= Seq(
       "-source:future"
     )

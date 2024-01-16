@@ -29,6 +29,10 @@ object Dependencies {
   val scodec = Seq(
     "org.scodec" %% "scodec-core" % "2.2.2"
   )
+
+  val levelDbJni = Seq(
+    "com.halibobor" % "leveldbjni-all" % "1.23.2"
+  )
 }
 
 object Versions {

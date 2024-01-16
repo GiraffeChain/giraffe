@@ -9,6 +9,9 @@ import cats.Monoid
 import cats.implicits.*
 import com.google.common.primitives.{Doubles, Ints, Longs}
 import com.google.protobuf.{ByteString, struct}
+import scodec.bits.BitVector
+
+import java.nio.charset.StandardCharsets
 
 trait Codecs {
 
@@ -237,6 +240,134 @@ trait Codecs {
   given ImmutableBytes[BlockId] with
     extension (id: BlockId) def immutableBytes: Bytes = id.value
 
+  given ArrayEncodable[BlockId] with
+    extension (id: BlockId) def encodeArray: Array[Byte] = id.value.toByteArray
+
+  given ArrayDecodable[BlockId] with
+    extension (array: Array[Byte])
+      def decodeFromArray: BlockId = BlockId(
+        ByteString.copyFrom(array.ensuring(_.length == 32))
+      )
+
+  given ArrayEncodable[TransactionId] with
+    extension (id: TransactionId)
+      def encodeArray: Array[Byte] = id.value.toByteArray
+
+  given ArrayDecodable[TransactionId] with
+    extension (array: Array[Byte])
+      def decodeFromArray: TransactionId = TransactionId(
+        ByteString.copyFrom(array.ensuring(_.length == 32))
+      )
+
+  given ArrayEncodable[Byte] with
+    extension (b: Byte) def encodeArray: Array[Byte] = Array(b)
+
+  given ArrayEncodable[(Long, BlockId)] with
+    extension (t: (Long, BlockId))
+      def encodeArray: Array[Byte] =
+        t._1.immutableBytes.concat(t._2.value).toByteArray
+
+  given ArrayDecodable[(Long, BlockId)] with
+    extension (array: Array[Byte])
+      def decodeFromArray: (Long, BlockId) =
+        (
+          Longs.fromByteArray(array.slice(0, 8)),
+          BlockId(ByteString.copyFrom(array.slice(8, array.length)))
+        )
+
+  given ArrayEncodable[BlockHeader] with
+    extension (v: BlockHeader) def encodeArray: Array[Byte] = v.toByteArray
+
+  given ArrayDecodable[BlockHeader] with
+    extension (array: Array[Byte])
+      def decodeFromArray: BlockHeader = BlockHeader.parseFrom(array)
+
+  given ArrayEncodable[BlockBody] with
+    extension (v: BlockBody) def encodeArray: Array[Byte] = v.toByteArray
+
+  given ArrayDecodable[BlockBody] with
+    extension (array: Array[Byte])
+      def decodeFromArray: BlockBody = BlockBody.parseFrom(array)
+
+  given ArrayEncodable[Transaction] with
+    extension (v: Transaction) def encodeArray: Array[Byte] = v.toByteArray
+
+  given ArrayDecodable[Transaction] with
+    extension (array: Array[Byte])
+      def decodeFromArray: Transaction = Transaction.parseFrom(array)
+
+  given ArrayEncodable[BitVector] with
+    extension (v: BitVector) def encodeArray: Array[Byte] = v.toByteArray
+
+  given ArrayDecodable[BitVector] with
+    extension (array: Array[Byte])
+      def decodeFromArray: BitVector = BitVector(array)
+
+  given ArrayEncodable[TransactionOutputReference] with
+    extension (v: TransactionOutputReference)
+      def encodeArray: Array[Byte] =
+        v.transactionId.value.toByteArray ++ Ints.toByteArray(v.index)
+
+  given ArrayDecodable[TransactionOutputReference] with
+    extension (array: Array[Byte])
+      def decodeFromArray: TransactionOutputReference =
+        TransactionOutputReference(
+          TransactionId(ByteString.copyFrom(array.slice(0, 32))),
+          Ints.fromByteArray(array.slice(32, 36))
+        )
+
+  given ArrayEncodable[List[TransactionOutputReference]] with
+    extension (v: List[TransactionOutputReference])
+      def encodeArray: Array[Byte] =
+        Ints.toByteArray(v.length) ++ v.toArray.flatMap(v => v.encodeArray)
+
+  given ArrayDecodable[List[TransactionOutputReference]] with
+    extension (array: Array[Byte])
+      def decodeFromArray: List[TransactionOutputReference] =
+        List.tabulate(Ints.fromByteArray(array.slice(0, 4)))(index =>
+          array.slice(4 + index * 36, 4 + (index + 1) * 36).decodeFromArray
+        )
+
+  given ArrayEncodable[Long] with
+    extension (v: Long)
+      def encodeArray: Array[Byte] =
+        Longs.toByteArray(v)
+
+  given ArrayDecodable[Long] with
+    extension (array: Array[Byte])
+      def decodeFromArray: Long =
+        Longs.fromByteArray(array)
+
+  given ArrayEncodable[Unit] with
+    extension (v: Unit)
+      def encodeArray: Array[Byte] =
+        Array[Byte](0)
+
+  given ArrayEncodable[ActiveStaker] with
+    extension (v: ActiveStaker)
+      def encodeArray: Array[Byte] =
+        v.toByteArray
+
+  given ArrayDecodable[ActiveStaker] with
+    extension (array: Array[Byte])
+      def decodeFromArray: ActiveStaker =
+        ActiveStaker.parseFrom(array)
+
+  given ArrayEncodable[Array[Byte]] with
+    extension (v: Array[Byte])
+      def encodeArray: Array[Byte] =
+        v
+
+  given ArrayDecodable[Array[Byte]] with
+    extension (array: Array[Byte])
+      def decodeFromArray: Array[Byte] =
+        array
+
+  given ArrayEncodable[String] with
+    extension (v: String)
+      def encodeArray: Array[Byte] =
+        v.getBytes(StandardCharsets.UTF_8)
+
   given SignableBytes[VrfArgument] with
     extension (argument: VrfArgument)
       def signableBytes: Bytes =
@@ -259,3 +390,8 @@ trait ImmutableBytes[T]:
 
 trait SignableBytes[T]:
   extension (t: T) def signableBytes: Bytes
+
+trait ArrayEncodable[T]:
+  extension (t: T) def encodeArray: Array[Byte]
+trait ArrayDecodable[T]:
+  extension (bytes: Array[Byte]) def decodeFromArray: T

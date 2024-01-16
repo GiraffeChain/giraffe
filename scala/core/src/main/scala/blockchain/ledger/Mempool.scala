@@ -5,7 +5,7 @@ import blockchain.consensus.*
 import blockchain.codecs.given
 import blockchain.models.*
 import cats.implicits.*
-import cats.effect.Async
+import cats.effect.{Async, Resource}
 import fs2.concurrent.Topic
 
 import java.time.Instant
@@ -17,8 +17,51 @@ trait Mempool[F[_]]:
 
 object Mempool:
   class State(var entries: List[Entry])
+  object State:
+    def default: State = new State(Nil)
   case class Entry(transaction: Transaction, addedAt: Instant)
   type BSS[F[_]] = BlockSourcedState[F, State]
+
+  def make[F[_]: Async](
+      bss: BSS[F],
+      localChain: LocalChain[F],
+      fetchHeader: FetchHeader[F],
+      bodyValidation: BodyValidation[F],
+      clock: Clock[F]
+  ): Resource[F, Mempool[F] with BlockPacker[F]] =
+    Resource
+      .make(Topic[F, MempoolChange])(_.close.void)
+      .map(mempoolChangesTopic =>
+        new MempoolImpl[F](
+          bss,
+          localChain,
+          fetchHeader,
+          bodyValidation,
+          clock,
+          mempoolChangesTopic
+        )
+      )
+
+  def makeBSS[F[_]: Async](
+      initialState: F[State],
+      initialBlockId: F[BlockId],
+      blockIdTree: BlockIdTree[F],
+      onBlockChanged: BlockId => F[Unit],
+      fetchBody: FetchBody[F],
+      fetchTransaction: FetchTransaction[F]
+  ): Resource[F, BSS[F]] =
+    Resource
+      .pure(new MempoolBSS[F]())
+      .flatMap(bssImpl =>
+        BlockSourcedState.make(
+          initialState,
+          initialBlockId,
+          bssImpl.applyBlock,
+          bssImpl.unapplyBlock,
+          blockIdTree,
+          onBlockChanged
+        )
+      )
 
 sealed trait MempoolChange
 object MempoolChange:
@@ -61,8 +104,12 @@ class MempoolImpl[F[_]: Async](
     mempoolChangesTopic.subscribeUnbounded
 
   override def streamed: fs2.Stream[F, FullBlockBody] =
-    localChain.adoptions.void
-      .merge(changes.void)
+    fs2.Stream
+      .apply(())
+      .merge(
+        localChain.adoptions.void
+          .merge(changes.void)
+      )
       .evalMap(_ => read)
       .map(FullBlockBody(_))
 
@@ -84,3 +131,8 @@ class MempoolImpl[F[_]: Async](
           .fold(_ => transactions, _ => transactions :+ transaction)
       )
     } yield newTransactions
+
+class MempoolBSS[F[_]]():
+  def applyBlock(state: Mempool.State, blockId: BlockId): F[Mempool.State] = ???
+  def unapplyBlock(state: Mempool.State, blockId: BlockId): F[Mempool.State] =
+    ???

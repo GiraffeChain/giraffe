@@ -8,6 +8,7 @@ import cats.{Functor, MonadThrow}
 import cats.data.OptionT
 import cats.effect.{Async, Resource, Sync}
 import cats.implicits.*
+import scodec.bits.BitVector
 
 trait TransactionOutputState[F[_]] {
 
@@ -19,16 +20,19 @@ trait TransactionOutputState[F[_]] {
 }
 
 object TransactionOutputState:
-  type State[F[_]] = Store[F, TransactionId, List[Boolean]]
+  type State[F[_]] = Store[F, TransactionId, BitVector]
   type BSS[F[_]] = BlockSourcedState[F, State[F]]
 
+  def make[F[_]: Functor](bss: BSS[F]): Resource[F, TransactionOutputState[F]] =
+    Resource.pure(new TransactionOutputStateImpl[F](bss))
+
   def makeBSS[F[_]: Async](
-      initialState: State[F],
-      initialBlockId: BlockId,
-      fetchBody: FetchBody[F],
-      fetchTransaction: FetchTransaction[F],
+      initialState: F[State[F]],
+      initialBlockId: F[BlockId],
       blockIdTree: BlockIdTree[F],
-      onBlockChanged: BlockId => F[Unit]
+      onBlockChanged: BlockId => F[Unit],
+      fetchBody: FetchBody[F],
+      fetchTransaction: FetchTransaction[F]
   ): Resource[F, BSS[F]] =
     new TransactionOutputStateBSSImpl[F](fetchBody, fetchTransaction).makeBss(
       initialState,
@@ -54,14 +58,14 @@ class TransactionOutputStateBSSImpl[F[_]: Async](
 ) {
 
   def makeBss(
-      initialState: TransactionOutputState.State[F],
-      initialBlockId: BlockId,
+      initialState: F[TransactionOutputState.State[F]],
+      initialBlockId: F[BlockId],
       blockIdTree: BlockIdTree[F],
       onBlockChanged: BlockId => F[Unit]
   ): Resource[F, TransactionOutputState.BSS[F]] =
     BlockSourcedState.make[F, TransactionOutputState.State[F]](
-      initialState.pure[F],
-      initialBlockId.pure[F],
+      initialState,
+      initialBlockId,
       applyBlock,
       unapplyBlock,
       blockIdTree,
@@ -81,16 +85,19 @@ class TransactionOutputStateBSSImpl[F[_]: Async](
               transaction.inputs.foldLeftM(state)((state, input) =>
                 state
                   .getOrRaise(input.reference.transactionId)
-                  .map(v => v.updated(input.reference.index, false))
+                  .map(v => v.clear(input.reference.index))
                   .flatMap(updated =>
-                    if (updated.contains(true))
+                    if (updated.populationCount > 1)
                       state.put(input.reference.transactionId, updated)
                     else state.remove(input.reference.transactionId)
                   )
                   .as(state)
               ) *>
                 state
-                  .put(transactionId, transaction.outputs.as(true).toList)
+                  .put(
+                    transactionId,
+                    BitVector.high(transaction.outputs.length)
+                  )
             )
             .as(state)
         )
@@ -111,9 +118,10 @@ class TransactionOutputStateBSSImpl[F[_]: Async](
                   OptionT(state.get(input.reference.transactionId))
                     .getOrElseF(
                       fetchTransaction(input.reference.transactionId)
-                        .map(_.outputs.as(false))
+                        .map(_.outputs.length)
+                        .map(BitVector.low(_))
                     )
-                    .map(_.updated(input.reference.index, true).toList)
+                    .map(_.set(input.reference.index))
                     .flatMap(state.put(input.reference.transactionId, _))
                     .as(state)
                 )

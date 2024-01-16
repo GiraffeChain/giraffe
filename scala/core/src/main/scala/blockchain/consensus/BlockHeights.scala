@@ -11,16 +11,19 @@ object BlockHeights:
   type BSS[F[_]] = BlockSourcedState[F, State[F]]
 
   def make[F[_]: Async](
-                         store:               Store[F, Long, BlockId],
-                         initialEventId:      F[BlockId],
-                         fetchHeader: BlockId => F[BlockHeader],
-                         blockTree:           BlockIdTree[F],
-                         currentEventChanged: BlockId => F[Unit]): Resource[F, BSS[F]] =
-      BlockSourcedState.make[F, State[F]](
-        Async[F].delay(store.get),
-        initialEventId = initialEventId,
-        (state, id) => fetchHeader(id).map(_.height).flatTap(store.put(_, id)).as(state),
-        (state, id) => fetchHeader(id).map(_.height).flatTap(store.remove).as(state),
-        blockTree,
-        currentEventChanged
-      )
+      store: Store[F, Long, BlockId],
+      initialEventId: F[BlockId],
+      blockTree: BlockIdTree[F],
+      currentEventChanged: BlockId => F[Unit],
+      fetchHeader: BlockId => F[BlockHeader]
+  ): Resource[F, BSS[F]] =
+    BlockSourcedState.make[F, State[F]](
+      Async[F].delay(store.get),
+      initialEventId = initialEventId,
+      (state, id) =>
+        fetchHeader(id).map(_.height).flatTap(store.put(_, id)).as(state),
+      (state, id) =>
+        fetchHeader(id).map(_.height).flatTap(store.remove).as(state),
+      blockTree,
+      currentEventChanged
+    )

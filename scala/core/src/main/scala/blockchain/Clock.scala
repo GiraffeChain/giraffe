@@ -1,10 +1,14 @@
 package blockchain
 
+import blockchain.Clock.SlotBoundary
+import blockchain.consensus.ProtocolSettings
+import cats.effect.{Async, Resource}
 import cats.implicits.*
-import cats.{Applicative, Functor, Monad}
+import cats.{Applicative, Monad}
 
+import java.time.Instant
 import scala.collection.immutable.NumericRange
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 trait Clock[F[_]]:
   def slotLength: FiniteDuration
@@ -50,3 +54,52 @@ trait Clock[F[_]]:
 
 object Clock:
   type SlotBoundary = NumericRange[Long]
+
+  def make[F[_]: Async](
+      protocolSettings: ProtocolSettings,
+      genesisTimestamp: Instant
+  ): Resource[F, Clock[F]] =
+    Resource.pure(
+      new ClockImpl[F](
+        protocolSettings.slotDuration,
+        protocolSettings.epochLength,
+        protocolSettings.operationalPeriodLength,
+        genesisTimestamp
+      )
+    )
+
+class ClockImpl[F[_]: Async](
+    val slotLength: FiniteDuration,
+    val epochLength: Long,
+    val operationalPeriodLength: Long,
+    genesisTimestamp: Instant
+) extends Clock[F]:
+  private val startTime = genesisTimestamp.toEpochMilli
+
+  override def globalSlot: F[Slot] =
+    globalTimestamp.flatMap(timestampToSlot)
+
+  override def globalTimestamp: F[Timestamp] =
+    Async[F].delay(System.currentTimeMillis())
+
+  override def timestampToSlot(timestamp: Slot): F[Slot] =
+    Async[F].delay((timestamp - startTime) / slotLength.toMillis)
+
+  override def slotToTimestampRange(slot: Slot): F[SlotBoundary] =
+    Async[F].delay {
+      if (slot == 0L) (0L to startTime)
+      else {
+        val startTimestamp = startTime + (slot * slotLength.toMillis)
+        val endTimestamp = startTimestamp + (slotLength.toMillis - 1)
+        NumericRange.inclusive(startTimestamp, endTimestamp, 1L)
+      }
+    }
+
+  override def delayedUntilSlot(slot: Slot): F[Unit] =
+    globalSlot
+      .map(currentSlot => slotLength * (slot - currentSlot))
+      .flatMap(delayedFor)
+
+  private def delayedFor(duration: FiniteDuration): F[Unit] =
+    if (duration < Duration.Zero) Applicative[F].unit
+    else Async[F].sleep(duration)

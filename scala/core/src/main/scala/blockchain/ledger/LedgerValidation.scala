@@ -4,7 +4,7 @@ import blockchain.{FetchTransaction, ValidationResult}
 import blockchain.models.*
 import blockchain.codecs.given
 import cats.data.{EitherT, NonEmptyChain}
-import cats.effect.Sync
+import cats.effect.{Resource, Sync}
 import cats.implicits.*
 
 trait TransactionValidation[F[_]] {
@@ -14,6 +14,20 @@ trait TransactionValidation[F[_]] {
   ): ValidationResult[F]
 }
 
+object TransactionValidation:
+  def make[F[_]: Sync](
+      fetchTransaction: FetchTransaction[F],
+      transactionOutputState: TransactionOutputState[F],
+      accountState: AccountState[F]
+  ): Resource[F, TransactionValidation[F]] =
+    Resource.pure(
+      new TransactionValidationImpl[F](
+        fetchTransaction,
+        transactionOutputState,
+        accountState
+      )
+    )
+
 trait BodyValidation[F[_]] {
   def validate(
       body: BlockBody,
@@ -21,9 +35,23 @@ trait BodyValidation[F[_]] {
   ): ValidationResult[F]
 }
 
+object BodyValidation:
+  def make[F[_]: Sync](
+      fetchTransaction: FetchTransaction[F],
+      transactionValidation: TransactionValidation[F]
+  ): Resource[F, BodyValidation[F]] =
+    Resource.pure(
+      new BodyValidationImpl[F](fetchTransaction, transactionValidation)
+    )
+
 trait HeaderToBodyValidation[F[_]] {
   def validate(block: Block): ValidationResult[F]
 }
+
+object HeaderToBodyValidation:
+  // TODO
+  def make[F[_]: Sync](): Resource[F, HeaderToBodyValidation[F]] =
+    Resource.pure(_ => EitherT.pure[F, NonEmptyChain[String]](()))
 
 case class TransactionValidationContext(
     parentBlockId: BlockId,

@@ -24,14 +24,17 @@ object AccountState:
     Store[F, TransactionOutputReference, List[TransactionOutputReference]]
   type BSS[F[_]] = BlockSourcedState[F, State[F]]
 
+  def make[F[_]: Functor](bss: BSS[F]): Resource[F, AccountState[F]] =
+    Resource.pure(new AccountStateImpl[F](bss))
+
   def makeBSS[F[_]: Async](
-      initialState: State[F],
-      initialBlockId: BlockId,
+      initialState: F[State[F]],
+      initialBlockId: F[BlockId],
+      blockIdTree: BlockIdTree[F],
+      onBlockChanged: BlockId => F[Unit],
       fetchBody: FetchBody[F],
       fetchTransaction: FetchTransaction[F],
-      fetchTransactionOutput: FetchTransactionOutput[F],
-      blockIdTree: BlockIdTree[F],
-      onBlockChanged: BlockId => F[Unit]
+      fetchTransactionOutput: FetchTransactionOutput[F]
   ): Resource[F, BSS[F]] =
     new AccountStateBSSImpl[F](
       fetchBody,
@@ -59,14 +62,14 @@ class AccountStateBSSImpl[F[_]: Async](
     fetchTransactionOutput: FetchTransactionOutput[F]
 ):
   def makeBss(
-      initialState: AccountState.State[F],
-      initialBlockId: BlockId,
+      initialState: F[AccountState.State[F]],
+      initialBlockId: F[BlockId],
       blockIdTree: BlockIdTree[F],
       onBlockChanged: BlockId => F[Unit]
   ): Resource[F, AccountState.BSS[F]] =
     BlockSourcedState.make[F, AccountState.State[F]](
-      initialState.pure[F],
-      initialBlockId.pure[F],
+      initialState,
+      initialBlockId,
       applyBlock,
       unapplyBlock,
       blockIdTree,
