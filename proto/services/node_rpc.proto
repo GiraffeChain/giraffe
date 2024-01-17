@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package blockchain.services;
 
+import "validate/validate.proto";
 import 'models/core.proto';
 
 service NodeRpc {
@@ -15,13 +16,13 @@ service NodeRpc {
 }
 
 message BroadcastTransactionReq {
-    blockchain.models.Transaction transaction = 1;
+    blockchain.models.Transaction transaction = 1 [(validate.rules).message.required = true];
 }
 
 message BroadcastTransactionRes {}
 
 message GetBlockHeaderReq {
-    blockchain.models.BlockId blockId = 1;
+    blockchain.models.BlockId blockId = 1 [(validate.rules).message.required = true];
 }
 
 message GetBlockHeaderRes {
@@ -29,7 +30,7 @@ message GetBlockHeaderRes {
 }
 
 message GetBlockBodyReq {
-    blockchain.models.BlockId blockId = 1;
+    blockchain.models.BlockId blockId = 1 [(validate.rules).message.required = true];
 }
 
 message GetBlockBodyRes {
@@ -37,7 +38,7 @@ message GetBlockBodyRes {
 }
 
 message GetFullBlockReq {
-    blockchain.models.BlockId blockId = 1;
+    blockchain.models.BlockId blockId = 1 [(validate.rules).message.required = true];
 }
 
 message GetFullBlockRes {
@@ -45,7 +46,7 @@ message GetFullBlockRes {
 }
 
 message GetTransactionReq {
-    blockchain.models.TransactionId transactionId = 1;
+    blockchain.models.TransactionId transactionId = 1 [(validate.rules).message.required = true];
 }
 
 message GetTransactionRes {

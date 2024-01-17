@@ -16,15 +16,15 @@ service StakerSupportRpc {
 
 
 message BroadcastBlockReq {
-    blockchain.models.Block block = 1;
+    blockchain.models.Block block = 1 [(validate.rules).message.required = true];
 }
 
 message BroadcastBlockRes {}
 
 
 message GetStakerReq {
-    blockchain.models.StakingAddress stakingAddress = 1;
-    blockchain.models.BlockId parentBlockId = 2;
+    blockchain.models.TransactionOutputReference stakingAccount = 1 [(validate.rules).message.required = true];
+    blockchain.models.BlockId parentBlockId = 2 [(validate.rules).message.required = true];
     uint64 slot = 3;
 }
 
@@ -34,7 +34,7 @@ message GetStakerRes {
 
 
 message GetTotalActiveStakeReq {
-    blockchain.models.BlockId parentBlockId = 1;
+    blockchain.models.BlockId parentBlockId = 1 [(validate.rules).message.required = true];
     uint64 slot = 2;
 }
 
@@ -44,7 +44,7 @@ message GetTotalActiveStakeRes {
 
 
 message CalculateEtaReq {
-    blockchain.models.BlockId parentBlockId = 1;
+    blockchain.models.BlockId parentBlockId = 1 [(validate.rules).message.required = true];
     uint64 slot = 2;
 }
 
@@ -53,10 +53,10 @@ message CalculateEtaRes {
 }
 
 message PackBlockReq {
-    blockchain.models.BlockId parentBlockId = 1;
+    blockchain.models.BlockId parentBlockId = 1 [(validate.rules).message.required = true];
     uint64 untilSlot = 2;
 }
 
 message PackBlockRes {
-    blockchain.models.BlockBody body = 1;
+    blockchain.models.BlockBody body = 1 [(validate.rules).message.required = true];
 }

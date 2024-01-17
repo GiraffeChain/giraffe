@@ -2,7 +2,7 @@ package blockchain
 
 import blockchain.codecs.{*, given}
 import blockchain.models.*
-import cats.{MonadThrow, Show}
+import cats.{Monad, MonadThrow, Show}
 import cats.data.OptionT
 import cats.effect.{Async, Resource, Sync}
 import cats.effect.implicits.*
@@ -41,7 +41,17 @@ case class DataStores[F[_]](
     blockHeightIndex: Store[F, Long, BlockId],
     metadata: Store[F, String, Array[Byte]],
     transactionOutputs: Store[F, TransactionOutputReference, TransactionOutput]
-)
+) {
+  def fetchFullBlock(blockId: BlockId)(using Monad[F]): F[Option[FullBlock]] =
+    (
+      OptionT(headers.get(blockId)),
+      OptionT(bodies.get(blockId)).flatMap(body =>
+        body.transactionIds.traverse(id => OptionT(transactions.get(id)))
+      )
+    ).mapN((header, transactions) =>
+      FullBlock(header, FullBlockBody(transactions))
+    ).value
+}
 
 object DataStores:
   def make[F[_]: Async](basePath: Path): Resource[F, DataStores[F]] =
