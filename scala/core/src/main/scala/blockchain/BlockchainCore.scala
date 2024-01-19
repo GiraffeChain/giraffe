@@ -15,6 +15,7 @@ import java.time.Instant
 case class BlockchainCore[F[_]](
     clock: Clock[F],
     dataStores: DataStores[F],
+    cryptoResources: CryptoResources[F],
     blockIdTree: BlockIdTree[F],
     consensus: Consensus[F],
     ledger: Ledger[F]
@@ -62,6 +63,7 @@ case class BlockchainCore[F[_]](
 object BlockchainCore:
   def make[F[_]: Async] =
     for {
+      // TODO
       genesis <- (null: FullBlock).pure[F].toResource
       clock <- Clock.make(
         ProtocolSettings.Default,
@@ -100,4 +102,11 @@ object BlockchainCore:
         clock,
         consensus.localChain
       )
-    } yield BlockchainCore(clock, dataStores, blockIdTree, consensus, ledger)
+    } yield BlockchainCore(
+      clock,
+      dataStores,
+      cryptoResources,
+      blockIdTree,
+      consensus,
+      ledger
+    )

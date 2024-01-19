@@ -16,4 +16,6 @@ trait ShowInstances {
     show"${slotId.blockId}@${slotId.slot}"
   given showTransactionOutputReference: Show[TransactionOutputReference] =
     reference => show"${reference.transactionId}#${reference.index}"
+  given showPeerId: Show[PeerId] =
+    peerId => show"p_${peerId.value.substring(0, 8)}"
 }

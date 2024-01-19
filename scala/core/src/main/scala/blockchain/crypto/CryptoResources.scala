@@ -15,6 +15,9 @@ case class CryptoResources[F[_]](
 )
 
 object CryptoResources:
+
+  def apply[F[_]: CryptoResources]: CryptoResources[F] =
+    summon[CryptoResources[F]]
   def make[F[_]: Async]: Resource[F, CryptoResources[F]] =
     Async[F]
       .delay(Runtime.getRuntime.availableProcessors())
