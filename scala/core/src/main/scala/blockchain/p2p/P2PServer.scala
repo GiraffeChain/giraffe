@@ -18,7 +18,7 @@ object P2PServer:
   def serve[F[_]: Async](
       bindHost: String,
       bindPort: Int,
-      handleSocket: Socket[F] => F[Unit],
+      handleSocket: (Socket[F], Option[SocketAddress[_]]) => F[Unit],
       outboundConnections: Stream[F, SocketAddress[_]]
   ): Resource[F, F[Outcome[F, Throwable, Unit]]] =
     for {
@@ -39,13 +39,13 @@ object P2PServer:
       inboundSockets = network.server(h.some, p.some)
       inboundHandler = inboundSockets
         .evalTap(socket => socket.remoteAddress.flatTap(address => logger.info(show"Inbound connection from $address")))
-        .map(socket => Stream.eval(handleSocket(socket)))
+        .map(socket => Stream.eval(handleSocket(socket, None)))
         .parJoinUnbounded
         .compile
         .drain
       outboundHandler = outboundConnections
         .evalTap(address => logger.info(show"Outbound connection to $address"))
-        .map(address => Stream.eval(network.client(address).use(handleSocket)))
+        .map(address => Stream.eval(network.client(address).use(handleSocket(_, address.some))))
         .parJoinUnbounded
         .compile
         .drain
@@ -74,7 +74,7 @@ object P2PServer:
         ).tupled
           .flatMap((outboundConnectionsQueue, localPeer) =>
             PeersManager
-              .make(core, localPeer, magicBytes, outboundConnectionsQueue.offer(_).void)
+              .make(core, localPeer, magicBytes, outboundConnectionsQueue.offer(_).void, initialPeers)
               .flatMap(manager =>
                 serve(bindHost, bindPort, manager.handleSocket, Stream.fromQueueUnterminated(outboundConnectionsQueue))
               )

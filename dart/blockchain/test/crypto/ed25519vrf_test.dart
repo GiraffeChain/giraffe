@@ -15,7 +15,8 @@ void main() {
           "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025");
       final expectedPi = _decodeUnsigned(
           "9bc0f79119cc5604bf02d23b4caede71393cedfbb191434dd016d30177ccbf80e29dc513c01c3a980e0e545bcd848222d08a6c3e3665ff5a4cab13a643bef812e284c6b2ee063a2cb4f456794723ad0a");
-
+      final expectedBeta = _decodeUnsigned(
+          "645427e5d00c62a23fb703732fa5d892940935942101e456ecca7bb217c61c452118fec1219202a0edcf038bb6373241578be7217ba85a2687f7a0310b2df19f");
       final vk = await ed25519Vrf.getVerificationKey(sk);
       expect(vk.sameElements(expectedVK), true);
       final pi = await ed25519Vrf.sign(sk, message);
@@ -26,6 +27,9 @@ void main() {
 
       expect(await ed25519Vrf.verify(expectedPi, message, vk), true);
       expect(await ed25519Vrf.verify(expectedPi, message, expectedVK), true);
+
+      final beta = await ed25519Vrf.proofToHash(expectedPi);
+      expect(beta.sameElements(expectedBeta), true);
     });
   });
 }

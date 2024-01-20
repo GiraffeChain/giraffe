@@ -4,7 +4,7 @@ import blockchain.codecs.given
 import blockchain.BlockchainCore
 import blockchain.consensus.TraversalStep
 import blockchain.ledger.TransactionValidationContext
-import blockchain.models.{BlockBody, SlotId}
+import blockchain.models.{BlockBody, FullBlockBody, SlotId}
 import blockchain.services.*
 import cats.MonadThrow
 import cats.effect.Async
@@ -116,9 +116,11 @@ class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupp
       _ <- core.blockIdTree.associate(header.id, header.parentHeaderId)
       _ <- core.dataStores.headers.put(header.id, header)
       _ <- core.dataStores.bodies.put(header.id, request.block.body)
+      // TODO: Reward Transaction in Request?
+      transactions <- request.block.body.transactionIds.traverse(core.dataStores.transactions.getOrRaise)
       _ <- core.ledger.bodyValidation
         .validate(
-          request.block.body,
+          FullBlockBody(transactions),
           TransactionValidationContext(header.id, header.height, header.slot)
         )
         .leftSemiflatTap(errors => logger.warn(show"Block id=${header.id} contains errors=$errors"))

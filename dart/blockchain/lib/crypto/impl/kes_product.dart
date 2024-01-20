@@ -226,7 +226,7 @@ class SecretKeyKesProduct {
     if (other is SecretKeyKesProduct) {
       superTree == other.superTree &&
           subTree == other.subTree &&
-          nextSubSeed == other.nextSubSeed &&
+          nextSubSeed.sameElements(other.nextSubSeed) &&
           subSignature == other.subSignature &&
           offset == other.offset;
     }
@@ -238,7 +238,7 @@ class SecretKeyKesProduct {
     final subTreeRes = _decodeTree(superTreeRes.$2);
     final nextSubSeed = subTreeRes.$2.sublist(0, 32);
     final subSignatureRes = _decodeSignature(subTreeRes.$2.sublist(32));
-    final offset = Int64.fromBytes(subSignatureRes.$2.sublist(0, 8));
+    final offset = Int64.fromBytesBigEndian(subSignatureRes.$2.sublist(0, 8));
     return SecretKeyKesProduct(
       superTree: superTreeRes.$1,
       subTree: subTreeRes.$1,

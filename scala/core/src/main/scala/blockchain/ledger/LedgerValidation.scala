@@ -8,12 +8,8 @@ import cats.data.{EitherT, NonEmptyChain}
 import cats.effect.{Resource, Sync}
 import cats.implicits.*
 
-trait TransactionValidation[F[_]] {
-  def validate(
-      transaction: Transaction,
-      context: TransactionValidationContext
-  ): ValidationResult[F]
-}
+trait TransactionValidation[F[_]]:
+  def validate(transaction: Transaction, context: TransactionValidationContext): ValidationResult[F]
 
 object TransactionValidation:
   def make[F[_]: Sync](
@@ -21,47 +17,29 @@ object TransactionValidation:
       transactionOutputState: TransactionOutputState[F],
       accountState: AccountState[F]
   ): Resource[F, TransactionValidation[F]] =
-    Resource.pure(
-      new TransactionValidationImpl[F](
-        fetchTransaction,
-        transactionOutputState,
-        accountState
-      )
-    )
+    Resource.pure(new TransactionValidationImpl[F](fetchTransaction, transactionOutputState, accountState))
 
-trait BodyValidation[F[_]] {
-  def validate(
-      body: BlockBody,
-      context: TransactionValidationContext
-  ): ValidationResult[F]
-}
+trait BodyValidation[F[_]]:
+  def validate(body: FullBlockBody, context: TransactionValidationContext): ValidationResult[F]
 
 object BodyValidation:
-  def make[F[_]: Sync](
-      fetchTransaction: FetchTransaction[F],
-      transactionValidation: TransactionValidation[F]
-  ): Resource[F, BodyValidation[F]] =
-    Resource.pure(
-      new BodyValidationImpl[F](fetchTransaction, transactionValidation)
-    )
+  def make[F[_]: Sync](transactionValidation: TransactionValidation[F]): Resource[F, BodyValidation[F]] =
+    Resource.pure(new BodyValidationImpl[F](transactionValidation))
 
-trait HeaderToBodyValidation[F[_]] {
+trait HeaderToBodyValidation[F[_]]:
   def validate(block: Block): ValidationResult[F]
-}
 
 object HeaderToBodyValidation:
   def make[F[_]: Sync](fetchHeader: FetchHeader[F]): Resource[F, HeaderToBodyValidation[F]] =
-    Resource.pure(
-      new HeaderToBodyValidation[F]:
-        override def validate(block: Block): ValidationResult[F] =
-          EitherT(
-            fetchHeader(block.header.parentHeaderId)
-              .map(_.txRoot)
-              .flatMap(parentTxRoot => Sync[F].delay(block.body.transactionIds.txRoot(parentTxRoot)))
-              .map(expectedTxRoot =>
-                Either.cond(expectedTxRoot == block.header.txRoot, (), NonEmptyChain("TxRoot Mismatch"))
-              )
+    Resource.pure((block: Block) =>
+      EitherT(
+        fetchHeader(block.header.parentHeaderId)
+          .map(_.txRoot)
+          .flatMap(parentTxRoot => Sync[F].delay(block.body.transactionIds.txRoot(parentTxRoot)))
+          .map(expectedTxRoot =>
+            Either.cond(expectedTxRoot == block.header.txRoot, (), NonEmptyChain("TxRoot Mismatch"))
           )
+      )
     )
 
 case class TransactionValidationContext(
@@ -77,17 +55,12 @@ class TransactionValidationImpl[F[_]: Sync](
 ) extends TransactionValidation[F]:
   // TODO: Attestation validation
 
-  override def validate(
-      transaction: Transaction,
-      context: TransactionValidationContext
-  ): ValidationResult[F] =
+  override def validate(transaction: Transaction, context: TransactionValidationContext): ValidationResult[F] =
     EitherT.fromEither[F](syntaxValidation(transaction)) >>
       dataCheck(transaction) >>
       spendableUtxoCheck(context.parentBlockId, transaction)
 
-  private def syntaxValidation(
-      transaction: Transaction
-  ): Either[NonEmptyChain[String], Unit] =
+  private def syntaxValidation(transaction: Transaction): Either[NonEmptyChain[String], Unit] =
     Either.cond(
       transaction.inputs.nonEmpty,
       (),
@@ -106,9 +79,7 @@ class TransactionValidationImpl[F[_]: Sync](
       ) >>
       transaction.attestation.traverse(witnessTypeValidation).void
 
-  private def witnessTypeValidation(
-      witness: Witness
-  ): Either[NonEmptyChain[String], Unit] =
+  private def witnessTypeValidation(witness: Witness): Either[NonEmptyChain[String], Unit] =
     (witness.lock.value, witness.key.value) match {
       case (_: Lock.Value.Ed25519, _: Key.Value.Ed25519) => ().asRight
       case _                                             => NonEmptyChain("InvalidKeyType").asLeft
@@ -131,10 +102,7 @@ class TransactionValidationImpl[F[_]: Sync](
       )
       .void
 
-  private def spendableUtxoCheck(
-      parentBlockId: BlockId,
-      transaction: Transaction
-  ): ValidationResult[F] =
+  private def spendableUtxoCheck(parentBlockId: BlockId, transaction: Transaction): ValidationResult[F] =
     transaction.dependencies.toList.traverse(dependency =>
       EitherT(
         transactionOutputState
@@ -174,26 +142,21 @@ class TransactionValidationImpl[F[_]: Sync](
         )
         .void
 
-class BodyValidationImpl[F[_]: Sync](
-    fetchTransaction: FetchTransaction[F],
-    transactionValidation: TransactionValidation[F]
-) extends BodyValidation[F]:
+class BodyValidationImpl[F[_]: Sync](transactionValidation: TransactionValidation[F]) extends BodyValidation[F]:
   override def validate(
-      body: BlockBody,
+      body: FullBlockBody,
       context: TransactionValidationContext
   ): ValidationResult[F] =
-    body.transactionIds
-      .foldLeftM(Set.empty[TransactionOutputReference])((spentUtxos, transactionId) =>
-        EitherT.liftF(fetchTransaction(transactionId)).flatMap { transaction =>
-          val dependencies = transaction.dependencies
-          EitherT.cond[F](
-            spentUtxos.intersect(dependencies).isEmpty,
-            (),
-            NonEmptyChain("UnspendableUtxoReference")
-          ) >>
-            transactionValidation
-              .validate(transaction, context)
-              .as(spentUtxos ++ transaction.inputs.map(_.reference))
-        }
-      )
+    body.transactions
+      .foldLeftM(Set.empty[TransactionOutputReference]) { (spentUtxos, transaction) =>
+        val dependencies = transaction.dependencies
+        EitherT.cond[F](
+          spentUtxos.intersect(dependencies).isEmpty,
+          (),
+          NonEmptyChain("UnspendableUtxoReference")
+        ) >>
+          transactionValidation
+            .validate(transaction, context)
+            .as(spentUtxos ++ transaction.inputs.map(_.reference))
+      }
       .void

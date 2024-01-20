@@ -8,58 +8,38 @@ import blockchain.{BlockchainCore, Bytes, Height}
 import cats.data.OptionT
 import cats.effect.Async
 import cats.implicits.*
-import cats.effect.implicits.*
 import com.google.protobuf.ByteString
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 
 class PeerBlockchainInterface[F[_]: Async: Logger](
     core: BlockchainCore[F],
-    remotePeerState: PeerState[F],
     manager: PeersManager[F],
     allPortQueues: AllPortQueues[F],
     readerWriter: MultiplexedReaderWriter[F]
 ):
   def publicState: F[PublicP2PState] =
-    writeRequest(
-      MultiplexerIds.PeerStateRequest,
-      ()
-    ) *> allPortQueues.p2pState.createResponse
+    writeRequest(MultiplexerIds.PeerStateRequest, ()) *> allPortQueues.p2pState.createResponse
   def nextBlockAdoption: F[BlockId] =
-    writeRequest(
-      MultiplexerIds.BlockAdoptionRequest,
-      ()
-    ) *> allPortQueues.blockAdoptions.createResponse
+    writeRequest(MultiplexerIds.BlockAdoptionRequest, ()) *> allPortQueues.blockAdoptions.createResponse
   def nextTransactionNotification: F[TransactionId] =
-    writeRequest(
-      MultiplexerIds.TransactionNotificationRequest,
-      ()
-    ) *> allPortQueues.transactionAdoptions.createResponse
+    writeRequest(MultiplexerIds.TransactionNotificationRequest, ()) *> allPortQueues.transactionAdoptions.createResponse
   def fetchHeader(id: BlockId): F[Option[BlockHeader]] =
-    writeRequest(
-      MultiplexerIds.HeaderRequest,
-      id
-    ) *> allPortQueues.headers.createResponse
+    writeRequest(MultiplexerIds.HeaderRequest, id) *> OptionT(allPortQueues.headers.createResponse)
+      .map(_.withEmbeddedId)
+      .ensure(new IllegalArgumentException("Header ID Mismatch"))(_.id == id)
+      .value
   def fetchBody(id: BlockId): F[Option[BlockBody]] =
-    writeRequest(
-      MultiplexerIds.BodyRequest,
-      id
-    ) *> allPortQueues.bodies.createResponse
+    writeRequest(MultiplexerIds.BodyRequest, id) *> allPortQueues.bodies.createResponse
   def fetchTransaction(id: TransactionId): F[Option[Transaction]] =
-    writeRequest(
-      MultiplexerIds.TransactionRequest,
-      id
-    ) *> allPortQueues.transactions.createResponse
+    writeRequest(MultiplexerIds.TransactionRequest, id) *> OptionT(allPortQueues.transactions.createResponse)
+      .map(_.withEmbeddedId)
+      .ensure(new IllegalArgumentException("Transaction ID Mismatch"))(_.id == id)
+      .value
   def blockIdAtHeight(height: Height): F[Option[BlockId]] =
-    writeRequest(
-      MultiplexerIds.BlockIdAtHeightRequest,
-      height
-    ) *> allPortQueues.blockIdAtHeight.createResponse
+    writeRequest(MultiplexerIds.BlockIdAtHeightRequest, height) *> allPortQueues.blockIdAtHeight.createResponse
   def ping(message: Bytes): F[Bytes] =
-    writeRequest(
-      MultiplexerIds.PingRequest,
-      message
-    ) *> allPortQueues.pingPong.createResponse
+    writeRequest(MultiplexerIds.PingRequest, message) *> allPortQueues.pingPong.createResponse
   def commonAncestor: F[BlockId] =
     for {
       localHeadId <- core.consensus.localChain.currentHead

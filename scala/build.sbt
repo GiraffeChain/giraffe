@@ -83,48 +83,56 @@ lazy val protobuf =
       copyProtobufTask := {
         import java.nio.file.*
         import scala.jdk.CollectionConverters.*
-        // The files will be copied into protobuf-fs2/target/protobuf-tmp
-        val destinationBase =
-          Paths.get((Compile / target).value.toString, "protobuf-tmp")
-        // First, delete the existing tmp directory
-        sLog.value.debug(s"Clearing protobuf-tmp directory=$destinationBase")
-        if (Files.exists(destinationBase)) {
-          Files
-            .walk(destinationBase)
-            .sorted(java.util.Comparator.reverseOrder[Path]())
-            .iterator()
-            .asScala
-            .foreach(Files.delete)
-        }
         // Now, assemble a list of all of the .proto files in the repository root
         val protosRoot =
           Paths.get(Paths.get("").toAbsolutePath.getParent.toString, "proto")
-        val allFiles =
-          Files
-            .walk(protosRoot)
-            .iterator()
-            .asScala
-            .map(_.toAbsolutePath)
-            .toList
-        val protoFiles =
-          allFiles.filter(_.toString.endsWith(".proto"))
-        // Copy each of the .proto files into the tmp directory
-        sLog.value.info(
-          s"Copying ${protoFiles.length} protobuf files to target/protobuf-tmp directory"
-        )
-        protoFiles
-          .foreach { protoFile =>
-            // Preserve the directory structure when copying
-            val destination = Paths.get(
-              destinationBase.toString,
-              protoFile.toString.drop(protosRoot.toString.length + 1)
-            )
-            sLog.value.debug(s"Copying from $protoFile to $destination")
-            Files.createDirectories(destination.getParent)
-            val contents = new String(Files.readAllBytes(protoFile), "UTF-8")
-            val modifiedContents = modifyProtoContents(contents)
-            Files.write(destination, modifiedContents.getBytes("UTF-8"))
+        // The files will be copied into protobuf-fs2/target/protobuf-tmp
+        val destinationBase =
+          Paths.get((Compile / target).value.toString, "protobuf-tmp")
+        if (
+          Files.exists(protosRoot) && Files.exists(destinationBase) && compareProtoContents(protosRoot, destinationBase)
+        ) {
+          sLog.value.info("Proto contents up-to-date.  Skipping copying.")
+        } else {
+          // First, delete the existing tmp directory
+          sLog.value.debug(s"Clearing protobuf-tmp directory=$destinationBase")
+          if (Files.exists(destinationBase)) {
+            Files
+              .walk(destinationBase)
+              .sorted(java.util.Comparator.reverseOrder[Path]())
+              .iterator()
+              .asScala
+              .foreach(Files.delete)
           }
+          val allFiles =
+            Files
+              .walk(protosRoot)
+              .iterator()
+              .asScala
+              .map(_.toAbsolutePath)
+              .toList
+          val protoFiles =
+            allFiles.filter(_.toString.endsWith(".proto"))
+          // Copy each of the .proto files into the tmp directory
+          sLog.value.info(
+            s"Copying ${protoFiles.length} protobuf files to target/protobuf-tmp directory"
+          )
+          Files.createDirectories(destinationBase)
+          Files.write(Paths.get(destinationBase.toString, "proto-contents.md5"), directoryMd5(protosRoot))
+          protoFiles
+            .foreach { protoFile =>
+              // Preserve the directory structure when copying
+              val destination = Paths.get(
+                destinationBase.toString,
+                protoFile.toString.drop(protosRoot.toString.length + 1)
+              )
+              sLog.value.debug(s"Copying from $protoFile to $destination")
+              Files.createDirectories(destination.getParent)
+              val contents = new String(Files.readAllBytes(protoFile), "UTF-8")
+              val modifiedContents = modifyProtoContents(contents)
+              Files.write(destination, modifiedContents.getBytes("UTF-8"))
+            }
+        }
       },
       (Compile / compile) := (Compile / compile)
         .dependsOn(copyProtobufTask)
@@ -191,4 +199,34 @@ def modifyProtoContents(contents: String): String = {
      |  ]
      |};
      |""".stripMargin
+}
+
+def directoryMd5(a: java.nio.file.Path): Array[Byte] = {
+  import java.nio.file.*
+  import scala.jdk.CollectionConverters.*
+  import java.security.*
+  val md = MessageDigest.getInstance("MD5")
+  md.reset()
+  Files
+    .walk(a)
+    .iterator()
+    .asScala
+    .filter(_.toString.endsWith(".proto"))
+    .toList
+    .sortBy(_.toString)
+    .map(Files.readAllBytes)
+    .foreach(md.update)
+  md.digest()
+}
+
+def compareProtoContents(a: java.nio.file.Path, b: java.nio.file.Path): Boolean = {
+  import java.nio.file.*
+  val protoContentsFile = Paths.get(b.toString, "proto-contents.md5")
+  if (Files.exists(protoContentsFile)) {
+    val aDigest = directoryMd5(a)
+    val bDigest = Files.readAllBytes(protoContentsFile)
+    java.util.Arrays.equals(aDigest, bDigest)
+  } else {
+    false
+  }
 }

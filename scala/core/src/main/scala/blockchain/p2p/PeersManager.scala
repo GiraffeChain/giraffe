@@ -28,7 +28,7 @@ class PeersManager[F[_]: Async: Random](
 
   def close(): F[Unit] =
     stateRef
-      .getAndSet(PeersManager.State(Map.empty, Map.empty))
+      .getAndSet(PeersManager.State(Map.empty, Map.empty, Nil))
       .flatMap(state => state.connectedPeers.values.toList.traverse(_.close()))
       .void
 
@@ -57,38 +57,30 @@ class PeersManager[F[_]: Async: Random](
       )
     } yield ()
 
-  def handleSocket(socket: Socket[F]): F[Unit] = {
+  def handleSocket(socket: Socket[F], outboundAddress: Option[SocketAddress[_]]): F[Unit] = {
     val resource = for {
       _ <- Resource.onFinalize(socket.endOfInput *> socket.endOfOutput)
       given CryptoResources[F] = core.cryptoResources
-      remotePeerId <- Handshake
-        .run(socket, magicBytes, localPeer.sk, localPeer.vk)
-        .toResource
-      given Logger[F] <- Slf4jLogger
-        .fromName(show"Peer($remotePeerId)")
-        .toResource
+      remotePeerId <- Handshake.run(socket, magicBytes, localPeer.sk, localPeer.vk).toResource
+      given Logger[F] <- Slf4jLogger.fromName(show"Peer($remotePeerId)").toResource
       _ <- Resource.make(Logger[F].info("Connected"))(_ => Logger[F].info("Disconnected"))
-      peerState <- PeerState.make(
-        socket,
-        PublicP2PState(localPeer = ConnectedPeer(remotePeerId))
-      )
-      _ <- Resource.make(
-        stateRef.update(_.withConnectedPeer(remotePeerId, peerState))
+      peerState <- PeerState.make(socket, PublicP2PState(localPeer = ConnectedPeer(remotePeerId)), outboundAddress)
+      _ <- Async[F]
+        .raiseWhen(remotePeerId == localPeer.connectedPeer.peerId)(
+          new IllegalStateException("Self-Connection")
+        )
+        .toResource
+      isNewPeer <- Resource.make(
+        stateRef.modify(s =>
+          if (s.connectedPeers.contains(remotePeerId)) (s, false)
+          else (s.withConnectedPeer(remotePeerId, peerState), true)
+        )
       )(_ => stateRef.update(_.withDisconnectedPeer(remotePeerId, peerState)))
+      _ <- Async[F].raiseWhen(!isNewPeer)(new IllegalStateException("Duplicate Connection")).toResource
       portQueues <- AllPortQueues.make[F]
       readerWriter = MultiplexedReaderWriter.forSocket(socket)
-      interface = new PeerBlockchainInterface[F](
-        core,
-        peerState,
-        this,
-        portQueues,
-        readerWriter
-      )
-      handler = new PeerBlockchainHandler[F](
-        core,
-        interface,
-        onPeerStateGossiped(remotePeerId, _)
-      )
+      interface = new PeerBlockchainInterface[F](core, this, portQueues, readerWriter)
+      handler = new PeerBlockchainHandler[F](core, interface, peerState)
       _ <- interface.background.merge(handler.handle).compile.drain.toResource
     } yield ()
 
@@ -103,21 +95,17 @@ class PeersManager[F[_]: Async: Random](
       )
       .map(PublicP2PState(localPeer.connectedPeer, _))
 
-  def onPeerStateGossiped(peerId: PeerId, publicState: PublicP2PState) =
-    stateRef.get.flatMap(
-      _.connectedPeers(peerId).publicStateRef.set(publicState)
-    )
-
 object PeersManager:
 
   def make[F[_]: Async: Random](
       core: BlockchainCore[F],
       localPeer: LocalPeer,
       magicBytes: Array[Byte],
-      connectOutbound: SocketAddress[_] => F[Unit]
+      connectOutbound: SocketAddress[_] => F[Unit],
+      knownPeers: List[SocketAddress[_]]
   ): Resource[F, PeersManager[F]] =
     Ref
-      .of(State[F](Map.empty, Map.empty))
+      .of(State[F](Map.empty, Map.empty, knownPeers))
       .map(
         new PeersManager(
           core,
@@ -140,7 +128,8 @@ object PeersManager:
 
   case class State[F[_]](
       connectedPeers: Map[PeerId, PeerState[F]],
-      disconnectedPeers: Map[PeerId, PeerState[F]]
+      disconnectedPeers: Map[PeerId, PeerState[F]],
+      knownPeers: List[SocketAddress[_]]
   ):
     def withConnectedPeer(peerId: PeerId, peerState: PeerState[F]) =
       copy(

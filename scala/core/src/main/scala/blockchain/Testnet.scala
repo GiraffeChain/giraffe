@@ -102,9 +102,13 @@ object TestnetAccount:
       operatorVk <- CryptoResources[F].ed25519.useSync(_.getVerificationKey(operatorSk))
       vrfSk <- CryptoResources[F].blake2b256.useSync(_.hash(seed, Array(1)))
       vrfVk <- CryptoResources[F].ed25519VRF.useSync(_.getVerificationKey(vrfSk))
-      (kesSk, _) <- CryptoResources[F].blake2b256
+      (kesSk, kesVk) <- CryptoResources[F].blake2b256
         .useSync(_.hash(seed, Array(2)))
         .flatMap(seed => CryptoResources[F].kesProduct.useSync(_.createKeyPair(seed, kesTreeHeight, 0)))
       registrationMessageToSign <- CryptoResources[F].blake2b256.useSync(_.hash(vrfVk, operatorVk))
       registrationSignature <- CryptoResources[F].kesProduct.useSync(_.sign(kesSk, registrationMessageToSign))
+      signatureIsValid <- CryptoResources[F].kesProduct.useSync(
+        _.verify(registrationSignature, registrationMessageToSign, kesVk)
+      )
+      _ <- Sync[F].raiseWhen(!signatureIsValid)(new IllegalStateException("Signature invalid"))
     } yield new TestnetAccount(operatorSk, operatorVk, vrfSk, vrfVk, kesSk, registrationSignature, quantity)

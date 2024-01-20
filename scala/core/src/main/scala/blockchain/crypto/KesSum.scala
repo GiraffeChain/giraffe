@@ -148,11 +148,10 @@ class SumComposition extends KesEd25519Blake2b256 {
     */
   private[crypto] def getKeyTime(keyTree: SK): Int =
     keyTree match {
-      case MerkleNode(_, _, _, Empty(), _: SigningLeaf) => 1
-      case MerkleNode(_, _, _, Empty(), right: MerkleNode) =>
-        getKeyTime(right) + exp(getTreeHeight(right))
-      case MerkleNode(_, _, _, left, Empty()) => getKeyTime(left)
-      case _                                  => 0
+      case MerkleNode(_, _, _, Empty(), _: SigningLeaf)    => 1
+      case MerkleNode(_, _, _, Empty(), right: MerkleNode) => getKeyTime(right) + exp(getTreeHeight(right))
+      case MerkleNode(_, _, _, left, Empty())              => getKeyTime(left)
+      case _                                               => 0
     }
 
   /** Gets the public key in the sum composition
@@ -189,8 +188,7 @@ class SumComposition extends KesEd25519Blake2b256 {
     // generate the binary tree with the pseudorandom number generator
     def seedTree(seed: Array[Byte], height: Int): KesBinaryTree =
       if (height == 0) {
-        val (sk, vk) = sGenKeypair(seed)
-        SigningLeaf(vk, sk)
+        SigningLeaf.apply.tupled(sGenKeypair(seed))
       } else {
         val r = prng(seed)
         val left = seedTree(r._1, height - 1)
@@ -264,24 +262,20 @@ class SumComposition extends KesEd25519Blake2b256 {
 
   /** Evolves key a specified number of steps
     */
-  private[crypto] def evolveKey(
-      input: KesBinaryTree,
-      step: Int
-  ): KesBinaryTree = {
+  private[crypto] def evolveKey(input: KesBinaryTree, step: Int): KesBinaryTree = {
     val halfTotalSteps = exp(getTreeHeight(input) - 1)
     val shiftStep: Int => Int = (step: Int) => step % halfTotalSteps
 
     if (step >= halfTotalSteps) {
       input match {
         case MerkleNode(seed, witL, witR, oldLeaf: SigningLeaf, Empty()) =>
-          val (sk, vk) = sGenKeypair(seed)
           val newNode =
             MerkleNode(
               Array.fill(seed.length)(0: Byte),
               witL,
               witR,
               Empty(),
-              SigningLeaf(sk, vk)
+              SigningLeaf.apply.tupled(sGenKeypair(seed))
             )
           eraseOldNode(oldLeaf)
           random.nextBytes(seed)
@@ -292,22 +286,13 @@ class SumComposition extends KesEd25519Blake2b256 {
             witL,
             witR,
             Empty(),
-            evolveKey(
-              generateSecretKey(seed, getTreeHeight(input) - 1),
-              shiftStep(step)
-            )
+            evolveKey(generateSecretKey(seed, getTreeHeight(input) - 1), shiftStep(step))
           )
           eraseOldNode(oldNode)
           random.nextBytes(seed)
           newNode
         case MerkleNode(seed, witL, witR, Empty(), right) =>
-          MerkleNode(
-            seed,
-            witL,
-            witR,
-            Empty(),
-            evolveKey(right, shiftStep(step))
-          )
+          MerkleNode(seed, witL, witR, Empty(), evolveKey(right, shiftStep(step)))
 
         case leaf: SigningLeaf => leaf
         case _                 => Empty()
@@ -315,22 +300,10 @@ class SumComposition extends KesEd25519Blake2b256 {
     } else {
       input match {
         case MerkleNode(seed, witL, witR, left, Empty()) =>
-          MerkleNode(
-            seed,
-            witL,
-            witR,
-            evolveKey(left, shiftStep(step)),
-            Empty()
-          )
+          MerkleNode(seed, witL, witR, evolveKey(left, shiftStep(step)), Empty())
 
         case MerkleNode(seed, witL, witR, Empty(), right) =>
-          MerkleNode(
-            seed,
-            witL,
-            witR,
-            Empty(),
-            evolveKey(right, shiftStep(step))
-          )
+          MerkleNode(seed, witL, witR, Empty(), evolveKey(right, shiftStep(step)))
 
         case leaf: SigningLeaf => leaf
         case _                 => Empty()
@@ -354,16 +327,10 @@ class SumComposition extends KesEd25519Blake2b256 {
         keyTree: KesBinaryTree,
         W: Vector[Array[Byte]] = Vector()
     ): SIG = keyTree match {
-      case MerkleNode(_, witL, _, Empty(), right) =>
-        loop(right, witL.clone() +: W)
-      case MerkleNode(_, _, witR, left, _) => loop(left, witR.clone() +: W)
-      case leaf: SigningLeaf               => (leaf.vk.clone(), sSign(m, leaf.sk).clone(), W)
-      case _ =>
-        (
-          Array.fill(pkBytes)(0: Byte),
-          Array.fill(sigBytes)(0: Byte),
-          Vector(Array())
-        )
+      case MerkleNode(_, witL, _, Empty(), right) => loop(right, witL.clone() +: W)
+      case MerkleNode(_, _, witR, left, _)        => loop(left, witR.clone() +: W)
+      case leaf: SigningLeaf                      => (leaf.vk.clone(), sSign(m, leaf.sk).clone(), W)
+      case _ => (Array.fill(pkBytes)(0: Byte), Array.fill(sigBytes)(0: Byte), Vector(Array()))
     }
     loop(keyTree)
   }
@@ -378,11 +345,7 @@ class SumComposition extends KesEd25519Blake2b256 {
     * @return
     *   true if the signature is valid false if otherwise
     */
-  private[crypto] def verify(
-      kesSig: SIG,
-      m: Array[Byte],
-      kesVk: VK
-  ): Boolean = {
+  private[crypto] def verify(kesSig: SIG, m: Array[Byte], kesVk: VK): Boolean = {
     val (vkSign, sigSign, merkleProof) = kesSig
     val (root: Array[Byte], step: Int) = kesVk
 
@@ -408,22 +371,10 @@ class SumComposition extends KesEd25519Blake2b256 {
         witnessRight: Array[Byte],
         index: Int
     ): Boolean =
-      if (witnessList.isEmpty)
-        root sameElements hash(witnessLeft ++ witnessRight)
+      if (witnessList.isEmpty) root sameElements hash(witnessLeft ++ witnessRight)
       else if (leftGoing(index))
-        multiWitness(
-          witnessList.tail,
-          hash(witnessLeft ++ witnessRight),
-          witnessList.head,
-          index + 1
-        )
-      else
-        multiWitness(
-          witnessList.tail,
-          witnessList.head,
-          hash(witnessLeft ++ witnessRight),
-          index + 1
-        )
+        multiWitness(witnessList.tail, hash(witnessLeft ++ witnessRight), witnessList.head, index + 1)
+      else multiWitness(witnessList.tail, witnessList.head, hash(witnessLeft ++ witnessRight), index + 1)
 
     val verifySign = sVerify(m, sigSign, vkSign)
 

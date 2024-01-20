@@ -84,9 +84,8 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
           } yield eta
       )
 
-  /** Given some header near the end of an epoch, traverse the chain (toward
-    * genesis) until reaching a block that is inside of the 2/3 window of the
-    * epoch
+  /** Given some header near the end of an epoch, traverse the chain (toward genesis) until reaching a block that is
+    * inside of the 2/3 window of the epoch
     */
   private def locateTwoThirdsBest(from: BlockHeader): F[BlockHeader] =
     if (isWithinTwoThirds(from)) from.pure[F]
@@ -100,8 +99,7 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
 
   /** Compute the Eta value for the epoch containing the given header
     * @param twoThirdsBest
-    *   The latest block header in some tine, but within the first 2/3 of the
-    *   epoch
+    *   The latest block header in some tine, but within the first 2/3 of the epoch
     */
   private def calculate(twoThirdsBest: BlockHeader): F[Eta] =
     cache.cachingF(twoThirdsBest.id)(ttl = None)(
@@ -112,9 +110,7 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
           epochData <- NonEmptyChain(twoThirdsBest).iterateUntilM(items =>
             fetchHeader(items.head.parentHeaderId).map(items.prepend)
           )(items => items.head.parentSlot < epochRange.start)
-          rhoValues <- epochData.parTraverse(header =>
-            ed25519VRFResource.use(e => Sync[F].delay(header.rho(using e)))
-          )
+          rhoValues <- epochData.parTraverse(header => ed25519VRFResource.use(e => Sync[F].delay(header.rho(using e))))
           nextEta <- calculate(
             previousEta = twoThirdsBest.eligibilityCertificate.eta,
             epoch = epoch + 1,
@@ -124,8 +120,7 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
       )
     )
 
-  /** Calculate a new Eta value once all the necessary pre-requisites have been
-    * gathered
+  /** Calculate a new Eta value once all the necessary pre-requisites have been gathered
     */
   private def calculate(
       previousEta: Eta,
@@ -158,8 +153,7 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
       )
     } yield nextEta
 
-  /** Calculate a new Eta value once all the necessary pre-requisites have been
-    * gathered
+  /** Calculate a new Eta value once all the necessary pre-requisites have been gathered
     */
   private def calculateFromNonceHashValues(
       previousEta: Eta,
@@ -175,9 +169,7 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
         ).digestMessages
       )
       .map(_.map(_.toByteArray))
-      .flatMap(bytes =>
-        blake2b256Resource.use(b2b => Sync[F].delay(b2b.hash(bytes*)))
-      )
+      .flatMap(bytes => blake2b256Resource.use(b2b => Sync[F].delay(b2b.hash(bytes*))))
       .map(ByteString.copyFrom)
 
 }
@@ -189,6 +181,6 @@ case class EtaCalculationArgs(
 
   def digestMessages: List[Bytes] =
     previousEta +:
-      ByteString.copyFrom(BigInt(epoch).toByteArray) +:
+      epoch.immutableBytes +:
       rhoNonceHashValues.toList
 }

@@ -359,7 +359,7 @@ class CacheStore[F[_]: Sync, Key, Value](
     cache.cachingF(key)(ttl = None)(Sync[F].defer(underlying.get(key)))
 
   override def contains(key: Key): F[Boolean] =
-    OptionT(get(key)).isDefined // TODO
+    underlying.contains(key)
 
   override def put(key: Key, value: Value): F[Unit] =
     cache.put(key)(value.some) *> underlying.put(key, value)

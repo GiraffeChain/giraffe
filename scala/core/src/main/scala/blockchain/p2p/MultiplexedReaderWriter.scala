@@ -13,10 +13,10 @@ case class MultiplexedReaderWriter[F[_]](
 )
 
 object MultiplexedReaderWriter:
-  def forSocket[F[_]: Monad](socket: Socket[F]) = {
+  def forSocket[F[_]: Monad](socket: Socket[F]): MultiplexedReaderWriter[F] = {
     val writer = MultiplexedFraming.writer(socket)
     MultiplexedReaderWriter[F](
-      MultiplexedFraming(socket).map((port, chunk) => (port, ByteString.copyFrom(chunk.toByteBuffer))),
+      MultiplexedFraming(socket).buffer(1).map((port, chunk) => (port, ByteString.copyFrom(chunk.toByteBuffer))),
       (port, data) => writer.apply(port, Chunk.byteBuffer(data.asReadOnlyByteBuffer()))
     )
   }

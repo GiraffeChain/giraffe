@@ -4,11 +4,11 @@ import blockchain.models.BlockId
 import cats.data.Chain
 import cats.implicits.*
 import cats.effect.implicits.*
-import cats.effect.{Async, Ref, Resource}
+import cats.effect.{Async, Ref, Resource, MonadCancelThrow}
 import cats.effect.std.{Mutex, Semaphore}
 
 trait BlockSourcedState[F[_], State]:
-  def useStateAt[U](blockId: BlockId)(f: State => F[U]): F[U]
+  def stateAt(blockId: BlockId): Resource[F, State]
 
 object BlockSourcedState:
   def make[F[_]: Async, State](
@@ -46,48 +46,47 @@ class TreeBlockSourcedState[F[_]: Async, State](
     currentEventIdRef: Ref[F, BlockId],
     currentEventChanged: BlockId => F[Unit]
 ) extends BlockSourcedState[F, State]:
-  def useStateAt[U](blockId: BlockId)(f: State => F[U]): F[U] =
-    mutex.lock.surround(
-      for {
-        currentEventId <- currentEventIdRef.get
-        state <-
-          (currentEventId == blockId)
-            .pure[F]
-            .ifM(
-              currentStateRef.get,
-              for {
-                (unapplyChain, applyChain) <- parentChildTree.findCommonAncestor(currentEventId, blockId)
-                currentState <- currentStateRef.get
-                stateAtCommonAncestor <- unapplyEvents(
-                  unapplyChain.tail,
-                  currentState,
-                  unapplyChain.head
-                )
-                newState <- applyEvents(applyChain.tail, stateAtCommonAncestor)
-              } yield newState
-            )
-        res <- f(state)
-      } yield res
-    )
+  def stateAt(blockId: BlockId): Resource[F, State] =
+    mutex.lock
+      .evalMap(_ =>
+        for {
+          currentEventId <- currentEventIdRef.get
+          state <-
+            (currentEventId == blockId)
+              .pure[F]
+              .ifM(
+                currentStateRef.get,
+                for {
+                  (unapplyChain, applyChain) <- parentChildTree.findCommonAncestor(currentEventId, blockId)
+                  currentState <- currentStateRef.get
+                  stateAtCommonAncestor <- unapplyEvents(
+                    unapplyChain.tail,
+                    currentState,
+                    unapplyChain.head
+                  )
+                  newState <- applyEvents(applyChain.tail, stateAtCommonAncestor)
+                } yield newState
+              )
+        } yield state
+      )
 
   private def unapplyEvents(
       eventIds: Chain[BlockId],
       currentState: State,
       newEventId: BlockId
   ): F[State] =
-    eventIds.zipWithIndex.reverse.foldLeftM(currentState) {
-      case (state, (eventId, index)) =>
-        Async[F].uncancelable(_ =>
-          for {
-            newState <- unapplyEvent(state, eventId)
-            nextEventId = eventIds.get(index - 1).getOrElse(newEventId)
-            _ <- (
-              currentStateRef.set(newState),
-              currentEventIdRef.set(nextEventId),
-              currentEventChanged(nextEventId)
-            ).tupled
-          } yield newState
-        )
+    eventIds.zipWithIndex.reverse.foldLeftM(currentState) { case (state, (eventId, index)) =>
+      Async[F].uncancelable(_ =>
+        for {
+          newState <- unapplyEvent(state, eventId)
+          nextEventId = eventIds.get(index - 1).getOrElse(newEventId)
+          _ <- (
+            currentStateRef.set(newState),
+            currentEventIdRef.set(nextEventId),
+            currentEventChanged(nextEventId)
+          ).tupled
+        } yield newState
+      )
     }
 
   private def applyEvents(

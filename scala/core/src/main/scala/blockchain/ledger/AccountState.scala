@@ -7,6 +7,7 @@ import blockchain.codecs.given
 import blockchain.ledger.given
 import cats.{Functor, MonadThrow}
 import cats.data.OptionT
+import cats.effect.kernel.MonadCancelThrow
 import cats.effect.{Async, Resource}
 import cats.implicits.*
 
@@ -24,7 +25,7 @@ object AccountState:
     Store[F, TransactionOutputReference, List[TransactionOutputReference]]
   type BSS[F[_]] = BlockSourcedState[F, State[F]]
 
-  def make[F[_]: Functor](bss: BSS[F]): Resource[F, AccountState[F]] =
+  def make[F[_]: MonadCancelThrow](bss: BSS[F]): Resource[F, AccountState[F]] =
     Resource.pure(new AccountStateImpl[F](bss))
 
   def makeBSS[F[_]: Async](
@@ -48,13 +49,12 @@ object AccountState:
         onBlockChanged
       )
 
-class AccountStateImpl[F[_]: Functor](bss: AccountState.BSS[F])
-    extends AccountState[F]:
+class AccountStateImpl[F[_]: MonadCancelThrow](bss: AccountState.BSS[F]) extends AccountState[F]:
   override def accountUtxos(
       parentBlockId: BlockId,
       account: TransactionOutputReference
   ): F[Option[List[TransactionOutputReference]]] =
-    bss.useStateAt(parentBlockId)(_.get(account))
+    bss.stateAt(parentBlockId).use(_.get(account))
 
 class AccountStateBSSImpl[F[_]: Async](
     fetchBody: FetchBody[F],

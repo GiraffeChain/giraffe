@@ -51,7 +51,7 @@ object Mempool:
       fetchTransaction: FetchTransaction[F]
   ): Resource[F, BSS[F]] =
     Resource
-      .pure(new MempoolBSS[F]())
+      .pure(new MempoolBSS[F](fetchBody, fetchTransaction))
       .flatMap(bssImpl =>
         BlockSourcedState.make(
           initialState,
@@ -80,24 +80,30 @@ class MempoolImpl[F[_]: Async](
   override def read: F[List[Transaction]] =
     localChain.currentHead
       .flatMap(
-        bss.useStateAt(_)(state =>
-          retainValid(state.entries.map(_.transaction)).flatTap(updated =>
-            Async[F].delay(state.entries =
-              updated.flatMap(u => state.entries.find(_.transaction.id == u.id))
+        bss
+          .stateAt(_)
+          .use(state =>
+            retainValid(state.entries.map(_.transaction)).flatTap(updated =>
+              Async[F].delay(state.entries = updated.flatMap(u => state.entries.find(_.transaction.id == u.id)))
             )
           )
-        )
       )
 
-  // TODO: Validate
   override def add(transaction: Transaction): F[Unit] =
     localChain.currentHead
-      .flatMap(
-        bss.useStateAt(_)(s =>
-          Async[F].delay(s.entries =
-            s.entries :+ Mempool.Entry(transaction, Instant.now())
+      .flatMap(headId =>
+        bss
+          .stateAt(headId)
+          .use(s =>
+            bodyValidation
+              .validate(
+                FullBlockBody(s.entries.map(_.transaction) :+ transaction),
+                TransactionValidationContext(headId, 0, 0)
+              )
+              .leftMap(errors => new IllegalArgumentException(errors.head))
+              .rethrowT >>
+              Async[F].delay(s.entries = s.entries :+ Mempool.Entry(transaction, Instant.now()))
           )
-        )
       )
 
   override def changes: fs2.Stream[F, MempoolChange] =
@@ -125,14 +131,30 @@ class MempoolImpl[F[_]: Async](
       )((transactions, transaction) =>
         bodyValidation
           .validate(
-            BlockBody(transactions.map(_.id) :+ transaction.id),
+            FullBlockBody(transactions :+ transaction),
             TransactionValidationContext(headId, head.height + 1, slot)
           )
           .fold(_ => transactions, _ => transactions :+ transaction)
       )
     } yield newTransactions
 
-class MempoolBSS[F[_]]():
-  def applyBlock(state: Mempool.State, blockId: BlockId): F[Mempool.State] = ???
+class MempoolBSS[F[_]: Async](fetchBody: FetchBody[F], fetchTransaction: FetchTransaction[F]):
+  def applyBlock(state: Mempool.State, blockId: BlockId): F[Mempool.State] =
+    fetchBody(blockId)
+      .flatMap(body =>
+        Async[F].delay(
+          body.transactionIds.foreach(transactionId =>
+            state.entries = state.entries.filterNot(_.transaction.id == transactionId)
+          )
+        )
+      )
+      .as(state)
   def unapplyBlock(state: Mempool.State, blockId: BlockId): F[Mempool.State] =
-    ???
+    fetchBody(blockId)
+      .flatMap(_.transactionIds.traverse(fetchTransaction))
+      .flatMap(transactions =>
+        Async[F].delay(
+          state.entries ++= transactions.filter(_.rewardParentBlockId.isEmpty).map(Mempool.Entry(_, Instant.now()))
+        )
+      )
+      .as(state)

@@ -62,7 +62,7 @@ class LocalChainImpl[F[_]: Async](
     if (height == Genesis.Height)
       genesis.map(_.some)
     else if (height > Genesis.Height)
-      currentHead.flatMap(blockHeightsBSS.useStateAt(_)(_.apply(height)))
+      currentHead.flatMap(blockHeightsBSS.stateAt(_).use(_.apply(height)))
     else if (height == 0L)
       currentHead.map(_.some)
     else

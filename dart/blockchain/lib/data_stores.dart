@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/common/store.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
@@ -111,24 +112,24 @@ class DataStores {
         final epochBoundariesR = HiveStore.make<Int64, BlockId>(
             "epoch-boundaries",
             hive,
-            (key) => Uint8List.fromList(key.toBytes()),
+            (key) => Uint8List.fromList(key.toBytesBigEndian()),
             PersistenceCodecs.encodeBlockId,
-            Int64.fromBytes,
+            Int64.fromBytesBigEndian,
             PersistenceCodecs.decodeBlockId);
         final delayedActiveStakeR = HiveStore.make<void, Int64>(
             "delayed-active-stake",
             hive,
             (_) => Uint8List(1),
-            (value) => Uint8List.fromList(value.toBytes()),
+            (value) => Uint8List.fromList(value.toBytesBigEndian()),
             (_) {},
-            Int64.fromBytes);
+            Int64.fromBytesBigEndian);
         final delayedInactiveStakeR = HiveStore.make<void, Int64>(
             "delayed-inactive-stake",
             hive,
             (_) => Uint8List(1),
-            (value) => Uint8List.fromList(value.toBytes()),
+            (value) => Uint8List.fromList(value.toBytesBigEndian()),
             (_) {},
-            Int64.fromBytes);
+            Int64.fromBytesBigEndian);
         final delayedActiveStakersR =
             HiveStore.make<TransactionOutputReference, ActiveStaker>(
                 "delayed-active-stakers",
@@ -140,9 +141,9 @@ class DataStores {
         final blockHeightTreeR = HiveStore.make<Int64, BlockId>(
             "block-height-tree",
             hive,
-            (key) => Uint8List.fromList(key.toBytes()),
+            (key) => Uint8List.fromList(key.toBytesBigEndian()),
             PersistenceCodecs.encodeBlockId,
-            Int64.fromBytes,
+            Int64.fromBytesBigEndian,
             PersistenceCodecs.decodeBlockId);
         final metadataR = HiveStore.make<int, List<int>>(
             "delayed-metadata",

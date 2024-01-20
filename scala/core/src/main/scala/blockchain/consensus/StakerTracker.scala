@@ -57,12 +57,14 @@ object StakerTracker:
             .epochOf(slot)
             .flatMap(epoch =>
               if (epoch > 1)
-                epochBoundariesBSS.useStateAt(currentBlockId)(
-                  _.getOrRaise(epoch - 2)
-                )
+                epochBoundariesBSS
+                  .stateAt(currentBlockId)
+                  .use(
+                    _.getOrRaise(epoch - 2)
+                  )
               else genesisBlockId.pure[F]
             )
-            .flatMap(consensusDataBSS.useStateAt(_)(f))
+            .flatMap(consensusDataBSS.stateAt(_).use(f))
     )
 
 object StakerData:

@@ -6,9 +6,57 @@ import 'package:fixnum/fixnum.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 
-// Source: https://github.com/dart-lang/sdk/issues/32803#issuecomment-1228291047
+final _bigIntByteMask = new BigInt.from(0xff);
+
 extension BigIntOps on BigInt {
-  Uint8List get bytes {
+  // Source: https://github.com/PointyCastle/pointycastle/blob/master/lib/src/utils.dart
+  Uint8List get bytesBigEndian2 {
+    final byteLen = bitLength ~/ 8 + 1;
+    final byteArray = Uint8List(byteLen);
+    for (int i = byteLen - 1, bytesCopied = 4, nextInt = 0, intIndex = 0;
+        i >= 0;
+        i--) {
+      if (bytesCopied == 4) {
+        nextInt = getInt(intIndex++);
+        bytesCopied = 1;
+      } else {
+        nextInt >>>= 8;
+        bytesCopied++;
+      }
+      byteArray[i] = nextInt;
+    }
+    return byteArray;
+  }
+
+  int getInt(int n) {
+    throw UnimplementedError();
+  }
+
+  int get signum {
+    if (this > BigInt.one)
+      return 1;
+    else if (this == BigInt.zero)
+      return 0;
+    else
+      return -1;
+  }
+
+  int get signInt => (signum < 0) ? -1 : 0;
+
+  Uint8List get bytesBigEndian {
+    BigInt number = this;
+    // Not handling negative numbers. Decide how you want to do that.
+    int size = (bitLength + 7) >> 3;
+    var result = new Uint8List(size);
+    for (int i = 0; i < size; i++) {
+      result[size - i - 1] = (number & _bigIntByteMask).toInt();
+      number = number >> 8;
+    }
+    return result;
+  }
+
+  // Source: https://github.com/dart-lang/sdk/issues/32803#issuecomment-1228291047
+  Uint8List get bytesLittleEndian {
     final data = ByteData(bitLength ~/ 8 + 1);
     var _bigInt = this;
 
@@ -23,6 +71,15 @@ extension BigIntOps on BigInt {
 
 extension Int32Ops on Int32 {
   BigInt get toBigInt => BigInt.from(this.toInt());
+  List<int> toBytesBigEndian() {
+    Int32 value = this;
+    final res = Uint8List(4);
+    for (int i = 3; i >= 0; i--) {
+      res[i] = (value & 0xff).toInt();
+      value >>= 8;
+    }
+    return res;
+  }
 }
 
 extension Int64Ops on Int64 {
@@ -30,7 +87,7 @@ extension Int64Ops on Int64 {
   List<int> toBytesBigEndian() {
     Int64 value = this;
     final res = Uint8List(8);
-    for (int i = 0; i >= 0; i--) {
+    for (int i = 7; i >= 0; i--) {
       res[i] = (value & 0xff).toInt();
       value >>= 8;
     }

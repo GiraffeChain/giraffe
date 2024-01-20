@@ -180,13 +180,9 @@ object Log1P:
             .build[Ratio, Entry[Ratio]]()
         )
       )
-      .map(cache =>
-        (x: Ratio) =>
-          cache.cachingF(x)(ttl = None)(Sync[F].defer(base.evaluate(x)))
-      )
+      .map(cache => (x: Ratio) => cache.cachingF(x)(ttl = None)(Sync[F].defer(base.evaluate(x))))
 
-class Log1PImpl[F[_]: Sync](maxIterations: Int, precision: Int)
-    extends Log1P[F]:
+class Log1PImpl[F[_]: Sync](maxIterations: Int, precision: Int) extends Log1P[F]:
   override def evaluate(x: Ratio): F[Ratio] =
     def a(j: Int): Ratio = j match {
       case 0 => Ratio.Zero
@@ -232,15 +228,12 @@ class ExpImpl[F[_]: Sync](maxIterations: Int, precision: Int) extends Exp[F]:
 
 object Lentz:
 
-  /** Implementation of modified Lentz's method from "Numerical Recipes in
-    * Fortran 77" Second Edition Section 5.2 William H. Press, Saul A.
-    * Teukolsky, William T. Vetterling, and Brian P. Flannery. 1992. Numerical
-    * recipes in FORTRAN (2nd ed.): the art of scientific computing. Cambridge
-    * University Press, USA.
+  /** Implementation of modified Lentz's method from "Numerical Recipes in Fortran 77" Second Edition Section 5.2
+    * William H. Press, Saul A. Teukolsky, William T. Vetterling, and Brian P. Flannery. 1992. Numerical recipes in
+    * FORTRAN (2nd ed.): the art of scientific computing. Cambridge University Press, USA.
     *
-    * The numerical technique uses a set of coefficients to calculate a nested
-    * fraction iteratively, avoiding nested recursion and providing a much more
-    * performant algorithm
+    * The numerical technique uses a set of coefficients to calculate a nested fraction iteratively, avoiding nested
+    * recursion and providing a much more performant algorithm
     * @param maxIterations
     *   maximum number of iterations
     * @param precision
@@ -250,8 +243,8 @@ object Lentz:
     * @param b
     *   b coefficients that map integers to ratios
     * @return
-    *   a tuple containing: ratio approximating the nested fraction, false if
-    *   method converged true otherwise, number of iterations
+    *   a tuple containing: ratio approximating the nested fraction, false if method converged true otherwise, number of
+    *   iterations
     */
   def modifiedLentzMethod(
       maxIterations: Int,

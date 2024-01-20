@@ -24,7 +24,7 @@ trait Codecs {
           case struct.Value.Kind.Empty        => ZeroBS
           case struct.Value.Kind.NullValue(_) => ZeroBS
           case struct.Value.Kind.NumberValue(num) =>
-            num.immutableBytes
+            num.toString.immutableBytes // TODO
           case struct.Value.Kind.StringValue(string) =>
             string.immutableBytes
           case struct.Value.Kind.BoolValue(bool) =>
@@ -41,10 +41,10 @@ trait Codecs {
   given ImmutableBytes[Int] with
     extension (int: Int) def immutableBytes: Bytes = ByteString.copyFrom(Ints.toByteArray(int))
 
-  given ImmutableBytes[Double] with
-    extension (double: Double)
-      def immutableBytes: Bytes =
-        double.toString.immutableBytes // TODO precision
+//  given ImmutableBytes[Double] with
+//    extension (double: Double)
+//      def immutableBytes: Bytes =
+//        double.toString.immutableBytes // TODO precision
 
   given ImmutableBytes[Boolean] with
     extension (bool: Boolean) def immutableBytes: Bytes = if (bool) OneBS else ZeroBS

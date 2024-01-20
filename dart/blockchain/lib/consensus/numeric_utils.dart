@@ -12,7 +12,7 @@ Rational log1p(Rational x) {
           ? Rational.one
           : Rational.fromInt(j) - Rational.fromInt(j - 1) * x;
 
-  return _modifiedLenz(10000, 16, a, b);
+  return _modifiedLenz(10000, 8, a, b);
 }
 
 Rational exp(Rational x) {

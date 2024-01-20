@@ -24,8 +24,8 @@ class VrfCalculatorImpl extends VrfCalculator {
 
   final log = Logger("VrfCalculator");
 
-  Map<(List<int>, Int64), List<int>> _vrfProofsCache = {};
-  Map<(List<int>, Int64), List<int>> _rhosCache = {};
+  Map<VrfArgument, List<int>> _vrfProofsCache = {};
+  Map<VrfArgument, List<int>> _rhosCache = {};
 
   VrfCalculatorImpl(this.skVrf, this.clock, this.leaderElectionValidation,
       this.protocolSettings);
@@ -59,11 +59,12 @@ class VrfCalculatorImpl extends VrfCalculator {
 
   @override
   Future<List<int>> proofForSlot(Int64 slot, List<int> eta) async {
-    final key = (eta, slot);
+    final key = VrfArgument(eta, slot);
     if (!_vrfProofsCache.containsKey(key)) {
-      final arg = VrfArgument(eta, slot);
-      final message = arg.signableBytes;
+      final message = key.signableBytes;
       final result = await ed25519Vrf.sign(skVrf, message);
+      final vkVrf = await ed25519Vrf.getVerificationKey(skVrf);
+      assert(await ed25519Vrf.verify(result, message, vkVrf));
 
       _vrfProofsCache[key] = result;
       return result;
@@ -73,7 +74,7 @@ class VrfCalculatorImpl extends VrfCalculator {
 
   @override
   Future<List<int>> rhoForSlot(Int64 slot, List<int> eta) async {
-    final key = (eta, slot);
+    final key = VrfArgument(eta, slot);
     if (!_rhosCache.containsKey(key)) {
       final proof = await proofForSlot(slot, eta);
       final rho = await ed25519Vrf.proofToHash(proof);

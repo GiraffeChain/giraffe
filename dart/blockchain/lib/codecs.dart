@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:blockchain/common/models/unsigned.dart';
@@ -12,7 +13,7 @@ import 'package:hashlib/hashlib.dart';
 
 extension ListCodec<T> on List<T> {
   List<int> immutableBytes(List<int> Function(T) encodeT) {
-    final result = <int>[]..addAll(Int32(length).toBytes());
+    final result = <int>[]..addAll(length.immutableBytes);
     for (final t in this) result.addAll(encodeT(t));
     return result;
   }
@@ -21,7 +22,7 @@ extension ListCodec<T> on List<T> {
 extension BlockHeaderCodecs on BlockHeader {
   List<int> get immutableBytes => <int>[]
     ..addAll(parentHeaderId.value)
-    ..addAll(parentSlot.toBytes())
+    ..addAll(parentSlot.immutableBytes)
     ..addAll(txRoot)
     ..addAll(timestamp.immutableBytes)
     ..addAll(height.immutableBytes)
@@ -52,7 +53,7 @@ BlockId decodeBlockId(String input) {
 extension UnsignedBlockHeaderCodecs on UnsignedBlockHeader {
   List<int> get signableBytes => <int>[]
     ..addAll(parentHeaderId.value)
-    ..addAll(parentSlot.toBytes())
+    ..addAll(parentSlot.immutableBytes)
     ..addAll(txRoot)
     ..addAll(timestamp.immutableBytes)
     ..addAll(height.immutableBytes)
@@ -113,11 +114,11 @@ extension SignatureKesProductCodecs on SignatureKesProduct {
 }
 
 extension IntCodecs on int {
-  List<int> get immutableBytes => BigInt.from(this).bytes;
+  List<int> get immutableBytes => Int32(this).toBytesBigEndian();
 }
 
 extension Int64Codecs on Int64 {
-  Uint8List get immutableBytes => toBigInt.bytes;
+  List<int> get immutableBytes => toBytesBigEndian();
 }
 
 extension Int128Codecs on List<int> {
@@ -249,13 +250,19 @@ extension PeerIdCodecs on PeerId {
   String get show => "p_${value.sublist(0, 8).show}";
 }
 
+extension StringCodecs on String {
+  List<int> get immutableBytes => utf8.encode(this);
+}
+
 class PersistenceCodecs {
   static Uint8List encodeHeightBlockId((Int64, BlockId) heightBlockTuple) =>
       Uint8List.fromList(<int>[]
-        ..addAll(heightBlockTuple.$1.toBytes())
+        ..addAll(heightBlockTuple.$1.toBytesBigEndian())
         ..addAll(heightBlockTuple.$2.value));
-  static (Int64, BlockId) decodeHeightBlockId(Uint8List bytes) =>
-      (Int64.fromBytes(bytes.sublist(0, 8)), BlockId(value: bytes.sublist(8)));
+  static (Int64, BlockId) decodeHeightBlockId(Uint8List bytes) => (
+        Int64.fromBytesBigEndian(bytes.sublist(0, 8)),
+        BlockId(value: bytes.sublist(8))
+      );
 
   static Uint8List encodeBlockId(BlockId blockId) =>
       Uint8List.fromList(blockId.value);
@@ -275,7 +282,8 @@ class Codec<T> {
 }
 
 class P2PCodecs {
-  static final int64Codec = Codec<Int64>((v) => v.toBytes(), Int64.fromBytes);
+  static final int64Codec =
+      Codec<Int64>((v) => v.toBytesBigEndian(), Int64.fromBytesBigEndian);
   static final blockIdCodec =
       Codec<BlockId>((v) => v.value, (v) => BlockId(value: v));
 

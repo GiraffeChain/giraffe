@@ -3,6 +3,7 @@ package blockchain
 import blockchain.*
 import blockchain.crypto.{Blake2b256, Blake2b512, Ed25519VRF}
 import blockchain.models.*
+import blockchain.codecs.given
 import blockchain.utility.{*, given}
 import com.google.protobuf.ByteString
 
@@ -23,8 +24,8 @@ package object consensus:
       blake2b256: Blake2b256
   ): Bytes =
     blake2b256.hash(
-      threshold.numerator.toByteArray,
-      threshold.denominator.toByteArray
+      threshold.numerator.toString().immutableBytes,
+      threshold.denominator.toString().immutableBytes
     )
 
   /** @param rho

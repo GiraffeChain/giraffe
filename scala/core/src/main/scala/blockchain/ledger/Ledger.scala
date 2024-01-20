@@ -43,16 +43,10 @@ object Ledger:
         dataStores.bodies.getOrRaise,
         dataStores.transactions.getOrRaise
       )
-      transactionOutputState <- TransactionOutputState.make(
-        transactionOutputStateBSS
-      )
-      transactionValidation <- TransactionValidation.make[F](
-        dataStores.transactions.getOrRaise,
-        transactionOutputState,
-        accountState
-      )
-      bodyValidation <- BodyValidation
-        .make[F](dataStores.transactions.getOrRaise, transactionValidation)
+      transactionOutputState <- TransactionOutputState.make(transactionOutputStateBSS)
+      transactionValidation <- TransactionValidation
+        .make[F](dataStores.transactions.getOrRaise, transactionOutputState, accountState)
+      bodyValidation <- BodyValidation.make[F](transactionValidation)
       mempoolBSS <- Mempool.makeBSS[F](
         Mempool.State.default.pure[F],
         localChain.currentHead,

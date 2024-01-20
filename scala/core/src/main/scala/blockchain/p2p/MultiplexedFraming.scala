@@ -12,11 +12,10 @@ object MultiplexedFraming:
     Stream
       .repeatEval(
         OptionT(socket.read(8))
-          .map(chunk => chunk.splitAt(4))
-          .map((portBytes, lengthBytes) =>
+          .map(prefix =>
             (
-              Ints.fromByteArray(portBytes.toArray),
-              Ints.fromByteArray(lengthBytes.toArray)
+              Ints.fromBytes(prefix(0), prefix(1), prefix(2), prefix(3)),
+              Ints.fromBytes(prefix(4), prefix(5), prefix(6), prefix(7))
             )
           )
           .flatMap((port, length) =>
@@ -31,5 +30,6 @@ object MultiplexedFraming:
     (port, data) =>
       socket.write(
         Chunk.array(Ints.toByteArray(port)) ++
-          Chunk.array(Ints.toByteArray(data.size))
-      ) >> Monad[F].whenA(data.nonEmpty)(socket.write(data))
+          Chunk.array(Ints.toByteArray(data.size)) ++
+          data
+      )

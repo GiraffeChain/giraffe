@@ -4,6 +4,7 @@ import blockchain.consensus.ChainSelectionOutcome
 import blockchain.ledger.TransactionValidationContext
 import blockchain.codecs.given
 import blockchain.models.*
+import blockchain.ledger.*
 import blockchain.*
 import cats.data.OptionT
 import cats.effect.Async
@@ -17,7 +18,7 @@ import scala.concurrent.duration.*
 class PeerBlockchainHandler[F[_]: Async: Logger](
     core: BlockchainCore[F],
     interface: PeerBlockchainInterface[F],
-    onPeerState: PublicP2PState => F[Unit]
+    remotePeerState: PeerState[F]
 ):
   def handle: Stream[F, Unit] =
     pingPong.merge(peerState).mergeHaltR(start)
@@ -32,7 +33,7 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
     Stream
       .awakeEvery(30.seconds)
       .evalMap(_ => interface.publicState)
-      .evalMap(onPeerState)
+      .evalMap(remotePeerState.publicStateRef.set)
       .void
 
   private def start = verifyGenesisAgreement ++ syncCheck
@@ -58,18 +59,12 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
         remoteHeader <- OptionT(interface.fetchHeader(remoteHeadId))
           .getOrRaise(new IllegalArgumentException("No Canonical Head"))
         remoteHeaderAtHeightF = (height: Height) =>
-          OptionT(interface.blockIdAtHeight(height))
-            .flatMapF(interface.fetchHeader)
-            .value
-        commonAncestorHeader <- core.dataStores.headers.getOrRaise(
-          commonAncestorId
-        )
+          OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
+        commonAncestorHeader <- core.dataStores.headers.getOrRaise(commonAncestorId)
         localHeadId <- core.consensus.localChain.currentHead
         localHeader <- core.dataStores.headers.getOrRaise(localHeadId)
         localHeaderAtHeightF = (height: Height) =>
-          OptionT(core.consensus.localChain.blockIdAtHeight(height))
-            .flatMapF(core.dataStores.headers.get)
-            .value
+          OptionT(core.consensus.localChain.blockIdAtHeight(height)).flatMapF(core.dataStores.headers.get).value
         chainSelectionResult <- core.consensus.chainSelection.compare(
           localHeader,
           remoteHeader,
@@ -79,21 +74,17 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
         )
         nextOperation <- chainSelectionResult match {
           case ChainSelectionOutcome.XStandard =>
-            Logger[F].info(
-              "Remote peer is up-to-date but local chain is better"
-            ) >> waitForBetterBlock.pure[F]
+            Logger[F].info("Remote peer is up-to-date but local chain is better") >>
+              waitForBetterBlock.pure[F]
           case ChainSelectionOutcome.YStandard =>
-            Logger[F].info(
-              "Local peer is up-to-date but remote chain is better"
-            ) >> sync(commonAncestorHeader).pure[F]
+            Logger[F].info("Local peer is up-to-date but remote chain is better") >>
+              sync(commonAncestorHeader).pure[F]
           case ChainSelectionOutcome.XDensity =>
-            Logger[F].info(
-              "Remote peer is out-of-sync but local chain is better"
-            ) >> waitForBetterBlock.pure[F]
+            Logger[F].info("Remote peer is out-of-sync but local chain is better") >>
+              waitForBetterBlock.pure[F]
           case ChainSelectionOutcome.YDensity =>
-            Logger[F].info(
-              "Local peer out-of-sync and remote chain is better"
-            ) >> sync(commonAncestorHeader).pure[F]
+            Logger[F].info("Local peer out-of-sync and remote chain is better") >>
+              sync(commonAncestorHeader).pure[F]
         }
       } yield nextOperation
     )
@@ -108,15 +99,12 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
               Logger[F].info(show"Ignoring known block id=$blockId") >>
                 waitForBetterBlock.pure[F],
               OptionT(interface.fetchHeader(blockId))
-                .getOrRaise(
-                  new IllegalArgumentException("Remote header not found")
-                )
+                .getOrRaise(new IllegalArgumentException("Remote header not found"))
                 .flatMap(remoteHeader =>
                   core.consensus.localChain.currentHead.flatMap(currentHeadId =>
                     if (remoteHeader.parentHeaderId == currentHeadId)
-                      fetchVerifyPersist(
-                        remoteHeader
-                      ) >> core.consensus.localChain.adopt(blockId) >>
+                      fetchVerifyPersist(remoteHeader) >>
+                        core.consensus.localChain.adopt(blockId) >>
                         waitForBetterBlock.pure[F]
                     else
                       Logger[F].info(show"Block id=$blockId is not a direct local extension.  Checking sync.") >>
@@ -133,21 +121,17 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
         OptionT(interface.blockIdAtHeight(h))
           .semiflatMap(remoteId =>
             OptionT(interface.fetchHeader(remoteId))
-              .getOrRaise(
-                new IllegalArgumentException("Remote header not found")
+              .getOrRaise(new IllegalArgumentException("Remote header not found"))
+              .ensure(new IllegalStateException("Remote peer branched during syncing"))(header =>
+                lastProcessed.forall(_ == header.parentHeaderId)
               )
-              .ensure(
-                new IllegalStateException(
-                  "Remote peer branched during syncing"
-                )
-              )(header => lastProcessed.forall(_ == header.parentHeaderId))
               .flatTap(fetchVerifyPersist)
               .as((h + 1, remoteId.some))
               .tupleLeft(remoteId)
           )
           .flatTapNone(
             lastProcessed.traverse(id =>
-              Logger[F].info(show"Adopting id=$id") >>
+              Logger[F].info(show"Adopting id=$id") *>
                 core.consensus.localChain.adopt(id)
             )
           )
@@ -163,25 +147,24 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
         .leftMap(errors => new IllegalArgumentException(errors.head))
         .rethrowT
       _ <- core.dataStores.headers.put(header.id, header)
+      parentHeader <- core.dataStores.headers.getOrRaise(header.parentHeaderId)
       _ <- core.blockIdTree.associate(header.id, header.parentHeaderId)
-      body <- OptionT(interface.fetchBody(header.id))
+      body <- OptionT(core.dataStores.bodies.get(header.id))
+        .orElse(
+          OptionT(interface.fetchBody(header.id))
+            .ensure(new IllegalArgumentException("TxRoot Mismatch"))(body =>
+              body.transactionIds.txRoot(parentHeader.txRoot) == header.txRoot
+            )
+        )
         .getOrRaise(new IllegalArgumentException("Remote body not found"))
       transactions <- body.transactionIds.traverse(id =>
-        OptionT(interface.fetchTransaction(id)).getOrRaise(
-          new IllegalArgumentException("Remote transaction not found")
-        )
-      )
-      _ <- transactions.traverse(transaction =>
-        core.dataStores.transactions
-          .contains(transaction.id)
-          .ifM(
-            ().pure[F],
-            core.dataStores.transactions.put(transaction.id, transaction)
-          )
+        OptionT(core.dataStores.transactions.get(id))
+          .orElse(OptionT(interface.fetchTransaction(id)))
+          .getOrRaise(new IllegalArgumentException("Remote transaction not found"))
       )
       _ <- core.ledger.bodyValidation
         .validate(
-          body,
+          FullBlockBody(transactions),
           TransactionValidationContext(
             header.parentHeaderId,
             header.height,
@@ -190,4 +173,10 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
         )
         .leftMap(errors => new IllegalArgumentException(errors.head))
         .rethrowT
+      _ <- core.dataStores.bodies.contains(header.id).ifM(().pure[F], core.dataStores.bodies.put(header.id, body))
+      _ <- transactions.traverseTap(transaction =>
+        core.dataStores.transactions
+          .contains(transaction.id)
+          .ifM(().pure[F], core.dataStores.transactions.put(transaction.id, transaction))
+      )
     } yield ()

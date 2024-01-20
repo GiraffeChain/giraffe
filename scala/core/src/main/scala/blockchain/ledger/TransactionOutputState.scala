@@ -6,7 +6,7 @@ import blockchain.utility.given
 import blockchain.codecs.given
 import cats.{Functor, MonadThrow}
 import cats.data.OptionT
-import cats.effect.{Async, Resource, Sync}
+import cats.effect.{Async, Resource, Sync, MonadCancelThrow}
 import cats.implicits.*
 import scodec.bits.BitVector
 
@@ -23,7 +23,7 @@ object TransactionOutputState:
   type State[F[_]] = Store[F, TransactionId, BitVector]
   type BSS[F[_]] = BlockSourcedState[F, State[F]]
 
-  def make[F[_]: Functor](bss: BSS[F]): Resource[F, TransactionOutputState[F]] =
+  def make[F[_]: MonadCancelThrow](bss: BSS[F]): Resource[F, TransactionOutputState[F]] =
     Resource.pure(new TransactionOutputStateImpl[F](bss))
 
   def makeBSS[F[_]: Async](
@@ -41,14 +41,14 @@ object TransactionOutputState:
       onBlockChanged
     )
 
-class TransactionOutputStateImpl[F[_]: Functor](
+class TransactionOutputStateImpl[F[_]: MonadCancelThrow](
     bss: TransactionOutputState.BSS[F]
 ) extends TransactionOutputState[F]:
   override def transactionOutputIsSpendable(
       blockId: BlockId,
       outputReference: TransactionOutputReference
   ): F[Boolean] =
-    OptionT(bss.useStateAt(blockId)(_.get(outputReference.transactionId)))
+    OptionT(bss.stateAt(blockId).use(_.get(outputReference.transactionId)))
       .subflatMap(_.lift(outputReference.index))
       .exists(identity)
 

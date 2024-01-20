@@ -1,15 +1,15 @@
 package blockchain.consensus
 
-import cats.implicits.*
-import cats.data.{EitherT, NonEmptyChain}
-import blockchain.crypto.{CryptoResources, given}
-import blockchain.{*, given}
 import blockchain.codecs.given
+import blockchain.crypto.{CryptoResources, given}
 import blockchain.models.{BlockHeader, BlockId, SlotId}
-import blockchain.utility.{Ratio, given}
+import blockchain.utility.*
+import blockchain.{*, given}
+import cats.data.{EitherT, NonEmptyChain}
 import cats.effect.{Resource, Sync}
+import cats.implicits.*
 import com.google.common.primitives.Longs
-import com.google.protobuf.ByteString
+import scodec.bits.ByteVector
 
 trait HeaderValidation[F[_]]:
   def validate(blockHeader: BlockHeader): ValidationResult[F]
@@ -93,8 +93,7 @@ class HeaderValidationImpl[F[_]: Sync](
       )
       .ensureOr(_ => NonEmptyChain("FutureBlock"))(_.slot < globalSlot + 10)
 
-  /** Verifies the given block's VRF certificate syntactic integrity for a
-    * particular stateful nonce
+  /** Verifies the given block's VRF certificate syntactic integrity for a particular stateful nonce
     */
   private[consensus] def vrfVerification(
       header: BlockHeader
@@ -110,17 +109,14 @@ class HeaderValidationImpl[F[_]: Sync](
       _ <- EitherT.cond[F](eta == expectedEta, (), NonEmptyChain("Invalid Eta"))
       signatureVerificationResult <- EitherT.liftF(
         cryptoResources.ed25519VRF
-          .use(ed25519vrf =>
-            Sync[F].delay(
-              ed25519vrf
-                .verify(
-                  header.eligibilityCertificate.vrfSig.toByteArray,
-                  VrfArgument(
-                    expectedEta,
-                    header.slot
-                  ).signableBytes.toByteArray,
-                  header.eligibilityCertificate.vrfVK.toByteArray
-                )
+          .useSync(
+            _.verify(
+              header.eligibilityCertificate.vrfSig.toByteArray,
+              VrfArgument(
+                expectedEta,
+                header.slot
+              ).signableBytes.toByteArray,
+              header.eligibilityCertificate.vrfVK.toByteArray
             )
           )
       )
@@ -131,8 +127,8 @@ class HeaderValidationImpl[F[_]: Sync](
       )
     } yield ()
 
-  /** Verifies the given block's Operational Certificate's parent -> linear
-    * commitment, and the Operational Certificate's block signature
+  /** Verifies the given block's Operational Certificate's parent -> linear commitment, and the Operational
+    * Certificate's block signature
     */
   private[consensus] def kesVerification(
       header: BlockHeader
@@ -146,14 +142,11 @@ class HeaderValidationImpl[F[_]: Sync](
       )
       parentCommitmentResult <- EitherT.liftF(
         cryptoResources.kesProduct
-          .use(kesProduct =>
-            Sync[F].delay(
-              kesProduct
-                .verify(
-                  header.operationalCertificate.parentSignature,
-                  message,
-                  header.operationalCertificate.parentVK
-                )
+          .useSync(
+            _.verify(
+              header.operationalCertificate.parentSignature,
+              message,
+              header.operationalCertificate.parentVK
             )
           )
       )
@@ -164,15 +157,11 @@ class HeaderValidationImpl[F[_]: Sync](
       )
       childSignatureResult <- EitherT.liftF(
         cryptoResources.ed25519
-          .use(ed25519 =>
-            // Use the ed25519 instance to verify the childSignature against the header's bytes
-            Sync[F].delay(
-              ed25519
-                .verify(
-                  header.operationalCertificate.childSignature.toByteArray,
-                  header.unsigned.signableBytes.toByteArray,
-                  header.operationalCertificate.childVK.toByteArray
-                )
+          .useSync(
+            _.verify(
+              header.operationalCertificate.childSignature.toByteArray,
+              header.unsigned.signableBytes.toByteArray,
+              header.operationalCertificate.childVK.toByteArray
             )
           )
       )
@@ -197,8 +186,7 @@ class HeaderValidationImpl[F[_]: Sync](
       )
       .semiflatMap(leaderElection.getThreshold(_, child.slot - parent.slot))
 
-  /** Verify that the threshold evidence stamped on the block matches the
-    * threshold generated using local state
+  /** Verify that the threshold evidence stamped on the block matches the threshold generated using local state
     */
   private[consensus] def vrfThresholdVerification(
       header: BlockHeader,
@@ -208,9 +196,7 @@ class HeaderValidationImpl[F[_]: Sync](
       evidence <-
         EitherT
           .liftF[F, NonEmptyChain[String], Bytes](
-            cryptoResources.blake2b256.use(implicit b =>
-              Sync[F].delay(thresholdEvidence(threshold))
-            )
+            cryptoResources.blake2b256.useSync(implicit b => thresholdEvidence(threshold))
           )
       _ <-
         EitherT.cond[F](
@@ -220,8 +206,7 @@ class HeaderValidationImpl[F[_]: Sync](
         )
     } yield ()
 
-  /** Verify that the block's staker is eligible using their relative stake
-    * distribution
+  /** Verify that the block's staker is eligible using their relative stake distribution
     */
   private[consensus] def eligibilityVerification(
       header: BlockHeader,
@@ -231,28 +216,20 @@ class HeaderValidationImpl[F[_]: Sync](
       rho <- EitherT
         .liftF(
           cryptoResources.ed25519VRF
-            .use(ed25519Vrf =>
-              Sync[F].delay(
-                ed25519Vrf.proofToHash(
-                  header.eligibilityCertificate.vrfSig.toByteArray
-                )
+            .useSync(
+              _.proofToHash(
+                header.eligibilityCertificate.vrfSig.toByteArray
               )
             )
         )
       isEligible <- EitherT.liftF(leaderElection.isEligible(threshold, rho))
-      _ <- EitherT
-        .cond[F](
-          isEligible,
-          (),
-          NonEmptyChain("Ineligible")
-        )
+      _ <- EitherT.cond[F](isEligible, (), NonEmptyChain("Ineligible"))
     } yield ()
 
-  /** Verifies the staker's registration. First checks that the staker is
-    * registered at all. Once retrieved, the registration contains a
-    * commitment/proof that must be verified using the 0th timestep of the
-    * header's operational certificate's "parentVK". The proof's message is the
-    * hash of (the staker's vrfVK concatenated with the staker's poolVK).
+  /** Verifies the staker's registration. First checks that the staker is registered at all. Once retrieved, the
+    * registration contains a commitment/proof that must be verified using the 0th timestep of the header's operational
+    * certificate's "parentVK". The proof's message is the hash of (the staker's vrfVK concatenated with the staker's
+    * poolVK).
     */
   private[consensus] def registrationVerification(
       header: BlockHeader
@@ -265,24 +242,20 @@ class HeaderValidationImpl[F[_]: Sync](
         )
       message <- EitherT.liftF(
         cryptoResources.blake2b256
-          .use(b =>
-            Sync[F].delay(
-              b.hash(
-                header.eligibilityCertificate.vrfVK,
-                staker.registration.stakingAddress.value
-              )
+          .useSync(
+            _.hash(
+              header.eligibilityCertificate.vrfVK,
+              staker.registration.stakingAddress.value
             )
           )
       )
       isValid <- EitherT.liftF(
         cryptoResources.kesProduct
-          .use(p =>
-            Sync[F].delay(
-              p.verify(
-                staker.registration.signature,
-                message,
-                header.operationalCertificate.parentVK.copy(step = 0)
-              )
+          .useSync(
+            _.verify(
+              staker.registration.signature,
+              message,
+              header.operationalCertificate.parentVK.copy(step = 0)
             )
           )
       )

@@ -87,7 +87,7 @@ class EtaCalculationArgs {
   Uint8List get eta {
     final bytes = <int>[]
       ..addAll(previousEta)
-      ..addAll(epoch.toBigInt.bytes);
+      ..addAll(epoch.toBytesBigEndian());
     rhoNonceHashValues.forEach(bytes.addAll);
 
     return blake2b256.convert(bytes).bytes;

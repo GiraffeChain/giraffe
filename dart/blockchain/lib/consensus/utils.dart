@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:blockchain/common/models/common.dart';
-import 'package:blockchain/common/utils.dart';
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:hashlib/hashlib.dart';
 import 'package:rational/rational.dart';
@@ -17,8 +17,10 @@ extension RhoOps on Rho {
 }
 
 extension RatioOps on Rational {
-  Uint8List get thresholdEvidence =>
-      blake2b256.convert(numerator.bytes + denominator.bytes).bytes;
+  Uint8List get thresholdEvidence => blake2b256
+      .convert(numerator.toString().immutableBytes +
+          denominator.toString().immutableBytes)
+      .bytes;
 }
 
 extension BlockHeaderOps on BlockHeader {
