@@ -29,7 +29,7 @@ extension BlockHeaderCodecs on BlockHeader {
     ..addAll(eligibilityCertificate.immutableBytes)
     ..addAll(operationalCertificate.immutableBytes)
     ..addAll(metadata)
-    ..addAll(address.value);
+    ..addAll(account.immutableBytes);
 
   BlockId get id => hasHeaderId() ? headerId : computeId;
 
@@ -60,7 +60,7 @@ extension UnsignedBlockHeaderCodecs on UnsignedBlockHeader {
     ..addAll(eligibilityCertificate.immutableBytes)
     ..addAll(partialOperationalCertificate.immutableBytes)
     ..addAll(metadata)
-    ..addAll(address.value);
+    ..addAll(account.immutableBytes);
 }
 
 extension EligibilityCertificateCodecs on EligibilityCertificate {
@@ -175,9 +175,11 @@ extension TransactionInputCodecs on TransactionInput {
 }
 
 extension TransactionOutputCodecs on TransactionOutput {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(lockAddress.immutableBytes)
-    ..addAll(value.immutableBytes);
+  List<int> get immutableBytes => [
+        ...lockAddress.immutableBytes,
+        ...value.immutableBytes,
+        ...account.immutableBytes
+      ];
 }
 
 extension KeyCodecs on Key {
@@ -203,7 +205,14 @@ extension StakingRegistrationCodecs on StakingRegistration {
 extension ValueCodecs on Value {
   List<int> get immutableBytes => <int>[]
     ..addAll(quantity.immutableBytes)
-    ..addAll(registration.immutableBytes);
+    ..addAll(accountRegistration.immutableBytes);
+}
+
+extension AccountRegistrationCodecs on AccountRegistration {
+  List<int> get immutableBytes => [
+        ...associationLock.immutableBytes,
+        ...stakingRegistration.immutableBytes
+      ];
 }
 
 extension LockAddressCodecs on LockAddress {

@@ -21,7 +21,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 abstract class Staking {
-  StakingAddress get address;
+  TransactionOutputReference get account;
   Future<VrfHit?> elect(SlotId parentSlotId, Int64 slot);
   Future<BlockHeader?> certifyBlock(
       SlotId parentSlotId,
@@ -33,7 +33,7 @@ abstract class Staking {
 class StakingImpl extends Staking {
   final Int64 operationalPeriodLength;
   final Int64 activationOperationalPeriod;
-  final StakingAddress _address;
+  final TransactionOutputReference account;
   final SecureStore secureStore;
   final List<int> vkVrf;
   final StakerTracker stakerTracker;
@@ -49,7 +49,7 @@ class StakingImpl extends Staking {
   StakingImpl(
     this.operationalPeriodLength,
     this.activationOperationalPeriod,
-    this._address,
+    this.account,
     this.secureStore,
     this.vkVrf,
     this.stakerTracker,
@@ -62,7 +62,7 @@ class StakingImpl extends Staking {
     SlotId parentSlotId,
     Int64 operationalPeriodLength,
     Int64 activationOperationalPeriod,
-    StakingAddress address,
+    TransactionOutputReference account,
     List<int> vkVrf,
     SecureStore secureStore,
     Clock clock,
@@ -74,7 +74,7 @@ class StakingImpl extends Staking {
       Resource.pure(StakingImpl(
         operationalPeriodLength,
         activationOperationalPeriod,
-        address,
+        account,
         secureStore,
         vkVrf,
         stakerTracker,
@@ -82,9 +82,6 @@ class StakingImpl extends Staking {
         vrfCalculator,
         leaderElection,
       ));
-
-  @override
-  StakingAddress get address => _address;
 
   @override
   Future<BlockHeader?> certifyBlock(
@@ -123,7 +120,7 @@ class StakingImpl extends Staking {
         ..eligibilityCertificate = unsignedHeader.eligibilityCertificate
         ..operationalCertificate = operationalCertificate
         ..metadata = unsignedHeader.metadata
-        ..address = unsignedHeader.address;
+        ..account = unsignedHeader.account;
       return header;
     }
     return null;
@@ -133,7 +130,7 @@ class StakingImpl extends Staking {
   Future<VrfHit?> elect(SlotId parentSlotId, Int64 slot) async {
     final eta = await etaCalculation.etaToBe(parentSlotId, slot);
     final relativeStake = await stakerTracker.operatorRelativeStake(
-        parentSlotId.blockId, slot, address);
+        parentSlotId.blockId, slot, account);
     if (relativeStake == null) return null;
     final threshold = await leaderElection.getThreshold(
         relativeStake, slot - parentSlotId.slot);
@@ -159,7 +156,7 @@ class StakingImpl extends Staking {
     if (operationalPeriod == currentOperationalPeriod)
       return currentKeyCache?[slot];
     final relativeStake = await stakerTracker.operatorRelativeStake(
-        parentSlotId.blockId, slot, address);
+        parentSlotId.blockId, slot, account);
     if (relativeStake == null) return null;
     final newKeys = await _consumeEvolvePersist(
         (operationalPeriod - activationOperationalPeriod).toInt(),

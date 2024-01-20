@@ -29,18 +29,18 @@ final $typed_data.Uint8List blockIdDescriptor = $convert.base64Decode(
 const BlockHeader$json = {
   '1': 'BlockHeader',
   '2': [
-    {'1': 'headerId', '3': 12, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'headerId'},
-    {'1': 'parentHeaderId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '8': {}, '10': 'parentHeaderId'},
+    {'1': 'headerId', '3': 12, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '10': 'headerId'},
+    {'1': 'parentHeaderId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '8': {}, '10': 'parentHeaderId'},
     {'1': 'parentSlot', '3': 2, '4': 1, '5': 4, '10': 'parentSlot'},
     {'1': 'txRoot', '3': 3, '4': 1, '5': 12, '8': {}, '10': 'txRoot'},
     {'1': 'timestamp', '3': 4, '4': 1, '5': 4, '10': 'timestamp'},
     {'1': 'height', '3': 5, '4': 1, '5': 4, '10': 'height'},
     {'1': 'slot', '3': 6, '4': 1, '5': 4, '10': 'slot'},
-    {'1': 'eligibilityCertificate', '3': 7, '4': 1, '5': 11, '6': '.com.blockchain.models.EligibilityCertificate', '8': {}, '10': 'eligibilityCertificate'},
-    {'1': 'operationalCertificate', '3': 8, '4': 1, '5': 11, '6': '.com.blockchain.models.OperationalCertificate', '8': {}, '10': 'operationalCertificate'},
+    {'1': 'eligibilityCertificate', '3': 7, '4': 1, '5': 11, '6': '.blockchain.models.EligibilityCertificate', '8': {}, '10': 'eligibilityCertificate'},
+    {'1': 'operationalCertificate', '3': 8, '4': 1, '5': 11, '6': '.blockchain.models.OperationalCertificate', '8': {}, '10': 'operationalCertificate'},
     {'1': 'metadata', '3': 9, '4': 1, '5': 12, '8': {}, '10': 'metadata'},
-    {'1': 'address', '3': 10, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingAddress', '8': {}, '10': 'address'},
-    {'1': 'settings', '3': 11, '4': 3, '5': 11, '6': '.com.blockchain.models.BlockHeader.SettingsEntry', '10': 'settings'},
+    {'1': 'account', '3': 10, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '8': {}, '10': 'account'},
+    {'1': 'settings', '3': 11, '4': 3, '5': 11, '6': '.blockchain.models.BlockHeader.SettingsEntry', '10': 'settings'},
   ],
   '3': [BlockHeader_SettingsEntry$json],
 };
@@ -57,20 +57,20 @@ const BlockHeader_SettingsEntry$json = {
 
 /// Descriptor for `BlockHeader`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List blockHeaderDescriptor = $convert.base64Decode(
-    'CgtCbG9ja0hlYWRlchI6CghoZWFkZXJJZBgMIAEoCzIeLmNvbS5ibG9ja2NoYWluLm1vZGVscy'
-    '5CbG9ja0lkUghoZWFkZXJJZBJQCg5wYXJlbnRIZWFkZXJJZBgBIAEoCzIeLmNvbS5ibG9ja2No'
-    'YWluLm1vZGVscy5CbG9ja0lkQgj6QgWKAQIQAVIOcGFyZW50SGVhZGVySWQSHgoKcGFyZW50U2'
-    'xvdBgCIAEoBFIKcGFyZW50U2xvdBIfCgZ0eFJvb3QYAyABKAxCB/pCBHoCaCBSBnR4Um9vdBIc'
-    'Cgl0aW1lc3RhbXAYBCABKARSCXRpbWVzdGFtcBIWCgZoZWlnaHQYBSABKARSBmhlaWdodBISCg'
-    'RzbG90GAYgASgEUgRzbG90Em8KFmVsaWdpYmlsaXR5Q2VydGlmaWNhdGUYByABKAsyLS5jb20u'
-    'YmxvY2tjaGFpbi5tb2RlbHMuRWxpZ2liaWxpdHlDZXJ0aWZpY2F0ZUII+kIFigECEAFSFmVsaW'
-    'dpYmlsaXR5Q2VydGlmaWNhdGUSbwoWb3BlcmF0aW9uYWxDZXJ0aWZpY2F0ZRgIIAEoCzItLmNv'
-    'bS5ibG9ja2NoYWluLm1vZGVscy5PcGVyYXRpb25hbENlcnRpZmljYXRlQgj6QgWKAQIQAVIWb3'
-    'BlcmF0aW9uYWxDZXJ0aWZpY2F0ZRIjCghtZXRhZGF0YRgJIAEoDEIH+kIEegIYIFIIbWV0YWRh'
-    'dGESSQoHYWRkcmVzcxgKIAEoCzIlLmNvbS5ibG9ja2NoYWluLm1vZGVscy5TdGFraW5nQWRkcm'
-    'Vzc0II+kIFigECEAFSB2FkZHJlc3MSTAoIc2V0dGluZ3MYCyADKAsyMC5jb20uYmxvY2tjaGFp'
-    'bi5tb2RlbHMuQmxvY2tIZWFkZXIuU2V0dGluZ3NFbnRyeVIIc2V0dGluZ3MaOwoNU2V0dGluZ3'
-    'NFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
+    'CgtCbG9ja0hlYWRlchI2CghoZWFkZXJJZBgMIAEoCzIaLmJsb2NrY2hhaW4ubW9kZWxzLkJsb2'
+    'NrSWRSCGhlYWRlcklkEkwKDnBhcmVudEhlYWRlcklkGAEgASgLMhouYmxvY2tjaGFpbi5tb2Rl'
+    'bHMuQmxvY2tJZEII+kIFigECEAFSDnBhcmVudEhlYWRlcklkEh4KCnBhcmVudFNsb3QYAiABKA'
+    'RSCnBhcmVudFNsb3QSHwoGdHhSb290GAMgASgMQgf6QgR6AmggUgZ0eFJvb3QSHAoJdGltZXN0'
+    'YW1wGAQgASgEUgl0aW1lc3RhbXASFgoGaGVpZ2h0GAUgASgEUgZoZWlnaHQSEgoEc2xvdBgGIA'
+    'EoBFIEc2xvdBJrChZlbGlnaWJpbGl0eUNlcnRpZmljYXRlGAcgASgLMikuYmxvY2tjaGFpbi5t'
+    'b2RlbHMuRWxpZ2liaWxpdHlDZXJ0aWZpY2F0ZUII+kIFigECEAFSFmVsaWdpYmlsaXR5Q2VydG'
+    'lmaWNhdGUSawoWb3BlcmF0aW9uYWxDZXJ0aWZpY2F0ZRgIIAEoCzIpLmJsb2NrY2hhaW4ubW9k'
+    'ZWxzLk9wZXJhdGlvbmFsQ2VydGlmaWNhdGVCCPpCBYoBAhABUhZvcGVyYXRpb25hbENlcnRpZm'
+    'ljYXRlEiMKCG1ldGFkYXRhGAkgASgMQgf6QgR6AhggUghtZXRhZGF0YRJRCgdhY2NvdW50GAog'
+    'ASgLMi0uYmxvY2tjaGFpbi5tb2RlbHMuVHJhbnNhY3Rpb25PdXRwdXRSZWZlcmVuY2VCCPpCBY'
+    'oBAhABUgdhY2NvdW50EkgKCHNldHRpbmdzGAsgAygLMiwuYmxvY2tjaGFpbi5tb2RlbHMuQmxv'
+    'Y2tIZWFkZXIuU2V0dGluZ3NFbnRyeVIIc2V0dGluZ3MaOwoNU2V0dGluZ3NFbnRyeRIQCgNrZX'
+    'kYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB');
 
 @$core.Deprecated('Use eligibilityCertificateDescriptor instead')
 const EligibilityCertificate$json = {
@@ -94,8 +94,8 @@ final $typed_data.Uint8List eligibilityCertificateDescriptor = $convert.base64De
 const OperationalCertificate$json = {
   '1': 'OperationalCertificate',
   '2': [
-    {'1': 'parentVK', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.VerificationKeyKesProduct', '8': {}, '10': 'parentVK'},
-    {'1': 'parentSignature', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.SignatureKesProduct', '8': {}, '10': 'parentSignature'},
+    {'1': 'parentVK', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.VerificationKeyKesProduct', '8': {}, '10': 'parentVK'},
+    {'1': 'parentSignature', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.SignatureKesProduct', '8': {}, '10': 'parentSignature'},
     {'1': 'childVK', '3': 3, '4': 1, '5': 12, '8': {}, '10': 'childVK'},
     {'1': 'childSignature', '3': 4, '4': 1, '5': 12, '8': {}, '10': 'childSignature'},
   ],
@@ -103,12 +103,12 @@ const OperationalCertificate$json = {
 
 /// Descriptor for `OperationalCertificate`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List operationalCertificateDescriptor = $convert.base64Decode(
-    'ChZPcGVyYXRpb25hbENlcnRpZmljYXRlElYKCHBhcmVudFZLGAEgASgLMjAuY29tLmJsb2NrY2'
-    'hhaW4ubW9kZWxzLlZlcmlmaWNhdGlvbktleUtlc1Byb2R1Y3RCCPpCBYoBAhABUghwYXJlbnRW'
-    'SxJeCg9wYXJlbnRTaWduYXR1cmUYAiABKAsyKi5jb20uYmxvY2tjaGFpbi5tb2RlbHMuU2lnbm'
-    'F0dXJlS2VzUHJvZHVjdEII+kIFigECEAFSD3BhcmVudFNpZ25hdHVyZRIhCgdjaGlsZFZLGAMg'
-    'ASgMQgf6QgR6AmggUgdjaGlsZFZLEi8KDmNoaWxkU2lnbmF0dXJlGAQgASgMQgf6QgR6AmhAUg'
-    '5jaGlsZFNpZ25hdHVyZQ==');
+    'ChZPcGVyYXRpb25hbENlcnRpZmljYXRlElIKCHBhcmVudFZLGAEgASgLMiwuYmxvY2tjaGFpbi'
+    '5tb2RlbHMuVmVyaWZpY2F0aW9uS2V5S2VzUHJvZHVjdEII+kIFigECEAFSCHBhcmVudFZLEloK'
+    'D3BhcmVudFNpZ25hdHVyZRgCIAEoCzImLmJsb2NrY2hhaW4ubW9kZWxzLlNpZ25hdHVyZUtlc1'
+    'Byb2R1Y3RCCPpCBYoBAhABUg9wYXJlbnRTaWduYXR1cmUSIQoHY2hpbGRWSxgDIAEoDEIH+kIE'
+    'egJoIFIHY2hpbGRWSxIvCg5jaGlsZFNpZ25hdHVyZRgEIAEoDEIH+kIEegJoQFIOY2hpbGRTaW'
+    'duYXR1cmU=');
 
 @$core.Deprecated('Use verificationKeyKesProductDescriptor instead')
 const VerificationKeyKesProduct$json = {
@@ -144,33 +144,33 @@ final $typed_data.Uint8List signatureKesSumDescriptor = $convert.base64Decode(
 const SignatureKesProduct$json = {
   '1': 'SignatureKesProduct',
   '2': [
-    {'1': 'superSignature', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.SignatureKesSum', '8': {}, '10': 'superSignature'},
-    {'1': 'subSignature', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.SignatureKesSum', '8': {}, '10': 'subSignature'},
+    {'1': 'superSignature', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.SignatureKesSum', '8': {}, '10': 'superSignature'},
+    {'1': 'subSignature', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.SignatureKesSum', '8': {}, '10': 'subSignature'},
     {'1': 'subRoot', '3': 3, '4': 1, '5': 12, '8': {}, '10': 'subRoot'},
   ],
 };
 
 /// Descriptor for `SignatureKesProduct`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List signatureKesProductDescriptor = $convert.base64Decode(
-    'ChNTaWduYXR1cmVLZXNQcm9kdWN0ElgKDnN1cGVyU2lnbmF0dXJlGAEgASgLMiYuY29tLmJsb2'
-    'NrY2hhaW4ubW9kZWxzLlNpZ25hdHVyZUtlc1N1bUII+kIFigECEAFSDnN1cGVyU2lnbmF0dXJl'
-    'ElQKDHN1YlNpZ25hdHVyZRgCIAEoCzImLmNvbS5ibG9ja2NoYWluLm1vZGVscy5TaWduYXR1cm'
-    'VLZXNTdW1CCPpCBYoBAhABUgxzdWJTaWduYXR1cmUSIQoHc3ViUm9vdBgDIAEoDEIH+kIEegJo'
-    'IFIHc3ViUm9vdA==');
+    'ChNTaWduYXR1cmVLZXNQcm9kdWN0ElQKDnN1cGVyU2lnbmF0dXJlGAEgASgLMiIuYmxvY2tjaG'
+    'Fpbi5tb2RlbHMuU2lnbmF0dXJlS2VzU3VtQgj6QgWKAQIQAVIOc3VwZXJTaWduYXR1cmUSUAoM'
+    'c3ViU2lnbmF0dXJlGAIgASgLMiIuYmxvY2tjaGFpbi5tb2RlbHMuU2lnbmF0dXJlS2VzU3VtQg'
+    'j6QgWKAQIQAVIMc3ViU2lnbmF0dXJlEiEKB3N1YlJvb3QYAyABKAxCB/pCBHoCaCBSB3N1YlJv'
+    'b3Q=');
 
 @$core.Deprecated('Use slotIdDescriptor instead')
 const SlotId$json = {
   '1': 'SlotId',
   '2': [
     {'1': 'slot', '3': 1, '4': 1, '5': 4, '10': 'slot'},
-    {'1': 'blockId', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '8': {}, '10': 'blockId'},
+    {'1': 'blockId', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '8': {}, '10': 'blockId'},
   ],
 };
 
 /// Descriptor for `SlotId`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List slotIdDescriptor = $convert.base64Decode(
-    'CgZTbG90SWQSEgoEc2xvdBgBIAEoBFIEc2xvdBJCCgdibG9ja0lkGAIgASgLMh4uY29tLmJsb2'
-    'NrY2hhaW4ubW9kZWxzLkJsb2NrSWRCCPpCBYoBAhABUgdibG9ja0lk');
+    'CgZTbG90SWQSEgoEc2xvdBgBIAEoBFIEc2xvdBI+CgdibG9ja0lkGAIgASgLMhouYmxvY2tjaG'
+    'Fpbi5tb2RlbHMuQmxvY2tJZEII+kIFigECEAFSB2Jsb2NrSWQ=');
 
 @$core.Deprecated('Use stakingAddressDescriptor instead')
 const StakingAddress$json = {
@@ -188,57 +188,57 @@ final $typed_data.Uint8List stakingAddressDescriptor = $convert.base64Decode(
 const BlockBody$json = {
   '1': 'BlockBody',
   '2': [
-    {'1': 'transactionIds', '3': 1, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionId', '10': 'transactionIds'},
+    {'1': 'transactionIds', '3': 1, '4': 3, '5': 11, '6': '.blockchain.models.TransactionId', '10': 'transactionIds'},
   ],
 };
 
 /// Descriptor for `BlockBody`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List blockBodyDescriptor = $convert.base64Decode(
-    'CglCbG9ja0JvZHkSTAoOdHJhbnNhY3Rpb25JZHMYASADKAsyJC5jb20uYmxvY2tjaGFpbi5tb2'
-    'RlbHMuVHJhbnNhY3Rpb25JZFIOdHJhbnNhY3Rpb25JZHM=');
+    'CglCbG9ja0JvZHkSSAoOdHJhbnNhY3Rpb25JZHMYASADKAsyIC5ibG9ja2NoYWluLm1vZGVscy'
+    '5UcmFuc2FjdGlvbklkUg50cmFuc2FjdGlvbklkcw==');
 
 @$core.Deprecated('Use fullBlockBodyDescriptor instead')
 const FullBlockBody$json = {
   '1': 'FullBlockBody',
   '2': [
-    {'1': 'transactions', '3': 1, '4': 3, '5': 11, '6': '.com.blockchain.models.Transaction', '10': 'transactions'},
+    {'1': 'transactions', '3': 1, '4': 3, '5': 11, '6': '.blockchain.models.Transaction', '10': 'transactions'},
   ],
 };
 
 /// Descriptor for `FullBlockBody`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List fullBlockBodyDescriptor = $convert.base64Decode(
-    'Cg1GdWxsQmxvY2tCb2R5EkYKDHRyYW5zYWN0aW9ucxgBIAMoCzIiLmNvbS5ibG9ja2NoYWluLm'
-    '1vZGVscy5UcmFuc2FjdGlvblIMdHJhbnNhY3Rpb25z');
+    'Cg1GdWxsQmxvY2tCb2R5EkIKDHRyYW5zYWN0aW9ucxgBIAMoCzIeLmJsb2NrY2hhaW4ubW9kZW'
+    'xzLlRyYW5zYWN0aW9uUgx0cmFuc2FjdGlvbnM=');
 
 @$core.Deprecated('Use blockDescriptor instead')
 const Block$json = {
   '1': 'Block',
   '2': [
-    {'1': 'header', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockHeader', '8': {}, '10': 'header'},
-    {'1': 'body', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockBody', '8': {}, '10': 'body'},
+    {'1': 'header', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockHeader', '8': {}, '10': 'header'},
+    {'1': 'body', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.BlockBody', '8': {}, '10': 'body'},
   ],
 };
 
 /// Descriptor for `Block`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List blockDescriptor = $convert.base64Decode(
-    'CgVCbG9jaxJECgZoZWFkZXIYASABKAsyIi5jb20uYmxvY2tjaGFpbi5tb2RlbHMuQmxvY2tIZW'
-    'FkZXJCCPpCBYoBAhABUgZoZWFkZXISPgoEYm9keRgCIAEoCzIgLmNvbS5ibG9ja2NoYWluLm1v'
-    'ZGVscy5CbG9ja0JvZHlCCPpCBYoBAhABUgRib2R5');
+    'CgVCbG9jaxJACgZoZWFkZXIYASABKAsyHi5ibG9ja2NoYWluLm1vZGVscy5CbG9ja0hlYWRlck'
+    'II+kIFigECEAFSBmhlYWRlchI6CgRib2R5GAIgASgLMhwuYmxvY2tjaGFpbi5tb2RlbHMuQmxv'
+    'Y2tCb2R5Qgj6QgWKAQIQAVIEYm9keQ==');
 
 @$core.Deprecated('Use fullBlockDescriptor instead')
 const FullBlock$json = {
   '1': 'FullBlock',
   '2': [
-    {'1': 'header', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockHeader', '8': {}, '10': 'header'},
-    {'1': 'fullBody', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.FullBlockBody', '8': {}, '10': 'fullBody'},
+    {'1': 'header', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockHeader', '8': {}, '10': 'header'},
+    {'1': 'fullBody', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.FullBlockBody', '8': {}, '10': 'fullBody'},
   ],
 };
 
 /// Descriptor for `FullBlock`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List fullBlockDescriptor = $convert.base64Decode(
-    'CglGdWxsQmxvY2sSRAoGaGVhZGVyGAEgASgLMiIuY29tLmJsb2NrY2hhaW4ubW9kZWxzLkJsb2'
-    'NrSGVhZGVyQgj6QgWKAQIQAVIGaGVhZGVyEkoKCGZ1bGxCb2R5GAIgASgLMiQuY29tLmJsb2Nr'
-    'Y2hhaW4ubW9kZWxzLkZ1bGxCbG9ja0JvZHlCCPpCBYoBAhABUghmdWxsQm9keQ==');
+    'CglGdWxsQmxvY2sSQAoGaGVhZGVyGAEgASgLMh4uYmxvY2tjaGFpbi5tb2RlbHMuQmxvY2tIZW'
+    'FkZXJCCPpCBYoBAhABUgZoZWFkZXISRgoIZnVsbEJvZHkYAiABKAsyIC5ibG9ja2NoYWluLm1v'
+    'ZGVscy5GdWxsQmxvY2tCb2R5Qgj6QgWKAQIQAVIIZnVsbEJvZHk=');
 
 @$core.Deprecated('Use transactionIdDescriptor instead')
 const TransactionId$json = {
@@ -256,127 +256,144 @@ final $typed_data.Uint8List transactionIdDescriptor = $convert.base64Decode(
 const Transaction$json = {
   '1': 'Transaction',
   '2': [
-    {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionId', '10': 'transactionId'},
-    {'1': 'inputs', '3': 2, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionInput', '10': 'inputs'},
-    {'1': 'outputs', '3': 3, '4': 3, '5': 11, '6': '.com.blockchain.models.TransactionOutput', '10': 'outputs'},
-    {'1': 'attestation', '3': 4, '4': 3, '5': 11, '6': '.com.blockchain.models.Witness', '10': 'attestation'},
-    {'1': 'rewardParentBlockId', '3': 5, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'rewardParentBlockId'},
+    {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionId', '10': 'transactionId'},
+    {'1': 'inputs', '3': 2, '4': 3, '5': 11, '6': '.blockchain.models.TransactionInput', '10': 'inputs'},
+    {'1': 'outputs', '3': 3, '4': 3, '5': 11, '6': '.blockchain.models.TransactionOutput', '10': 'outputs'},
+    {'1': 'attestation', '3': 4, '4': 3, '5': 11, '6': '.blockchain.models.Witness', '10': 'attestation'},
+    {'1': 'rewardParentBlockId', '3': 5, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '10': 'rewardParentBlockId'},
   ],
 };
 
 /// Descriptor for `Transaction`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionDescriptor = $convert.base64Decode(
-    'CgtUcmFuc2FjdGlvbhJKCg10cmFuc2FjdGlvbklkGAEgASgLMiQuY29tLmJsb2NrY2hhaW4ubW'
-    '9kZWxzLlRyYW5zYWN0aW9uSWRSDXRyYW5zYWN0aW9uSWQSPwoGaW5wdXRzGAIgAygLMicuY29t'
-    'LmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uSW5wdXRSBmlucHV0cxJCCgdvdXRwdXRzGA'
-    'MgAygLMiguY29tLmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UgdvdXRwdXRz'
-    'EkAKC2F0dGVzdGF0aW9uGAQgAygLMh4uY29tLmJsb2NrY2hhaW4ubW9kZWxzLldpdG5lc3NSC2'
-    'F0dGVzdGF0aW9uElAKE3Jld2FyZFBhcmVudEJsb2NrSWQYBSABKAsyHi5jb20uYmxvY2tjaGFp'
-    'bi5tb2RlbHMuQmxvY2tJZFITcmV3YXJkUGFyZW50QmxvY2tJZA==');
+    'CgtUcmFuc2FjdGlvbhJGCg10cmFuc2FjdGlvbklkGAEgASgLMiAuYmxvY2tjaGFpbi5tb2RlbH'
+    'MuVHJhbnNhY3Rpb25JZFINdHJhbnNhY3Rpb25JZBI7CgZpbnB1dHMYAiADKAsyIy5ibG9ja2No'
+    'YWluLm1vZGVscy5UcmFuc2FjdGlvbklucHV0UgZpbnB1dHMSPgoHb3V0cHV0cxgDIAMoCzIkLm'
+    'Jsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UgdvdXRwdXRzEjwKC2F0dGVzdGF0'
+    'aW9uGAQgAygLMhouYmxvY2tjaGFpbi5tb2RlbHMuV2l0bmVzc1ILYXR0ZXN0YXRpb24STAoTcm'
+    'V3YXJkUGFyZW50QmxvY2tJZBgFIAEoCzIaLmJsb2NrY2hhaW4ubW9kZWxzLkJsb2NrSWRSE3Jl'
+    'd2FyZFBhcmVudEJsb2NrSWQ=');
 
 @$core.Deprecated('Use witnessDescriptor instead')
 const Witness$json = {
   '1': 'Witness',
   '2': [
-    {'1': 'lockAddress', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.LockAddress', '10': 'lockAddress'},
-    {'1': 'lock', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Lock', '10': 'lock'},
-    {'1': 'key', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Key', '10': 'key'},
+    {'1': 'lockAddress', '3': 3, '4': 1, '5': 11, '6': '.blockchain.models.LockAddress', '8': {}, '10': 'lockAddress'},
+    {'1': 'lock', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.Lock', '8': {}, '10': 'lock'},
+    {'1': 'key', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.Key', '8': {}, '10': 'key'},
   ],
 };
 
 /// Descriptor for `Witness`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List witnessDescriptor = $convert.base64Decode(
-    'CgdXaXRuZXNzEkQKC2xvY2tBZGRyZXNzGAMgASgLMiIuY29tLmJsb2NrY2hhaW4ubW9kZWxzLk'
-    'xvY2tBZGRyZXNzUgtsb2NrQWRkcmVzcxIvCgRsb2NrGAEgASgLMhsuY29tLmJsb2NrY2hhaW4u'
-    'bW9kZWxzLkxvY2tSBGxvY2sSLAoDa2V5GAIgASgLMhouY29tLmJsb2NrY2hhaW4ubW9kZWxzLk'
-    'tleVIDa2V5');
+    'CgdXaXRuZXNzEkoKC2xvY2tBZGRyZXNzGAMgASgLMh4uYmxvY2tjaGFpbi5tb2RlbHMuTG9ja0'
+    'FkZHJlc3NCCPpCBYoBAhABUgtsb2NrQWRkcmVzcxI1CgRsb2NrGAEgASgLMhcuYmxvY2tjaGFp'
+    'bi5tb2RlbHMuTG9ja0II+kIFigECEAFSBGxvY2sSMgoDa2V5GAIgASgLMhYuYmxvY2tjaGFpbi'
+    '5tb2RlbHMuS2V5Qgj6QgWKAQIQAVIDa2V5');
 
 @$core.Deprecated('Use transactionInputDescriptor instead')
 const TransactionInput$json = {
   '1': 'TransactionInput',
   '2': [
-    {'1': 'reference', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionOutputReference', '10': 'reference'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Value', '10': 'value'},
+    {'1': 'reference', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '8': {}, '10': 'reference'},
+    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.Value', '8': {}, '10': 'value'},
   ],
 };
 
 /// Descriptor for `TransactionInput`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionInputDescriptor = $convert.base64Decode(
-    'ChBUcmFuc2FjdGlvbklucHV0Ek8KCXJlZmVyZW5jZRgBIAEoCzIxLmNvbS5ibG9ja2NoYWluLm'
-    '1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZVIJcmVmZXJlbmNlEjIKBXZhbHVlGAIg'
-    'ASgLMhwuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlZhbHVlUgV2YWx1ZQ==');
+    'ChBUcmFuc2FjdGlvbklucHV0ElUKCXJlZmVyZW5jZRgBIAEoCzItLmJsb2NrY2hhaW4ubW9kZW'
+    'xzLlRyYW5zYWN0aW9uT3V0cHV0UmVmZXJlbmNlQgj6QgWKAQIQAVIJcmVmZXJlbmNlEjgKBXZh'
+    'bHVlGAIgASgLMhguYmxvY2tjaGFpbi5tb2RlbHMuVmFsdWVCCPpCBYoBAhABUgV2YWx1ZQ==');
 
 @$core.Deprecated('Use transactionOutputReferenceDescriptor instead')
 const TransactionOutputReference$json = {
   '1': 'TransactionOutputReference',
   '2': [
-    {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionId', '10': 'transactionId'},
+    {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionId', '8': {}, '10': 'transactionId'},
     {'1': 'index', '3': 2, '4': 1, '5': 13, '10': 'index'},
   ],
 };
 
 /// Descriptor for `TransactionOutputReference`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionOutputReferenceDescriptor = $convert.base64Decode(
-    'ChpUcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZRJKCg10cmFuc2FjdGlvbklkGAEgASgLMiQuY2'
-    '9tLmJsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uSWRSDXRyYW5zYWN0aW9uSWQSFAoFaW5k'
-    'ZXgYAiABKA1SBWluZGV4');
+    'ChpUcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZRJQCg10cmFuc2FjdGlvbklkGAEgASgLMiAuYm'
+    'xvY2tjaGFpbi5tb2RlbHMuVHJhbnNhY3Rpb25JZEII+kIFigECEAFSDXRyYW5zYWN0aW9uSWQS'
+    'FAoFaW5kZXgYAiABKA1SBWluZGV4');
 
 @$core.Deprecated('Use transactionOutputDescriptor instead')
 const TransactionOutput$json = {
   '1': 'TransactionOutput',
   '2': [
-    {'1': 'lockAddress', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.LockAddress', '10': 'lockAddress'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Value', '10': 'value'},
+    {'1': 'lockAddress', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.LockAddress', '8': {}, '10': 'lockAddress'},
+    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.Value', '8': {}, '10': 'value'},
+    {'1': 'account', '3': 3, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '10': 'account'},
   ],
 };
 
 /// Descriptor for `TransactionOutput`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionOutputDescriptor = $convert.base64Decode(
-    'ChFUcmFuc2FjdGlvbk91dHB1dBJECgtsb2NrQWRkcmVzcxgBIAEoCzIiLmNvbS5ibG9ja2NoYW'
-    'luLm1vZGVscy5Mb2NrQWRkcmVzc1ILbG9ja0FkZHJlc3MSMgoFdmFsdWUYAiABKAsyHC5jb20u'
-    'YmxvY2tjaGFpbi5tb2RlbHMuVmFsdWVSBXZhbHVl');
+    'ChFUcmFuc2FjdGlvbk91dHB1dBJKCgtsb2NrQWRkcmVzcxgBIAEoCzIeLmJsb2NrY2hhaW4ubW'
+    '9kZWxzLkxvY2tBZGRyZXNzQgj6QgWKAQIQAVILbG9ja0FkZHJlc3MSOAoFdmFsdWUYAiABKAsy'
+    'GC5ibG9ja2NoYWluLm1vZGVscy5WYWx1ZUII+kIFigECEAFSBXZhbHVlEkcKB2FjY291bnQYAy'
+    'ABKAsyLS5ibG9ja2NoYWluLm1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZVIHYWNj'
+    'b3VudA==');
 
 @$core.Deprecated('Use valueDescriptor instead')
 const Value$json = {
   '1': 'Value',
   '2': [
-    {'1': 'quantity', '3': 1, '4': 1, '5': 4, '8': {}, '10': 'quantity'},
-    {'1': 'staker', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingAddress', '10': 'staker'},
-    {'1': 'registration', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingRegistration', '10': 'registration'},
-    {'1': 'graphEntry', '3': 4, '4': 1, '5': 11, '6': '.com.blockchain.models.GraphEntry', '10': 'graphEntry'},
+    {'1': 'quantity', '3': 1, '4': 1, '5': 4, '10': 'quantity'},
+    {'1': 'accountRegistration', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.AccountRegistration', '10': 'accountRegistration'},
+    {'1': 'graphEntry', '3': 3, '4': 1, '5': 11, '6': '.blockchain.models.GraphEntry', '10': 'graphEntry'},
   ],
 };
 
 /// Descriptor for `Value`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List valueDescriptor = $convert.base64Decode(
-    'CgVWYWx1ZRIkCghxdWFudGl0eRgBIAEoBEII+kIFigECEAFSCHF1YW50aXR5Ej0KBnN0YWtlch'
-    'gCIAEoCzIlLmNvbS5ibG9ja2NoYWluLm1vZGVscy5TdGFraW5nQWRkcmVzc1IGc3Rha2VyEk4K'
-    'DHJlZ2lzdHJhdGlvbhgDIAEoCzIqLmNvbS5ibG9ja2NoYWluLm1vZGVscy5TdGFraW5nUmVnaX'
-    'N0cmF0aW9uUgxyZWdpc3RyYXRpb24SQQoKZ3JhcGhFbnRyeRgEIAEoCzIhLmNvbS5ibG9ja2No'
-    'YWluLm1vZGVscy5HcmFwaEVudHJ5UgpncmFwaEVudHJ5');
+    'CgVWYWx1ZRIaCghxdWFudGl0eRgBIAEoBFIIcXVhbnRpdHkSWAoTYWNjb3VudFJlZ2lzdHJhdG'
+    'lvbhgCIAEoCzImLmJsb2NrY2hhaW4ubW9kZWxzLkFjY291bnRSZWdpc3RyYXRpb25SE2FjY291'
+    'bnRSZWdpc3RyYXRpb24SPQoKZ3JhcGhFbnRyeRgDIAEoCzIdLmJsb2NrY2hhaW4ubW9kZWxzLk'
+    'dyYXBoRW50cnlSCmdyYXBoRW50cnk=');
+
+@$core.Deprecated('Use accountRegistrationDescriptor instead')
+const AccountRegistration$json = {
+  '1': 'AccountRegistration',
+  '2': [
+    {'1': 'associationLock', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.LockAddress', '8': {}, '10': 'associationLock'},
+    {'1': 'stakingRegistration', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.StakingRegistration', '10': 'stakingRegistration'},
+  ],
+};
+
+/// Descriptor for `AccountRegistration`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List accountRegistrationDescriptor = $convert.base64Decode(
+    'ChNBY2NvdW50UmVnaXN0cmF0aW9uElIKD2Fzc29jaWF0aW9uTG9jaxgBIAEoCzIeLmJsb2NrY2'
+    'hhaW4ubW9kZWxzLkxvY2tBZGRyZXNzQgj6QgWKAQIQAVIPYXNzb2NpYXRpb25Mb2NrElgKE3N0'
+    'YWtpbmdSZWdpc3RyYXRpb24YAiABKAsyJi5ibG9ja2NoYWluLm1vZGVscy5TdGFraW5nUmVnaX'
+    'N0cmF0aW9uUhNzdGFraW5nUmVnaXN0cmF0aW9u');
 
 @$core.Deprecated('Use stakingRegistrationDescriptor instead')
 const StakingRegistration$json = {
   '1': 'StakingRegistration',
   '2': [
-    {'1': 'signature', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.SignatureKesProduct', '8': {}, '10': 'signature'},
-    {'1': 'stakingAddress', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingAddress', '8': {}, '10': 'stakingAddress'},
+    {'1': 'signature', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.SignatureKesProduct', '8': {}, '10': 'signature'},
+    {'1': 'stakingAddress', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.StakingAddress', '8': {}, '10': 'stakingAddress'},
   ],
 };
 
 /// Descriptor for `StakingRegistration`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List stakingRegistrationDescriptor = $convert.base64Decode(
-    'ChNTdGFraW5nUmVnaXN0cmF0aW9uElIKCXNpZ25hdHVyZRgBIAEoCzIqLmNvbS5ibG9ja2NoYW'
-    'luLm1vZGVscy5TaWduYXR1cmVLZXNQcm9kdWN0Qgj6QgWKAQIQAVIJc2lnbmF0dXJlElcKDnN0'
-    'YWtpbmdBZGRyZXNzGAIgASgLMiUuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlN0YWtpbmdBZGRyZX'
-    'NzQgj6QgWKAQIQAVIOc3Rha2luZ0FkZHJlc3M=');
+    'ChNTdGFraW5nUmVnaXN0cmF0aW9uEk4KCXNpZ25hdHVyZRgBIAEoCzImLmJsb2NrY2hhaW4ubW'
+    '9kZWxzLlNpZ25hdHVyZUtlc1Byb2R1Y3RCCPpCBYoBAhABUglzaWduYXR1cmUSUwoOc3Rha2lu'
+    'Z0FkZHJlc3MYAiABKAsyIS5ibG9ja2NoYWluLm1vZGVscy5TdGFraW5nQWRkcmVzc0II+kIFig'
+    'ECEAFSDnN0YWtpbmdBZGRyZXNz');
 
 @$core.Deprecated('Use graphEntryDescriptor instead')
 const GraphEntry$json = {
   '1': 'GraphEntry',
   '2': [
-    {'1': 'vertex', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Vertex', '9': 0, '10': 'vertex'},
-    {'1': 'edge', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.Edge', '9': 0, '10': 'edge'},
+    {'1': 'vertex', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.Vertex', '9': 0, '10': 'vertex'},
+    {'1': 'edge', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.Edge', '9': 0, '10': 'edge'},
   ],
   '8': [
     {'1': 'entry'},
@@ -385,9 +402,9 @@ const GraphEntry$json = {
 
 /// Descriptor for `GraphEntry`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List graphEntryDescriptor = $convert.base64Decode(
-    'CgpHcmFwaEVudHJ5EjcKBnZlcnRleBgBIAEoCzIdLmNvbS5ibG9ja2NoYWluLm1vZGVscy5WZX'
-    'J0ZXhIAFIGdmVydGV4EjEKBGVkZ2UYAiABKAsyGy5jb20uYmxvY2tjaGFpbi5tb2RlbHMuRWRn'
-    'ZUgAUgRlZGdlQgcKBWVudHJ5');
+    'CgpHcmFwaEVudHJ5EjMKBnZlcnRleBgBIAEoCzIZLmJsb2NrY2hhaW4ubW9kZWxzLlZlcnRleE'
+    'gAUgZ2ZXJ0ZXgSLQoEZWRnZRgCIAEoCzIXLmJsb2NrY2hhaW4ubW9kZWxzLkVkZ2VIAFIEZWRn'
+    'ZUIHCgVlbnRyeQ==');
 
 @$core.Deprecated('Use vertexDescriptor instead')
 const Vertex$json = {
@@ -395,15 +412,15 @@ const Vertex$json = {
   '2': [
     {'1': 'label', '3': 1, '4': 1, '5': 9, '10': 'label'},
     {'1': 'data', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'data'},
-    {'1': 'edgeLockAddress', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.LockAddress', '10': 'edgeLockAddress'},
+    {'1': 'edgeLockAddress', '3': 3, '4': 1, '5': 11, '6': '.blockchain.models.LockAddress', '10': 'edgeLockAddress'},
   ],
 };
 
 /// Descriptor for `Vertex`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List vertexDescriptor = $convert.base64Decode(
     'CgZWZXJ0ZXgSFAoFbGFiZWwYASABKAlSBWxhYmVsEisKBGRhdGEYAiABKAsyFy5nb29nbGUucH'
-    'JvdG9idWYuU3RydWN0UgRkYXRhEkwKD2VkZ2VMb2NrQWRkcmVzcxgDIAEoCzIiLmNvbS5ibG9j'
-    'a2NoYWluLm1vZGVscy5Mb2NrQWRkcmVzc1IPZWRnZUxvY2tBZGRyZXNz');
+    'JvdG9idWYuU3RydWN0UgRkYXRhEkgKD2VkZ2VMb2NrQWRkcmVzcxgDIAEoCzIeLmJsb2NrY2hh'
+    'aW4ubW9kZWxzLkxvY2tBZGRyZXNzUg9lZGdlTG9ja0FkZHJlc3M=');
 
 @$core.Deprecated('Use edgeDescriptor instead')
 const Edge$json = {
@@ -411,35 +428,32 @@ const Edge$json = {
   '2': [
     {'1': 'label', '3': 1, '4': 1, '5': 9, '10': 'label'},
     {'1': 'data', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'data'},
-    {'1': 'a', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionOutputReference', '10': 'a'},
-    {'1': 'b', '3': 4, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionOutputReference', '10': 'b'},
+    {'1': 'a', '3': 3, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '8': {}, '10': 'a'},
+    {'1': 'b', '3': 4, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '8': {}, '10': 'b'},
   ],
 };
 
 /// Descriptor for `Edge`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List edgeDescriptor = $convert.base64Decode(
     'CgRFZGdlEhQKBWxhYmVsGAEgASgJUgVsYWJlbBIrCgRkYXRhGAIgASgLMhcuZ29vZ2xlLnByb3'
-    'RvYnVmLlN0cnVjdFIEZGF0YRI/CgFhGAMgASgLMjEuY29tLmJsb2NrY2hhaW4ubW9kZWxzLlRy'
-    'YW5zYWN0aW9uT3V0cHV0UmVmZXJlbmNlUgFhEj8KAWIYBCABKAsyMS5jb20uYmxvY2tjaGFpbi'
-    '5tb2RlbHMuVHJhbnNhY3Rpb25PdXRwdXRSZWZlcmVuY2VSAWI=');
+    'RvYnVmLlN0cnVjdFIEZGF0YRJFCgFhGAMgASgLMi0uYmxvY2tjaGFpbi5tb2RlbHMuVHJhbnNh'
+    'Y3Rpb25PdXRwdXRSZWZlcmVuY2VCCPpCBYoBAhABUgFhEkUKAWIYBCABKAsyLS5ibG9ja2NoYW'
+    'luLm1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZUII+kIFigECEAFSAWI=');
 
 @$core.Deprecated('Use activeStakerDescriptor instead')
 const ActiveStaker$json = {
   '1': 'ActiveStaker',
   '2': [
-    {'1': 'registration', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.StakingRegistration', '8': {}, '10': 'registration'},
-    {'1': 'quantity', '3': 2, '4': 1, '5': 3, '8': {}, '10': 'quantity'},
-    {'1': 'registrationBlock', '3': 3, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '8': {}, '10': 'registrationBlock'},
+    {'1': 'registration', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.StakingRegistration', '8': {}, '10': 'registration'},
+    {'1': 'quantity', '3': 2, '4': 1, '5': 3, '10': 'quantity'},
   ],
 };
 
 /// Descriptor for `ActiveStaker`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List activeStakerDescriptor = $convert.base64Decode(
-    'CgxBY3RpdmVTdGFrZXISWAoMcmVnaXN0cmF0aW9uGAEgASgLMiouY29tLmJsb2NrY2hhaW4ubW'
-    '9kZWxzLlN0YWtpbmdSZWdpc3RyYXRpb25CCPpCBYoBAhABUgxyZWdpc3RyYXRpb24SJAoIcXVh'
-    'bnRpdHkYAiABKANCCPpCBYoBAhABUghxdWFudGl0eRJWChFyZWdpc3RyYXRpb25CbG9jaxgDIA'
-    'EoCzIeLmNvbS5ibG9ja2NoYWluLm1vZGVscy5CbG9ja0lkQgj6QgWKAQIQAVIRcmVnaXN0cmF0'
-    'aW9uQmxvY2s=');
+    'CgxBY3RpdmVTdGFrZXISVAoMcmVnaXN0cmF0aW9uGAEgASgLMiYuYmxvY2tjaGFpbi5tb2RlbH'
+    'MuU3Rha2luZ1JlZ2lzdHJhdGlvbkII+kIFigECEAFSDHJlZ2lzdHJhdGlvbhIaCghxdWFudGl0'
+    'eRgCIAEoA1IIcXVhbnRpdHk=');
 
 @$core.Deprecated('Use lockAddressDescriptor instead')
 const LockAddress$json = {
@@ -457,7 +471,7 @@ final $typed_data.Uint8List lockAddressDescriptor = $convert.base64Decode(
 const Lock$json = {
   '1': 'Lock',
   '2': [
-    {'1': 'ed25519', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Lock.Ed25519', '9': 0, '10': 'ed25519'},
+    {'1': 'ed25519', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.Lock.Ed25519', '9': 0, '10': 'ed25519'},
   ],
   '3': [Lock_Ed25519$json],
   '8': [
@@ -475,14 +489,14 @@ const Lock_Ed25519$json = {
 
 /// Descriptor for `Lock`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List lockDescriptor = $convert.base64Decode(
-    'CgRMb2NrEj8KB2VkMjU1MTkYASABKAsyIy5jb20uYmxvY2tjaGFpbi5tb2RlbHMuTG9jay5FZD'
-    'I1NTE5SABSB2VkMjU1MTkaGQoHRWQyNTUxORIOCgJ2axgBIAEoDFICdmtCBwoFdmFsdWU=');
+    'CgRMb2NrEjsKB2VkMjU1MTkYASABKAsyHy5ibG9ja2NoYWluLm1vZGVscy5Mb2NrLkVkMjU1MT'
+    'lIAFIHZWQyNTUxORoZCgdFZDI1NTE5Eg4KAnZrGAEgASgMUgJ2a0IHCgV2YWx1ZQ==');
 
 @$core.Deprecated('Use keyDescriptor instead')
 const Key$json = {
   '1': 'Key',
   '2': [
-    {'1': 'ed25519', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Key.Ed25519', '9': 0, '10': 'ed25519'},
+    {'1': 'ed25519', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.Key.Ed25519', '9': 0, '10': 'ed25519'},
   ],
   '3': [Key_Ed25519$json],
   '8': [
@@ -500,9 +514,9 @@ const Key_Ed25519$json = {
 
 /// Descriptor for `Key`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List keyDescriptor = $convert.base64Decode(
-    'CgNLZXkSPgoHZWQyNTUxORgBIAEoCzIiLmNvbS5ibG9ja2NoYWluLm1vZGVscy5LZXkuRWQyNT'
-    'UxOUgAUgdlZDI1NTE5GicKB0VkMjU1MTkSHAoJc2lnbmF0dXJlGAEgASgMUglzaWduYXR1cmVC'
-    'BwoFdmFsdWU=');
+    'CgNLZXkSOgoHZWQyNTUxORgBIAEoCzIeLmJsb2NrY2hhaW4ubW9kZWxzLktleS5FZDI1NTE5SA'
+    'BSB2VkMjU1MTkaJwoHRWQyNTUxORIcCglzaWduYXR1cmUYASABKAxSCXNpZ25hdHVyZUIHCgV2'
+    'YWx1ZQ==');
 
 @$core.Deprecated('Use peerIdDescriptor instead')
 const PeerId$json = {
@@ -520,22 +534,22 @@ final $typed_data.Uint8List peerIdDescriptor = $convert.base64Decode(
 const PublicP2PState$json = {
   '1': 'PublicP2PState',
   '2': [
-    {'1': 'localPeer', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.ConnectedPeer', '10': 'localPeer'},
-    {'1': 'peers', '3': 2, '4': 3, '5': 11, '6': '.com.blockchain.models.ConnectedPeer', '10': 'peers'},
+    {'1': 'localPeer', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.ConnectedPeer', '8': {}, '10': 'localPeer'},
+    {'1': 'peers', '3': 2, '4': 3, '5': 11, '6': '.blockchain.models.ConnectedPeer', '10': 'peers'},
   ],
 };
 
 /// Descriptor for `PublicP2PState`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List publicP2PStateDescriptor = $convert.base64Decode(
-    'Cg5QdWJsaWNQMlBTdGF0ZRJCCglsb2NhbFBlZXIYASABKAsyJC5jb20uYmxvY2tjaGFpbi5tb2'
-    'RlbHMuQ29ubmVjdGVkUGVlclIJbG9jYWxQZWVyEjoKBXBlZXJzGAIgAygLMiQuY29tLmJsb2Nr'
-    'Y2hhaW4ubW9kZWxzLkNvbm5lY3RlZFBlZXJSBXBlZXJz');
+    'Cg5QdWJsaWNQMlBTdGF0ZRJICglsb2NhbFBlZXIYASABKAsyIC5ibG9ja2NoYWluLm1vZGVscy'
+    '5Db25uZWN0ZWRQZWVyQgj6QgWKAQIQAVIJbG9jYWxQZWVyEjYKBXBlZXJzGAIgAygLMiAuYmxv'
+    'Y2tjaGFpbi5tb2RlbHMuQ29ubmVjdGVkUGVlclIFcGVlcnM=');
 
 @$core.Deprecated('Use connectedPeerDescriptor instead')
 const ConnectedPeer$json = {
   '1': 'ConnectedPeer',
   '2': [
-    {'1': 'peerId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.PeerId', '10': 'peerId'},
+    {'1': 'peerId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.PeerId', '8': {}, '10': 'peerId'},
     {'1': 'host', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.StringValue', '10': 'host'},
     {'1': 'port', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.UInt32Value', '10': 'port'},
   ],
@@ -543,8 +557,8 @@ const ConnectedPeer$json = {
 
 /// Descriptor for `ConnectedPeer`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List connectedPeerDescriptor = $convert.base64Decode(
-    'Cg1Db25uZWN0ZWRQZWVyEjUKBnBlZXJJZBgBIAEoCzIdLmNvbS5ibG9ja2NoYWluLm1vZGVscy'
-    '5QZWVySWRSBnBlZXJJZBIwCgRob3N0GAIgASgLMhwuZ29vZ2xlLnByb3RvYnVmLlN0cmluZ1Zh'
-    'bHVlUgRob3N0EjAKBHBvcnQYAyABKAsyHC5nb29nbGUucHJvdG9idWYuVUludDMyVmFsdWVSBH'
-    'BvcnQ=');
+    'Cg1Db25uZWN0ZWRQZWVyEjsKBnBlZXJJZBgBIAEoCzIZLmJsb2NrY2hhaW4ubW9kZWxzLlBlZX'
+    'JJZEII+kIFigECEAFSBnBlZXJJZBIwCgRob3N0GAIgASgLMhwuZ29vZ2xlLnByb3RvYnVmLlN0'
+    'cmluZ1ZhbHVlUgRob3N0EjAKBHBvcnQYAyABKAsyHC5nb29nbGUucHJvdG9idWYuVUludDMyVm'
+    'FsdWVSBHBvcnQ=');
 

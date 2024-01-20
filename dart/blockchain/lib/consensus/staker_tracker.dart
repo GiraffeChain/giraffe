@@ -13,11 +13,11 @@ abstract class StakerTracker {
   Future<Int64> totalActiveStake(BlockId currentBlockId, Slot slot);
 
   Future<ActiveStaker?> staker(
-      BlockId currentBlockId, Int64 slot, StakingAddress address);
+      BlockId currentBlockId, Int64 slot, TransactionOutputReference account);
 
-  Future<Rational?> operatorRelativeStake(
-      BlockId currentBlockId, Int64 slot, StakingAddress address) async {
-    final s = await staker(currentBlockId, slot, address);
+  Future<Rational?> operatorRelativeStake(BlockId currentBlockId, Int64 slot,
+      TransactionOutputReference account) async {
+    final s = await staker(currentBlockId, slot, account);
     if (s != null) {
       final total = await totalActiveStake(currentBlockId, slot);
       return Rational(s.quantity.toBigInt, total.toBigInt);
@@ -29,7 +29,7 @@ abstract class StakerTracker {
 class ConsensusData {
   final Store<void, Int64> totalActiveStake;
   final Store<void, Int64> totalInactiveStake;
-  final Store<StakingAddress, ActiveStaker> registrations;
+  final Store<TransactionOutputReference, ActiveStaker> registrations;
 
   ConsensusData(
       this.totalActiveStake, this.totalInactiveStake, this.registrations);
@@ -53,119 +53,14 @@ class ConsensusData {
   static Future<ConsensusData> Function(ConsensusData, BlockId) _applyBlock(
       Future<BlockBody> Function(BlockId) fetchBlockBody,
       Future<Transaction> Function(TransactionId) fetchTransaction) {
-    List<ActiveStaker> removedStakersOf(Transaction transaction) =>
-        transaction.inputs
-            .where((i) => i.hasValue() && i.value.hasRegistration())
-            .map((i) => ActiveStaker()
-              ..registration = i.value.registration
-              ..quantity = i.value.quantity)
-            .toList();
-
-    List<ActiveStaker> addedStakersOf(Transaction transaction) =>
-        transaction.outputs
-            .where((i) => i.hasValue() && i.value.hasRegistration())
-            .map((i) => ActiveStaker()
-              ..registration = i.value.registration
-              ..quantity = i.value.quantity)
-            .toList();
-
-    Future<ConsensusData> apply(ConsensusData state, BlockId blockId) async {
-      final body = await fetchBlockBody(blockId);
-      final transactions =
-          await Future.wait(body.transactionIds.map(fetchTransaction));
-      final spentActiveStake = _activeQuantityOf(
-          transactions.flatMap((t) => t.inputs).map((i) => i.value));
-      final createdActiveStake = _activeQuantityOf(
-          transactions.flatMap((t) => t.outputs).map((o) => o.value));
-      final previousTotalActiveStake =
-          await state.totalActiveStake.getOrRaise("");
-      await state.totalActiveStake.put(
-          "", previousTotalActiveStake - spentActiveStake + createdActiveStake);
-      final spentInactiveStake = _inactiveQuantityOf(
-          transactions.flatMap((t) => t.inputs).map((i) => i.value));
-      final createdInactiveStake = _inactiveQuantityOf(
-          transactions.flatMap((t) => t.outputs).map((o) => o.value));
-      final previousTotalInactiveStake =
-          await state.totalInactiveStake.getOrRaise("");
-      await state.totalInactiveStake.put(
-          "",
-          previousTotalInactiveStake -
-              spentInactiveStake +
-              createdInactiveStake);
-      final removedRegistrations = transactions.flatMap(removedStakersOf);
-      final addedRegistrations = transactions.flatMap(addedStakersOf);
-      await Future.wait(removedRegistrations.map(
-          (r) => state.registrations.remove(r.registration.stakingAddress)));
-      await Future.wait(addedRegistrations.map(
-          ((r) => state.registrations.put(r.registration.stakingAddress, r))));
-      return state;
-    }
-
-    return apply;
+    throw UnimplementedError();
   }
 
   static Future<ConsensusData> Function(ConsensusData, BlockId) _unapplyBlock(
       Future<BlockBody> Function(BlockId) fetchBlockBody,
       Future<Transaction> Function(TransactionId) fetchTransaction) {
-    List<ActiveStaker> removedStakersOf(Transaction transaction) =>
-        transaction.inputs.reversed
-            .where((i) => i.hasValue() && i.value.hasRegistration())
-            .map((i) => ActiveStaker()
-              ..registration = i.value.registration
-              ..quantity = i.value.quantity)
-            .toList();
-
-    List<ActiveStaker> addedStakersOf(Transaction transaction) =>
-        transaction.outputs.reversed
-            .where((i) => i.hasValue() && i.value.hasRegistration())
-            .map((i) => ActiveStaker()
-              ..registration = i.value.registration
-              ..quantity = i.value.quantity)
-            .toList();
-    Future<ConsensusData> f(ConsensusData state, BlockId blockId) async {
-      final body = await fetchBlockBody(blockId);
-      final transactions =
-          await Future.wait(body.transactionIds.reversed.map(fetchTransaction));
-      final spentActiveStake = _activeQuantityOf(
-          transactions.flatMap((t) => t.inputs.reversed).map((i) => i.value));
-      final createdActiveStake = _activeQuantityOf(
-          transactions.flatMap((t) => t.outputs.reversed).map((o) => o.value));
-      final previousTotalActiveStake =
-          await state.totalActiveStake.getOrRaise("");
-      await state.totalActiveStake.put(
-          "", previousTotalActiveStake + spentActiveStake - createdActiveStake);
-      final spentInactiveStake = _inactiveQuantityOf(
-          transactions.flatMap((t) => t.inputs.reversed).map((i) => i.value));
-      final createdInactiveStake = _inactiveQuantityOf(
-          transactions.flatMap((t) => t.outputs.reversed).map((o) => o.value));
-      final previousTotalInactiveStake =
-          await state.totalInactiveStake.getOrRaise("");
-      await state.totalInactiveStake.put(
-          "",
-          previousTotalInactiveStake +
-              spentInactiveStake -
-              createdInactiveStake);
-      final addedRegistrations = transactions.flatMap(addedStakersOf);
-      final removedRegistrations = transactions.flatMap(removedStakersOf);
-      await Future.wait(addedRegistrations.map(
-          (r) => state.registrations.remove(r.registration.stakingAddress)));
-      await Future.wait(removedRegistrations.map(
-          ((r) => state.registrations.put(r.registration.stakingAddress, r))));
-      return state;
-    }
-
-    return f;
+    throw UnimplementedError();
   }
-
-  static Int64 _activeQuantityOf(Iterable<Value> values) => values
-      .where((v) => v.hasRegistration())
-      .map((v) => v.quantity)
-      .fold(Int64.ZERO, (a, b) => a + b);
-
-  static Int64 _inactiveQuantityOf(Iterable<Value> values) => values
-      .where((v) => v.hasRegistration())
-      .map((v) => v.quantity)
-      .fold(Int64.ZERO, (a, b) => a + b);
 }
 
 class StakerTrackerImpl extends StakerTracker {
@@ -183,10 +78,10 @@ class StakerTrackerImpl extends StakerTracker {
           currentBlockId, slot, (p0) => p0.totalActiveStake.getOrRaise(""));
 
   @override
-  Future<ActiveStaker?> staker(
-          BlockId currentBlockId, Int64 slot, StakingAddress address) =>
+  Future<ActiveStaker?> staker(BlockId currentBlockId, Int64 slot,
+          TransactionOutputReference account) =>
       _useStateAtTargetBoundary(
-          currentBlockId, slot, (t) => t.registrations.get(address));
+          currentBlockId, slot, (t) => t.registrations.get(account));
 
   Future<Res> _useStateAtTargetBoundary<Res>(BlockId currentBlockId, Slot slot,
       Future<Res> Function(ConsensusData) f) async {

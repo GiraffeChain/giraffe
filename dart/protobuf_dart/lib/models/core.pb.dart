@@ -31,7 +31,7 @@ class BlockId extends $pb.GeneratedMessage {
   factory BlockId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BlockId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockId', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockId', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -79,7 +79,7 @@ class BlockHeader extends $pb.GeneratedMessage {
     EligibilityCertificate? eligibilityCertificate,
     OperationalCertificate? operationalCertificate,
     $core.List<$core.int>? metadata,
-    StakingAddress? address,
+    TransactionOutputReference? account,
     $core.Map<$core.String, $core.String>? settings,
     BlockId? headerId,
   }) {
@@ -111,8 +111,8 @@ class BlockHeader extends $pb.GeneratedMessage {
     if (metadata != null) {
       $result.metadata = metadata;
     }
-    if (address != null) {
-      $result.address = address;
+    if (account != null) {
+      $result.account = account;
     }
     if (settings != null) {
       $result.settings.addAll(settings);
@@ -126,7 +126,7 @@ class BlockHeader extends $pb.GeneratedMessage {
   factory BlockHeader.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BlockHeader.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockHeader', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockHeader', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<BlockId>(1, _omitFieldNames ? '' : 'parentHeaderId', protoName: 'parentHeaderId', subBuilder: BlockId.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'parentSlot', $pb.PbFieldType.OU6, protoName: 'parentSlot', defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'txRoot', $pb.PbFieldType.OY, protoName: 'txRoot')
@@ -136,8 +136,8 @@ class BlockHeader extends $pb.GeneratedMessage {
     ..aOM<EligibilityCertificate>(7, _omitFieldNames ? '' : 'eligibilityCertificate', protoName: 'eligibilityCertificate', subBuilder: EligibilityCertificate.create)
     ..aOM<OperationalCertificate>(8, _omitFieldNames ? '' : 'operationalCertificate', protoName: 'operationalCertificate', subBuilder: OperationalCertificate.create)
     ..a<$core.List<$core.int>>(9, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
-    ..aOM<StakingAddress>(10, _omitFieldNames ? '' : 'address', subBuilder: StakingAddress.create)
-    ..m<$core.String, $core.String>(11, _omitFieldNames ? '' : 'settings', entryClassName: 'BlockHeader.SettingsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('com.blockchain.models'))
+    ..aOM<TransactionOutputReference>(10, _omitFieldNames ? '' : 'account', subBuilder: TransactionOutputReference.create)
+    ..m<$core.String, $core.String>(11, _omitFieldNames ? '' : 'settings', entryClassName: 'BlockHeader.SettingsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('blockchain.models'))
     ..aOM<BlockId>(12, _omitFieldNames ? '' : 'headerId', protoName: 'headerId', subBuilder: BlockId.create)
     ..hasRequiredFields = false
   ;
@@ -261,17 +261,17 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(9)
   void clearMetadata() => clearField(9);
 
-  /// The operator's staking address
+  /// The operator's staking account location
   @$pb.TagNumber(10)
-  StakingAddress get address => $_getN(9);
+  TransactionOutputReference get account => $_getN(9);
   @$pb.TagNumber(10)
-  set address(StakingAddress v) { setField(10, v); }
+  set account(TransactionOutputReference v) { setField(10, v); }
   @$pb.TagNumber(10)
-  $core.bool hasAddress() => $_has(9);
+  $core.bool hasAccount() => $_has(9);
   @$pb.TagNumber(10)
-  void clearAddress() => clearField(10);
+  void clearAccount() => clearField(10);
   @$pb.TagNumber(10)
-  StakingAddress ensureAddress() => $_ensure(9);
+  TransactionOutputReference ensureAccount() => $_ensure(9);
 
   /// Configuration or protocol changes
   @$pb.TagNumber(11)
@@ -318,7 +318,7 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
   factory EligibilityCertificate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory EligibilityCertificate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EligibilityCertificate', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EligibilityCertificate', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'vrfSig', $pb.PbFieldType.OY, protoName: 'vrfSig')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'vrfVK', $pb.PbFieldType.OY, protoName: 'vrfVK')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'thresholdEvidence', $pb.PbFieldType.OY, protoName: 'thresholdEvidence')
@@ -418,7 +418,7 @@ class OperationalCertificate extends $pb.GeneratedMessage {
   factory OperationalCertificate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory OperationalCertificate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationalCertificate', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationalCertificate', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<VerificationKeyKesProduct>(1, _omitFieldNames ? '' : 'parentVK', protoName: 'parentVK', subBuilder: VerificationKeyKesProduct.create)
     ..aOM<SignatureKesProduct>(2, _omitFieldNames ? '' : 'parentSignature', protoName: 'parentSignature', subBuilder: SignatureKesProduct.create)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'childVK', $pb.PbFieldType.OY, protoName: 'childVK')
@@ -510,7 +510,7 @@ class VerificationKeyKesProduct extends $pb.GeneratedMessage {
   factory VerificationKeyKesProduct.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory VerificationKeyKesProduct.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'VerificationKeyKesProduct', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'VerificationKeyKesProduct', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'step', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
@@ -579,7 +579,7 @@ class SignatureKesSum extends $pb.GeneratedMessage {
   factory SignatureKesSum.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SignatureKesSum.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignatureKesSum', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignatureKesSum', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'verificationKey', $pb.PbFieldType.OY, protoName: 'verificationKey')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
     ..p<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'witness', $pb.PbFieldType.PY)
@@ -652,7 +652,7 @@ class SignatureKesProduct extends $pb.GeneratedMessage {
   factory SignatureKesProduct.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SignatureKesProduct.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignatureKesProduct', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignatureKesProduct', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<SignatureKesSum>(1, _omitFieldNames ? '' : 'superSignature', protoName: 'superSignature', subBuilder: SignatureKesSum.create)
     ..aOM<SignatureKesSum>(2, _omitFieldNames ? '' : 'subSignature', protoName: 'subSignature', subBuilder: SignatureKesSum.create)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'subRoot', $pb.PbFieldType.OY, protoName: 'subRoot')
@@ -732,7 +732,7 @@ class SlotId extends $pb.GeneratedMessage {
   factory SlotId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SlotId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SlotId', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SlotId', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOM<BlockId>(2, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: BlockId.create)
     ..hasRequiredFields = false
@@ -796,7 +796,7 @@ class StakingAddress extends $pb.GeneratedMessage {
   factory StakingAddress.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory StakingAddress.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StakingAddress', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StakingAddress', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -847,7 +847,7 @@ class BlockBody extends $pb.GeneratedMessage {
   factory BlockBody.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BlockBody.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockBody', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockBody', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..pc<TransactionId>(1, _omitFieldNames ? '' : 'transactionIds', $pb.PbFieldType.PM, protoName: 'transactionIds', subBuilder: TransactionId.create)
     ..hasRequiredFields = false
   ;
@@ -893,7 +893,7 @@ class FullBlockBody extends $pb.GeneratedMessage {
   factory FullBlockBody.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory FullBlockBody.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FullBlockBody', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FullBlockBody', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..pc<Transaction>(1, _omitFieldNames ? '' : 'transactions', $pb.PbFieldType.PM, subBuilder: Transaction.create)
     ..hasRequiredFields = false
   ;
@@ -943,7 +943,7 @@ class Block extends $pb.GeneratedMessage {
   factory Block.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Block.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Block', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Block', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<BlockHeader>(1, _omitFieldNames ? '' : 'header', subBuilder: BlockHeader.create)
     ..aOM<BlockBody>(2, _omitFieldNames ? '' : 'body', subBuilder: BlockBody.create)
     ..hasRequiredFields = false
@@ -1014,7 +1014,7 @@ class FullBlock extends $pb.GeneratedMessage {
   factory FullBlock.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory FullBlock.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FullBlock', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FullBlock', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<BlockHeader>(1, _omitFieldNames ? '' : 'header', subBuilder: BlockHeader.create)
     ..aOM<FullBlockBody>(2, _omitFieldNames ? '' : 'fullBody', protoName: 'fullBody', subBuilder: FullBlockBody.create)
     ..hasRequiredFields = false
@@ -1081,7 +1081,7 @@ class TransactionId extends $pb.GeneratedMessage {
   factory TransactionId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionId', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionId', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -1149,7 +1149,7 @@ class Transaction extends $pb.GeneratedMessage {
   factory Transaction.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Transaction.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Transaction', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Transaction', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<TransactionId>(1, _omitFieldNames ? '' : 'transactionId', protoName: 'transactionId', subBuilder: TransactionId.create)
     ..pc<TransactionInput>(2, _omitFieldNames ? '' : 'inputs', $pb.PbFieldType.PM, subBuilder: TransactionInput.create)
     ..pc<TransactionOutput>(3, _omitFieldNames ? '' : 'outputs', $pb.PbFieldType.PM, subBuilder: TransactionOutput.create)
@@ -1236,7 +1236,7 @@ class Witness extends $pb.GeneratedMessage {
   factory Witness.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Witness.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Witness', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Witness', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<Lock>(1, _omitFieldNames ? '' : 'lock', subBuilder: Lock.create)
     ..aOM<Key>(2, _omitFieldNames ? '' : 'key', subBuilder: Key.create)
     ..aOM<LockAddress>(3, _omitFieldNames ? '' : 'lockAddress', protoName: 'lockAddress', subBuilder: LockAddress.create)
@@ -1316,7 +1316,7 @@ class TransactionInput extends $pb.GeneratedMessage {
   factory TransactionInput.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionInput.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionInput', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionInput', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<TransactionOutputReference>(1, _omitFieldNames ? '' : 'reference', subBuilder: TransactionOutputReference.create)
     ..aOM<Value>(2, _omitFieldNames ? '' : 'value', subBuilder: Value.create)
     ..hasRequiredFields = false
@@ -1384,7 +1384,7 @@ class TransactionOutputReference extends $pb.GeneratedMessage {
   factory TransactionOutputReference.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionOutputReference.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionOutputReference', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionOutputReference', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<TransactionId>(1, _omitFieldNames ? '' : 'transactionId', protoName: 'transactionId', subBuilder: TransactionId.create)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'index', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
@@ -1436,6 +1436,7 @@ class TransactionOutput extends $pb.GeneratedMessage {
   factory TransactionOutput({
     LockAddress? lockAddress,
     Value? value,
+    TransactionOutputReference? account,
   }) {
     final $result = create();
     if (lockAddress != null) {
@@ -1444,15 +1445,19 @@ class TransactionOutput extends $pb.GeneratedMessage {
     if (value != null) {
       $result.value = value;
     }
+    if (account != null) {
+      $result.account = account;
+    }
     return $result;
   }
   TransactionOutput._() : super();
   factory TransactionOutput.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionOutput.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionOutput', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionOutput', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<LockAddress>(1, _omitFieldNames ? '' : 'lockAddress', protoName: 'lockAddress', subBuilder: LockAddress.create)
     ..aOM<Value>(2, _omitFieldNames ? '' : 'value', subBuilder: Value.create)
+    ..aOM<TransactionOutputReference>(3, _omitFieldNames ? '' : 'account', subBuilder: TransactionOutputReference.create)
     ..hasRequiredFields = false
   ;
 
@@ -1498,24 +1503,32 @@ class TransactionOutput extends $pb.GeneratedMessage {
   void clearValue() => clearField(2);
   @$pb.TagNumber(2)
   Value ensureValue() => $_ensure(1);
+
+  /// Optional
+  @$pb.TagNumber(3)
+  TransactionOutputReference get account => $_getN(2);
+  @$pb.TagNumber(3)
+  set account(TransactionOutputReference v) { setField(3, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasAccount() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAccount() => clearField(3);
+  @$pb.TagNumber(3)
+  TransactionOutputReference ensureAccount() => $_ensure(2);
 }
 
 class Value extends $pb.GeneratedMessage {
   factory Value({
     $fixnum.Int64? quantity,
-    StakingAddress? staker,
-    StakingRegistration? registration,
+    AccountRegistration? accountRegistration,
     GraphEntry? graphEntry,
   }) {
     final $result = create();
     if (quantity != null) {
       $result.quantity = quantity;
     }
-    if (staker != null) {
-      $result.staker = staker;
-    }
-    if (registration != null) {
-      $result.registration = registration;
+    if (accountRegistration != null) {
+      $result.accountRegistration = accountRegistration;
     }
     if (graphEntry != null) {
       $result.graphEntry = graphEntry;
@@ -1526,11 +1539,10 @@ class Value extends $pb.GeneratedMessage {
   factory Value.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Value.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Value', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Value', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'quantity', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOM<StakingAddress>(2, _omitFieldNames ? '' : 'staker', subBuilder: StakingAddress.create)
-    ..aOM<StakingRegistration>(3, _omitFieldNames ? '' : 'registration', subBuilder: StakingRegistration.create)
-    ..aOM<GraphEntry>(4, _omitFieldNames ? '' : 'graphEntry', protoName: 'graphEntry', subBuilder: GraphEntry.create)
+    ..aOM<AccountRegistration>(2, _omitFieldNames ? '' : 'accountRegistration', protoName: 'accountRegistration', subBuilder: AccountRegistration.create)
+    ..aOM<GraphEntry>(3, _omitFieldNames ? '' : 'graphEntry', protoName: 'graphEntry', subBuilder: GraphEntry.create)
     ..hasRequiredFields = false
   ;
 
@@ -1564,41 +1576,97 @@ class Value extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearQuantity() => clearField(1);
 
-  /// Optional.  If not provided, this token will not be used for staking purposes.
   @$pb.TagNumber(2)
-  StakingAddress get staker => $_getN(1);
+  AccountRegistration get accountRegistration => $_getN(1);
   @$pb.TagNumber(2)
-  set staker(StakingAddress v) { setField(2, v); }
+  set accountRegistration(AccountRegistration v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasStaker() => $_has(1);
+  $core.bool hasAccountRegistration() => $_has(1);
   @$pb.TagNumber(2)
-  void clearStaker() => clearField(2);
+  void clearAccountRegistration() => clearField(2);
   @$pb.TagNumber(2)
-  StakingAddress ensureStaker() => $_ensure(1);
-
-  /// Optional.  If provided, introduces a new staker to the chain.
-  @$pb.TagNumber(3)
-  StakingRegistration get registration => $_getN(2);
-  @$pb.TagNumber(3)
-  set registration(StakingRegistration v) { setField(3, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasRegistration() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearRegistration() => clearField(3);
-  @$pb.TagNumber(3)
-  StakingRegistration ensureRegistration() => $_ensure(2);
+  AccountRegistration ensureAccountRegistration() => $_ensure(1);
 
   /// Optional
-  @$pb.TagNumber(4)
-  GraphEntry get graphEntry => $_getN(3);
-  @$pb.TagNumber(4)
-  set graphEntry(GraphEntry v) { setField(4, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasGraphEntry() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearGraphEntry() => clearField(4);
-  @$pb.TagNumber(4)
-  GraphEntry ensureGraphEntry() => $_ensure(3);
+  @$pb.TagNumber(3)
+  GraphEntry get graphEntry => $_getN(2);
+  @$pb.TagNumber(3)
+  set graphEntry(GraphEntry v) { setField(3, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasGraphEntry() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearGraphEntry() => clearField(3);
+  @$pb.TagNumber(3)
+  GraphEntry ensureGraphEntry() => $_ensure(2);
+}
+
+class AccountRegistration extends $pb.GeneratedMessage {
+  factory AccountRegistration({
+    LockAddress? associationLock,
+    StakingRegistration? stakingRegistration,
+  }) {
+    final $result = create();
+    if (associationLock != null) {
+      $result.associationLock = associationLock;
+    }
+    if (stakingRegistration != null) {
+      $result.stakingRegistration = stakingRegistration;
+    }
+    return $result;
+  }
+  AccountRegistration._() : super();
+  factory AccountRegistration.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory AccountRegistration.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AccountRegistration', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
+    ..aOM<LockAddress>(1, _omitFieldNames ? '' : 'associationLock', protoName: 'associationLock', subBuilder: LockAddress.create)
+    ..aOM<StakingRegistration>(2, _omitFieldNames ? '' : 'stakingRegistration', protoName: 'stakingRegistration', subBuilder: StakingRegistration.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  AccountRegistration clone() => AccountRegistration()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  AccountRegistration copyWith(void Function(AccountRegistration) updates) => super.copyWith((message) => updates(message as AccountRegistration)) as AccountRegistration;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AccountRegistration create() => AccountRegistration._();
+  AccountRegistration createEmptyInstance() => create();
+  static $pb.PbList<AccountRegistration> createRepeated() => $pb.PbList<AccountRegistration>();
+  @$core.pragma('dart2js:noInline')
+  static AccountRegistration getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AccountRegistration>(create);
+  static AccountRegistration? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  LockAddress get associationLock => $_getN(0);
+  @$pb.TagNumber(1)
+  set associationLock(LockAddress v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasAssociationLock() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAssociationLock() => clearField(1);
+  @$pb.TagNumber(1)
+  LockAddress ensureAssociationLock() => $_ensure(0);
+
+  /// Optional.  If provided, introduces a new staker to the chain.
+  @$pb.TagNumber(2)
+  StakingRegistration get stakingRegistration => $_getN(1);
+  @$pb.TagNumber(2)
+  set stakingRegistration(StakingRegistration v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasStakingRegistration() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearStakingRegistration() => clearField(2);
+  @$pb.TagNumber(2)
+  StakingRegistration ensureStakingRegistration() => $_ensure(1);
 }
 
 /// A proof-of-stake registration
@@ -1620,7 +1688,7 @@ class StakingRegistration extends $pb.GeneratedMessage {
   factory StakingRegistration.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory StakingRegistration.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StakingRegistration', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StakingRegistration', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<SignatureKesProduct>(1, _omitFieldNames ? '' : 'signature', subBuilder: SignatureKesProduct.create)
     ..aOM<StakingAddress>(2, _omitFieldNames ? '' : 'stakingAddress', protoName: 'stakingAddress', subBuilder: StakingAddress.create)
     ..hasRequiredFields = false
@@ -1699,7 +1767,7 @@ class GraphEntry extends $pb.GeneratedMessage {
     2 : GraphEntry_Entry.edge,
     0 : GraphEntry_Entry.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GraphEntry', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GraphEntry', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..oo(0, [1, 2])
     ..aOM<Vertex>(1, _omitFieldNames ? '' : 'vertex', subBuilder: Vertex.create)
     ..aOM<Edge>(2, _omitFieldNames ? '' : 'edge', subBuilder: Edge.create)
@@ -1775,7 +1843,7 @@ class Vertex extends $pb.GeneratedMessage {
   factory Vertex.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Vertex.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Vertex', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Vertex', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'label')
     ..aOM<$2.Struct>(2, _omitFieldNames ? '' : 'data', subBuilder: $2.Struct.create)
     ..aOM<LockAddress>(3, _omitFieldNames ? '' : 'edgeLockAddress', protoName: 'edgeLockAddress', subBuilder: LockAddress.create)
@@ -1861,7 +1929,7 @@ class Edge extends $pb.GeneratedMessage {
   factory Edge.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Edge.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Edge', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Edge', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'label')
     ..aOM<$2.Struct>(2, _omitFieldNames ? '' : 'data', subBuilder: $2.Struct.create)
     ..aOM<TransactionOutputReference>(3, _omitFieldNames ? '' : 'a', subBuilder: TransactionOutputReference.create)
@@ -1938,7 +2006,6 @@ class ActiveStaker extends $pb.GeneratedMessage {
   factory ActiveStaker({
     StakingRegistration? registration,
     $fixnum.Int64? quantity,
-    BlockId? registrationBlock,
   }) {
     final $result = create();
     if (registration != null) {
@@ -1947,19 +2014,15 @@ class ActiveStaker extends $pb.GeneratedMessage {
     if (quantity != null) {
       $result.quantity = quantity;
     }
-    if (registrationBlock != null) {
-      $result.registrationBlock = registrationBlock;
-    }
     return $result;
   }
   ActiveStaker._() : super();
   factory ActiveStaker.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory ActiveStaker.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ActiveStaker', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ActiveStaker', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<StakingRegistration>(1, _omitFieldNames ? '' : 'registration', subBuilder: StakingRegistration.create)
     ..aInt64(2, _omitFieldNames ? '' : 'quantity')
-    ..aOM<BlockId>(3, _omitFieldNames ? '' : 'registrationBlock', protoName: 'registrationBlock', subBuilder: BlockId.create)
     ..hasRequiredFields = false
   ;
 
@@ -2005,18 +2068,6 @@ class ActiveStaker extends $pb.GeneratedMessage {
   $core.bool hasQuantity() => $_has(1);
   @$pb.TagNumber(2)
   void clearQuantity() => clearField(2);
-
-  /// The block in which the staker is registered.
-  @$pb.TagNumber(3)
-  BlockId get registrationBlock => $_getN(2);
-  @$pb.TagNumber(3)
-  set registrationBlock(BlockId v) { setField(3, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasRegistrationBlock() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearRegistrationBlock() => clearField(3);
-  @$pb.TagNumber(3)
-  BlockId ensureRegistrationBlock() => $_ensure(2);
 }
 
 class LockAddress extends $pb.GeneratedMessage {
@@ -2033,7 +2084,7 @@ class LockAddress extends $pb.GeneratedMessage {
   factory LockAddress.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory LockAddress.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LockAddress', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LockAddress', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -2083,7 +2134,7 @@ class Lock_Ed25519 extends $pb.GeneratedMessage {
   factory Lock_Ed25519.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Lock_Ed25519.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Lock.Ed25519', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Lock.Ed25519', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'vk', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -2142,7 +2193,7 @@ class Lock extends $pb.GeneratedMessage {
     1 : Lock_Value.ed25519,
     0 : Lock_Value.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Lock', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Lock', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..oo(0, [1])
     ..aOM<Lock_Ed25519>(1, _omitFieldNames ? '' : 'ed25519', subBuilder: Lock_Ed25519.create)
     ..hasRequiredFields = false
@@ -2198,7 +2249,7 @@ class Key_Ed25519 extends $pb.GeneratedMessage {
   factory Key_Ed25519.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory Key_Ed25519.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Key.Ed25519', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Key.Ed25519', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -2257,7 +2308,7 @@ class Key extends $pb.GeneratedMessage {
     1 : Key_Value.ed25519,
     0 : Key_Value.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Key', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Key', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..oo(0, [1])
     ..aOM<Key_Ed25519>(1, _omitFieldNames ? '' : 'ed25519', subBuilder: Key_Ed25519.create)
     ..hasRequiredFields = false
@@ -2313,7 +2364,7 @@ class PeerId extends $pb.GeneratedMessage {
   factory PeerId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory PeerId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerId', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerId', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -2367,7 +2418,7 @@ class PublicP2PState extends $pb.GeneratedMessage {
   factory PublicP2PState.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory PublicP2PState.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PublicP2PState', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PublicP2PState', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<ConnectedPeer>(1, _omitFieldNames ? '' : 'localPeer', protoName: 'localPeer', subBuilder: ConnectedPeer.create)
     ..pc<ConnectedPeer>(2, _omitFieldNames ? '' : 'peers', $pb.PbFieldType.PM, subBuilder: ConnectedPeer.create)
     ..hasRequiredFields = false
@@ -2431,7 +2482,7 @@ class ConnectedPeer extends $pb.GeneratedMessage {
   factory ConnectedPeer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory ConnectedPeer.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConnectedPeer', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.models'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ConnectedPeer', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<PeerId>(1, _omitFieldNames ? '' : 'peerId', protoName: 'peerId', subBuilder: PeerId.create)
     ..aOM<$3.StringValue>(2, _omitFieldNames ? '' : 'host', subBuilder: $3.StringValue.create)
     ..aOM<$3.UInt32Value>(3, _omitFieldNames ? '' : 'port', subBuilder: $3.UInt32Value.create)

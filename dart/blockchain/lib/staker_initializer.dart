@@ -45,13 +45,12 @@ class StakerInitializer {
 
   Future<List<Transaction>> genesisTransactions(
       Int64 stake, LockAddress lockAddress) async {
+    throw UnimplementedError();
     return [
       Transaction()
         ..outputs.add(TransactionOutput()
           ..lockAddress = lockAddress
-          ..value = (Value()
-            ..quantity = stake
-            ..registration = await registration))
+          ..value = (Value()..quantity = stake))
     ];
   }
 

@@ -59,7 +59,9 @@ class Minting {
         final operatorSk =
             await File("${stakingDir.path}/operator").readAsBytes();
         final operatorVk = await ed25519.getVerificationKey(operatorSk);
-        final stakingAddress = StakingAddress(value: operatorVk);
+        final account = TransactionOutputReference.fromBuffer(
+            await File("${stakingDir.path}/account").readAsBytes());
+
         final vrfCalculator =
             VrfCalculatorImpl(vrfSk, clock, leaderElection, protocolSettings);
 
@@ -67,7 +69,7 @@ class Minting {
           canonicalHead.slotId,
           protocolSettings.operationalPeriodLength,
           Int64(0),
-          stakingAddress,
+          account,
           vrfVk,
           secureStore,
           clock,
@@ -161,10 +163,10 @@ class StakerTrackerForStakerSupportRpc extends StakerTracker {
   StakerTrackerForStakerSupportRpc({required this.client});
 
   @override
-  Future<ActiveStaker?> staker(
-      BlockId currentBlockId, Int64 slot, StakingAddress address) async {
+  Future<ActiveStaker?> staker(BlockId currentBlockId, Int64 slot,
+      TransactionOutputReference account) async {
     final rpcResult = await client.getStaker(GetStakerReq(
-        stakingAddress: address, parentBlockId: currentBlockId, slot: slot));
+        stakingAccount: account, parentBlockId: currentBlockId, slot: slot));
     if (rpcResult.hasStaker()) return rpcResult.staker;
     return null;
   }

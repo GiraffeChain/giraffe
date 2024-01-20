@@ -369,7 +369,7 @@ object KesBinaryTree {
     override def toByteArray: Array[Byte] =
       mutable.ArrayBuilder
         .make[Byte]
-        .addOne(0x00)
+        .addOne(0x01)
         .addAll(sk)
         .addAll(vk)
         .result()

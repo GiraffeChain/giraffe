@@ -65,7 +65,7 @@ class BodyValidationImpl extends BodyValidation {
       return ["RewardContainsAttestation"];
     Int64 claimedSum = Int64.ZERO;
     for (final output in transaction.outputs) {
-      if (output.value.hasRegistration())
+      if (output.value.hasAccountRegistration())
         return ["RewardContainsRegistration"];
       else if (output.value.hasGraphEntry())
         return ["RewardContainsGraphElement"];

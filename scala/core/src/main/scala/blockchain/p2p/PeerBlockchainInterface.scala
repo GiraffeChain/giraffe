@@ -92,17 +92,13 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
 
   private def portQueueStreams =
     Stream(
-      allPortQueues.blockIdAtHeight.backgroundRequestProcessor(
-        onPeerRequestedBlockIdAtHeight
-      ),
+      allPortQueues.blockIdAtHeight.backgroundRequestProcessor(onPeerRequestedBlockIdAtHeight),
       allPortQueues.headers.backgroundRequestProcessor(onPeerRequestedHeader),
       allPortQueues.bodies.backgroundRequestProcessor(onPeerRequestedBody),
-      allPortQueues.transactions.backgroundRequestProcessor(
-        onPeerRequestedTransaction
-      ),
-      allPortQueues.blockAdoptions.backgroundRequestProcessor((_) => onPeerRequestedBlockNotification()),
-      allPortQueues.transactionAdoptions.backgroundRequestProcessor((_) => onPeerRequestedTransactionNotification()),
-      allPortQueues.p2pState.backgroundRequestProcessor((_) => onPeerRequestedState()),
+      allPortQueues.transactions.backgroundRequestProcessor(onPeerRequestedTransaction),
+      allPortQueues.blockAdoptions.backgroundRequestProcessor(_ => onPeerRequestedBlockNotification()),
+      allPortQueues.transactionAdoptions.backgroundRequestProcessor(_ => onPeerRequestedTransactionNotification()),
+      allPortQueues.p2pState.backgroundRequestProcessor(_ => onPeerRequestedState()),
       allPortQueues.pingPong.backgroundRequestProcessor(onPeerRequestedPing)
     ).parJoinUnbounded
 
@@ -157,19 +153,13 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
       port: Int,
       message: Message
   ): F[Unit] =
-    readerWriter.write(
-      port,
-      ByteStringZero.concat(P2PEncodable[Message].encodeP2P(message))
-    )
+    readerWriter.write(port, ByteStringZero.concat(P2PEncodable[Message].encodeP2P(message)))
 
   private def writeResponse[Message: P2PEncodable](
       port: Int,
       message: Message
   ): F[Unit] =
-    readerWriter.write(
-      port,
-      ByteStringOne.concat(P2PEncodable[Message].encodeP2P(message))
-    )
+    readerWriter.write(port, ByteStringOne.concat(P2PEncodable[Message].encodeP2P(message)))
 
   private def onPeerRequestedBlockIdAtHeight(height: Height) =
     core.consensus.localChain
@@ -205,9 +195,7 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
 
   private def onPeerRequestedTransactionNotification() =
     core.ledger.mempool.changes
-      .collectFirst { case MempoolChange.Added(tx) =>
-        tx.id
-      }
+      .collectFirst { case MempoolChange.Added(tx) => tx.id }
       .compile
       .lastOrError
       .flatMap(writeResponse(MultiplexerIds.TransactionNotificationRequest, _))

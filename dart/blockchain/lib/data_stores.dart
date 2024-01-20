@@ -18,7 +18,7 @@ class DataStores {
   final Store<Int64, BlockId> epochBoundaries;
   final Store<void, Int64> delayedActiveStake;
   final Store<void, Int64> delayedInactiveStake;
-  final Store<StakingAddress, ActiveStaker> delayedActiveStakers;
+  final Store<TransactionOutputReference, ActiveStaker> delayedActiveStakers;
   final Store<Int64, BlockId> blockHeightTree;
   final Store<int, List<int>> metadata;
 
@@ -130,12 +130,12 @@ class DataStores {
             (_) {},
             Int64.fromBytes);
         final delayedActiveStakersR =
-            HiveStore.make<StakingAddress, ActiveStaker>(
+            HiveStore.make<TransactionOutputReference, ActiveStaker>(
                 "delayed-active-stakers",
                 hive,
                 (key) => key.writeToBuffer(),
                 (value) => value.writeToBuffer(),
-                StakingAddress.fromBuffer,
+                TransactionOutputReference.fromBuffer,
                 ActiveStaker.fromBuffer);
         final blockHeightTreeR = HiveStore.make<Int64, BlockId>(
             "block-height-tree",

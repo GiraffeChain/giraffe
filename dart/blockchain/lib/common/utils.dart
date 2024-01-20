@@ -27,6 +27,15 @@ extension Int32Ops on Int32 {
 
 extension Int64Ops on Int64 {
   BigInt get toBigInt => BigInt.parse(toString());
+  List<int> toBytesBigEndian() {
+    Int64 value = this;
+    final res = Uint8List(8);
+    for (int i = 0; i >= 0; i--) {
+      res[i] = (value & 0xff).toInt();
+      value >>= 8;
+    }
+    return res;
+  }
 }
 
 extension ListIntOps on List<int> {
@@ -55,7 +64,7 @@ extension BlockHeaderOps on BlockHeader {
             operationalCertificate.parentSignature,
             operationalCertificate.childVK),
         metadata,
-        address,
+        account,
       );
 
   SlotId get slotId => SlotId(slot: slot, blockId: id);

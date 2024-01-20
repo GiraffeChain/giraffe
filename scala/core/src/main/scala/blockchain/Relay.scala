@@ -30,7 +30,7 @@ object Relay extends IOApp:
         .pure[F]
         .rethrow
         .toResource
-      genesis <- Testnet.init[F](Path("/tmp/blockchain/genesis"), args.testnet.getOrElse("")).toResource
+      genesis <- Testnet.init[F](Path("/tmp/blockchain-genesis"), args.testnet.getOrElse("")).toResource
       _ <- logger.info(show"Genesis id=${genesis.header.id} timestamp=${genesis.header.timestamp}").toResource
       dataDir = Path(show"${args.dataDir}/${genesis.header.id}")
       _ <- logger.info(show"Data dir=$dataDir").toResource

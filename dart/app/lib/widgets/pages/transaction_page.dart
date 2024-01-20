@@ -140,7 +140,7 @@ class TransactionPage extends StatelessWidget {
                         Text("#${t.reference.index}"),
                       ])),
                       DataCell(Text(t.value.quantity.toString())),
-                      DataCell(t.value.hasRegistration()
+                      DataCell(t.value.hasAccountRegistration()
                           ? const Icon(Icons.app_registration_rounded)
                           : Container()),
                     ]))
@@ -174,7 +174,7 @@ class TransactionPage extends StatelessWidget {
                               ? const Icon(Icons.circle)
                               : const Icon(Icons.compare_arrows_outlined))
                           : Container()),
-                      DataCell(t.value.hasRegistration()
+                      DataCell(t.value.hasAccountRegistration()
                           ? const Icon(Icons.account_box)
                           : Container()),
                     ]))

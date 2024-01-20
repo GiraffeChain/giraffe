@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/crypto/impl/kes_helper.dart';
 import 'package:blockchain/crypto/impl/kes_sum.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -253,7 +254,7 @@ class SecretKeyKesProduct {
       ..._encodeTree(subTree),
       ...nextSubSeed,
       ..._encodeSignature(subSignature),
-      ...offset.toBytes()
+      ...offset.toBytesBigEndian()
     ];
   }
 
@@ -283,7 +284,7 @@ class SecretKeyKesProduct {
     return [
       ...signature.verificationKey,
       ...signature.signature,
-      ...Int64(signature.witness.length).toBytes(),
+      ...Int64(signature.witness.length).toBytesBigEndian(),
       ...signature.witness.flatMap((t) => t)
     ];
   }
@@ -327,7 +328,7 @@ class SecretKeyKesProduct {
   }
 
   static Int64 _parseInt(List<int> bytes) {
-    return Int64.fromBytes(bytes);
+    return Int64.fromBytesBigEndian(bytes);
   }
 }
 

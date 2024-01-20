@@ -127,11 +127,11 @@ class BlockHeaderValidationImpl extends BlockHeaderValidation {
 
   Future<List<String>> _registrationVerification(BlockHeader header) async {
     final staker = await consensusValidationState.staker(
-        await header.id, header.slot, header.address);
+        await header.id, header.slot, header.account);
     if (staker == null) return ["Unregistered"];
-    final message =
-        await (header.eligibilityCertificate.vrfVK + header.address.value)
-            .hash256;
+    final message = await (header.eligibilityCertificate.vrfVK +
+            staker.registration.stakingAddress.value)
+        .hash256;
 
     final verificationResult = await kesProduct.verify(
         staker.registration.signature,
@@ -146,7 +146,7 @@ class BlockHeaderValidationImpl extends BlockHeaderValidation {
   Future<Either<List<String>, Rational>> _vrfThresholdFor(
       BlockHeader header) async {
     final relativeStake = await consensusValidationState.operatorRelativeStake(
-        await header.id, header.slot, header.address);
+        await header.id, header.slot, header.account);
     if (relativeStake == null) return Left(["Unregistered"]);
     final threshold = await leaderElectionValidation.getThreshold(
         relativeStake, header.slot - header.parentSlot);

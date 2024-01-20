@@ -124,12 +124,12 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
   @override
   Future<GetStakerRes> getStaker(ServiceCall call, GetStakerReq request) async {
     assert(request.hasParentBlockId());
-    assert(request.hasStakingAddress());
+    assert(request.hasStakingAccount());
     assert(request.hasSlot());
     final staker = await blockchain.consensus.stakerTracker.staker(
       request.parentBlockId,
       request.slot,
-      request.stakingAddress,
+      request.stakingAccount,
     );
     return GetStakerRes(staker: staker);
   }

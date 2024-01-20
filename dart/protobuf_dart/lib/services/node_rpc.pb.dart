@@ -30,7 +30,7 @@ class BroadcastTransactionReq extends $pb.GeneratedMessage {
   factory BroadcastTransactionReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BroadcastTransactionReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastTransactionReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastTransactionReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.Transaction>(1, _omitFieldNames ? '' : 'transaction', subBuilder: $4.Transaction.create)
     ..hasRequiredFields = false
   ;
@@ -74,7 +74,7 @@ class BroadcastTransactionRes extends $pb.GeneratedMessage {
   factory BroadcastTransactionRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BroadcastTransactionRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastTransactionRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastTransactionRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..hasRequiredFields = false
   ;
 
@@ -114,7 +114,7 @@ class GetBlockHeaderReq extends $pb.GeneratedMessage {
   factory GetBlockHeaderReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetBlockHeaderReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockHeaderReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockHeaderReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: $4.BlockId.create)
     ..hasRequiredFields = false
   ;
@@ -166,7 +166,7 @@ class GetBlockHeaderRes extends $pb.GeneratedMessage {
   factory GetBlockHeaderRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetBlockHeaderRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockHeaderRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockHeaderRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockHeader>(1, _omitFieldNames ? '' : 'header', subBuilder: $4.BlockHeader.create)
     ..hasRequiredFields = false
   ;
@@ -218,7 +218,7 @@ class GetBlockBodyReq extends $pb.GeneratedMessage {
   factory GetBlockBodyReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetBlockBodyReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockBodyReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockBodyReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: $4.BlockId.create)
     ..hasRequiredFields = false
   ;
@@ -270,7 +270,7 @@ class GetBlockBodyRes extends $pb.GeneratedMessage {
   factory GetBlockBodyRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetBlockBodyRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockBodyRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockBodyRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockBody>(1, _omitFieldNames ? '' : 'body', subBuilder: $4.BlockBody.create)
     ..hasRequiredFields = false
   ;
@@ -322,7 +322,7 @@ class GetFullBlockReq extends $pb.GeneratedMessage {
   factory GetFullBlockReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetFullBlockReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetFullBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetFullBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: $4.BlockId.create)
     ..hasRequiredFields = false
   ;
@@ -374,7 +374,7 @@ class GetFullBlockRes extends $pb.GeneratedMessage {
   factory GetFullBlockRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetFullBlockRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetFullBlockRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetFullBlockRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.FullBlock>(1, _omitFieldNames ? '' : 'fullBlock', protoName: 'fullBlock', subBuilder: $4.FullBlock.create)
     ..hasRequiredFields = false
   ;
@@ -426,7 +426,7 @@ class GetTransactionReq extends $pb.GeneratedMessage {
   factory GetTransactionReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetTransactionReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTransactionReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTransactionReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.TransactionId>(1, _omitFieldNames ? '' : 'transactionId', protoName: 'transactionId', subBuilder: $4.TransactionId.create)
     ..hasRequiredFields = false
   ;
@@ -478,7 +478,7 @@ class GetTransactionRes extends $pb.GeneratedMessage {
   factory GetTransactionRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetTransactionRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTransactionRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTransactionRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.Transaction>(1, _omitFieldNames ? '' : 'transaction', subBuilder: $4.Transaction.create)
     ..hasRequiredFields = false
   ;
@@ -522,7 +522,7 @@ class FollowReq extends $pb.GeneratedMessage {
   factory FollowReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory FollowReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FollowReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FollowReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..hasRequiredFields = false
   ;
 
@@ -577,7 +577,7 @@ class FollowRes extends $pb.GeneratedMessage {
     2 : FollowRes_Step.unadopted,
     0 : FollowRes_Step.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FollowRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FollowRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..oo(0, [1, 2])
     ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'adopted', subBuilder: $4.BlockId.create)
     ..aOM<$4.BlockId>(2, _omitFieldNames ? '' : 'unadopted', subBuilder: $4.BlockId.create)
@@ -645,7 +645,7 @@ class GetBlockIdAtHeightReq extends $pb.GeneratedMessage {
   factory GetBlockIdAtHeightReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetBlockIdAtHeightReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockIdAtHeightReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockIdAtHeightReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'height')
     ..hasRequiredFields = false
   ;
@@ -697,7 +697,7 @@ class GetBlockIdAtHeightRes extends $pb.GeneratedMessage {
   factory GetBlockIdAtHeightRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetBlockIdAtHeightRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockIdAtHeightRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetBlockIdAtHeightRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'blockId', protoName: 'blockId', subBuilder: $4.BlockId.create)
     ..hasRequiredFields = false
   ;

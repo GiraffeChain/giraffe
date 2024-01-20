@@ -19,34 +19,34 @@ import 'node_rpc.pb.dart' as $1;
 
 export 'node_rpc.pb.dart';
 
-@$pb.GrpcServiceName('com.blockchain.services.NodeRpc')
+@$pb.GrpcServiceName('blockchain.services.NodeRpc')
 class NodeRpcClient extends $grpc.Client {
   static final _$broadcastTransaction = $grpc.ClientMethod<$1.BroadcastTransactionReq, $1.BroadcastTransactionRes>(
-      '/com.blockchain.services.NodeRpc/BroadcastTransaction',
+      '/blockchain.services.NodeRpc/BroadcastTransaction',
       ($1.BroadcastTransactionReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $1.BroadcastTransactionRes.fromBuffer(value));
   static final _$getBlockHeader = $grpc.ClientMethod<$1.GetBlockHeaderReq, $1.GetBlockHeaderRes>(
-      '/com.blockchain.services.NodeRpc/GetBlockHeader',
+      '/blockchain.services.NodeRpc/GetBlockHeader',
       ($1.GetBlockHeaderReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $1.GetBlockHeaderRes.fromBuffer(value));
   static final _$getBlockBody = $grpc.ClientMethod<$1.GetBlockBodyReq, $1.GetBlockBodyRes>(
-      '/com.blockchain.services.NodeRpc/GetBlockBody',
+      '/blockchain.services.NodeRpc/GetBlockBody',
       ($1.GetBlockBodyReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $1.GetBlockBodyRes.fromBuffer(value));
   static final _$getFullBlock = $grpc.ClientMethod<$1.GetFullBlockReq, $1.GetFullBlockRes>(
-      '/com.blockchain.services.NodeRpc/GetFullBlock',
+      '/blockchain.services.NodeRpc/GetFullBlock',
       ($1.GetFullBlockReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $1.GetFullBlockRes.fromBuffer(value));
   static final _$getTransaction = $grpc.ClientMethod<$1.GetTransactionReq, $1.GetTransactionRes>(
-      '/com.blockchain.services.NodeRpc/GetTransaction',
+      '/blockchain.services.NodeRpc/GetTransaction',
       ($1.GetTransactionReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $1.GetTransactionRes.fromBuffer(value));
   static final _$getBlockIdAtHeight = $grpc.ClientMethod<$1.GetBlockIdAtHeightReq, $1.GetBlockIdAtHeightRes>(
-      '/com.blockchain.services.NodeRpc/GetBlockIdAtHeight',
+      '/blockchain.services.NodeRpc/GetBlockIdAtHeight',
       ($1.GetBlockIdAtHeightReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $1.GetBlockIdAtHeightRes.fromBuffer(value));
   static final _$follow = $grpc.ClientMethod<$1.FollowReq, $1.FollowRes>(
-      '/com.blockchain.services.NodeRpc/Follow',
+      '/blockchain.services.NodeRpc/Follow',
       ($1.FollowReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $1.FollowRes.fromBuffer(value));
 
@@ -85,9 +85,9 @@ class NodeRpcClient extends $grpc.Client {
   }
 }
 
-@$pb.GrpcServiceName('com.blockchain.services.NodeRpc')
+@$pb.GrpcServiceName('blockchain.services.NodeRpc')
 abstract class NodeRpcServiceBase extends $grpc.Service {
-  $core.String get $name => 'com.blockchain.services.NodeRpc';
+  $core.String get $name => 'blockchain.services.NodeRpc';
 
   NodeRpcServiceBase() {
     $addMethod($grpc.ServiceMethod<$1.BroadcastTransactionReq, $1.BroadcastTransactionRes>(

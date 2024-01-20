@@ -11,7 +11,7 @@ class UnsignedBlockHeader {
   final EligibilityCertificate eligibilityCertificate;
   final PartialOperationalCertificate partialOperationalCertificate;
   final List<int> metadata;
-  final StakingAddress address;
+  final TransactionOutputReference account;
 
   UnsignedBlockHeader(
       this.parentHeaderId,
@@ -23,7 +23,7 @@ class UnsignedBlockHeader {
       this.eligibilityCertificate,
       this.partialOperationalCertificate,
       this.metadata,
-      this.address);
+      this.account);
 }
 
 class PartialOperationalCertificate {

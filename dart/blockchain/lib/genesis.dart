@@ -26,7 +26,8 @@ class Genesis {
     ..childVK = _emptyBytes(32)
     ..childSignature = _emptyBytes(64);
 
-  static final stakingAddress = StakingAddress(value: _emptyBytes(32));
+  static final stakingAccount = TransactionOutputReference(
+      transactionId: TransactionId(value: _emptyBytes(32)));
 
   static Eta eta(List<int> prefix, Iterable<TransactionId> transactionIds) {
     final bytes = <int>[]..addAll(prefix);
@@ -118,7 +119,7 @@ class GenesisConfig {
       ..eligibilityCertificate =
           Genesis.eligibilityCertificate(Genesis.eta(etaPrefix, transactionIds))
       ..operationalCertificate = Genesis.operationalCertificate
-      ..address = Genesis.stakingAddress;
+      ..account = Genesis.stakingAccount;
 
     header.settings.addAll(settings);
 

@@ -110,6 +110,7 @@ class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupp
       )
       _ <- core.consensus.headerValidation
         .validate(header)
+        .leftSemiflatTap(errors => logger.warn(show"Block id=${header.id} contains errors=$errors"))
         .leftMap(errors => new IllegalArgumentException(errors.head))
         .rethrowT
       _ <- core.blockIdTree.associate(header.id, header.parentHeaderId)
@@ -120,6 +121,7 @@ class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupp
           request.block.body,
           TransactionValidationContext(header.id, header.height, header.slot)
         )
+        .leftSemiflatTap(errors => logger.warn(show"Block id=${header.id} contains errors=$errors"))
         .leftMap(errors => new IllegalArgumentException(errors.head))
         .rethrowT
       _ <- MonadThrow[F].raiseWhen(header.parentHeaderId != canonicalHeadId)(

@@ -187,7 +187,7 @@ class BlockProducerImpl extends BlockProducer {
                 nextHit.cert,
                 partialOperationalCertificate,
                 [],
-                staker.address,
+                staker.account,
               );
 
   FullBlockBody insertReward(FullBlockBody base, BlockId parentId) {

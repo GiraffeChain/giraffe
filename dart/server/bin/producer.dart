@@ -20,7 +20,7 @@ import 'package:logging/logging.dart';
 final BlockchainConfig config = BlockchainConfig(
     staking: BlockchainStaking(
         stakingDir:
-            "${Directory.systemTemp.path}/blockchain-genesis/{genesisId}/stakers/1"));
+            "${Directory.systemTemp.path}/blockchain-genesis/{genesisId}/stakers/0"));
 Future<void> main() async {
   initRootLogger();
 
@@ -30,7 +30,7 @@ Future<void> main() async {
       .map((p) => p.isolate)
       .tap(setComputeFunction)
       .flatMap((isolate) =>
-          RpcClient.makeChannel(port: 2034).evalFlatMap((channel) async {
+          RpcClient.makeChannel(port: 2024).evalFlatMap((channel) async {
             final rpcClient = NodeRpcClient(channel);
             final viewer = BlockchainViewFromRpc(nodeClient: rpcClient);
             final canonicalHeadId = await viewer.canonicalHeadId;

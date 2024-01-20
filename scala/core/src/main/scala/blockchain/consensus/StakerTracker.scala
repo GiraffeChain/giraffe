@@ -20,12 +20,10 @@ trait StakerTracker[F[_]]:
   def stakerRelativeStake(
       currentBlockId: BlockId,
       slot: Long,
-      address: TransactionOutputReference
+      account: TransactionOutputReference
   )(using Monad[F]): F[Option[Ratio]] =
-    OptionT(staker(currentBlockId, slot, address))
-      .semiflatMap(staker =>
-        totalActiveStake(currentBlockId, slot).map(Ratio(staker.quantity, _))
-      )
+    OptionT(staker(currentBlockId, slot, account))
+      .semiflatMap(staker => totalActiveStake(currentBlockId, slot).map(Ratio(staker.quantity, _)))
       .value
 
 object StakerTracker:
@@ -168,14 +166,13 @@ object StakerData:
                 .tupleLeft(outputReference)
             )
         )
-        .foldF(state.modifyTotalInactiveStake(_ + output.value.quantity))(
-          (account, staker) =>
-            state.modifyTotalActiveStake(_ + output.value.quantity) *>
-              state.stakers.put(
-                account,
-                staker
-                  .copy(quantity = staker.quantity + output.value.quantity)
-              )
+        .foldF(state.modifyTotalInactiveStake(_ + output.value.quantity))((account, staker) =>
+          state.modifyTotalActiveStake(_ + output.value.quantity) *>
+            state.stakers.put(
+              account,
+              staker
+                .copy(quantity = staker.quantity + output.value.quantity)
+            )
         )
 
   private class UnapplyBlock[F[_]: MonadThrow](
@@ -195,12 +192,11 @@ object StakerData:
       for {
         transaction <- fetchTransaction(transactionId)
         _ <- transaction.inputs.reverse.traverseTap(unapplyInput(state))
-        _ <- transaction.outputs.zipWithIndex.reverse.traverseTap(
-          (output, index) =>
-            unapplyOutput(state)(
-              TransactionOutputReference(transactionId, index),
-              output
-            )
+        _ <- transaction.outputs.zipWithIndex.reverse.traverseTap((output, index) =>
+          unapplyOutput(state)(
+            TransactionOutputReference(transactionId, index),
+            output
+          )
         )
       } yield state
 
@@ -258,12 +254,8 @@ object StakerData:
             .semiflatMap(account =>
               state.stakers
                 .getOrRaise(account)
-                .map(staker =>
-                  staker.copy(quantity = staker.quantity + input.value.quantity)
-                )
-                .flatMap(newStaker =>
-                  state.stakers.put(input.reference, newStaker)
-                ) *>
+                .map(staker => staker.copy(quantity = staker.quantity + input.value.quantity))
+                .flatMap(newStaker => state.stakers.put(input.reference, newStaker)) *>
                 state.modifyTotalActiveStake(_ + input.value.quantity)
             )
             .void

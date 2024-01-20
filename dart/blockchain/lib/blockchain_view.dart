@@ -54,7 +54,8 @@ abstract class BlockchainView {
 
   Future<ProtocolSettings> get protocolSettings async {
     final genesis = await genesisBlock;
-    return ProtocolSettings.fromMap(genesis.header.settings);
+    return ProtocolSettings.defaultSettings
+        .mergeFromMap(genesis.header.settings);
   }
 
   Stream<FullBlock> get adoptedBlocks =>

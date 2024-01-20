@@ -1,15 +1,11 @@
 package blockchain
 
-import blockchain.consensus.Eta
 import blockchain.codecs.given
+import blockchain.consensus.Eta
 import blockchain.crypto.Blake2b256
-import blockchain.ledger.HeaderToBodyValidation
-import blockchain.models.*
 import blockchain.ledger.*
-import cats.Parallel
-import cats.data.{EitherT, ReaderT}
+import blockchain.models.*
 import cats.effect.Sync
-import cats.implicits.*
 import com.google.common.primitives.Longs
 import com.google.protobuf.ByteString
 

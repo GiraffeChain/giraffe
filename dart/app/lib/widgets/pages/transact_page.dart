@@ -266,7 +266,7 @@ class TransactViewState extends State<TransactView> {
                 columns: header,
                 rows: widget.wallet.spendableOutputs.entries
                     // Hide registrations for now
-                    .where((e) => !e.value.value.hasRegistration())
+                    .where((e) => !e.value.value.hasAccountRegistration())
                     .map(_inputEntryRow)
                     .toList(),
               ));

@@ -19,26 +19,26 @@ import 'staker_support_rpc.pb.dart' as $0;
 
 export 'staker_support_rpc.pb.dart';
 
-@$pb.GrpcServiceName('com.blockchain.services.StakerSupportRpc')
+@$pb.GrpcServiceName('blockchain.services.StakerSupportRpc')
 class StakerSupportRpcClient extends $grpc.Client {
   static final _$broadcastBlock = $grpc.ClientMethod<$0.BroadcastBlockReq, $0.BroadcastBlockRes>(
-      '/com.blockchain.services.StakerSupportRpc/BroadcastBlock',
+      '/blockchain.services.StakerSupportRpc/BroadcastBlock',
       ($0.BroadcastBlockReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.BroadcastBlockRes.fromBuffer(value));
   static final _$getStaker = $grpc.ClientMethod<$0.GetStakerReq, $0.GetStakerRes>(
-      '/com.blockchain.services.StakerSupportRpc/GetStaker',
+      '/blockchain.services.StakerSupportRpc/GetStaker',
       ($0.GetStakerReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.GetStakerRes.fromBuffer(value));
   static final _$getTotalActivestake = $grpc.ClientMethod<$0.GetTotalActiveStakeReq, $0.GetTotalActiveStakeRes>(
-      '/com.blockchain.services.StakerSupportRpc/GetTotalActivestake',
+      '/blockchain.services.StakerSupportRpc/GetTotalActivestake',
       ($0.GetTotalActiveStakeReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.GetTotalActiveStakeRes.fromBuffer(value));
   static final _$calculateEta = $grpc.ClientMethod<$0.CalculateEtaReq, $0.CalculateEtaRes>(
-      '/com.blockchain.services.StakerSupportRpc/CalculateEta',
+      '/blockchain.services.StakerSupportRpc/CalculateEta',
       ($0.CalculateEtaReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.CalculateEtaRes.fromBuffer(value));
   static final _$packBlock = $grpc.ClientMethod<$0.PackBlockReq, $0.PackBlockRes>(
-      '/com.blockchain.services.StakerSupportRpc/PackBlock',
+      '/blockchain.services.StakerSupportRpc/PackBlock',
       ($0.PackBlockReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.PackBlockRes.fromBuffer(value));
 
@@ -69,9 +69,9 @@ class StakerSupportRpcClient extends $grpc.Client {
   }
 }
 
-@$pb.GrpcServiceName('com.blockchain.services.StakerSupportRpc')
+@$pb.GrpcServiceName('blockchain.services.StakerSupportRpc')
 abstract class StakerSupportRpcServiceBase extends $grpc.Service {
-  $core.String get $name => 'com.blockchain.services.StakerSupportRpc';
+  $core.String get $name => 'blockchain.services.StakerSupportRpc';
 
   StakerSupportRpcServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.BroadcastBlockReq, $0.BroadcastBlockRes>(

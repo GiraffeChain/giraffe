@@ -20,7 +20,8 @@ object MultiplexedFraming:
             )
           )
           .flatMap((port, length) =>
-            OptionT(socket.read(length)).tupleLeft(port)
+            if (length == 0) OptionT.some[F]((port, Chunk.empty[Byte]))
+            else OptionT(socket.read(length)).tupleLeft(port)
           )
           .value
       )
@@ -31,4 +32,4 @@ object MultiplexedFraming:
       socket.write(
         Chunk.array(Ints.toByteArray(port)) ++
           Chunk.array(Ints.toByteArray(data.size))
-      ) >> socket.write(data)
+      ) >> Monad[F].whenA(data.nonEmpty)(socket.write(data))

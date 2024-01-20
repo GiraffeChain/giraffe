@@ -17,14 +17,14 @@ import 'dart:typed_data' as $typed_data;
 const BroadcastTransactionReq$json = {
   '1': 'BroadcastTransactionReq',
   '2': [
-    {'1': 'transaction', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Transaction', '10': 'transaction'},
+    {'1': 'transaction', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.Transaction', '8': {}, '10': 'transaction'},
   ],
 };
 
 /// Descriptor for `BroadcastTransactionReq`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List broadcastTransactionReqDescriptor = $convert.base64Decode(
-    'ChdCcm9hZGNhc3RUcmFuc2FjdGlvblJlcRJECgt0cmFuc2FjdGlvbhgBIAEoCzIiLmNvbS5ibG'
-    '9ja2NoYWluLm1vZGVscy5UcmFuc2FjdGlvblILdHJhbnNhY3Rpb24=');
+    'ChdCcm9hZGNhc3RUcmFuc2FjdGlvblJlcRJKCgt0cmFuc2FjdGlvbhgBIAEoCzIeLmJsb2NrY2'
+    'hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uQgj6QgWKAQIQAVILdHJhbnNhY3Rpb24=');
 
 @$core.Deprecated('Use broadcastTransactionResDescriptor instead')
 const BroadcastTransactionRes$json = {
@@ -39,105 +39,105 @@ final $typed_data.Uint8List broadcastTransactionResDescriptor = $convert.base64D
 const GetBlockHeaderReq$json = {
   '1': 'GetBlockHeaderReq',
   '2': [
-    {'1': 'blockId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'blockId'},
+    {'1': 'blockId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '8': {}, '10': 'blockId'},
   ],
 };
 
 /// Descriptor for `GetBlockHeaderReq`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getBlockHeaderReqDescriptor = $convert.base64Decode(
-    'ChFHZXRCbG9ja0hlYWRlclJlcRI4CgdibG9ja0lkGAEgASgLMh4uY29tLmJsb2NrY2hhaW4ubW'
-    '9kZWxzLkJsb2NrSWRSB2Jsb2NrSWQ=');
+    'ChFHZXRCbG9ja0hlYWRlclJlcRI+CgdibG9ja0lkGAEgASgLMhouYmxvY2tjaGFpbi5tb2RlbH'
+    'MuQmxvY2tJZEII+kIFigECEAFSB2Jsb2NrSWQ=');
 
 @$core.Deprecated('Use getBlockHeaderResDescriptor instead')
 const GetBlockHeaderRes$json = {
   '1': 'GetBlockHeaderRes',
   '2': [
-    {'1': 'header', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockHeader', '10': 'header'},
+    {'1': 'header', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockHeader', '10': 'header'},
   ],
 };
 
 /// Descriptor for `GetBlockHeaderRes`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getBlockHeaderResDescriptor = $convert.base64Decode(
-    'ChFHZXRCbG9ja0hlYWRlclJlcxI6CgZoZWFkZXIYASABKAsyIi5jb20uYmxvY2tjaGFpbi5tb2'
-    'RlbHMuQmxvY2tIZWFkZXJSBmhlYWRlcg==');
+    'ChFHZXRCbG9ja0hlYWRlclJlcxI2CgZoZWFkZXIYASABKAsyHi5ibG9ja2NoYWluLm1vZGVscy'
+    '5CbG9ja0hlYWRlclIGaGVhZGVy');
 
 @$core.Deprecated('Use getBlockBodyReqDescriptor instead')
 const GetBlockBodyReq$json = {
   '1': 'GetBlockBodyReq',
   '2': [
-    {'1': 'blockId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'blockId'},
+    {'1': 'blockId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '8': {}, '10': 'blockId'},
   ],
 };
 
 /// Descriptor for `GetBlockBodyReq`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getBlockBodyReqDescriptor = $convert.base64Decode(
-    'Cg9HZXRCbG9ja0JvZHlSZXESOAoHYmxvY2tJZBgBIAEoCzIeLmNvbS5ibG9ja2NoYWluLm1vZG'
-    'Vscy5CbG9ja0lkUgdibG9ja0lk');
+    'Cg9HZXRCbG9ja0JvZHlSZXESPgoHYmxvY2tJZBgBIAEoCzIaLmJsb2NrY2hhaW4ubW9kZWxzLk'
+    'Jsb2NrSWRCCPpCBYoBAhABUgdibG9ja0lk');
 
 @$core.Deprecated('Use getBlockBodyResDescriptor instead')
 const GetBlockBodyRes$json = {
   '1': 'GetBlockBodyRes',
   '2': [
-    {'1': 'body', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockBody', '10': 'body'},
+    {'1': 'body', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockBody', '10': 'body'},
   ],
 };
 
 /// Descriptor for `GetBlockBodyRes`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getBlockBodyResDescriptor = $convert.base64Decode(
-    'Cg9HZXRCbG9ja0JvZHlSZXMSNAoEYm9keRgBIAEoCzIgLmNvbS5ibG9ja2NoYWluLm1vZGVscy'
-    '5CbG9ja0JvZHlSBGJvZHk=');
+    'Cg9HZXRCbG9ja0JvZHlSZXMSMAoEYm9keRgBIAEoCzIcLmJsb2NrY2hhaW4ubW9kZWxzLkJsb2'
+    'NrQm9keVIEYm9keQ==');
 
 @$core.Deprecated('Use getFullBlockReqDescriptor instead')
 const GetFullBlockReq$json = {
   '1': 'GetFullBlockReq',
   '2': [
-    {'1': 'blockId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'blockId'},
+    {'1': 'blockId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '8': {}, '10': 'blockId'},
   ],
 };
 
 /// Descriptor for `GetFullBlockReq`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getFullBlockReqDescriptor = $convert.base64Decode(
-    'Cg9HZXRGdWxsQmxvY2tSZXESOAoHYmxvY2tJZBgBIAEoCzIeLmNvbS5ibG9ja2NoYWluLm1vZG'
-    'Vscy5CbG9ja0lkUgdibG9ja0lk');
+    'Cg9HZXRGdWxsQmxvY2tSZXESPgoHYmxvY2tJZBgBIAEoCzIaLmJsb2NrY2hhaW4ubW9kZWxzLk'
+    'Jsb2NrSWRCCPpCBYoBAhABUgdibG9ja0lk');
 
 @$core.Deprecated('Use getFullBlockResDescriptor instead')
 const GetFullBlockRes$json = {
   '1': 'GetFullBlockRes',
   '2': [
-    {'1': 'fullBlock', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.FullBlock', '10': 'fullBlock'},
+    {'1': 'fullBlock', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.FullBlock', '10': 'fullBlock'},
   ],
 };
 
 /// Descriptor for `GetFullBlockRes`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getFullBlockResDescriptor = $convert.base64Decode(
-    'Cg9HZXRGdWxsQmxvY2tSZXMSPgoJZnVsbEJsb2NrGAEgASgLMiAuY29tLmJsb2NrY2hhaW4ubW'
-    '9kZWxzLkZ1bGxCbG9ja1IJZnVsbEJsb2Nr');
+    'Cg9HZXRGdWxsQmxvY2tSZXMSOgoJZnVsbEJsb2NrGAEgASgLMhwuYmxvY2tjaGFpbi5tb2RlbH'
+    'MuRnVsbEJsb2NrUglmdWxsQmxvY2s=');
 
 @$core.Deprecated('Use getTransactionReqDescriptor instead')
 const GetTransactionReq$json = {
   '1': 'GetTransactionReq',
   '2': [
-    {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.TransactionId', '10': 'transactionId'},
+    {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionId', '8': {}, '10': 'transactionId'},
   ],
 };
 
 /// Descriptor for `GetTransactionReq`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getTransactionReqDescriptor = $convert.base64Decode(
-    'ChFHZXRUcmFuc2FjdGlvblJlcRJKCg10cmFuc2FjdGlvbklkGAEgASgLMiQuY29tLmJsb2NrY2'
-    'hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uSWRSDXRyYW5zYWN0aW9uSWQ=');
+    'ChFHZXRUcmFuc2FjdGlvblJlcRJQCg10cmFuc2FjdGlvbklkGAEgASgLMiAuYmxvY2tjaGFpbi'
+    '5tb2RlbHMuVHJhbnNhY3Rpb25JZEII+kIFigECEAFSDXRyYW5zYWN0aW9uSWQ=');
 
 @$core.Deprecated('Use getTransactionResDescriptor instead')
 const GetTransactionRes$json = {
   '1': 'GetTransactionRes',
   '2': [
-    {'1': 'transaction', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.Transaction', '10': 'transaction'},
+    {'1': 'transaction', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.Transaction', '10': 'transaction'},
   ],
 };
 
 /// Descriptor for `GetTransactionRes`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getTransactionResDescriptor = $convert.base64Decode(
-    'ChFHZXRUcmFuc2FjdGlvblJlcxJECgt0cmFuc2FjdGlvbhgBIAEoCzIiLmNvbS5ibG9ja2NoYW'
-    'luLm1vZGVscy5UcmFuc2FjdGlvblILdHJhbnNhY3Rpb24=');
+    'ChFHZXRUcmFuc2FjdGlvblJlcxJACgt0cmFuc2FjdGlvbhgBIAEoCzIeLmJsb2NrY2hhaW4ubW'
+    '9kZWxzLlRyYW5zYWN0aW9uUgt0cmFuc2FjdGlvbg==');
 
 @$core.Deprecated('Use followReqDescriptor instead')
 const FollowReq$json = {
@@ -152,8 +152,8 @@ final $typed_data.Uint8List followReqDescriptor = $convert.base64Decode(
 const FollowRes$json = {
   '1': 'FollowRes',
   '2': [
-    {'1': 'adopted', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '9': 0, '10': 'adopted'},
-    {'1': 'unadopted', '3': 2, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '9': 0, '10': 'unadopted'},
+    {'1': 'adopted', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '9': 0, '10': 'adopted'},
+    {'1': 'unadopted', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '9': 0, '10': 'unadopted'},
   ],
   '8': [
     {'1': 'step'},
@@ -162,9 +162,9 @@ const FollowRes$json = {
 
 /// Descriptor for `FollowRes`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List followResDescriptor = $convert.base64Decode(
-    'CglGb2xsb3dSZXMSOgoHYWRvcHRlZBgBIAEoCzIeLmNvbS5ibG9ja2NoYWluLm1vZGVscy5CbG'
-    '9ja0lkSABSB2Fkb3B0ZWQSPgoJdW5hZG9wdGVkGAIgASgLMh4uY29tLmJsb2NrY2hhaW4ubW9k'
-    'ZWxzLkJsb2NrSWRIAFIJdW5hZG9wdGVkQgYKBHN0ZXA=');
+    'CglGb2xsb3dSZXMSNgoHYWRvcHRlZBgBIAEoCzIaLmJsb2NrY2hhaW4ubW9kZWxzLkJsb2NrSW'
+    'RIAFIHYWRvcHRlZBI6Cgl1bmFkb3B0ZWQYAiABKAsyGi5ibG9ja2NoYWluLm1vZGVscy5CbG9j'
+    'a0lkSABSCXVuYWRvcHRlZEIGCgRzdGVw');
 
 @$core.Deprecated('Use getBlockIdAtHeightReqDescriptor instead')
 const GetBlockIdAtHeightReq$json = {
@@ -182,12 +182,12 @@ final $typed_data.Uint8List getBlockIdAtHeightReqDescriptor = $convert.base64Dec
 const GetBlockIdAtHeightRes$json = {
   '1': 'GetBlockIdAtHeightRes',
   '2': [
-    {'1': 'blockId', '3': 1, '4': 1, '5': 11, '6': '.com.blockchain.models.BlockId', '10': 'blockId'},
+    {'1': 'blockId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.BlockId', '10': 'blockId'},
   ],
 };
 
 /// Descriptor for `GetBlockIdAtHeightRes`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getBlockIdAtHeightResDescriptor = $convert.base64Decode(
-    'ChVHZXRCbG9ja0lkQXRIZWlnaHRSZXMSOAoHYmxvY2tJZBgBIAEoCzIeLmNvbS5ibG9ja2NoYW'
-    'luLm1vZGVscy5CbG9ja0lkUgdibG9ja0lk');
+    'ChVHZXRCbG9ja0lkQXRIZWlnaHRSZXMSNAoHYmxvY2tJZBgBIAEoCzIaLmJsb2NrY2hhaW4ubW'
+    '9kZWxzLkJsb2NrSWRSB2Jsb2NrSWQ=');
 

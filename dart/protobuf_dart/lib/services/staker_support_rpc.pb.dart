@@ -30,7 +30,7 @@ class BroadcastBlockReq extends $pb.GeneratedMessage {
   factory BroadcastBlockReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BroadcastBlockReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.Block>(1, _omitFieldNames ? '' : 'block', subBuilder: $4.Block.create)
     ..hasRequiredFields = false
   ;
@@ -74,7 +74,7 @@ class BroadcastBlockRes extends $pb.GeneratedMessage {
   factory BroadcastBlockRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BroadcastBlockRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastBlockRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastBlockRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..hasRequiredFields = false
   ;
 
@@ -102,13 +102,13 @@ class BroadcastBlockRes extends $pb.GeneratedMessage {
 
 class GetStakerReq extends $pb.GeneratedMessage {
   factory GetStakerReq({
-    $4.StakingAddress? stakingAddress,
+    $4.TransactionOutputReference? stakingAccount,
     $4.BlockId? parentBlockId,
     $fixnum.Int64? slot,
   }) {
     final $result = create();
-    if (stakingAddress != null) {
-      $result.stakingAddress = stakingAddress;
+    if (stakingAccount != null) {
+      $result.stakingAccount = stakingAccount;
     }
     if (parentBlockId != null) {
       $result.parentBlockId = parentBlockId;
@@ -122,8 +122,8 @@ class GetStakerReq extends $pb.GeneratedMessage {
   factory GetStakerReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetStakerReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetStakerReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
-    ..aOM<$4.StakingAddress>(1, _omitFieldNames ? '' : 'stakingAddress', protoName: 'stakingAddress', subBuilder: $4.StakingAddress.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetStakerReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
+    ..aOM<$4.TransactionOutputReference>(1, _omitFieldNames ? '' : 'stakingAccount', protoName: 'stakingAccount', subBuilder: $4.TransactionOutputReference.create)
     ..aOM<$4.BlockId>(2, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $4.BlockId.create)
     ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false
@@ -151,15 +151,15 @@ class GetStakerReq extends $pb.GeneratedMessage {
   static GetStakerReq? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $4.StakingAddress get stakingAddress => $_getN(0);
+  $4.TransactionOutputReference get stakingAccount => $_getN(0);
   @$pb.TagNumber(1)
-  set stakingAddress($4.StakingAddress v) { setField(1, v); }
+  set stakingAccount($4.TransactionOutputReference v) { setField(1, v); }
   @$pb.TagNumber(1)
-  $core.bool hasStakingAddress() => $_has(0);
+  $core.bool hasStakingAccount() => $_has(0);
   @$pb.TagNumber(1)
-  void clearStakingAddress() => clearField(1);
+  void clearStakingAccount() => clearField(1);
   @$pb.TagNumber(1)
-  $4.StakingAddress ensureStakingAddress() => $_ensure(0);
+  $4.TransactionOutputReference ensureStakingAccount() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $4.BlockId get parentBlockId => $_getN(1);
@@ -196,7 +196,7 @@ class GetStakerRes extends $pb.GeneratedMessage {
   factory GetStakerRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetStakerRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetStakerRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetStakerRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.ActiveStaker>(1, _omitFieldNames ? '' : 'staker', subBuilder: $4.ActiveStaker.create)
     ..hasRequiredFields = false
   ;
@@ -252,7 +252,7 @@ class GetTotalActiveStakeReq extends $pb.GeneratedMessage {
   factory GetTotalActiveStakeReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetTotalActiveStakeReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTotalActiveStakeReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTotalActiveStakeReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $4.BlockId.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false
@@ -314,7 +314,7 @@ class GetTotalActiveStakeRes extends $pb.GeneratedMessage {
   factory GetTotalActiveStakeRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetTotalActiveStakeRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTotalActiveStakeRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTotalActiveStakeRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'totalActiveStake', protoName: 'totalActiveStake')
     ..hasRequiredFields = false
   ;
@@ -368,7 +368,7 @@ class CalculateEtaReq extends $pb.GeneratedMessage {
   factory CalculateEtaReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory CalculateEtaReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateEtaReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateEtaReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $4.BlockId.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false
@@ -430,7 +430,7 @@ class CalculateEtaRes extends $pb.GeneratedMessage {
   factory CalculateEtaRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory CalculateEtaRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateEtaRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateEtaRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'eta', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -484,7 +484,7 @@ class PackBlockReq extends $pb.GeneratedMessage {
   factory PackBlockReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory PackBlockReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PackBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PackBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockId>(1, _omitFieldNames ? '' : 'parentBlockId', protoName: 'parentBlockId', subBuilder: $4.BlockId.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'untilSlot', $pb.PbFieldType.OU6, protoName: 'untilSlot', defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false
@@ -546,7 +546,7 @@ class PackBlockRes extends $pb.GeneratedMessage {
   factory PackBlockRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory PackBlockRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PackBlockRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.blockchain.services'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PackBlockRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.BlockBody>(1, _omitFieldNames ? '' : 'body', subBuilder: $4.BlockBody.create)
     ..hasRequiredFields = false
   ;
