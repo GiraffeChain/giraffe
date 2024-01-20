@@ -66,7 +66,7 @@ object Consensus:
         .make[F](clock, genesis.header.id, stakerDataBSS, epochBoundariesBSS)
       canonicalHeadId <- eventIdGetterSetters.canonicalHead.get().toResource
       localChain <- LocalChain
-        .make[F](genesis.header.id, blockHeights, canonicalHeadId)
+        .make[F](genesis.header.id, blockHeights, canonicalHeadId, dataStores.headers.getOrRaise)
       chainSelection <- ChainSelection.make[F](
         cryptoResources.blake2b512,
         cryptoResources.ed25519VRF,

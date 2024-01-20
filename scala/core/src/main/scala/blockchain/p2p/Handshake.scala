@@ -3,6 +3,7 @@ package blockchain.p2p
 import blockchain.crypto.CryptoResources
 import cats.implicits.*
 import blockchain.models.PeerId
+import blockchain.utility.*
 import cats.MonadThrow
 import cats.data.OptionT
 import cats.effect.Sync
@@ -18,33 +19,38 @@ object Handshake:
       sk: Array[Byte],
       vk: Array[Byte]
   ): F[PeerId] =
+    run(
+      length =>
+        OptionT(socket.read(length)).getOrRaise(new IllegalArgumentException(s"Expected $length bytes")).map(_.toArray),
+      data => socket.write(Chunk.array(data)),
+      magicBytes,
+      sk,
+      vk
+    )
+
+  def run[F[_]: Sync: Random: CryptoResources](
+      read: Int => F[Array[Byte]],
+      write: Array[Byte] => F[Unit],
+      magicBytes: Array[Byte],
+      sk: Array[Byte],
+      vk: Array[Byte]
+  ): F[PeerId] =
     for {
-      magicBytesChunk <- Chunk.array(magicBytes).pure[F]
-      _ <- socket.write(magicBytesChunk)
-      _ <- OptionT(socket.read(magicBytes.length))
-        .getOrRaise(new IllegalArgumentException("No MagicBytes Provided"))
-        .ensure(new IllegalArgumentException("MagicBytes Mismatch"))(
-          _ == magicBytesChunk
-        )
-      _ <- socket.write(Chunk.array(vk))
-      remoteVk <- OptionT(socket.read(vk.length))
-        .map(_.toArray)
-        .getOrRaise(new IllegalArgumentException("No VK Provided"))
-      localChallenge <- Random[F].nextBytes(32)
-      _ <- socket.write(Chunk.array(localChallenge))
-      remoteChallenge <- OptionT(socket.read(localChallenge.length))
-        .map(_.toArray)
-        .getOrRaise(new IllegalArgumentException("No Challenge Provided"))
-      localSignature <- CryptoResources[F].ed25519.use(ed =>
-        Sync[F].delay(ed.sign(sk, remoteChallenge))
+      ed25519 <- CryptoResources[F].ed25519.pure[F]
+      exchanger = exchange(read, write)
+      _ <- exchanger(magicBytes).ensure(new IllegalArgumentException("MagicBytes Mismatch"))(
+        java.util.Arrays.equals(_, magicBytes)
       )
-      _ <- socket.write(Chunk.array(localSignature))
-      remoteSignature <- OptionT(socket.read(localSignature.length))
-        .getOrRaise(new IllegalArgumentException("No Signature Provided"))
-      _ <- CryptoResources[F].ed25519
-        .use(ed =>
-          Sync[F]
-            .delay(ed.verify(remoteSignature.toArray, localChallenge, remoteVk))
-        )
-        .ensure(new IllegalArgumentException("Invalid Signature"))(identity)
+      remoteVk <- exchanger(vk)
+      localChallenge <- Random[F].nextBytes(32)
+      remoteChallenge <- exchanger(localChallenge)
+      localSignature <- ed25519.useSync(_.sign(sk, remoteChallenge))
+      remoteSignature <- exchanger(localSignature)
+      signatureIsValid <- ed25519.useSync(_.verify(remoteSignature, localChallenge, remoteVk))
+      _ <- Sync[F].raiseWhen(!signatureIsValid)(new IllegalArgumentException("Invalid Signature"))
     } yield PeerId(ByteString.copyFrom(remoteVk))
+
+  private def exchange[F[_]: MonadThrow](read: Int => F[Array[Byte]], write: Array[Byte] => F[Unit])(
+      data: Array[Byte]
+  ): F[Array[Byte]] =
+    write(data) >> read(data.length)

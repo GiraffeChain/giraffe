@@ -49,7 +49,10 @@ lazy val core = project
         Dependencies.bouncycastle ++
         Dependencies.scodec ++
         Dependencies.levelDbJni ++
-        Dependencies.fs2,
+        Dependencies.fs2 ++
+        Dependencies.caseApp ++
+        Dependencies.mUnitTest,
+    libraryDependencies += "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
     scalacOptions ++= Seq(
       "-source:future"
     )
@@ -152,8 +155,8 @@ lazy val protobuf =
         )
     )
 
-/** Instead of embedding scala-specific overrides in the protobuf files, we
-  * copy+modify the contents to embed any Scala-specific code.
+/** Instead of embedding scala-specific overrides in the protobuf files, we copy+modify the contents to embed any
+  * Scala-specific code.
   * @param contents
   *   The contents of the original protobuf file
   * @return

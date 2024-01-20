@@ -2,7 +2,6 @@ package blockchain.crypto
 
 import java.security.MessageDigest
 import java.util
-import scala.util.boundary
 import scala.util.control.Breaks.*
 
 /*
@@ -33,15 +32,20 @@ import scala.util.control.Breaks.*
 Table 1: Parameters of Ed25519
  */
 
-/**
- * AMS 2021: Supporting curve point operations for all EC crypto primitives in eddsa package
- * Directly ported from BouncyCastle implementation of Ed25519 RFC8032 https://tools.ietf.org/html/rfc8032
- * Licensing: https://www.bouncycastle.org/licence.html
- * Copyright (c) 2000 - 2021 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org)
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+/** AMS 2021: Supporting curve point operations for all EC crypto primitives in eddsa package Directly ported from
+  * BouncyCastle implementation of Ed25519 RFC8032 https://tools.ietf.org/html/rfc8032 Licensing:
+  * https://www.bouncycastle.org/licence.html Copyright (c) 2000 - 2021 The Legion of the Bouncy Castle Inc.
+  * (https://www.bouncycastle.org) Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  * software and associated documentation files (the "Software"), to deal in the Software without restriction, including
+  * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+  * the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+  * Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  * THE SOFTWARE.
+  */
 //noinspection ScalaStyle,SameParameterValue
 
 trait EC {
@@ -217,14 +221,16 @@ trait EC {
   }
 
   private[crypto] def gte256(x: Array[Int], y: Array[Int]): Boolean = {
-    boundary:
-      for (i <- 7 to 0 by -1) {
-        val x_i = x(i) ^ Integer.MIN_VALUE
-        val y_i = y(i) ^ Integer.MIN_VALUE
-        if (x_i < y_i) boundary.break(false)
-        if (x_i > y_i) boundary.break(true)
-      }
-    true
+    var i = 7
+    var res: Option[Boolean] = None
+    while (i >= 0 && res.isEmpty) {
+      val x_i = x(i) ^ Integer.MIN_VALUE
+      val y_i = y(i) ^ Integer.MIN_VALUE
+      if (x_i < y_i) res = Some(false)
+      else if (x_i > y_i) res = Some(true)
+      i = i - 1
+    }
+    res.getOrElse(true)
   }
 
   private[crypto] def cmov(len: Int, mask: Int, x: Array[Int], xOff: Int, z: Array[Int], zOff: Int): Unit = {

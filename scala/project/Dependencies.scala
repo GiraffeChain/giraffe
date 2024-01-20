@@ -33,6 +33,17 @@ object Dependencies {
   val levelDbJni = Seq(
     "com.halibobor" % "leveldbjni-all" % "1.23.2"
   )
+
+  val caseApp = Seq(
+    "com.github.alexarchambault" %% "case-app" % "2.1.0-M26"
+  )
+
+  val mUnitTest = Seq(
+    "org.scalameta" %% "munit" % "0.7.29",
+    "org.scalameta" %% "munit-scalacheck" % "0.7.29",
+    "org.typelevel" %% "munit-cats-effect-3" % "1.0.7",
+    "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4"
+  ).map(_ % Test)
 }
 
 object Versions {

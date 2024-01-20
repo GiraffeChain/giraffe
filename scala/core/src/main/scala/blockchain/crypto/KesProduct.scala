@@ -1,8 +1,10 @@
 package blockchain.crypto
 
 import blockchain.crypto.KesBinaryTree.*
+import com.google.common.primitives.Longs
 
 import java.security.SecureRandom
+import scala.collection.mutable
 
 class KesProduct extends ProductComposition {
 
@@ -151,6 +153,16 @@ case class SecretKeyKesProduct(
     r = 31 * r + offset.hashCode()
     r
   }
+
+  def toByteArray: Array[Byte] =
+    mutable.ArrayBuilder
+      .make[Byte]
+      .addAll(superTree.toByteArray)
+      .addAll(subTree.toByteArray)
+      .addAll(nextSubSeed)
+      .addAll(subSignature.toByteArray)
+      .addAll(Longs.toByteArray(offset))
+      .result()
 }
 
 case class SignatureKesProduct(
@@ -254,10 +266,9 @@ private[crypto] class ProductComposition extends KesEd25519Blake2b256 {
     (superScheme, subScheme, rSub._2, kesSigSup)
   }
 
-  /** Erases the secret key at the leaf level of a private key in the sum
-    * composition Used to commit to a child verification key and then convert
-    * the parent private key to a state that can't be used to re-commit to
-    * another child key until the next time step
+  /** Erases the secret key at the leaf level of a private key in the sum composition Used to commit to a child
+    * verification key and then convert the parent private key to a state that can't be used to re-commit to another
+    * child key until the next time step
     * @param input
     *   input key
     * @return
@@ -292,10 +303,9 @@ private[crypto] class ProductComposition extends KesEd25519Blake2b256 {
       case _ => throw new Exception("Evolving Key Configuration Error")
     }
 
-  /** Erases the secret key at the leaf level of a private key in the product
-    * composition Used to commit to a child verification key and then convert
-    * the parent private key to a state that can't be used to re-commit to
-    * another child key until the next time step
+  /** Erases the secret key at the leaf level of a private key in the product composition Used to commit to a child
+    * verification key and then convert the parent private key to a state that can't be used to re-commit to another
+    * child key until the next time step
     * @param key
     *   input key
     * @return

@@ -2,16 +2,18 @@ package blockchain
 
 import blockchain.codecs.{*, given}
 import blockchain.models.*
-import cats.{Monad, MonadThrow, Show}
+import cats.{Applicative, Monad, MonadThrow, Show}
 import cats.data.OptionT
 import cats.effect.{Async, Resource, Sync}
 import cats.effect.implicits.*
 import cats.implicits.*
 import com.github.benmanes.caffeine.cache.Caffeine
-import fs2.io.file.Path
+import fs2.io.file.{Files, Path}
 import org.fusesource.leveldbjni.JniDBFactory
 import org.iq80.leveldb
 import org.iq80.leveldb.Options
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.*
 import scalacache.Entry
 import scalacache.caffeine.CaffeineCache
 import scodec.bits.BitVector
@@ -41,20 +43,58 @@ case class DataStores[F[_]](
     blockHeightIndex: Store[F, Long, BlockId],
     metadata: Store[F, String, Array[Byte]],
     transactionOutputs: Store[F, TransactionOutputReference, TransactionOutput]
-) {
+):
+
   def fetchFullBlock(blockId: BlockId)(using Monad[F]): F[Option[FullBlock]] =
     (
       OptionT(headers.get(blockId)),
-      OptionT(bodies.get(blockId)).flatMap(body =>
-        body.transactionIds.traverse(id => OptionT(transactions.get(id)))
+      OptionT(bodies.get(blockId)).flatMap(body => body.transactionIds.traverse(id => OptionT(transactions.get(id))))
+    ).mapN((header, transactions) => FullBlock(header, FullBlockBody(transactions))).value
+
+  /** Determines if the given DataStores have already been initialized (i.e. node re-launch)
+    */
+  def isInitialized(using Sync[F]): F[Boolean] =
+    Slf4jLogger
+      .fromName[F]("DataStores.Init")
+      .flatMap(logger =>
+        currentEventIds
+          .contains(EventIdGetterSetters.Indices.CanonicalHead)
+          .flatTap(result =>
+            if (result) logger.info("Data stores already initialized")
+            else logger.info("Data stores not initialized")
+          )
       )
-    ).mapN((header, transactions) =>
-      FullBlock(header, FullBlockBody(transactions))
-    ).value
-}
+
+  def init(genesis: FullBlock)(using Sync[F]): F[Unit] =
+    for {
+      given Logger[F] <- Slf4jLogger.fromName[F]("DataStores.Init")
+      _ <- Logger[F].info("Initializing data stores")
+      _ <- currentEventIds.put(EventIdGetterSetters.Indices.CanonicalHead, genesis.header.id)
+      _ <- List(
+        EventIdGetterSetters.Indices.ConsensusData,
+        EventIdGetterSetters.Indices.EpochBoundaries,
+        EventIdGetterSetters.Indices.BlockHeightTree,
+        EventIdGetterSetters.Indices.TransactionOutputState,
+        EventIdGetterSetters.Indices.Mempool,
+        EventIdGetterSetters.Indices.AccountState
+      ).traverseTap(currentEventIds.put(_, genesis.header.parentHeaderId))
+      _ <- headers.put(genesis.header.id, genesis.header)
+      _ <- bodies.put(
+        genesis.header.id,
+        BlockBody(genesis.fullBody.transactions.map(_.id))
+      )
+      _ <- genesis.fullBody.transactions.traverseTap(transaction => transactions.put(transaction.id, transaction))
+      _ <- blockHeightIndex.put(0, genesis.header.parentHeaderId)
+      _ <- activeStake.contains(()).ifM(Applicative[F].unit, activeStake.put((), 0))
+      _ <- inactiveStake.contains(()).ifM(Applicative[F].unit, inactiveStake.put((), 0))
+      _ <- blockIdTree.put(
+        genesis.header.id,
+        (genesis.header.height, genesis.header.parentHeaderId)
+      )
+    } yield ()
 
 object DataStores:
-  def make[F[_]: Async](basePath: Path): Resource[F, DataStores[F]] =
+  def make[F[_]: Async: Files](basePath: Path): Resource[F, DataStores[F]] =
     LevelDbStore
       .makeFactory[F]
       .flatMap(factory =>
@@ -159,7 +199,7 @@ object DataStores:
 
   private def makeCachedStore[F[
       _
-  ]: Sync, Key: ArrayEncodable, Value: ArrayEncodable: ArrayDecodable](
+  ]: Sync: Files, Key: ArrayEncodable, Value: ArrayEncodable: ArrayDecodable](
       factory: JniDBFactory,
       dir: Path,
       cacheSize: Int
@@ -169,9 +209,7 @@ object DataStores:
         dir,
         factory
       )
-      .flatMap(underlying =>
-        CacheStore.make[F, Key, Value](underlying, cacheSize)
-      )
+      .flatMap(underlying => CacheStore.make[F, Key, Value](underlying, cacheSize))
 
 class TransactionOutputStore[F[_]: MonadThrow](
     transactionStore: Store[F, TransactionId, Transaction]
@@ -232,18 +270,9 @@ class EventIdGetterSetters[F[_]: MonadThrow](
   val mempool: EventIdGetterSetters.GetterSetter[F] =
     EventIdGetterSetters.GetterSetter.forByte(store)(Indices.Mempool)
 
-  val epochData: EventIdGetterSetters.GetterSetter[F] =
-    EventIdGetterSetters.GetterSetter.forByte(store)(Indices.EpochData)
-
-  val registrationAccumulator: EventIdGetterSetters.GetterSetter[F] =
-    EventIdGetterSetters.GetterSetter.forByte(store)(
-      Indices.RegistrationAccumulator
-    )
-
 object EventIdGetterSetters:
 
-  /** Captures a getter function and a setter function for a particular "Current
-    * Event ID"
+  /** Captures a getter function and a setter function for a particular "Current Event ID"
     * @param get
     *   a function which retrieves the current value/ID
     * @param set
@@ -269,8 +298,6 @@ object EventIdGetterSetters:
     val TransactionOutputState: Byte = 4
     val AccountState: Byte = 5
     val Mempool: Byte = 6
-    val EpochData: Byte = 7
-    val RegistrationAccumulator: Byte = 8
 
 class LevelDbStore[F[
     _
@@ -315,13 +342,13 @@ object LevelDbStore:
 
   def make[F[
       _
-  ]: Sync, Key: ArrayEncodable, Value: ArrayEncodable: ArrayDecodable](
+  ]: Sync: Files, Key: ArrayEncodable, Value: ArrayEncodable: ArrayDecodable](
       path: Path,
       factory: JniDBFactory
   ): Resource[F, LevelDbStore[F, Key, Value]] =
-    Sync[F]
-      .delay(factory.open(path.toNioPath.toFile, new Options))
-      .toResource
+    (Files[F].createDirectories(path) >>
+      Sync[F]
+        .delay(factory.open(path.toNioPath.toFile, new Options))).toResource
       .map(new LevelDbStore[F, Key, Value](_))
 
 class CacheStore[F[_]: Sync, Key, Value](

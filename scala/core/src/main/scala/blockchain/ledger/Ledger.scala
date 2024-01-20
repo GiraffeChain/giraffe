@@ -68,7 +68,7 @@ object Ledger:
         bodyValidation,
         clock
       )
-      headerToBodyValidation <- HeaderToBodyValidation.make[F]()
+      headerToBodyValidation <- HeaderToBodyValidation.make[F](dataStores.headers.getOrRaise)
     } yield Ledger(
       transactionValidation,
       bodyValidation,

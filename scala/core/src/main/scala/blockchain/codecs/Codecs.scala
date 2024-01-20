@@ -36,12 +36,10 @@ trait Codecs {
         }
 
   given ImmutableBytes[Long] with
-    extension (long: Long)
-      def immutableBytes: Bytes = ByteString.copyFrom(Longs.toByteArray(long))
+    extension (long: Long) def immutableBytes: Bytes = ByteString.copyFrom(Longs.toByteArray(long))
 
   given ImmutableBytes[Int] with
-    extension (int: Int)
-      def immutableBytes: Bytes = ByteString.copyFrom(Ints.toByteArray(int))
+    extension (int: Int) def immutableBytes: Bytes = ByteString.copyFrom(Ints.toByteArray(int))
 
   given ImmutableBytes[Double] with
     extension (double: Double)
@@ -49,8 +47,7 @@ trait Codecs {
         double.toString.immutableBytes // TODO precision
 
   given ImmutableBytes[Boolean] with
-    extension (bool: Boolean)
-      def immutableBytes: Bytes = if (bool) OneBS else ZeroBS
+    extension (bool: Boolean) def immutableBytes: Bytes = if (bool) OneBS else ZeroBS
 
   given ImmutableBytes[String] with
     extension (s: String) def immutableBytes: Bytes = ByteString.copyFromUtf8(s)
@@ -120,15 +117,12 @@ trait Codecs {
           .concat(certificate.childVK)
 
   given ImmutableBytes[VerificationKeyKesProduct] with
-    extension (vk: VerificationKeyKesProduct)
-      def immutableBytes: Bytes = vk.value.concat(vk.step.immutableBytes)
+    extension (vk: VerificationKeyKesProduct) def immutableBytes: Bytes = vk.value.concat(vk.step.immutableBytes)
 
   given [T: ImmutableBytes]: ImmutableBytes[Seq[T]] with
     extension (iterable: Seq[T])
       def immutableBytes: Bytes =
-        iterable.foldLeft(iterable.size.immutableBytes)((res, t) =>
-          res.concat(t.immutableBytes)
-        )
+        iterable.foldLeft(iterable.size.immutableBytes)((res, t) => res.concat(t.immutableBytes))
 
   private val ZeroBS = ByteString.copyFrom(Array[Byte](0))
   private val OneBS = ByteString.copyFrom(Array[Byte](1))
@@ -204,9 +198,11 @@ trait Codecs {
           case _                     => ByteString.empty()
         }
 
+  extension (lock: Lock)
+    def address: LockAddress = LockAddress(ByteString.copyFrom(new Blake2b256().hash(lock.immutableBytes.toByteArray)))
+
   given ImmutableBytes[StakingAddress] with
-    extension (stakingAddress: StakingAddress)
-      def immutableBytes: Bytes = stakingAddress.value
+    extension (stakingAddress: StakingAddress) def immutableBytes: Bytes = stakingAddress.value
 
   given ImmutableBytes[StakingRegistration] with
     extension (registration: StakingRegistration)
@@ -216,8 +212,7 @@ trait Codecs {
         )
 
   given ImmutableBytes[LockAddress] with
-    extension (lockAddress: LockAddress)
-      def immutableBytes: Bytes = lockAddress.value
+    extension (lockAddress: LockAddress) def immutableBytes: Bytes = lockAddress.value
 
   given ImmutableBytes[Transaction] with
     extension (transaction: Transaction)
@@ -252,8 +247,7 @@ trait Codecs {
       )
 
   given ArrayEncodable[TransactionId] with
-    extension (id: TransactionId)
-      def encodeArray: Array[Byte] = id.value.toByteArray
+    extension (id: TransactionId) def encodeArray: Array[Byte] = id.value.toByteArray
 
   given ArrayDecodable[TransactionId] with
     extension (array: Array[Byte])
@@ -281,29 +275,25 @@ trait Codecs {
     extension (v: BlockHeader) def encodeArray: Array[Byte] = v.toByteArray
 
   given ArrayDecodable[BlockHeader] with
-    extension (array: Array[Byte])
-      def decodeFromArray: BlockHeader = BlockHeader.parseFrom(array)
+    extension (array: Array[Byte]) def decodeFromArray: BlockHeader = BlockHeader.parseFrom(array)
 
   given ArrayEncodable[BlockBody] with
     extension (v: BlockBody) def encodeArray: Array[Byte] = v.toByteArray
 
   given ArrayDecodable[BlockBody] with
-    extension (array: Array[Byte])
-      def decodeFromArray: BlockBody = BlockBody.parseFrom(array)
+    extension (array: Array[Byte]) def decodeFromArray: BlockBody = BlockBody.parseFrom(array)
 
   given ArrayEncodable[Transaction] with
     extension (v: Transaction) def encodeArray: Array[Byte] = v.toByteArray
 
   given ArrayDecodable[Transaction] with
-    extension (array: Array[Byte])
-      def decodeFromArray: Transaction = Transaction.parseFrom(array)
+    extension (array: Array[Byte]) def decodeFromArray: Transaction = Transaction.parseFrom(array)
 
   given ArrayEncodable[BitVector] with
     extension (v: BitVector) def encodeArray: Array[Byte] = v.toByteArray
 
   given ArrayDecodable[BitVector] with
-    extension (array: Array[Byte])
-      def decodeFromArray: BitVector = BitVector(array)
+    extension (array: Array[Byte]) def decodeFromArray: BitVector = BitVector(array)
 
   given ArrayEncodable[TransactionOutputReference] with
     extension (v: TransactionOutputReference)
@@ -459,12 +449,10 @@ trait P2PCodecs {
     extension (message: TransactionId) def encodeP2P: Bytes = message.value
 
   given P2PDecodable[TransactionId] with
-    extension (bytes: Bytes)
-      def decodeFromP2P: TransactionId = TransactionId(bytes)
+    extension (bytes: Bytes) def decodeFromP2P: TransactionId = TransactionId(bytes)
 
   given P2PEncodable[PublicP2PState] with
-    extension (message: PublicP2PState)
-      def encodeP2P: Bytes = message.toByteString
+    extension (message: PublicP2PState) def encodeP2P: Bytes = message.toByteString
 
   given P2PDecodable[PublicP2PState] with
     extension (bytes: Bytes)
@@ -483,11 +471,9 @@ trait P2PCodecs {
     extension (b: Bytes) def decodeFromP2P: Unit = ()
 
   given P2PEncodable[Long] with
-    extension (u: Long)
-      def encodeP2P: Bytes = ByteString.copyFrom(Longs.toByteArray(u))
+    extension (u: Long) def encodeP2P: Bytes = ByteString.copyFrom(Longs.toByteArray(u))
   given P2PDecodable[Long] with
-    extension (b: Bytes)
-      def decodeFromP2P: Long = Longs.fromByteArray(b.toByteArray)
+    extension (b: Bytes) def decodeFromP2P: Long = Longs.fromByteArray(b.toByteArray)
 
   given [T: P2PDecodable]: Conversion[Bytes, T] =
     P2PDecodable[T].decodeFromP2P

@@ -8,13 +8,41 @@ import blockchain.models.{BlockBody, SlotId}
 import blockchain.services.*
 import cats.MonadThrow
 import cats.effect.Async
+import cats.effect.kernel.Resource
 import cats.implicits.*
-import io.grpc.Metadata
+import cats.effect.implicits.*
+import io.grpc.{Metadata, Server}
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 
-class BlockchainRpc {}
+import java.net.InetSocketAddress
+import fs2.grpc.syntax.all.*
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-class NodeServiceImpl[F[_]: Async](core: BlockchainCore[F])
-    extends NodeRpcFs2Grpc[F, Metadata]:
+object BlockchainRpc:
+  def serve[F[_]: Async](core: BlockchainCore[F], bindHost: String, bindPort: Int): Resource[F, Server] =
+    Slf4jLogger
+      .fromName("RPC")
+      .toResource
+      .flatTap(logger => Resource.onFinalize(logger.info("RPC Terminated")))
+      .flatMap(logger =>
+        List(
+          NodeRpcFs2Grpc.bindServiceResource[F](new NodeServiceImpl(core)),
+          StakerSupportRpcFs2Grpc.bindServiceResource[F](new StakerSupportImpl(core))
+        ).sequence
+          .flatMap(services =>
+            services
+              .foldLeft(
+                NettyServerBuilder
+                  .forAddress(InetSocketAddress(bindHost, bindPort))
+              )((builder, service) => builder.addService(service))
+              .resource[F]
+          )
+          .evalTap(server => Async[F].delay(server.start()))
+          .evalTap(_ => logger.info(s"Serving RPC on bindHost=$bindHost bindPort=$bindPort"))
+      )
+
+class NodeServiceImpl[F[_]: Async](core: BlockchainCore[F]) extends NodeRpcFs2Grpc[F, Metadata]:
   override def broadcastTransaction(
       request: BroadcastTransactionReq,
       ctx: Metadata
@@ -64,15 +92,22 @@ class NodeServiceImpl[F[_]: Async](core: BlockchainCore[F])
       case TraversalStep.Unapplied(id) => FollowRes().withUnadopted(id)
     }
 
-class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F])
-    extends StakerSupportRpcFs2Grpc[F, Metadata]:
+class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupportRpcFs2Grpc[F, Metadata]:
+  private given logger: Logger[F] = Slf4jLogger.getLoggerFromName("RPC")
+
   override def broadcastBlock(
       request: BroadcastBlockReq,
       ctx: Metadata
   ): F[BroadcastBlockRes] =
     for {
       header <- request.block.header.withEmbeddedId.pure[F]
+      _ <- logger.info(
+        show"Received block id=${header.id} height=${header.height} slot=${header.slot} transactions=${request.block.body.transactionIds}"
+      )
       canonicalHeadId <- core.consensus.localChain.currentHead
+      _ <- MonadThrow[F].raiseWhen(header.parentHeaderId != canonicalHeadId)(
+        new IllegalArgumentException("Block does not extend local tip")
+      )
       _ <- core.consensus.headerValidation
         .validate(header)
         .leftMap(errors => new IllegalArgumentException(errors.head))
@@ -91,6 +126,7 @@ class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F])
         new IllegalArgumentException("Block does not extend local tip")
       )
       _ <- core.consensus.localChain.adopt(header.id)
+      _ <- logger.info(show"Adopted id=${header.id}")
     } yield BroadcastBlockRes()
 
   override def getStaker(

@@ -1,6 +1,6 @@
 package blockchain.consensus
 
-import blockchain.BlockSourcedState
+import blockchain.{BlockSourcedState, FetchHeader, Genesis}
 import blockchain.models.*
 import blockchain.codecs.given
 import blockchain.utility.given
@@ -23,32 +23,30 @@ object LocalChain:
   def make[F[_]: Async](
       genesisId: BlockId,
       blockHeightsBSS: BlockHeights.BSS[F],
-      initialHead: BlockId
+      initialHead: BlockId,
+      fetchHeader: FetchHeader[F]
   ): Resource[F, LocalChain[F]] =
     (
       Resource.make(Topic[F, BlockId])(_.close.void),
       Ref.of(initialHead).toResource
     )
-      .mapN((topic, ref) =>
-        new LocalChainImpl[F](genesisId, blockHeightsBSS, topic, ref)
-      )
+      .mapN((topic, ref) => new LocalChainImpl[F](genesisId, blockHeightsBSS, topic, ref, fetchHeader))
 
 class LocalChainImpl[F[_]: Async](
     genesisId: BlockId,
     blockHeightsBSS: BlockHeights.BSS[F],
     adoptionsTopic: Topic[F, BlockId],
-    headRef: Ref[F, BlockId]
+    headRef: Ref[F, BlockId],
+    fetchHeader: FetchHeader[F]
 ) extends LocalChain[F]:
 
   private given Logger[F] =
-    Slf4jFactory.getLoggerFromName[F]("Blockchain.Consensus.LocalChain")
+    Slf4jFactory.getLoggerFromName[F]("Consensus.LocalChain")
   override def adopt(blockId: BlockId): F[Unit] =
     Async[F].uncancelable(_ =>
       headRef.set(blockId) *>
         EitherT(adoptionsTopic.publish1(blockId))
-          .leftMap(_ =>
-            new IllegalStateException("LocalChain topic unexpectedly closed")
-          )
+          .leftMap(_ => new IllegalStateException("LocalChain topic unexpectedly closed"))
           .rethrowT *>
         Logger[F].info(show"Adopted head block id=$blockId")
     )
@@ -61,4 +59,17 @@ class LocalChainImpl[F[_]: Async](
     adoptionsTopic.subscribe(Int.MaxValue)
 
   override def blockIdAtHeight(height: Long): F[Option[BlockId]] =
-    currentHead.flatMap(blockHeightsBSS.useStateAt(_)(_.apply(height)))
+    if (height == Genesis.Height)
+      genesis.map(_.some)
+    else if (height > Genesis.Height)
+      currentHead.flatMap(blockHeightsBSS.useStateAt(_)(_.apply(height)))
+    else if (height == 0L)
+      currentHead.map(_.some)
+    else
+      currentHead
+        .flatMap(fetchHeader)
+        .map(_.height + height)
+        .flatMap(targetHeight =>
+          if (targetHeight < Genesis.Height) none[BlockId].pure[F]
+          else blockIdAtHeight(targetHeight)
+        )

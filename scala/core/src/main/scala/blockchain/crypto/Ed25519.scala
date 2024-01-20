@@ -21,11 +21,7 @@ class Ed25519:
     )
     signature
 
-  def verify(
-      signature: Array[Byte],
-      message: Array[Byte],
-      verificationKey: Array[Byte]
-  ) =
+  def verify(signature: Array[Byte], message: Array[Byte], verificationKey: Array[Byte]): Boolean =
     require(signature.length == 64)
     require(verificationKey.length == 32)
     impl.verify(signature, 0, verificationKey, 0, message, 0, message.length)
@@ -39,32 +35,22 @@ class Ed25519:
   def generateSecretKey[F[_]](using random: cats.effect.std.Random[F]) =
     random.nextBytes(32)
 
-/** AMS 2021: Ed25519 ported from BouncyCastle Licensing:
-  * https://www.bouncycastle.org/licence.html Copyright (c) 2000 - 2021 The
-  * Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org) Permission
-  * is hereby granted, free of charge, to any person obtaining a copy of this
-  * software and associated documentation files (the "Software"), to deal in the
-  * Software without restriction, including without limitation the rights to
-  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  * copies of the Software, and to permit persons to whom the Software is
-  * furnished to do so, subject to the following conditions: The above copyright
-  * notice and this permission notice shall be included in all copies or
-  * substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS",
-  * WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-  * TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-  * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+/** AMS 2021: Ed25519 ported from BouncyCastle Licensing: https://www.bouncycastle.org/licence.html Copyright (c) 2000 -
+  * 2021 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org) Permission is hereby granted, free of
+  * charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal
+  * in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
+  * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished
+  * to do so, subject to the following conditions: The above copyright notice and this permission notice shall be
+  * included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY
+  * OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+  * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   */
 
 private[crypto] class Ed25519Impl extends EC {
 
-  private[crypto] def dom2(
-      d: SHA512Digest,
-      phflag: Byte,
-      ctx: Array[Byte]
-  ): Unit =
+  private[crypto] def dom2(d: SHA512Digest, phflag: Byte, ctx: Array[Byte]): Unit =
     if (ctx.nonEmpty) {
       d.update(DOM2_PREFIX, 0, DOM2_PREFIX.length)
       d.update(phflag)
@@ -72,18 +58,10 @@ private[crypto] class Ed25519Impl extends EC {
       d.update(ctx, 0, ctx.length)
     }
 
-  private[crypto] def generatePrivateKey(
-      random: SecureRandom,
-      k: Array[Byte]
-  ): Unit =
+  private[crypto] def generatePrivateKey(random: SecureRandom, k: Array[Byte]): Unit =
     random.nextBytes(k)
 
-  private[crypto] def generatePublicKey(
-      sk: Array[Byte],
-      skOff: Int,
-      pk: Array[Byte],
-      pkOff: Int
-  ): Unit = {
+  private[crypto] def generatePublicKey(sk: Array[Byte], skOff: Int, pk: Array[Byte], pkOff: Int): Unit = {
     val h = new Array[Byte](sha512Digest.getDigestSize)
     sha512Digest.update(sk, skOff, SECRET_KEY_SIZE)
     sha512Digest.doFinal(h, 0)
@@ -166,20 +144,7 @@ private[crypto] class Ed25519Impl extends EC {
     sha512Digest.doFinal(h, 0)
     val s = new Array[Byte](SCALAR_BYTES)
     pruneScalar(h, 0, s)
-    implSign(
-      sha512Digest,
-      h,
-      s,
-      pk,
-      pkOff,
-      ctx,
-      phflag,
-      m,
-      mOff,
-      mLen,
-      sig,
-      sigOff
-    )
+    implSign(sha512Digest, h, s, pk, pkOff, ctx, phflag, m, mOff, mLen, sig, sigOff)
   }
 
   private[crypto] def implVerify(
@@ -195,11 +160,7 @@ private[crypto] class Ed25519Impl extends EC {
   ): Boolean = {
     if (!checkContextVar(ctx, phflag)) throw new IllegalArgumentException("ctx")
     val R = util.Arrays.copyOfRange(sig, sigOff, sigOff + POINT_BYTES)
-    val S = util.Arrays.copyOfRange(
-      sig,
-      sigOff + POINT_BYTES,
-      sigOff + SIGNATURE_SIZE
-    )
+    val S = util.Arrays.copyOfRange(sig, sigOff + POINT_BYTES, sigOff + SIGNATURE_SIZE)
     if (!checkPointVar(R)) return false
     if (!checkScalarVar(S)) return false
     val pA = new PointExt
@@ -307,19 +268,7 @@ private[crypto] class Ed25519Impl extends EC {
       sigOff: Int
   ): Unit = {
     val phflag: Byte = 0x01
-    implSign(
-      sk,
-      skOff,
-      pk,
-      pkOff,
-      ctx,
-      phflag,
-      ph,
-      phOff,
-      PREHASH_SIZE,
-      sig,
-      sigOff
-    )
+    implSign(sk, skOff, pk, pkOff, ctx, phflag, ph, phOff, PREHASH_SIZE, sig, sigOff)
   }
 
   private[crypto] def signPrehash(
@@ -331,8 +280,7 @@ private[crypto] class Ed25519Impl extends EC {
       sigOff: Int
   ): Unit = {
     val m = new Array[Byte](PREHASH_SIZE)
-    if (PREHASH_SIZE != ph.doFinal(m, 0))
-      throw new IllegalArgumentException("ph")
+    if (PREHASH_SIZE != ph.doFinal(m, 0)) throw new IllegalArgumentException("ph")
     val phflag: Byte = 0x01
     implSign(sk, skOff, ctx, phflag, m, 0, m.length, sig, sigOff)
   }
@@ -348,8 +296,7 @@ private[crypto] class Ed25519Impl extends EC {
       sigOff: Int
   ): Unit = {
     val m = new Array[Byte](PREHASH_SIZE)
-    if (PREHASH_SIZE != ph.doFinal(m, 0))
-      throw new IllegalArgumentException("ph")
+    if (PREHASH_SIZE != ph.doFinal(m, 0)) throw new IllegalArgumentException("ph")
     val phflag: Byte = 0x01
     implSign(sk, skOff, pk, pkOff, ctx, phflag, m, 0, m.length, sig, sigOff)
   }
@@ -404,8 +351,7 @@ private[crypto] class Ed25519Impl extends EC {
       ph: SHA512Digest
   ): Boolean = {
     val m = new Array[Byte](PREHASH_SIZE)
-    if (PREHASH_SIZE != ph.doFinal(m, 0))
-      throw new IllegalArgumentException("ph")
+    if (PREHASH_SIZE != ph.doFinal(m, 0)) throw new IllegalArgumentException("ph")
     val phflag = 0x01.toByte
     implVerify(sig, sigOff, pk, pkOff, ctx, phflag, m, 0, m.length)
   }

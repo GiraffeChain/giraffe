@@ -1,9 +1,11 @@
 package blockchain.crypto
 
 import blockchain.crypto.KesBinaryTree.*
+import com.google.common.primitives.Longs
 
 import java.security.SecureRandom
 import scala.annotation.tailrec
+import scala.collection.mutable
 
 class KesSum extends SumComposition {
 
@@ -83,6 +85,17 @@ case class SignatureKesSum(
 
       case _ => false
     }
+
+  def toByteArray: Array[Byte] =
+    witness
+      .foldLeft(
+        mutable.ArrayBuilder
+          .make[Byte]
+          .addAll(verificationKey)
+          .addAll(signature)
+          .addAll(Longs.toByteArray(witness.length))
+      )((b, w) => b.addAll(w))
+      .result()
 }
 
 case class VerificationKeyKesSum(value: Array[Byte], step: Int) {
@@ -103,21 +116,17 @@ case class VerificationKeyKesSum(value: Array[Byte], step: Int) {
     }
 }
 
-/** AMS 2021: Implementation of the MMM construction: Malkin, T., Micciancio, D.
-  * and Miner, S. (2002) ‘Efficient generic forward-secure signatures with an
-  * unbounded number of time periods’, Advances in Cryptology Eurocrypt ’02,
-  * LNCS 2332, Springer, pp.400–417.
+/** AMS 2021: Implementation of the MMM construction: Malkin, T., Micciancio, D. and Miner, S. (2002) ‘Efficient generic
+  * forward-secure signatures with an unbounded number of time periods’, Advances in Cryptology Eurocrypt ’02, LNCS
+  * 2332, Springer, pp.400–417.
   *
-  * Provides forward secure signatures that cannot be reforged with a leaked
-  * private key that has been updated.
+  * Provides forward secure signatures that cannot be reforged with a leaked private key that has been updated.
   *
-  * Number of time steps is determined by logl argument upon key generation,
-  * theoretically unbounded for log(l)/log(2) = 7 in the asymmetric product
-  * composition assuming integer time steps.
+  * Number of time steps is determined by logl argument upon key generation, theoretically unbounded for log(l)/log(2) =
+  * 7 in the asymmetric product composition assuming integer time steps.
   *
-  * Sum composition is based on underlying signing routine and the number of
-  * time steps is configurable by specifying a tree height log(l)/log(2),
-  * yielding l time steps.
+  * Sum composition is based on underlying signing routine and the number of time steps is configurable by specifying a
+  * tree height log(l)/log(2), yielding l time steps.
   *
   * Credit to Aaron Schutza
   */
@@ -165,8 +174,8 @@ class SumComposition extends KesEd25519Blake2b256 {
     h
   }
 
-  /** Generates keys in the sum composition, recursive functions construct the
-    * tree in steps and the output is the leftmost branch
+  /** Generates keys in the sum composition, recursive functions construct the tree in steps and the output is the
+    * leftmost branch
     *
     * @param seed
     *   input entropy for binary tree and keypair generation
@@ -348,7 +357,7 @@ class SumComposition extends KesEd25519Blake2b256 {
       case MerkleNode(_, witL, _, Empty(), right) =>
         loop(right, witL.clone() +: W)
       case MerkleNode(_, _, witR, left, _) => loop(left, witR.clone() +: W)
-      case leaf: SigningLeaf => (leaf.vk.clone(), sSign(m, leaf.sk).clone(), W)
+      case leaf: SigningLeaf               => (leaf.vk.clone(), sSign(m, leaf.sk).clone(), W)
       case _ =>
         (
           Array.fill(pkBytes)(0: Byte),
@@ -378,8 +387,7 @@ class SumComposition extends KesEd25519Blake2b256 {
     val (root: Array[Byte], step: Int) = kesVk
 
     // determine if the step corresponds to a right or left decision at each height
-    val leftGoing: Int => Boolean = (level: Int) =>
-      ((step / exp(level)) % 2) == 0
+    val leftGoing: Int => Boolean = (level: Int) => ((step / exp(level)) % 2) == 0
 
     def verifyMerkle(W: Vector[Array[Byte]]): Boolean =
       if (W.isEmpty) emptyWitness

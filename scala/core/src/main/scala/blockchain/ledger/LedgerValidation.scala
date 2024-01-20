@@ -1,8 +1,9 @@
 package blockchain.ledger
 
-import blockchain.{FetchTransaction, ValidationResult}
+import blockchain.{FetchHeader, FetchTransaction, ValidationResult}
 import blockchain.models.*
 import blockchain.codecs.given
+import blockchain.ledger.given
 import cats.data.{EitherT, NonEmptyChain}
 import cats.effect.{Resource, Sync}
 import cats.implicits.*
@@ -49,9 +50,19 @@ trait HeaderToBodyValidation[F[_]] {
 }
 
 object HeaderToBodyValidation:
-  // TODO
-  def make[F[_]: Sync](): Resource[F, HeaderToBodyValidation[F]] =
-    Resource.pure(_ => EitherT.pure[F, NonEmptyChain[String]](()))
+  def make[F[_]: Sync](fetchHeader: FetchHeader[F]): Resource[F, HeaderToBodyValidation[F]] =
+    Resource.pure(
+      new HeaderToBodyValidation[F]:
+        override def validate(block: Block): ValidationResult[F] =
+          EitherT(
+            fetchHeader(block.header.parentHeaderId)
+              .map(_.txRoot)
+              .flatMap(parentTxRoot => Sync[F].delay(block.body.transactionIds.txRoot(parentTxRoot)))
+              .map(expectedTxRoot =>
+                Either.cond(expectedTxRoot == block.header.txRoot, (), NonEmptyChain("TxRoot Mismatch"))
+              )
+          )
+    )
 
 case class TransactionValidationContext(
     parentBlockId: BlockId,
@@ -100,7 +111,7 @@ class TransactionValidationImpl[F[_]: Sync](
   ): Either[NonEmptyChain[String], Unit] =
     (witness.lock.value, witness.key.value) match {
       case (_: Lock.Value.Ed25519, _: Key.Value.Ed25519) => ().asRight
-      case _ => NonEmptyChain("InvalidKeyType").asLeft
+      case _                                             => NonEmptyChain("InvalidKeyType").asLeft
     }
 
   private def dataCheck(transaction: Transaction): ValidationResult[F] =
@@ -172,19 +183,17 @@ class BodyValidationImpl[F[_]: Sync](
       context: TransactionValidationContext
   ): ValidationResult[F] =
     body.transactionIds
-      .foldLeftM(Set.empty[TransactionOutputReference])(
-        (spentUtxos, transactionId) =>
-          EitherT.liftF(fetchTransaction(transactionId)).flatMap {
-            transaction =>
-              val dependencies = transaction.dependencies
-              EitherT.cond[F](
-                spentUtxos.intersect(dependencies).isEmpty,
-                (),
-                NonEmptyChain("UnspendableUtxoReference")
-              ) >>
-                transactionValidation
-                  .validate(transaction, context)
-                  .as(spentUtxos ++ transaction.inputs.map(_.reference))
-          }
+      .foldLeftM(Set.empty[TransactionOutputReference])((spentUtxos, transactionId) =>
+        EitherT.liftF(fetchTransaction(transactionId)).flatMap { transaction =>
+          val dependencies = transaction.dependencies
+          EitherT.cond[F](
+            spentUtxos.intersect(dependencies).isEmpty,
+            (),
+            NonEmptyChain("UnspendableUtxoReference")
+          ) >>
+            transactionValidation
+              .validate(transaction, context)
+              .as(spentUtxos ++ transaction.inputs.map(_.reference))
+        }
       )
       .void

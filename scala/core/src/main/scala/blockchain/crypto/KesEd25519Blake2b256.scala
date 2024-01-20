@@ -1,5 +1,7 @@
 package blockchain.crypto
 
+import scala.collection.mutable
+
 trait KesEd25519Blake2b256 {
 
   type SIG
@@ -24,9 +26,8 @@ trait KesEd25519Blake2b256 {
   protected def exp(n: Int): Int =
     scala.math.pow(2, n).toInt
 
-  /** Pseudorandom number generator used for seed doubling Input must be
-    * non-recoverable from output Each output cannot be used to determine one
-    * from the other
+  /** Pseudorandom number generator used for seed doubling Input must be non-recoverable from output Each output cannot
+    * be used to determine one from the other
     * @param seed
     *   input seed
     * @return
@@ -38,8 +39,7 @@ trait KesEd25519Blake2b256 {
     (r1, r2)
   }
 
-  /** generates a keypair for underlying SIG functionality returns it in a
-    * single byte array
+  /** generates a keypair for underlying SIG functionality returns it in a single byte array
     * @param seed
     *   input entropy for keypair generation
     * @return
@@ -105,9 +105,8 @@ import BinaryTree.Empty
 import BinaryTree.Leaf
 import BinaryTree.Node
 
-/** AMS 2021: Modified for use with MMM construction, ported from:
-  * https://gist.github.com/dholbrook/2967371 All credit and praise goes to:
-  * https://gist.github.com/dholbrook
+/** AMS 2021: Modified for use with MMM construction, ported from: https://gist.github.com/dholbrook/2967371 All credit
+  * and praise goes to: https://gist.github.com/dholbrook
   *
   * D Holbrook
   *
@@ -115,17 +114,14 @@ import BinaryTree.Node
   *
   * (*) Define a binary tree data structure and related fundamental operations.
   *
-  * Use whichever language features are the best fit (this will depend on the
-  * language you have selected).
+  * Use whichever language features are the best fit (this will depend on the language you have selected).
   *
   * The following operations should be supported:
   *
-  * Constructors (bitree data left right) - Should return a binary tree
-  * containing data and the left and right children. Accessors (bitree-data t) -
-  * Should return the data contained by the tree. (bitree-left t) - Should
-  * return the left child of the tree. (bitree-right t) - Should return the
-  * right child of the tree. Predicates (bitree-leaf? t) - Should return true if
-  * the tree is a leaf (has null left and right children), false otherwise
+  * Constructors (bitree data left right) - Should return a binary tree containing data and the left and right children.
+  * Accessors (bitree-data t) - Should return the data contained by the tree. (bitree-left t) - Should return the left
+  * child of the tree. (bitree-right t) - Should return the right child of the tree. Predicates (bitree-leaf? t) -
+  * Should return true if the tree is a leaf (has null left and right children), false otherwise
   */
 
 trait BinaryTree[+A] {
@@ -177,11 +173,9 @@ trait BinaryTree[+A] {
     *
     * F / \ B G / \ \ A D I / \ / C E H
     *
-    * head evaluate accumulator ---- -------- ----------- \| (F) F | () |
-    * F::B::G::() F | (F) | (B,G) B | () | B::A::D::(G) B | (B) \| (A,D,G) A |
-    * (A) | (D,G) D | () | D::C::E::(G) D | (D) | (C,E,G) C | (C) \| (E,G) E |
-    * (E) | (G) G | () | G::I::() G | (G) | (I) I | () | I::H::() I \| (I) | (H)
-    * H | (H) | ()
+    * head evaluate accumulator ---- -------- ----------- \| (F) F | () | F::B::G::() F | (F) | (B,G) B | () |
+    * B::A::D::(G) B | (B) \| (A,D,G) A | (A) | (D,G) D | () | D::C::E::(G) D | (D) | (C,E,G) C | (C) \| (E,G) E | (E) |
+    * (G) G | () | G::I::() G | (G) | (I) I | () | I::H::() I \| (I) | (H) H | (H) | ()
     *
     * result F, B, A, D, C, E, G, I, H
     */
@@ -192,11 +186,9 @@ trait BinaryTree[+A] {
     *
     * F / \ B G / \ \ A D I / \ / C E H
     *
-    * head evaluate accumulator ---- -------- ----------- \| (F) F | () |
-    * B::F::G::() B | () | A::B::D::(F,G) A | (A) | (B,D,F,G) B \| (B) | (D,F,G)
-    * D | () | C::D::E::(F,G) C | (C) | (D,E,F,G) D | (D) | (E,F,G) E | (E) |
-    * (F,G) F | (F) | (G) G | () | G::I::() G | (G) | (I) I | () | H::I::() H |
-    * (H) | H I | (I) | ()
+    * head evaluate accumulator ---- -------- ----------- \| (F) F | () | B::F::G::() B | () | A::B::D::(F,G) A | (A) |
+    * (B,D,F,G) B \| (B) | (D,F,G) D | () | C::D::E::(F,G) C | (C) | (D,E,F,G) D | (D) | (E,F,G) E | (E) | (F,G) F | (F)
+    * \| (G) G | () | G::I::() G | (G) | (I) I | () | H::I::() H | (H) | H I | (I) | ()
     *
     * result A,B,C,D,E,F,G,H,I
     */
@@ -207,11 +199,9 @@ trait BinaryTree[+A] {
     *
     * F / \ B G / \ \ A D I / \ / C E H
     *
-    * head evaluate accumulator ---- -------- ----------- \| (F) F | () |
-    * B::G::F::() B | () | A::D::(B,G,F) A | (A) | (D,B,G,F) D | () |
-    * C::E::D::(B,G,F) C | (C) | (E,D,B,G,F) E | (E) | (D,B,G,F) D | (D) |
-    * (B,G,F) B | (B) | (G,F) G | () | I::G::(F) I | () | H::I::(G,F) H | (H) |
-    * (I,G,F) I | (I) | (G,F) G | (G) | (F) F | (F) | ()
+    * head evaluate accumulator ---- -------- ----------- \| (F) F | () | B::G::F::() B | () | A::D::(B,G,F) A | (A) |
+    * (D,B,G,F) D | () | C::E::D::(B,G,F) C | (C) | (E,D,B,G,F) E | (E) | (D,B,G,F) D | (D) | (B,G,F) B | (B) | (G,F) G
+    * \| () | I::G::(F) I | () | H::I::(G,F) H | (H) | (I,G,F) I | (I) | (G,F) G | (G) | (F) F | (F) | ()
     *
     * result A,C,E,D,B,H,I,G,F
     */
@@ -222,11 +212,10 @@ trait BinaryTree[+A] {
     *
     * F / \ B G / \ \ A D I / \ / C E H
     *
-    * head evaluate accumulator ---- -------- ----------- \| (F) F | () |
-    * (F::()) ::: (B,G) F | (F) | (B,G) B | () | (B::(G)) ::: (A,D) B | (B) |
-    * (G,A,D) G | () | (G::(A,D)) ::: (I) G | (G) | (A,D,I) A | (A) | (D,I) D |
-    * () | (D::(I)) ::: (C,E) D | (D) | (I,C,E) I | () | (I::(C,E)) ::: (H) I |
-    * (I) | (C,E,H) C | (C) | (E,H) E | (E) | (H) H | (H) \| ()
+    * head evaluate accumulator ---- -------- ----------- \| (F) F | () | (F::()) ::: (B,G) F | (F) | (B,G) B | () |
+    * (B::(G)) ::: (A,D) B | (B) | (G,A,D) G | () | (G::(A,D)) ::: (I) G | (G) | (A,D,I) A | (A) | (D,I) D | () |
+    * (D::(I)) ::: (C,E) D | (D) | (I,C,E) I | () | (I::(C,E)) ::: (H) I | (I) | (C,E,H) C | (C) | (E,H) E | (E) | (H) H
+    * \| (H) \| ()
     *
     * result F, B, G, A, D, I, C, E, H
     */
@@ -241,9 +230,8 @@ trait BinaryTree[+A] {
     */
   def size: Int = fold(0)((sum, _) => sum + 1)
 
-  /** P03 (*) Determine the height of a binary tree. Definition: The height of a
-    * tree is the length of the path from the root to the deepest node in the
-    * tree. A (rooted) tree with only one node (the root) has a height of zero.
+  /** P03 (*) Determine the height of a binary tree. Definition: The height of a tree is the length of the path from the
+    * root to the deepest node in the tree. A (rooted) tree with only one node (the root) has a height of zero.
     */
   def height: Int = {
     def loop(t: BinaryTree[A]): Int = t match {
@@ -278,27 +266,24 @@ trait BinaryTree[+A] {
   def toSeqLevelorder: Seq[A] =
     foldLevelorder(List[A]())((l, v) => v :: l).reverse
 
-  /** P05 (**) Find the last element in a binary tree using pre/in/post/level
-    * order traversals. Note: This is S-99 problem P01 converted from lists to
-    * binary trees.
+  /** P05 (**) Find the last element in a binary tree using pre/in/post/level order traversals. Note: This is S-99
+    * problem P01 converted from lists to binary trees.
     */
   def lastPreorder: A = toSeqPreorder.last
   def lastInorder: A = toSeqInorder.last
   def lastPostorder: A = toSeqPostorder.last
   def lastLevelorder: A = toSeqLevelorder.last
 
-  /** P06 (**) Find the last but one element in a binary tree using
-    * pre/in/post/level order traversals. Note: This is S-99 problem P02
-    * converted from lists to binary trees.
+  /** P06 (**) Find the last but one element in a binary tree using pre/in/post/level order traversals. Note: This is
+    * S-99 problem P02 converted from lists to binary trees.
     */
   def penultimatePreorder: A = toSeqPreorder.dropRight(1).last
   def penultimateInorder: A = toSeqInorder.dropRight(1).last
   def penultimatePostorder: A = toSeqPostorder.dropRight(1).last
   def penultimateLevelorder: A = toSeqLevelorder.dropRight(1).last
 
-  /** P07 (**) Find the Nth element in a binary tree using pre/in/post/level
-    * order traversals. By convention, the first element in the tree is element
-    * 0.
+  /** P07 (**) Find the Nth element in a binary tree using pre/in/post/level order traversals. By convention, the first
+    * element in the tree is element 0.
     */
   def nthPreorder(n: Int): A = toSeqPreorder(n)
   def nthInorder(n: Int): A = toSeqInorder(n)
@@ -308,13 +293,13 @@ trait BinaryTree[+A] {
 }
 
 object BinaryTree {
-  case class Node[T](v: T, l: BinaryTree[T], r: BinaryTree[T])
-      extends BinaryTree[T]
+  case class Node[T](v: T, l: BinaryTree[T], r: BinaryTree[T]) extends BinaryTree[T]
   case class Leaf[T](v: T) extends BinaryTree[T]
   case object Empty extends BinaryTree[Nothing]
 }
 
-sealed trait KesBinaryTree
+sealed trait KesBinaryTree:
+  def toByteArray: Array[Byte]
 
 object KesBinaryTree {
   val nodeTypePrefix: Byte = 0
@@ -350,10 +335,20 @@ object KesBinaryTree {
       r = 31 * r + right.hashCode()
       r
     }
+
+    def toByteArray: Array[Byte] =
+      mutable.ArrayBuilder
+        .make[Byte]
+        .addOne(0x00)
+        .addAll(seed)
+        .addAll(witnessLeft)
+        .addAll(witnessRight)
+        .addAll(left.toByteArray)
+        .addAll(right.toByteArray)
+        .result()
   }
 
-  final case class SigningLeaf(sk: Array[Byte], vk: Array[Byte])
-      extends KesBinaryTree {
+  final case class SigningLeaf(sk: Array[Byte], vk: Array[Byte]) extends KesBinaryTree {
 
     override def equals(obj: Any): Boolean =
       obj.asInstanceOf[Matchable] match {
@@ -370,7 +365,17 @@ object KesBinaryTree {
       r = r * 31 + java.util.Arrays.hashCode(vk)
       r
     }
+
+    override def toByteArray: Array[Byte] =
+      mutable.ArrayBuilder
+        .make[Byte]
+        .addOne(0x00)
+        .addAll(sk)
+        .addAll(vk)
+        .result()
+
   }
 
-  final case class Empty() extends KesBinaryTree
+  final case class Empty() extends KesBinaryTree:
+    override def toByteArray: Array[Byte] = Array[Byte](0x02)
 }

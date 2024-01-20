@@ -8,6 +8,7 @@ import blockchain.models.*
 import cats.effect.Async
 import cats.implicits.*
 import cats.effect.implicits.*
+import fs2.io.file.{Files, Path}
 import fs2.{Chunk, Pipe, Pull, Stream}
 
 import java.time.Instant
@@ -55,22 +56,19 @@ case class BlockchainCore[F[_]](
     }
     Stream
       .eval(consensus.localChain.currentHead)
-      .flatMap(currentHead =>
-        consensus.localChain.adoptions.through(pullSteps(currentHead))
-      )
+      .flatMap(currentHead => consensus.localChain.adoptions.through(pullSteps(currentHead)))
   }
 
 object BlockchainCore:
-  def make[F[_]: Async] =
+  def make[F[_]: Async: Files](genesis: FullBlock, dataDir: Path) =
     for {
-      // TODO
-      genesis <- (null: FullBlock).pure[F].toResource
       clock <- Clock.make(
         ProtocolSettings.Default,
         Instant.ofEpochMilli(genesis.header.timestamp)
       )
       cryptoResources <- CryptoResources.make[F]
-      dataStores <- DataStores.make(???) // TODO init
+      dataStores <- DataStores.make(dataDir)
+      _ <- dataStores.isInitialized.ifM(().pure[F], dataStores.init(genesis)).toResource
       blockIdTree <- BlockIdTree.make(
         dataStores.blockIdTree.get,
         dataStores.blockIdTree.put,
