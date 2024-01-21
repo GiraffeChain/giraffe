@@ -1,45 +1,56 @@
 package blockchain.p2p
 
-import blockchain.codecs.{P2PEncodable, given}
+import blockchain.codecs.{Codecs, P2PEncodable, given}
 import blockchain.ledger.MempoolChange
 import blockchain.models.*
 import blockchain.utility.Ratio
 import blockchain.{BlockchainCore, Bytes, Height}
 import cats.data.OptionT
 import cats.effect.Async
+import cats.effect.implicits.*
+import cats.effect.kernel.Resource
+import cats.effect.std.Queue
 import cats.implicits.*
-import com.google.protobuf.ByteString
 import fs2.Stream
 import org.typelevel.log4cats.Logger
+
+import scala.concurrent.duration.*
 
 class PeerBlockchainInterface[F[_]: Async: Logger](
     core: BlockchainCore[F],
     manager: PeersManager[F],
     allPortQueues: AllPortQueues[F],
-    readerWriter: MultiplexedReaderWriter[F]
+    readerWriter: MultiplexedReaderWriter[F],
+    cache: PeerCache[F]
 ):
   def publicState: F[PublicP2PState] =
-    writeRequest(MultiplexerIds.PeerStateRequest, ()) *> allPortQueues.p2pState.createResponse
+    writeRequest(MultiplexerIds.PeerStateRequest, ()) *>
+      allPortQueues.p2pState.createResponse.withDefaultTimeout
   def nextBlockAdoption: F[BlockId] =
-    writeRequest(MultiplexerIds.BlockAdoptionRequest, ()) *> allPortQueues.blockAdoptions.createResponse
+    cache.remoteBlockAdoptions.take
   def nextTransactionNotification: F[TransactionId] =
-    writeRequest(MultiplexerIds.TransactionNotificationRequest, ()) *> allPortQueues.transactionAdoptions.createResponse
+    cache.remoteTransactionAdoptions.take
   def fetchHeader(id: BlockId): F[Option[BlockHeader]] =
-    writeRequest(MultiplexerIds.HeaderRequest, id) *> OptionT(allPortQueues.headers.createResponse)
-      .map(_.withEmbeddedId)
-      .ensure(new IllegalArgumentException("Header ID Mismatch"))(_.id == id)
-      .value
+    writeRequest(MultiplexerIds.HeaderRequest, id) *>
+      OptionT(allPortQueues.headers.createResponse.withDefaultTimeout)
+        .map(_.withEmbeddedId)
+        .ensure(new IllegalArgumentException("Header ID Mismatch"))(_.id == id)
+        .value
   def fetchBody(id: BlockId): F[Option[BlockBody]] =
-    writeRequest(MultiplexerIds.BodyRequest, id) *> allPortQueues.bodies.createResponse
+    writeRequest(MultiplexerIds.BodyRequest, id) *>
+      allPortQueues.bodies.createResponse.withDefaultTimeout
   def fetchTransaction(id: TransactionId): F[Option[Transaction]] =
-    writeRequest(MultiplexerIds.TransactionRequest, id) *> OptionT(allPortQueues.transactions.createResponse)
-      .map(_.withEmbeddedId)
-      .ensure(new IllegalArgumentException("Transaction ID Mismatch"))(_.id == id)
-      .value
+    writeRequest(MultiplexerIds.TransactionRequest, id) *>
+      OptionT(allPortQueues.transactions.createResponse.withDefaultTimeout)
+        .map(_.withEmbeddedId)
+        .ensure(new IllegalArgumentException("Transaction ID Mismatch"))(_.id == id)
+        .value
   def blockIdAtHeight(height: Height): F[Option[BlockId]] =
-    writeRequest(MultiplexerIds.BlockIdAtHeightRequest, height) *> allPortQueues.blockIdAtHeight.createResponse
+    writeRequest(MultiplexerIds.BlockIdAtHeightRequest, height) *>
+      allPortQueues.blockIdAtHeight.createResponse.withDefaultTimeout
   def ping(message: Bytes): F[Bytes] =
-    writeRequest(MultiplexerIds.PingRequest, message) *> allPortQueues.pingPong.createResponse
+    writeRequest(MultiplexerIds.PingRequest, message) *>
+      allPortQueues.pingPong.createResponse.withDefaultTimeout
   def commonAncestor: F[BlockId] =
     for {
       localHeadId <- core.consensus.localChain.currentHead
@@ -51,12 +62,12 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
               .getOrRaise(new IllegalStateException("Local height not found")),
           blockIdAtHeight,
           Ratio(2, 3)
-        )(1L, localHeader.height)
+        )(1L, localHeader.height).timeout(8.seconds)
       ).getOrRaise(new IllegalStateException("Common ancestor not found"))
     } yield intersection
 
   def background: Stream[F, Unit] =
-    readerStream.merge(portQueueStreams)
+    readerStream.merge(portQueueStreams).merge(cacheStreams)
 
   private def readerStream =
     readerWriter.read
@@ -70,6 +81,8 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
         }
       )
 
+  extension [A](fa: F[A]) def withDefaultTimeout: F[A] = fa.timeout(3.seconds)
+
   private def portQueueStreams =
     Stream(
       allPortQueues.blockIdAtHeight.backgroundRequestProcessor(onPeerRequestedBlockIdAtHeight),
@@ -80,6 +93,28 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
       allPortQueues.transactionAdoptions.backgroundRequestProcessor(_ => onPeerRequestedTransactionNotification()),
       allPortQueues.p2pState.backgroundRequestProcessor(_ => onPeerRequestedState()),
       allPortQueues.pingPong.backgroundRequestProcessor(onPeerRequestedPing)
+    ).parJoinUnbounded
+
+  private def cacheStreams =
+    Stream(
+      core.consensus.localChain.adoptions.enqueueUnterminated(cache.localBlockAdoptions).void,
+      core.ledger.mempool.changes
+        .collect { case MempoolChange.Added(transaction) => transaction.id }
+        .enqueueUnterminated(cache.localTransactionAdoptions)
+        .void,
+      Stream
+        .repeatEval(
+          writeRequest(MultiplexerIds.BlockAdoptionRequest, ()) *> allPortQueues.blockAdoptions.createResponse
+        )
+        .enqueueUnterminated(cache.remoteBlockAdoptions),
+      Stream
+        .repeatEval(
+          writeRequest(
+            MultiplexerIds.TransactionNotificationRequest,
+            ()
+          ) *> allPortQueues.transactionAdoptions.createResponse
+        )
+        .enqueueUnterminated(cache.remoteTransactionAdoptions)
     ).parJoinUnbounded
 
   private def processRequest(port: Int, data: Bytes) =
@@ -126,20 +161,17 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
         Async[F].raiseError(new IllegalArgumentException(s"Invalid port=$port"))
     }
 
-  private val ByteStringZero = ByteString.copyFrom(Array[Byte](0))
-  private val ByteStringOne = ByteString.copyFrom(Array[Byte](1))
-
   private def writeRequest[Message: P2PEncodable](
       port: Int,
       message: Message
   ): F[Unit] =
-    readerWriter.write(port, ByteStringZero.concat(P2PEncodable[Message].encodeP2P(message)))
+    readerWriter.write(port, Codecs.ZeroBS.concat(P2PEncodable[Message].encodeP2P(message)))
 
   private def writeResponse[Message: P2PEncodable](
       port: Int,
       message: Message
   ): F[Unit] =
-    readerWriter.write(port, ByteStringOne.concat(P2PEncodable[Message].encodeP2P(message)))
+    readerWriter.write(port, Codecs.OneBS.concat(P2PEncodable[Message].encodeP2P(message)))
 
   private def onPeerRequestedBlockIdAtHeight(height: Height) =
     core.consensus.localChain
@@ -170,14 +202,11 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
     writeResponse(MultiplexerIds.PingRequest, message)
 
   private def onPeerRequestedBlockNotification() =
-    core.consensus.localChain.adoptions.head.compile.lastOrError
+    cache.localBlockAdoptions.take
       .flatMap(writeResponse(MultiplexerIds.BlockAdoptionRequest, _))
 
   private def onPeerRequestedTransactionNotification() =
-    core.ledger.mempool.changes
-      .collectFirst { case MempoolChange.Added(tx) => tx.id }
-      .compile
-      .lastOrError
+    cache.localTransactionAdoptions.take
       .flatMap(writeResponse(MultiplexerIds.TransactionNotificationRequest, _))
 
   private def narySearch[T](
@@ -209,3 +238,20 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
         )
     (min, max) => f(min, max, None)
   }
+
+class PeerCache[F[_]](
+    val localBlockAdoptions: Queue[F, BlockId],
+    val localTransactionAdoptions: Queue[F, TransactionId],
+    val remoteBlockAdoptions: Queue[F, BlockId],
+    val remoteTransactionAdoptions: Queue[F, TransactionId]
+)
+object PeerCache:
+  def make[F[_]: Async]: Resource[F, PeerCache[F]] =
+    (
+      Queue.circularBuffer[F, BlockId](32),
+      Queue.circularBuffer[F, TransactionId](32),
+      Queue.circularBuffer[F, BlockId](32),
+      Queue.circularBuffer[F, TransactionId](32)
+    )
+      .mapN(new PeerCache[F](_, _, _, _))
+      .toResource

@@ -11,6 +11,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
 
 class StreamedTransactView extends StatefulWidget {
   final BlockchainView view;
@@ -137,8 +138,11 @@ class TransactViewState extends State<TransactView> {
     return tx;
   }
 
+  final log = Logger("Transact");
+
   _transact() async {
     final tx = await _createTransaction();
+    log.info("Broadcasting transaction id=${tx.id.show}");
     await widget.writer.submitTransaction(tx);
     setState(() {
       _selectedInputs = {};

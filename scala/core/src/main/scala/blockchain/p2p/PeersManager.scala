@@ -16,7 +16,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import scala.concurrent.duration.*
 
-class PeersManager[F[_]: Async: Random](
+class PeersManager[F[_]: Async: Random: CryptoResources](
     core: BlockchainCore[F],
     localPeer: LocalPeer,
     magicBytes: Array[Byte],
@@ -60,8 +60,7 @@ class PeersManager[F[_]: Async: Random](
   def handleSocket(socket: Socket[F], outboundAddress: Option[SocketAddress[_]]): F[Unit] = {
     val resource = for {
       _ <- Resource.onFinalize(socket.endOfInput *> socket.endOfOutput)
-      given CryptoResources[F] = core.cryptoResources
-      remotePeerId <- Handshake.run(socket, magicBytes, localPeer.sk, localPeer.vk).toResource
+      remotePeerId <- Handshake.run(socket, magicBytes, localPeer.sk, localPeer.vk).timeout(5.seconds).toResource
       given Logger[F] <- Slf4jLogger.fromName(show"Peer($remotePeerId)").toResource
       _ <- Resource.make(Logger[F].info("Connected"))(_ => Logger[F].info("Disconnected"))
       peerState <- PeerState.make(socket, PublicP2PState(localPeer = ConnectedPeer(remotePeerId)), outboundAddress)
@@ -79,7 +78,8 @@ class PeersManager[F[_]: Async: Random](
       _ <- Async[F].raiseWhen(!isNewPeer)(new IllegalStateException("Duplicate Connection")).toResource
       portQueues <- AllPortQueues.make[F]
       readerWriter = MultiplexedReaderWriter.forSocket(socket)
-      interface = new PeerBlockchainInterface[F](core, this, portQueues, readerWriter)
+      peerCache <- PeerCache.make[F]
+      interface = new PeerBlockchainInterface[F](core, this, portQueues, readerWriter, peerCache)
       handler = new PeerBlockchainHandler[F](core, interface, peerState)
       _ <- interface.background.merge(handler.handle).compile.drain.toResource
     } yield ()
@@ -97,7 +97,7 @@ class PeersManager[F[_]: Async: Random](
 
 object PeersManager:
 
-  def make[F[_]: Async: Random](
+  def make[F[_]: Async: Random: CryptoResources](
       core: BlockchainCore[F],
       localPeer: LocalPeer,
       magicBytes: Array[Byte],

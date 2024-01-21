@@ -70,6 +70,7 @@ class Wallet {
 
   void applyTransaction(Transaction transaction) {
     for (final input in transaction.inputs) {
+      input.reference.index = input.reference.index;
       spendableOutputs.remove(input.reference);
     }
     final txId = transaction.id;
@@ -93,6 +94,7 @@ class Wallet {
     }
 
     for (final input in transaction.inputs.reversed) {
+      input.reference.index = input.reference.index;
       if (spentOutputs.containsKey(input.reference)) {
         spendableOutputs[input.reference] = spentOutputs[input.reference]!;
         spentOutputs.remove(input.reference);

@@ -16,7 +16,6 @@ import java.time.Instant
 case class BlockchainCore[F[_]](
     clock: Clock[F],
     dataStores: DataStores[F],
-    cryptoResources: CryptoResources[F],
     blockIdTree: BlockIdTree[F],
     consensus: Consensus[F],
     ledger: Ledger[F]
@@ -60,13 +59,12 @@ case class BlockchainCore[F[_]](
   }
 
 object BlockchainCore:
-  def make[F[_]: Async: Files](genesis: FullBlock, dataDir: Path) =
+  def make[F[_]: Async: Files: CryptoResources](genesis: FullBlock, dataDir: Path) =
     for {
       clock <- Clock.make(
         ProtocolSettings.Default,
         Instant.ofEpochMilli(genesis.header.timestamp)
       )
-      cryptoResources <- CryptoResources.make[F]
       dataStores <- DataStores.make(dataDir)
       _ <- dataStores.isInitialized.ifM(().pure[F], dataStores.init(genesis)).toResource
       blockIdTree <- BlockIdTree.make(
@@ -88,7 +86,6 @@ object BlockchainCore:
         genesis,
         clock,
         dataStores,
-        cryptoResources,
         eventIdGetterSetters,
         blockIdTree,
         blockHeights
@@ -103,7 +100,6 @@ object BlockchainCore:
     } yield BlockchainCore(
       clock,
       dataStores,
-      cryptoResources,
       blockIdTree,
       consensus,
       ledger

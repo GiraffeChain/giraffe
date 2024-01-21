@@ -1,10 +1,9 @@
 package blockchain.consensus
 
 import blockchain.*
-import blockchain.consensus.given
+import blockchain.codecs.given
 import blockchain.crypto.*
 import blockchain.models.{BlockHeader, BlockId, SlotId}
-import blockchain.codecs.given
 import blockchain.utility.{*, given}
 import cats.*
 import cats.data.*
@@ -21,13 +20,10 @@ trait EtaCalculation[F[_]]:
   def etaToBe(parentslotId: SlotId, childSlot: Long): F[Eta]
 
 object EtaCalculation:
-  def make[F[_]: Async: Parallel](
+  def make[F[_]: Async: Parallel: CryptoResources](
       fetchHeader: BlockId => F[BlockHeader],
       clock: Clock[F],
-      genesisEta: Eta,
-      blake2b256Resource: Resource[F, Blake2b256],
-      blake2b512Resource: Resource[F, Blake2b512],
-      ed25519VRFResource: Resource[F, Ed25519VRF]
+      genesisEta: Eta
   ): Resource[F, EtaCalculation[F]] =
     Resource.pure(
       new EtaCalculationImpl[F](
@@ -36,21 +32,15 @@ object EtaCalculation:
         genesisEta,
         CaffeineCache[F, BlockId, Eta](
           Caffeine.newBuilder.maximumSize(32).build[BlockId, Entry[Eta]]()
-        ),
-        blake2b256Resource,
-        blake2b512Resource,
-        ed25519VRFResource
+        )
       )
     )
 
-private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
+private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel: CryptoResources](
     fetchHeader: BlockId => F[BlockHeader],
     clock: Clock[F],
     genesisEta: Eta,
-    cache: Cache[F, BlockId, Eta],
-    blake2b256Resource: Resource[F, Blake2b256],
-    blake2b512Resource: Resource[F, Blake2b512],
-    ed25519VRFResource: Resource[F, Ed25519VRF]
+    cache: Cache[F, BlockId, Eta]
 ) extends EtaCalculation[F] {
 
   implicit private val logger: Logger[F] =
@@ -110,7 +100,7 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
           epochData <- NonEmptyChain(twoThirdsBest).iterateUntilM(items =>
             fetchHeader(items.head.parentHeaderId).map(items.prepend)
           )(items => items.head.parentSlot < epochRange.start)
-          rhoValues <- epochData.parTraverse(header => ed25519VRFResource.use(e => Sync[F].delay(header.rho(using e))))
+          rhoValues <- epochData.parTraverse(header => CryptoResources[F].ed25519VRF.useSync(e => header.rho(using e)))
           nextEta <- calculate(
             previousEta = twoThirdsBest.eligibilityCertificate.eta,
             epoch = epoch + 1,
@@ -136,8 +126,8 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
       )
       rhoNonceHashes <- rhoValues
         .parTraverse(rho =>
-          blake2b512Resource
-            .use(implicit b2b => Sync[F].delay(rhoToRhoNonceHash(rho)))
+          CryptoResources[F].blake2b512
+            .useSync(implicit b2b => rhoToRhoNonceHash(rho))
         )
       nextEta <- calculateFromNonceHashValues(
         previousEta,
@@ -169,7 +159,7 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel](
         ).digestMessages
       )
       .map(_.map(_.toByteArray))
-      .flatMap(bytes => blake2b256Resource.use(b2b => Sync[F].delay(b2b.hash(bytes*))))
+      .flatMap(bytes => CryptoResources[F].blake2b256.useSync(_.hash(bytes*)))
       .map(ByteString.copyFrom)
 
 }

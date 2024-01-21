@@ -4,12 +4,16 @@ import 'dart:typed_data';
 import 'package:blockchain/common/models/unsigned.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/crypto/utils.dart';
+import 'package:blockchain_protobuf/google/protobuf/struct.pb.dart' as struct;
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fast_base58/fast_base58.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:hashlib/hashlib.dart';
+
+const arr0 = [0x00];
+const arr1 = [0x01];
 
 extension ListCodec<T> on List<T> {
   List<int> immutableBytes(List<int> Function(T) encodeT) {
@@ -144,14 +148,14 @@ TransactionId decodeTransactionId(String input) {
 }
 
 extension TransactionCodecs on Transaction {
-  List<int> get immutableBytes => inputs.immutableBytes((i) => i.immutableBytes)
-    ..addAll(outputs.immutableBytes((o) => o.immutableBytes))
-    ..addAll(
-        hasRewardParentBlockId() ? rewardParentBlockId.immutableBytes : []);
+  List<int> get immutableBytes => [
+        ...inputs.immutableBytes((i) => i.immutableBytes),
+        ...outputs.immutableBytes((o) => o.immutableBytes),
+        ...condOptCodec(hasRewardParentBlockId(), rewardParentBlockId,
+            (v) => v.immutableBytes),
+      ];
 
-  List<int> get signableBytes =>
-      <int>[]..addAll(inputs.immutableBytes((i) => i.immutableBytes)
-        ..addAll(outputs.immutableBytes((o) => o.immutableBytes)));
+  List<int> get signableBytes => immutableBytes;
 
   TransactionId get id => hasTransactionId() ? transactionId : computeId;
 
@@ -179,7 +183,8 @@ extension TransactionOutputCodecs on TransactionOutput {
   List<int> get immutableBytes => [
         ...lockAddress.immutableBytes,
         ...value.immutableBytes,
-        ...account.immutableBytes
+        ...condOptCodec(
+            hasAccount(), account, (accout) => account.immutableBytes),
       ];
 }
 
@@ -203,10 +208,19 @@ extension StakingRegistrationCodecs on StakingRegistration {
     ..addAll(stakingAddress.immutableBytes);
 }
 
+List<int> optCodec<T>(T? t, List<int> Function(T) encode) =>
+    (t == null) ? [...arr0] : [...arr1, ...encode(t)];
+
+List<int> condOptCodec<T>(bool cond, T t, List<int> Function(T) encode) =>
+    optCodec(cond ? t : null, encode);
+
 extension ValueCodecs on Value {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(quantity.immutableBytes)
-    ..addAll(accountRegistration.immutableBytes);
+  List<int> get immutableBytes => [
+        ...quantity.immutableBytes,
+        ...condOptCodec(hasAccountRegistration(), accountRegistration,
+            (v) => v.immutableBytes),
+        ...condOptCodec(hasGraphEntry(), graphEntry, (v) => v.immutableBytes),
+      ];
 }
 
 extension AccountRegistrationCodecs on AccountRegistration {
@@ -214,6 +228,57 @@ extension AccountRegistrationCodecs on AccountRegistration {
         ...associationLock.immutableBytes,
         ...stakingRegistration.immutableBytes
       ];
+}
+
+extension GraphEntryCodecs on GraphEntry {
+  List<int> get immutableBytes =>
+      hasVertex() ? vertex.immutableBytes : edge.immutableBytes;
+}
+
+extension VertexCodecs on Vertex {
+  List<int> get immutableBytes => [
+        ...label.immutableBytes,
+        ...condOptCodec(hasData(), data, (v) => v.immutableBytes),
+      ];
+}
+
+extension EdgeCodecs on Edge {
+  List<int> get immutableBytes => [
+        ...label.immutableBytes,
+        ...condOptCodec(hasData(), data, (v) => v.immutableBytes),
+        ...a.immutableBytes,
+        ...b.immutableBytes,
+      ];
+}
+
+extension StructCodecs on struct.Struct {
+  List<int> get immutableBytes {
+    final sorted = fields.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    return sorted
+        .map((e) => [
+              ...e.key.immutableBytes,
+              ...e.value.immutableBytes,
+            ])
+        .immutableBytes(identity);
+  }
+}
+
+extension StructValueCodecs on struct.Value {
+  List<int> get immutableBytes {
+    if (hasNumberValue())
+      return numberValue.toString().immutableBytes;
+    else if (hasStringValue())
+      return stringValue.immutableBytes;
+    else if (hasBoolValue())
+      return boolValue.immutableBytes;
+    else if (hasStructValue())
+      return structValue.immutableBytes;
+    else if (hasListValue())
+      return listValue.values.immutableBytes((v) => v.immutableBytes);
+    return [...arr0];
+  }
 }
 
 extension LockAddressCodecs on LockAddress {
@@ -252,6 +317,10 @@ extension PeerIdCodecs on PeerId {
 
 extension StringCodecs on String {
   List<int> get immutableBytes => utf8.encode(this);
+}
+
+extension BoolCodecs on bool {
+  List<int> get immutableBytes => this ? [...arr1] : [...arr0];
 }
 
 class PersistenceCodecs {
@@ -310,6 +379,6 @@ class P2PCodecs {
       (v) => v.writeToBuffer(), PublicP2PState.fromBuffer);
 
   static Codec<T?> optCodec<T>(Codec<T> baseCodec) => Codec<T?>(
-      (v) => (v == null) ? [0] : [1, ...baseCodec.encode(v)],
+      (v) => (v == null) ? [...arr0] : [...arr1, ...baseCodec.encode(v)],
       (bytes) => (bytes[0] == 0) ? null : baseCodec.decode(bytes.sublist(1)));
 }

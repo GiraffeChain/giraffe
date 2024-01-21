@@ -100,7 +100,8 @@ class BlockProducerImpl extends BlockProducer {
               .takeWhile((_) =>
                   clock.globalSlot <= nextHit.slot && !completer.isCanceled)
               .listen((b) => bodyTmp = b,
-                  onError: (e) => completer.completeError(e));
+                  onError: (e) =>
+                      !completer.isCompleted ? completer.completeError(e) : {});
           _cancelOps.add(() async => packOperation?.cancel());
           final timer = clock.timerUntilSlot(nextHit.slot, () async {
             try {

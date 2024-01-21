@@ -11,6 +11,7 @@ extension TransactionOps on Transaction {
       result.add(out.lockAddress);
     }
     for (final output in outputs) {
+      // TODO: Account lock address
       if (output.value.hasGraphEntry() && output.value.graphEntry.hasEdge()) {
         final edge = output.value.graphEntry.edge;
         final aTx = await fetchTransaction(edge.a.transactionId);

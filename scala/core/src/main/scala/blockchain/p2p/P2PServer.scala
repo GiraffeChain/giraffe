@@ -2,18 +2,18 @@ package blockchain.p2p
 
 import blockchain.BlockchainCore
 import blockchain.codecs.given
+import blockchain.crypto.CryptoResources
 import cats.effect.Async
-import cats.implicits.*
 import cats.effect.implicits.*
 import cats.effect.kernel.{Outcome, Resource}
-import cats.effect.std.{Queue, Random}
+import cats.effect.std.Random
+import cats.implicits.*
 import com.comcast.ip4s.{Host, Port, SocketAddress}
-import fs2.io.net.{Network, Socket}
 import fs2.Stream
 import fs2.concurrent.Channel
+import fs2.io.net.{Network, Socket}
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-
-class P2PServer[F[_]] {}
+import scala.concurrent.duration.*
 
 object P2PServer:
   def serve[F[_]: Async](
@@ -40,15 +40,17 @@ object P2PServer:
       inboundSockets = network.server(h.some, p.some)
       inboundHandler = inboundSockets
         .evalTap(socket => socket.remoteAddress.flatTap(address => logger.info(show"Inbound connection from $address")))
-        .map(socket => Stream.eval(handleSocket(socket, None)))
+        .map(socket => Stream.exec(handleSocket(socket, None)))
+        .parJoinUnbounded
       outboundHandler = outboundConnections
         .evalTap(address => logger.info(show"Outbound connection to $address"))
-        .map(address => Stream.eval(network.client(address).use(handleSocket(_, address.some))))
-      handler = inboundHandler.merge(outboundHandler).parJoinUnbounded.compile.drain
+        .map(address => Stream.exec(network.client(address).timeout(5.seconds).use(handleSocket(_, address.some))))
+        .parJoinUnbounded
+      handler = inboundHandler.merge(outboundHandler).compile.drain
       outcome <- handler.void.background
     } yield outcome
 
-  def serveBlockchain[F[_]: Async: Random](
+  def serveBlockchain[F[_]: Async: Random: CryptoResources](
       core: BlockchainCore[F],
       bindHost: String,
       bindPort: Int,

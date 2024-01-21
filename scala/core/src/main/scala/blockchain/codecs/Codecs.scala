@@ -16,6 +16,8 @@ import scodec.bits.BitVector
 import java.nio.charset.StandardCharsets
 
 trait Codecs {
+  
+  import Codecs.*
 
   given structValueImmutableBytes: ImmutableBytes[struct.Value] with
     extension (value: struct.Value)
@@ -124,9 +126,6 @@ trait Codecs {
       def immutableBytes: Bytes =
         iterable.foldLeft(iterable.size.immutableBytes)((res, t) => res.concat(t.immutableBytes))
 
-  private val ZeroBS = ByteString.copyFrom(Array[Byte](0))
-  private val OneBS = ByteString.copyFrom(Array[Byte](1))
-
   given [T: ImmutableBytes]: ImmutableBytes[Option[T]] with
     extension (o: Option[T])
       def immutableBytes: Bytes =
@@ -199,7 +198,8 @@ trait Codecs {
         }
 
   extension (lock: Lock)
-    def address: LockAddress = LockAddress(ByteString.copyFrom(new Blake2b256().hash(lock.immutableBytes.toByteArray)))
+    def address: LockAddress =
+      LockAddress(ByteString.copyFrom(new Blake2b256().hash(lock.immutableBytes.toByteArray)))
 
   given ImmutableBytes[StakingAddress] with
     extension (stakingAddress: StakingAddress) def immutableBytes: Bytes = stakingAddress.value
@@ -220,6 +220,8 @@ trait Codecs {
         transaction.inputs.immutableBytes
           .concat(transaction.outputs.immutableBytes)
           .concat(transaction.rewardParentBlockId.immutableBytes)
+      def signableBytes: Bytes =
+        immutableBytes
       def id: TransactionId =
         transaction.transactionId.getOrElse(computedId)
       def computedId: TransactionId =
@@ -237,6 +239,134 @@ trait Codecs {
   given ImmutableBytes[BlockId] with
     extension (id: BlockId) def immutableBytes: Bytes = id.value
 
+  given SignableBytes[VrfArgument] with
+    extension (argument: VrfArgument)
+      def signableBytes: Bytes =
+        argument.eta.concat(argument.slot.immutableBytes)
+
+  given ImmutableBytes[struct.Struct] with
+    extension (str: struct.Struct)
+      def immutableBytes: Bytes =
+        str.fields.toList
+          .sortBy(_._1)
+          .map((key, value) => key.immutableBytes.concat(value.immutableBytes))
+          .immutableBytes
+
+  given Monoid[Bytes] = Monoid.instance(ByteString.EMPTY, _.concat(_))
+
+}
+
+object Codecs:
+  val ZeroBS = ByteString.copyFrom(Array[Byte](0))
+  val OneBS = ByteString.copyFrom(Array[Byte](1))
+
+trait ImmutableBytes[T]:
+  extension (t: T) def immutableBytes: Bytes
+
+trait SignableBytes[T]:
+  extension (t: T) def signableBytes: Bytes
+
+trait ArrayEncodable[T]:
+  extension (t: T) def encodeArray: Array[Byte]
+trait ArrayDecodable[T]:
+  extension (bytes: Array[Byte]) def decodeFromArray: T
+
+trait P2PEncodable[T]:
+  extension (t: T) def encodeP2P: Bytes
+
+object P2PEncodable:
+  def apply[T: P2PEncodable]: P2PEncodable[T] = summon[P2PEncodable[T]]
+trait P2PDecodable[T]:
+  extension (bytes: Bytes) def decodeFromP2P: T
+
+object P2PDecodable:
+  def apply[T: P2PDecodable]: P2PDecodable[T] = summon[P2PDecodable[T]]
+
+trait P2PCodecs {
+
+  given [T: P2PEncodable]: P2PEncodable[Option[T]] with
+    extension (message: Option[T])
+      def encodeP2P: Bytes =
+        message.fold(ByteString.copyFrom(Array[Byte](0)))(message =>
+          ByteString.copyFrom(Array[Byte](1)).concat(message.encodeP2P)
+        )
+
+  given [T: P2PDecodable]: P2PDecodable[Option[T]] with
+    extension (bytes: Bytes)
+      def decodeFromP2P: Option[T] =
+        if (bytes.byteAt(0) == 1)
+          summon[P2PDecodable[T]].decodeFromP2P(bytes.substring(1)).some
+        else none
+
+  given P2PEncodable[BlockHeader] with
+    extension (message: BlockHeader) def encodeP2P: Bytes = message.toByteString
+
+  given P2PDecodable[BlockHeader] with
+    extension (bytes: Bytes)
+      def decodeFromP2P: BlockHeader =
+        BlockHeader.parseFrom(bytes.newCodedInput())
+
+  given P2PEncodable[BlockBody] with
+    extension (message: BlockBody) def encodeP2P: Bytes = message.toByteString
+
+  given P2PDecodable[BlockBody] with
+    extension (bytes: Bytes)
+      def decodeFromP2P: BlockBody =
+        BlockBody.parseFrom(bytes.newCodedInput())
+
+  given P2PEncodable[Transaction] with
+    extension (message: Transaction) def encodeP2P: Bytes = message.toByteString
+
+  given P2PDecodable[Transaction] with
+    extension (bytes: Bytes)
+      def decodeFromP2P: Transaction =
+        Transaction.parseFrom(bytes.newCodedInput())
+
+  given P2PEncodable[BlockId] with
+    extension (message: BlockId) def encodeP2P: Bytes = message.value
+
+  given P2PDecodable[BlockId] with
+    extension (bytes: Bytes) def decodeFromP2P: BlockId = BlockId(bytes)
+
+  given P2PEncodable[TransactionId] with
+    extension (message: TransactionId) def encodeP2P: Bytes = message.value
+
+  given P2PDecodable[TransactionId] with
+    extension (bytes: Bytes) def decodeFromP2P: TransactionId = TransactionId(bytes)
+
+  given P2PEncodable[PublicP2PState] with
+    extension (message: PublicP2PState) def encodeP2P: Bytes = message.toByteString
+
+  given P2PDecodable[PublicP2PState] with
+    extension (bytes: Bytes)
+      def decodeFromP2P: PublicP2PState =
+        PublicP2PState.parseFrom(bytes.newCodedInput())
+
+  given P2PEncodable[Bytes] with
+    extension (message: Bytes) def encodeP2P: Bytes = message
+
+  given P2PDecodable[Bytes] with
+    extension (bytes: Bytes) def decodeFromP2P: Bytes = bytes
+
+  given P2PEncodable[Unit] with
+    extension (u: Unit) def encodeP2P: Bytes = ByteString.EMPTY
+  given P2PDecodable[Unit] with
+    extension (b: Bytes) def decodeFromP2P: Unit = ()
+
+  given P2PEncodable[Long] with
+    extension (u: Long) def encodeP2P: Bytes = ByteString.copyFrom(Longs.toByteArray(u))
+  given P2PDecodable[Long] with
+    extension (b: Bytes) def decodeFromP2P: Long = Longs.fromByteArray(b.toByteArray)
+
+  given [T: P2PDecodable]: Conversion[Bytes, T] =
+    P2PDecodable[T].decodeFromP2P
+
+  given [T: P2PEncodable]: Conversion[T, Bytes] =
+    P2PEncodable[T].encodeP2P
+}
+
+trait ArrayCodecs {
+
   given ArrayEncodable[BlockId] with
     extension (id: BlockId) def encodeArray: Array[Byte] = id.value.toByteArray
 
@@ -247,7 +377,9 @@ trait Codecs {
       )
 
   given ArrayEncodable[TransactionId] with
-    extension (id: TransactionId) def encodeArray: Array[Byte] = id.value.toByteArray
+    extension (id: TransactionId)
+      def encodeArray: Array[Byte] =
+        id.value.toByteArray
 
   given ArrayDecodable[TransactionId] with
     extension (array: Array[Byte])
@@ -360,124 +492,4 @@ trait Codecs {
       def encodeArray: Array[Byte] =
         v.getBytes(StandardCharsets.UTF_8)
 
-  given SignableBytes[VrfArgument] with
-    extension (argument: VrfArgument)
-      def signableBytes: Bytes =
-        argument.eta.concat(argument.slot.immutableBytes)
-
-  given ImmutableBytes[struct.Struct] with
-    extension (str: struct.Struct)
-      def immutableBytes: Bytes =
-        str.fields.toList
-          .sortBy(_._1)
-          .map((key, value) => key.immutableBytes.concat(value.immutableBytes))
-          .immutableBytes
-
-  given Monoid[Bytes] = Monoid.instance(ByteString.EMPTY, _.concat(_))
-
-}
-
-trait ImmutableBytes[T]:
-  extension (t: T) def immutableBytes: Bytes
-
-trait SignableBytes[T]:
-  extension (t: T) def signableBytes: Bytes
-
-trait ArrayEncodable[T]:
-  extension (t: T) def encodeArray: Array[Byte]
-trait ArrayDecodable[T]:
-  extension (bytes: Array[Byte]) def decodeFromArray: T
-
-trait P2PEncodable[T]:
-  extension (t: T) def encodeP2P: Bytes
-
-object P2PEncodable:
-  def apply[T: P2PEncodable]: P2PEncodable[T] = summon[P2PEncodable[T]]
-trait P2PDecodable[T]:
-  extension (bytes: Bytes) def decodeFromP2P: T
-
-object P2PDecodable:
-  def apply[T: P2PDecodable]: P2PDecodable[T] = summon[P2PDecodable[T]]
-
-trait P2PCodecs {
-
-  given [T: P2PEncodable]: P2PEncodable[Option[T]] with
-    extension (message: Option[T])
-      def encodeP2P: Bytes =
-        message.fold(ByteString.copyFrom(Array[Byte](0)))(message =>
-          ByteString.copyFrom(Array[Byte](1)).concat(message.encodeP2P)
-        )
-
-  given [T: P2PDecodable]: P2PDecodable[Option[T]] with
-    extension (bytes: Bytes)
-      def decodeFromP2P: Option[T] =
-        if (bytes.byteAt(0) == 1)
-          summon[P2PDecodable[T]].decodeFromP2P(bytes.substring(1)).some
-        else none
-
-  given P2PEncodable[BlockHeader] with
-    extension (message: BlockHeader) def encodeP2P: Bytes = message.toByteString
-
-  given P2PDecodable[BlockHeader] with
-    extension (bytes: Bytes)
-      def decodeFromP2P: BlockHeader =
-        BlockHeader.parseFrom(bytes.newCodedInput())
-
-  given P2PEncodable[BlockBody] with
-    extension (message: BlockBody) def encodeP2P: Bytes = message.toByteString
-
-  given P2PDecodable[BlockBody] with
-    extension (bytes: Bytes)
-      def decodeFromP2P: BlockBody =
-        BlockBody.parseFrom(bytes.newCodedInput())
-
-  given P2PEncodable[Transaction] with
-    extension (message: Transaction) def encodeP2P: Bytes = message.toByteString
-
-  given P2PDecodable[Transaction] with
-    extension (bytes: Bytes)
-      def decodeFromP2P: Transaction =
-        Transaction.parseFrom(bytes.newCodedInput())
-
-  given P2PEncodable[BlockId] with
-    extension (message: BlockId) def encodeP2P: Bytes = message.value
-
-  given P2PDecodable[BlockId] with
-    extension (bytes: Bytes) def decodeFromP2P: BlockId = BlockId(bytes)
-
-  given P2PEncodable[TransactionId] with
-    extension (message: TransactionId) def encodeP2P: Bytes = message.value
-
-  given P2PDecodable[TransactionId] with
-    extension (bytes: Bytes) def decodeFromP2P: TransactionId = TransactionId(bytes)
-
-  given P2PEncodable[PublicP2PState] with
-    extension (message: PublicP2PState) def encodeP2P: Bytes = message.toByteString
-
-  given P2PDecodable[PublicP2PState] with
-    extension (bytes: Bytes)
-      def decodeFromP2P: PublicP2PState =
-        PublicP2PState.parseFrom(bytes.newCodedInput())
-
-  given P2PEncodable[Bytes] with
-    extension (message: Bytes) def encodeP2P: Bytes = message
-
-  given P2PDecodable[Bytes] with
-    extension (bytes: Bytes) def decodeFromP2P: Bytes = bytes
-
-  given P2PEncodable[Unit] with
-    extension (u: Unit) def encodeP2P: Bytes = ByteString.EMPTY
-  given P2PDecodable[Unit] with
-    extension (b: Bytes) def decodeFromP2P: Unit = ()
-
-  given P2PEncodable[Long] with
-    extension (u: Long) def encodeP2P: Bytes = ByteString.copyFrom(Longs.toByteArray(u))
-  given P2PDecodable[Long] with
-    extension (b: Bytes) def decodeFromP2P: Long = Longs.fromByteArray(b.toByteArray)
-
-  given [T: P2PDecodable]: Conversion[Bytes, T] =
-    P2PDecodable[T].decodeFromP2P
-
-  given [T: P2PEncodable]: Conversion[T, Bytes] =
-    P2PEncodable[T].encodeP2P
 }

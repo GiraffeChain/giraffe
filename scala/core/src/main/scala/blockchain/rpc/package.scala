@@ -3,6 +3,7 @@ package blockchain
 import cats.ApplicativeThrow
 import cats.implicits.*
 import io.grpc.{Status, StatusException}
+import org.typelevel.log4cats.Logger
 import scalapb.validate.*
 
 package object rpc:
@@ -20,5 +21,8 @@ package object rpc:
           Status.fromThrowable(e).asException()
       }
 
-  extension [F[_]: ApplicativeThrow, A](fa: F[A])
-    def adaptErrorsToGrpc: F[A] = fa.adaptErr { case e => e.asGrpcException }
+  extension [F[_], A](fa: F[A])
+    def adaptErrorsToGrpc(using ApplicativeThrow[F]): F[A] = fa.adaptErr { case e => e.asGrpcException }
+    def warnLogErrors(using Logger[F])(using ApplicativeThrow[F]): F[A] = fa.onError { case e =>
+      Logger[F].warn(e)("gRPC Error")
+    }

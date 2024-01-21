@@ -15,14 +15,13 @@ trait HeaderValidation[F[_]]:
   def validate(blockHeader: BlockHeader): ValidationResult[F]
 
 object HeaderValidation:
-  def make[F[_]: Sync](
+  def make[F[_]: Sync: CryptoResources](
       genesisId: BlockId,
       etaCalculation: EtaCalculation[F],
       stakerTracker: StakerTracker[F],
       leaderElection: LeaderElection[F],
       clock: Clock[F],
-      fetchHeader: BlockId => F[BlockHeader],
-      cryptoResources: CryptoResources[F]
+      fetchHeader: BlockId => F[BlockHeader]
   ): Resource[F, HeaderValidation[F]] = Resource.pure(
     new HeaderValidationImpl[F](
       genesisId,
@@ -30,18 +29,17 @@ object HeaderValidation:
       stakerTracker,
       leaderElection,
       clock,
-      fetchHeader,
-      cryptoResources
+      fetchHeader
     )
   )
-class HeaderValidationImpl[F[_]: Sync](
+
+class HeaderValidationImpl[F[_]: Sync: CryptoResources](
     genesisId: BlockId,
     etaCalculation: EtaCalculation[F],
     stakerTracker: StakerTracker[F],
     leaderElection: LeaderElection[F],
     clock: Clock[F],
-    fetchHeader: BlockId => F[BlockHeader],
-    cryptoResources: CryptoResources[F]
+    fetchHeader: BlockId => F[BlockHeader]
 ) extends HeaderValidation[F]:
   override def validate(header: BlockHeader): ValidationResult[F] =
     if (header.id == genesisId) EitherT.pure(())
@@ -87,7 +85,7 @@ class HeaderValidationImpl[F[_]: Sync](
       eta = header.eligibilityCertificate.eta
       _ <- EitherT.cond[F](eta == expectedEta, (), NonEmptyChain("Invalid Eta"))
       signatureVerificationResult <- EitherT.liftF(
-        cryptoResources.ed25519VRF
+        CryptoResources[F].ed25519VRF
           .useSync(
             _.verify(
               header.eligibilityCertificate.vrfSig.toByteArray,
@@ -116,7 +114,7 @@ class HeaderValidationImpl[F[_]: Sync](
         )
       )
       parentCommitmentResult <- EitherT.liftF(
-        cryptoResources.kesProduct
+        CryptoResources[F].kesProduct
           .useSync(
             _.verify(
               header.operationalCertificate.parentSignature,
@@ -127,7 +125,7 @@ class HeaderValidationImpl[F[_]: Sync](
       )
       _ <- EitherT.cond[F](parentCommitmentResult, (), NonEmptyChain("InvalidOperationalParentSignature"))
       childSignatureResult <- EitherT.liftF(
-        cryptoResources.ed25519
+        CryptoResources[F].ed25519
           .useSync(
             _.verify(
               header.operationalCertificate.childSignature.toByteArray,
@@ -162,7 +160,7 @@ class HeaderValidationImpl[F[_]: Sync](
       evidence <-
         EitherT
           .liftF[F, NonEmptyChain[String], Bytes](
-            cryptoResources.blake2b256.useSync(implicit b => thresholdEvidence(threshold))
+            CryptoResources[F].blake2b256.useSync(implicit b => thresholdEvidence(threshold))
           )
       _ <-
         EitherT.cond[F](
@@ -181,7 +179,7 @@ class HeaderValidationImpl[F[_]: Sync](
     for {
       rho <- EitherT
         .liftF(
-          cryptoResources.ed25519VRF
+          CryptoResources[F].ed25519VRF
             .useSync(
               _.proofToHash(
                 header.eligibilityCertificate.vrfSig.toByteArray
@@ -207,7 +205,7 @@ class HeaderValidationImpl[F[_]: Sync](
           NonEmptyChain("Unregistered")
         )
       message <- EitherT.liftF(
-        cryptoResources.blake2b256
+        CryptoResources[F].blake2b256
           .useSync(
             _.hash(
               header.eligibilityCertificate.vrfVK,
@@ -216,7 +214,7 @@ class HeaderValidationImpl[F[_]: Sync](
           )
       )
       isValid <- EitherT.liftF(
-        cryptoResources.kesProduct
+        CryptoResources[F].kesProduct
           .useSync(
             _.verify(
               staker.registration.signature,

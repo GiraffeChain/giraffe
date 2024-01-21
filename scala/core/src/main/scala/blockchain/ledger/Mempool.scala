@@ -7,6 +7,8 @@ import blockchain.models.*
 import cats.implicits.*
 import cats.effect.{Async, Resource}
 import fs2.concurrent.Topic
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.time.Instant
 
@@ -27,7 +29,8 @@ object Mempool:
       localChain: LocalChain[F],
       fetchHeader: FetchHeader[F],
       bodyValidation: BodyValidation[F],
-      clock: Clock[F]
+      clock: Clock[F],
+      saveTransaction: Transaction => F[Unit]
   ): Resource[F, Mempool[F] with BlockPacker[F]] =
     Resource
       .make(Topic[F, MempoolChange])(_.close.void)
@@ -38,7 +41,8 @@ object Mempool:
           fetchHeader,
           bodyValidation,
           clock,
-          mempoolChangesTopic
+          mempoolChangesTopic,
+          saveTransaction
         )
       )
 
@@ -74,9 +78,13 @@ class MempoolImpl[F[_]: Async](
     fetchHeader: FetchHeader[F],
     bodyValidation: BodyValidation[F],
     clock: Clock[F],
-    mempoolChangesTopic: Topic[F, MempoolChange]
+    mempoolChangesTopic: Topic[F, MempoolChange],
+    saveTransaction: Transaction => F[Unit]
 ) extends Mempool[F]
     with BlockPacker[F]:
+
+  private given logger: Logger[F] = Slf4jLogger.getLoggerFromName("Mempool")
+
   override def read: F[List[Transaction]] =
     localChain.currentHead
       .flatMap(
@@ -95,14 +103,19 @@ class MempoolImpl[F[_]: Async](
         bss
           .stateAt(headId)
           .use(s =>
-            bodyValidation
-              .validate(
-                FullBlockBody(s.entries.map(_.transaction) :+ transaction),
-                TransactionValidationContext(headId, 0, 0)
-              )
-              .leftMap(errors => new IllegalArgumentException(errors.head))
-              .rethrowT >>
-              Async[F].delay(s.entries = s.entries :+ Mempool.Entry(transaction, Instant.now()))
+            if (s.entries.exists(_.transaction.id == transaction.id))
+              logger.info(show"Ignoring duplicate transaction id=${transaction.id}")
+            else
+              bodyValidation
+                .validate(
+                  FullBlockBody(s.entries.map(_.transaction) :+ transaction),
+                  TransactionValidationContext(headId, 0, 0)
+                )
+                .leftMap(errors => new IllegalArgumentException(errors.head))
+                .rethrowT >>
+                saveTransaction(transaction) >>
+                Async[F].delay(s.entries = s.entries :+ Mempool.Entry(transaction, Instant.now())) >>
+                logger.info(show"Included transaction id=${transaction.id}")
           )
       )
 

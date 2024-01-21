@@ -19,11 +19,10 @@ case class Consensus[F[_]](
 )
 
 object Consensus:
-  def make[F[_]: Async](
+  def make[F[_]: Async: CryptoResources](
       genesis: FullBlock,
       clock: Clock[F],
       dataStores: DataStores[F],
-      cryptoResources: CryptoResources[F],
       eventIdGetterSetters: EventIdGetterSetters[F],
       blockIdTree: BlockIdTree[F],
       blockHeights: BlockHeights.BSS[F]
@@ -32,14 +31,8 @@ object Consensus:
       protocolSettings <- Resource.pure[F, ProtocolSettings](
         ProtocolSettings.Default.merge(genesis.header.settings)
       )
-      etaCalculation <- EtaCalculation.make[F](
-        dataStores.headers.getOrRaise,
-        clock,
-        genesis.header.eligibilityCertificate.eta,
-        cryptoResources.blake2b256,
-        cryptoResources.blake2b512,
-        cryptoResources.ed25519VRF
-      )
+      etaCalculation <- EtaCalculation
+        .make[F](dataStores.headers.getOrRaise, clock, genesis.header.eligibilityCertificate.eta)
       epochBoundariesBSS <- EpochBoundaries.make[F](
         dataStores.epochBoundaries.pure[F],
         eventIdGetterSetters.epochBoundaries.get(),
@@ -49,28 +42,20 @@ object Consensus:
         dataStores.headers.getOrRaise
       )
       stakerDataBSS <- StakerData.make[F](
-        StakerData
-          .State(
-            dataStores.activeStake,
-            dataStores.inactiveStake,
-            dataStores.stakers
-          )
-          .pure[F],
+        StakerData.State(dataStores.activeStake, dataStores.inactiveStake, dataStores.stakers).pure[F],
         eventIdGetterSetters.stakerData.get(),
         blockIdTree,
         eventIdGetterSetters.stakerData.set,
         dataStores.bodies.getOrRaise,
         dataStores.transactions.getOrRaise
       )
-      stakerTracker <- StakerTracker
-        .make[F](clock, genesis.header.id, stakerDataBSS, epochBoundariesBSS)
+      stakerTracker <- StakerTracker.make[F](clock, genesis.header.id, stakerDataBSS, epochBoundariesBSS)
       canonicalHeadId <- eventIdGetterSetters.canonicalHead.get().toResource
-      localChain <- LocalChain
-        .make[F](genesis.header.id, blockHeights, canonicalHeadId, dataStores.headers.getOrRaise)
+      localChain <- LocalChain.make[F](genesis.header.id, blockHeights, canonicalHeadId, dataStores.headers.getOrRaise)
       _ <- localChain.adoptions.evalTap(eventIdGetterSetters.canonicalHead.set).compile.drain.background
       chainSelection <- ChainSelection.make[F](
-        cryptoResources.blake2b512,
-        cryptoResources.ed25519VRF,
+        CryptoResources[F].blake2b512,
+        CryptoResources[F].ed25519VRF,
         protocolSettings.chainSelectionKLookback,
         protocolSettings.chainSelectionSWindow
       )
@@ -78,7 +63,7 @@ object Consensus:
       log1p <- Log1P.make() >>= Log1P.makeCached
       leaderElection <- LeaderElection.make(
         protocolSettings,
-        cryptoResources.blake2b512,
+        CryptoResources[F].blake2b512,
         exp,
         log1p
       )
@@ -88,8 +73,7 @@ object Consensus:
         stakerTracker,
         leaderElection,
         clock,
-        dataStores.headers.getOrRaise,
-        cryptoResources
+        dataStores.headers.getOrRaise
       )
     } yield Consensus(
       headerValidation,

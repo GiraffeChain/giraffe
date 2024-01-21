@@ -17,6 +17,7 @@ service StakerSupportRpc {
 
 message BroadcastBlockReq {
     blockchain.models.Block block = 1 [(validate.rules).message.required = true];
+    blockchain.models.Transaction rewardTransaction = 2;
 }
 
 message BroadcastBlockRes {}

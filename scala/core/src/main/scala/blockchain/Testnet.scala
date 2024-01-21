@@ -40,7 +40,16 @@ object Testnet:
         TestnetAccount.generate((9, 9), quantity, Longs.toByteArray(timestampValue) ++ Ints.toByteArray(index))
       )
       registrationTransactions = accounts.map(_.transaction)
-      fullBlock <- Genesis.init(timestampValue, registrationTransactions)
+      otherTransactions = List(
+        Transaction()
+          .withOutputs(
+            List(
+              TransactionOutput(lockAddress, Value(1_000_000_000L))
+            )
+          )
+      )
+      transactions = (registrationTransactions ++ otherTransactions).map(_.withEmbeddedId)
+      fullBlock <- Genesis.init(timestampValue, transactions)
       dir = outputDir / fullBlock.header.id.show
       _ <- Files[F]
         .exists(dir)

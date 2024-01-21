@@ -1,9 +1,11 @@
 package blockchain.ledger
 
-import blockchain.{FetchHeader, FetchTransaction, ValidationResult}
+import blockchain.*
 import blockchain.models.*
-import blockchain.codecs.given
+import blockchain.codecs.{*, given}
+import blockchain.crypto.CryptoResources
 import blockchain.ledger.given
+import blockchain.utility.{*, given}
 import cats.data.{EitherT, NonEmptyChain}
 import cats.effect.{Resource, Sync}
 import cats.implicits.*
@@ -12,12 +14,15 @@ trait TransactionValidation[F[_]]:
   def validate(transaction: Transaction, context: TransactionValidationContext): ValidationResult[F]
 
 object TransactionValidation:
-  def make[F[_]: Sync](
+  def make[F[_]: Sync: CryptoResources](
       fetchTransaction: FetchTransaction[F],
+      fetchTransactionOutput: FetchTransactionOutput[F],
       transactionOutputState: TransactionOutputState[F],
       accountState: AccountState[F]
   ): Resource[F, TransactionValidation[F]] =
-    Resource.pure(new TransactionValidationImpl[F](fetchTransaction, transactionOutputState, accountState))
+    Resource.pure(
+      new TransactionValidationImpl[F](fetchTransaction, fetchTransactionOutput, transactionOutputState, accountState)
+    )
 
 trait BodyValidation[F[_]]:
   def validate(body: FullBlockBody, context: TransactionValidationContext): ValidationResult[F]
@@ -48,12 +53,12 @@ case class TransactionValidationContext(
     slot: Long
 )
 
-class TransactionValidationImpl[F[_]: Sync](
+class TransactionValidationImpl[F[_]: Sync: CryptoResources](
     fetchTransaction: FetchTransaction[F],
+    fetchTransactionOutput: FetchTransactionOutput[F],
     transactionOutputState: TransactionOutputState[F],
     accountState: AccountState[F]
 ) extends TransactionValidation[F]:
-  // TODO: Attestation validation
 
   override def validate(transaction: Transaction, context: TransactionValidationContext): ValidationResult[F] =
     EitherT.fromEither[F](syntaxValidation(transaction)) >>
@@ -141,6 +146,35 @@ class TransactionValidationImpl[F[_]: Sync](
           )
         )
         .void
+
+  private def attestationValidation(transaction: Transaction): ValidationResult[F] =
+    for {
+      providedLockAddressesList <- EitherT.pure(transaction.attestation.map(_.lockAddress))
+      providedLockAddresses = providedLockAddressesList.toSet
+      _ <- EitherT.cond(
+        providedLockAddressesList.length == providedLockAddresses.size,
+        (),
+        NonEmptyChain("Duplicate Witness")
+      )
+      requiredLockAddresses <- EitherT.liftF(transaction.requiredWitnesses(fetchTransactionOutput))
+      _ <- EitherT.cond(requiredLockAddresses == providedLockAddresses, (), NonEmptyChain("Insufficient Witness"))
+      signableBytes = transaction.signableBytes.toByteArray
+      _ <- transaction.attestation.traverse(witnessValidation(signableBytes))
+    } yield ()
+
+  private def witnessValidation(signableBytes: Array[Byte])(witness: Witness): ValidationResult[F] =
+    for {
+      _ <- EitherT.cond[F](witness.lock.address == witness.lock, (), NonEmptyChain("Lock-Address Mismatch"))
+      _ <- (witness.lock.value, witness.key.value) match {
+        case (l: Lock.Value.Ed25519, k: Key.Value.Ed25519) =>
+          EitherT(
+            CryptoResources[F].ed25519
+              .useSync(e => e.verify(k.value.signature.toByteArray, signableBytes, l.value.vk.toByteArray))
+              .map(Either.cond(_, (), NonEmptyChain("InvalidSignature")))
+          )
+        case _ => EitherT.leftT(NonEmptyChain("InvalidKeyType"))
+      }
+    } yield ()
 
 class BodyValidationImpl[F[_]: Sync](transactionValidation: TransactionValidation[F]) extends BodyValidation[F]:
   override def validate(

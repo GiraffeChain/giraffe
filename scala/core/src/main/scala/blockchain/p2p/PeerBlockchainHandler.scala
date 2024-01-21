@@ -75,13 +75,13 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
         nextOperation <- chainSelectionResult match {
           case ChainSelectionOutcome.XStandard =>
             Logger[F].info("Remote peer is up-to-date but local chain is better") >>
-              waitForBetterBlock.pure[F]
+              inSync.pure[F]
           case ChainSelectionOutcome.YStandard =>
             Logger[F].info("Local peer is up-to-date but remote chain is better") >>
               sync(commonAncestorHeader).pure[F]
           case ChainSelectionOutcome.XDensity =>
             Logger[F].info("Remote peer is out-of-sync but local chain is better") >>
-              waitForBetterBlock.pure[F]
+              inSync.pure[F]
           case ChainSelectionOutcome.YDensity =>
             Logger[F].info("Local peer out-of-sync and remote chain is better") >>
               sync(commonAncestorHeader).pure[F]
@@ -89,7 +89,9 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
       } yield nextOperation
     )
 
-  private def waitForBetterBlock: Stream[F, Unit] =
+  private def inSync: Stream[F, Unit] = awaitBetterBlock.mergeHaltL(mempoolSync)
+
+  private def awaitBetterBlock: Stream[F, Unit] =
     Stream.force(
       interface.nextBlockAdoption.flatMap(blockId =>
         Logger[F].info(show"Received block notification id=$blockId") >>
@@ -97,7 +99,7 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
             .contains(blockId)
             .ifM(
               Logger[F].info(show"Ignoring known block id=$blockId") >>
-                waitForBetterBlock.pure[F],
+                inSync.pure[F],
               OptionT(interface.fetchHeader(blockId))
                 .getOrRaise(new IllegalArgumentException("Remote header not found"))
                 .flatMap(remoteHeader =>
@@ -105,7 +107,7 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
                     if (remoteHeader.parentHeaderId == currentHeadId)
                       fetchVerifyPersist(remoteHeader)
                         .flatTap(adoptAndLog) >>
-                        waitForBetterBlock.pure[F]
+                        inSync.pure[F]
                     else
                       Logger[F].info(show"Block id=$blockId is not a direct local extension.  Checking sync.") >>
                         syncCheck.pure[F]
@@ -137,7 +139,22 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
           )
       )
       .evalTap(_.traverse(adoptAndLog))
-      .void ++ waitForBetterBlock
+      .void ++ inSync
+
+  private def mempoolSync: Stream[F, Unit] =
+    Stream.repeatEval(
+      interface.nextTransactionNotification
+        .flatMap(id =>
+          core.dataStores.transactions
+            .contains(id)
+            .ifM(
+              ().pure[F],
+              OptionT(interface.fetchTransaction(id))
+                .getOrRaise(new IllegalStateException("Remote peer did not have expected transaction"))
+                .flatMap(core.ledger.mempool.add)
+            )
+        )
+    )
 
   private def fetchVerifyPersist(header: BlockHeader): F[FullBlock] =
     for {

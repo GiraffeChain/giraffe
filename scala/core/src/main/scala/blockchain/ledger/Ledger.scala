@@ -3,6 +3,7 @@ package blockchain.ledger
 import blockchain.consensus.LocalChain
 import blockchain.{BlockIdTree, Clock, DataStores, EventIdGetterSetters}
 import blockchain.codecs.given
+import blockchain.crypto.CryptoResources
 import cats.effect.{Async, Resource}
 import cats.implicits.*
 
@@ -17,7 +18,7 @@ case class Ledger[F[_]](
 )
 
 object Ledger:
-  def make[F[_]: Async](
+  def make[F[_]: Async: CryptoResources](
       dataStores: DataStores[F],
       eventIdGetterSetters: EventIdGetterSetters[F],
       blockIdTree: BlockIdTree[F],
@@ -45,7 +46,12 @@ object Ledger:
       )
       transactionOutputState <- TransactionOutputState.make(transactionOutputStateBSS)
       transactionValidation <- TransactionValidation
-        .make[F](dataStores.transactions.getOrRaise, transactionOutputState, accountState)
+        .make[F](
+          dataStores.transactions.getOrRaise,
+          dataStores.transactionOutputs.getOrRaise,
+          transactionOutputState,
+          accountState
+        )
       bodyValidation <- BodyValidation.make[F](transactionValidation)
       mempoolBSS <- Mempool.makeBSS[F](
         Mempool.State.default.pure[F],
@@ -60,7 +66,8 @@ object Ledger:
         localChain,
         dataStores.headers.getOrRaise,
         bodyValidation,
-        clock
+        clock,
+        transaction => dataStores.transactions.put(transaction.id, transaction)
       )
       headerToBodyValidation <- HeaderToBodyValidation.make[F](dataStores.headers.getOrRaise)
     } yield Ledger(
