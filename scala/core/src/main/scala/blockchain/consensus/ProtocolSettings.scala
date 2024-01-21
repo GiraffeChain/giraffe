@@ -4,7 +4,7 @@ import blockchain.models.BlockHeader
 import blockchain.utility.Ratio
 import cats.implicits.showInterpolator
 
-import scala.concurrent.duration.{FiniteDuration, given}
+import scala.concurrent.duration.{Duration, FiniteDuration, given}
 
 case class ProtocolSettings(
     fEffective: Ratio,
@@ -34,7 +34,29 @@ case class ProtocolSettings(
   override def toString: String =
     show"ProtocolSettings(fEffective=$fEffective, vrfLddCutoff=$vrfLddCutoff, vrfPrecision=$vrfPrecision, vrfBaselineDifficulty=$vrfBaselineDifficulty, vrfAmplitude=$vrfAmplitude, kLookback=$chainSelectionKLookback, slotDuration=$slotDuration, operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch, kesHeight=($kesKeyHours, $kesKeyMinutes), operationalPeriodLength=$operationalPeriodLength, epochLength=$epochLength)"
 
-  def merge(map: Map[String, String]): ProtocolSettings = this // TODO
+  def merge(map: Map[String, String]): ProtocolSettings =
+    map.foldLeft(this)(_.withSetting.apply.tupled(_))
+
+  def withSetting(name: String, value: String): ProtocolSettings =
+    name match {
+      case "f-effective"                   => copy(fEffective = parseRational(value))
+      case "vrf-ldd-cutoff"                => copy(vrfLddCutoff = value.toInt)
+      case "vrf-precision"                 => copy(vrfPrecision = value.toInt)
+      case "vrf-baseline-difficulty"       => copy(vrfBaselineDifficulty = parseRational(value))
+      case "vrf-amplitude"                 => copy(vrfAmplitude = parseRational(value))
+      case "chain-selection-k-lookback"    => copy(chainSelectionKLookback = value.toInt)
+      case "slot-duration-ms"              => copy(slotDuration = Duration(value).asInstanceOf[FiniteDuration])
+      case "operational-periods-per-epoch" => copy(operationalPeriodsPerEpoch = value.toInt)
+      case "kes-key-hours"                 => copy(kesKeyHours = value.toInt)
+      case "kes-key-minutes"               => copy(kesKeyMinutes = value.toInt)
+      case _                               => throw IllegalArgumentException(name)
+    }
+  private def parseRational(value: String): Ratio =
+    value.split('/') match {
+      case Array(numerator)              => Ratio(BigInt(numerator))
+      case Array(numerator, denominator) => Ratio(BigInt(numerator), BigInt(denominator))
+      case _                             => throw IllegalArgumentException(value)
+    }
 
 object ProtocolSettings:
 

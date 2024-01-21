@@ -32,10 +32,9 @@ object BlockchainRpc:
         ).sequence
           .flatMap(services =>
             services
-              .foldLeft(
-                NettyServerBuilder
-                  .forAddress(InetSocketAddress(bindHost, bindPort))
-              )((builder, service) => builder.addService(service))
+              .foldLeft(NettyServerBuilder.forAddress(InetSocketAddress(bindHost, bindPort)))((builder, service) =>
+                builder.addService(service)
+              )
               .resource[F]
           )
           .evalTap(server => Async[F].delay(server.start()))
@@ -46,51 +45,60 @@ class NodeServiceImpl[F[_]: Async](core: BlockchainCore[F]) extends NodeRpcFs2Gr
   override def broadcastTransaction(
       request: BroadcastTransactionReq,
       ctx: Metadata
-  ): F[BroadcastTransactionRes] =
+  ): F[BroadcastTransactionRes] = (
     core.ledger.mempool.add(request.transaction).as(BroadcastTransactionRes())
+  ).adaptErrorsToGrpc
 
   override def getBlockHeader(
       request: GetBlockHeaderReq,
       ctx: Metadata
-  ): F[GetBlockHeaderRes] =
+  ): F[GetBlockHeaderRes] = (
     core.dataStores.headers.get(request.blockId).map(GetBlockHeaderRes(_))
+  ).adaptErrorsToGrpc
 
   override def getBlockBody(
       request: GetBlockBodyReq,
       ctx: Metadata
-  ): F[GetBlockBodyRes] =
+  ): F[GetBlockBodyRes] = (
     core.dataStores.bodies.get(request.blockId).map(GetBlockBodyRes(_))
+  ).adaptErrorsToGrpc
 
   override def getFullBlock(
       request: GetFullBlockReq,
       ctx: Metadata
-  ): F[GetFullBlockRes] =
+  ): F[GetFullBlockRes] = (
     core.dataStores.fetchFullBlock(request.blockId).map(GetFullBlockRes(_))
+  ).adaptErrorsToGrpc
 
   override def getTransaction(
       request: GetTransactionReq,
       ctx: Metadata
-  ): F[GetTransactionRes] =
+  ): F[GetTransactionRes] = (
     core.dataStores.transactions
       .get(request.transactionId)
       .map(GetTransactionRes(_))
+    )
+    .adaptErrorsToGrpc
 
   override def getBlockIdAtHeight(
       request: GetBlockIdAtHeightReq,
       ctx: Metadata
-  ): F[GetBlockIdAtHeightRes] =
+  ): F[GetBlockIdAtHeightRes] = (
     core.consensus.localChain
       .blockIdAtHeight(request.height)
       .map(GetBlockIdAtHeightRes(_))
+    )
+    .adaptErrorsToGrpc
 
   override def follow(
       request: FollowReq,
       ctx: Metadata
-  ): fs2.Stream[F, FollowRes] =
+  ): fs2.Stream[F, FollowRes] = (
     core.traversal.map {
       case TraversalStep.Applied(id)   => FollowRes().withAdopted(id)
       case TraversalStep.Unapplied(id) => FollowRes().withUnadopted(id)
     }
+  ).adaptErrorsToGrpc
 
 class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupportRpcFs2Grpc[F, Metadata]:
   private given logger: Logger[F] = Slf4jLogger.getLoggerFromName("RPC")
@@ -98,19 +106,20 @@ class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupp
   override def broadcastBlock(
       request: BroadcastBlockReq,
       ctx: Metadata
-  ): F[BroadcastBlockRes] =
+  ): F[BroadcastBlockRes] = (
     for {
       header <- request.block.header.withEmbeddedId.pure[F]
-      _ <- logger.info(
-        show"Received block id=${header.id} height=${header.height} slot=${header.slot} transactions=${request.block.body.transactionIds}"
-      )
+      _ <- logger.info(show"Received block id=${header.id}")
       canonicalHeadId <- core.consensus.localChain.currentHead
       _ <- MonadThrow[F].raiseWhen(header.parentHeaderId != canonicalHeadId)(
         new IllegalArgumentException("Block does not extend local tip")
       )
       _ <- core.consensus.headerValidation
         .validate(header)
-        .leftSemiflatTap(errors => logger.warn(show"Block id=${header.id} contains errors=$errors"))
+        .leftSemiflatTap(errors =>
+          //
+          logger.warn(show"Block id=${header.id} contains errors=$errors")
+        )
         .leftMap(errors => new IllegalArgumentException(errors.head))
         .rethrowT
       _ <- core.blockIdTree.associate(header.id, header.parentHeaderId)
@@ -130,29 +139,36 @@ class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupp
         new IllegalArgumentException("Block does not extend local tip")
       )
       _ <- core.consensus.localChain.adopt(header.id)
-      _ <- logger.info(show"Adopted id=${header.id}")
+      _ <- logger.info(
+        show"Adopted block id=${header.id} height=${header.height} slot=${header.slot} transactions=${request.block.body.transactionIds}"
+      )
     } yield BroadcastBlockRes()
+  ).adaptErrorsToGrpc
 
   override def getStaker(
       request: GetStakerReq,
       ctx: Metadata
-  ): F[GetStakerRes] =
+  ): F[GetStakerRes] = (
     core.consensus.stakerTracker
       .staker(request.parentBlockId, request.slot, request.stakingAccount)
       .map(GetStakerRes(_))
+    )
+    .adaptErrorsToGrpc
 
   override def getTotalActivestake(
       request: GetTotalActiveStakeReq,
       ctx: Metadata
-  ): F[GetTotalActiveStakeRes] =
+  ): F[GetTotalActiveStakeRes] = (
     core.consensus.stakerTracker
       .totalActiveStake(request.parentBlockId, request.slot)
       .map(GetTotalActiveStakeRes(_))
+    )
+    .adaptErrorsToGrpc
 
   override def calculateEta(
       request: CalculateEtaReq,
       ctx: Metadata
-  ): F[CalculateEtaRes] =
+  ): F[CalculateEtaRes] = (
     core.dataStores.headers
       .getOrRaise(request.parentBlockId)
       .flatMap(header =>
@@ -160,13 +176,17 @@ class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupp
           .etaToBe(SlotId(header.slot, header.id), request.slot)
           .map(CalculateEtaRes(_))
       )
+    )
+    .adaptErrorsToGrpc
 
   override def packBlock(
       request: PackBlockReq,
       ctx: Metadata
-  ): fs2.Stream[F, PackBlockRes] =
+  ): fs2.Stream[F, PackBlockRes] = (
     core.ledger.blockPacker.streamed
       .map(fullBody => PackBlockRes(BlockBody(fullBody.transactions.map(_.id))))
       .mergeHaltR(
         fs2.Stream.exec(core.clock.delayedUntilSlot(request.untilSlot))
       )
+    )
+    .adaptErrorsToGrpc

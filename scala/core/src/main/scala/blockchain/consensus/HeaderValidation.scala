@@ -49,7 +49,7 @@ class HeaderValidationImpl[F[_]: Sync](
       for {
         parent <- EitherT.liftF(fetchHeader(header.parentHeaderId))
         _ <- statelessVerification(header, parent)
-        _ <- EitherT(timeSlotVerification(header))
+        _ <- timeSlotVerification(header)
         _ <- vrfVerification(header)
         _ <- kesVerification(header)
         _ <- registrationVerification(header)
@@ -58,46 +58,25 @@ class HeaderValidationImpl[F[_]: Sync](
         _ <- eligibilityVerification(header, threshold)
       } yield ()
 
-  private[consensus] def statelessVerification(
-      child: BlockHeader,
-      parent: BlockHeader
-  ) =
+  private[consensus] def statelessVerification(child: BlockHeader, parent: BlockHeader) =
     for {
-      _ <- EitherT
-        .cond[F](
-          child.slot > parent.slot,
-          (),
-          NonEmptyChain("Non-Forward Slot")
-        )
-      _ <- EitherT.cond[F](
-        child.timestamp > parent.timestamp,
-        (),
-        NonEmptyChain("Non-Forward Timestamp")
-      )
-      _ <- EitherT
-        .cond[F](
-          child.height === parent.height + 1,
-          (),
-          NonEmptyChain("Non-Forward Height")
-        )
+      _ <- EitherT.cond[F](child.slot > parent.slot, (), NonEmptyChain("Non-Forward Slot"))
+      _ <- EitherT.cond[F](child.timestamp > parent.timestamp, (), NonEmptyChain("Non-Forward Timestamp"))
+      _ <- EitherT.cond[F](child.height === parent.height + 1, (), NonEmptyChain("Non-Forward Height"))
     } yield child
 
-  private[consensus] def timeSlotVerification(header: BlockHeader) =
-    for {
-      globalSlot <- clock.globalSlot
-      childSlotFromTimestamp <- clock.timestampToSlot(header.timestamp)
-    } yield Either
-      .right[NonEmptyChain[String], BlockHeader](header)
-      .ensureOr(_ => NonEmptyChain("TimestampSlotMismatch"))(
-        _.slot == childSlotFromTimestamp
-      )
-      .ensureOr(_ => NonEmptyChain("FutureBlock"))(_.slot < globalSlot + 10)
+  private[consensus] def timeSlotVerification(header: BlockHeader): ValidationResult[F] =
+    EitherT
+      .liftF(clock.timestampToSlot(header.timestamp))
+      .ensure(NonEmptyChain("TimestampSlotMismatch"))(_ == header.slot) >>
+      EitherT
+        .liftF(clock.globalSlot)
+        .ensure(NonEmptyChain("FutureBlock"))(_ + 10 >= header.slot)
+        .void
 
   /** Verifies the given block's VRF certificate syntactic integrity for a particular stateful nonce
     */
-  private[consensus] def vrfVerification(
-      header: BlockHeader
-  ): ValidationResult[F] =
+  private[consensus] def vrfVerification(header: BlockHeader): ValidationResult[F] =
     for {
       expectedEta <- EitherT.liftF(
         etaCalculation.etaToBe(
@@ -120,11 +99,7 @@ class HeaderValidationImpl[F[_]: Sync](
             )
           )
       )
-      _ <- EitherT.cond[F](
-        signatureVerificationResult,
-        (),
-        NonEmptyChain("InvalidEligibilityProof")
-      )
+      _ <- EitherT.cond[F](signatureVerificationResult, (), NonEmptyChain("InvalidEligibilityProof"))
     } yield ()
 
   /** Verifies the given block's Operational Certificate's parent -> linear commitment, and the Operational
@@ -150,11 +125,7 @@ class HeaderValidationImpl[F[_]: Sync](
             )
           )
       )
-      _ <- EitherT.cond[F](
-        parentCommitmentResult,
-        (),
-        NonEmptyChain("InvalidOperationalParentSignature")
-      )
+      _ <- EitherT.cond[F](parentCommitmentResult, (), NonEmptyChain("InvalidOperationalParentSignature"))
       childSignatureResult <- EitherT.liftF(
         cryptoResources.ed25519
           .useSync(
@@ -165,12 +136,7 @@ class HeaderValidationImpl[F[_]: Sync](
             )
           )
       )
-      _ <- EitherT
-        .cond[F](
-          childSignatureResult,
-          (),
-          NonEmptyChain("InvalidBlockProof")
-        )
+      _ <- EitherT.cond[F](childSignatureResult, (), NonEmptyChain("InvalidBlockProof"))
     } yield ()
 
   /** Determines the VRF threshold for the given child
@@ -181,7 +147,7 @@ class HeaderValidationImpl[F[_]: Sync](
   ): EitherT[F, NonEmptyChain[String], Ratio] =
     EitherT
       .fromOptionF(
-        stakerTracker.stakerRelativeStake(child.id, child.slot, child.account),
+        stakerTracker.stakerRelativeStake(parent.id, child.slot, child.account),
         NonEmptyChain("UnregisteredStaker")
       )
       .semiflatMap(leaderElection.getThreshold(_, child.slot - parent.slot))
@@ -237,7 +203,7 @@ class HeaderValidationImpl[F[_]: Sync](
     for {
       staker <-
         EitherT.fromOptionF(
-          stakerTracker.staker(header.id, header.slot, header.account),
+          stakerTracker.staker(header.parentHeaderId, header.slot, header.account),
           NonEmptyChain("Unregistered")
         )
       message <- EitherT.liftF(

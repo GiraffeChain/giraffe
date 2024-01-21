@@ -67,6 +67,7 @@ object Consensus:
       canonicalHeadId <- eventIdGetterSetters.canonicalHead.get().toResource
       localChain <- LocalChain
         .make[F](genesis.header.id, blockHeights, canonicalHeadId, dataStores.headers.getOrRaise)
+      _ <- localChain.adoptions.evalTap(eventIdGetterSetters.canonicalHead.set).compile.drain.background
       chainSelection <- ChainSelection.make[F](
         cryptoResources.blake2b512,
         cryptoResources.ed25519VRF,

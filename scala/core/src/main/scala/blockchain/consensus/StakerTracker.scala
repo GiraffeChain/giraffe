@@ -136,7 +136,10 @@ object StakerData:
       } yield state
 
     private def applyInput(state: State[F])(input: TransactionInput) =
-      OptionT(state.stakers.get(input.reference))
+      OptionT(
+        fetchTransaction(input.reference.transactionId)
+          .map(_.outputs(input.reference.index).account)
+      ).flatMapF(state.stakers.get)
         .foldF(
           state.modifyTotalInactiveStake(_ - input.value.quantity)
         )(staker =>
@@ -193,13 +196,13 @@ object StakerData:
     ): F[State[F]] =
       for {
         transaction <- fetchTransaction(transactionId)
-        _ <- transaction.inputs.reverse.traverseTap(unapplyInput(state))
         _ <- transaction.outputs.zipWithIndex.reverse.traverseTap((output, index) =>
           unapplyOutput(state)(
             TransactionOutputReference(transactionId, index),
             output
           )
         )
+        _ <- transaction.inputs.reverse.traverseTap(unapplyInput(state))
       } yield state
 
     private def unapplyOutput(

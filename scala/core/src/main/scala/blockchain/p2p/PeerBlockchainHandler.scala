@@ -103,8 +103,8 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
                 .flatMap(remoteHeader =>
                   core.consensus.localChain.currentHead.flatMap(currentHeadId =>
                     if (remoteHeader.parentHeaderId == currentHeadId)
-                      fetchVerifyPersist(remoteHeader) >>
-                        core.consensus.localChain.adopt(blockId) >>
+                      fetchVerifyPersist(remoteHeader)
+                        .flatTap(adoptAndLog) >>
                         waitForBetterBlock.pure[F]
                     else
                       Logger[F].info(show"Block id=$blockId is not a direct local extension.  Checking sync.") >>
@@ -117,29 +117,29 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
 
   private def sync(commonAncestor: BlockHeader): Stream[F, Unit] =
     Stream
-      .unfoldEval((commonAncestor.height + 1, none[BlockId]))((h, lastProcessed) =>
-        OptionT(interface.blockIdAtHeight(h))
-          .semiflatMap(remoteId =>
-            OptionT(interface.fetchHeader(remoteId))
-              .getOrRaise(new IllegalArgumentException("Remote header not found"))
-              .ensure(new IllegalStateException("Remote peer branched during syncing"))(header =>
-                lastProcessed.forall(_ == header.parentHeaderId)
+      .eval(
+        (commonAncestor.height + 1, none[FullBlock])
+          .tailRecM((h, lastProcessed) =>
+            OptionT(interface.blockIdAtHeight(h))
+              .semiflatMap(remoteId =>
+                OptionT(interface.fetchHeader(remoteId))
+                  .getOrRaise(new IllegalArgumentException("Remote header not found"))
+                  .ensure(new IllegalStateException("Remote peer branched during syncing"))(header =>
+                    lastProcessed.forall(_.header.id == header.parentHeaderId)
+                  )
+                  .flatMap(fetchVerifyPersist)
+                  .map(_.some)
+                  .tupleLeft(h + 1)
               )
-              .flatTap(fetchVerifyPersist)
-              .as((h + 1, remoteId.some))
-              .tupleLeft(remoteId)
+              .flatTapNone(lastProcessed.traverse(adoptAndLog))
+              .toLeft(lastProcessed)
+              .value
           )
-          .flatTapNone(
-            lastProcessed.traverse(id =>
-              Logger[F].info(show"Adopting id=$id") *>
-                core.consensus.localChain.adopt(id)
-            )
-          )
-          .value
       )
+      .evalTap(_.traverse(adoptAndLog))
       .void ++ waitForBetterBlock
 
-  private def fetchVerifyPersist(header: BlockHeader): F[Unit] =
+  private def fetchVerifyPersist(header: BlockHeader): F[FullBlock] =
     for {
       _ <- Logger[F].info(show"Processing remote block id=${header.id}")
       _ <- core.consensus.headerValidation
@@ -162,9 +162,10 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
           .orElse(OptionT(interface.fetchTransaction(id)))
           .getOrRaise(new IllegalArgumentException("Remote transaction not found"))
       )
+      fullBody = FullBlockBody(transactions)
       _ <- core.ledger.bodyValidation
         .validate(
-          FullBlockBody(transactions),
+          fullBody,
           TransactionValidationContext(
             header.parentHeaderId,
             header.height,
@@ -179,4 +180,14 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
           .contains(transaction.id)
           .ifM(().pure[F], core.dataStores.transactions.put(transaction.id, transaction))
       )
-    } yield ()
+    } yield FullBlock(header, fullBody)
+
+  private def adoptAndLog(fullBlock: FullBlock): F[Unit] =
+    core.consensus.localChain.adopt(fullBlock.header.id) >>
+      Logger[F].info(
+        show"Adopted block" +
+          show" id=${fullBlock.header.id}" +
+          show" height=${fullBlock.header.height}" +
+          show" slot=${fullBlock.header.slot}" +
+          show" transactions=${fullBlock.fullBody.transactions.map(_.id)}"
+      )

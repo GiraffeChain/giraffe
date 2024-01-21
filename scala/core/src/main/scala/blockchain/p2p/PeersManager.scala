@@ -119,7 +119,7 @@ object PeersManager:
       .flatTap(manager => Resource.onFinalize(Async[F].defer(manager.close())))
       .flatTap(manager =>
         Stream
-          .awakeDelay(30.seconds)
+          .awakeDelay(10.seconds)
           .evalTap(_ => manager.connectNext())
           .compile
           .drain

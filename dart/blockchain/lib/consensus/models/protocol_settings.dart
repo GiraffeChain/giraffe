@@ -81,7 +81,6 @@ class ProtocolSettings {
     "vrf-amplitude": "1/2",
     "chain-selection-k-lookback": "81", // 5184
     "slot-duration-ms": "1000",
-    "forward-biased-slot-window": "50",
     "operational-periods-per-epoch": "25",
     "kes-key-hours": "9",
     "kes-key-minutes": "9"
