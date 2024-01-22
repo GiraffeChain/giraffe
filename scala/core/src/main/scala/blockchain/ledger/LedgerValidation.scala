@@ -6,7 +6,7 @@ import blockchain.codecs.{*, given}
 import blockchain.crypto.CryptoResources
 import blockchain.ledger.given
 import blockchain.utility.{*, given}
-import cats.data.{EitherT, NonEmptyChain}
+import cats.data.{EitherT, OptionT, NonEmptyChain}
 import cats.effect.{Resource, Sync}
 import cats.implicits.*
 
@@ -62,6 +62,7 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
 
   override def validate(transaction: Transaction, context: TransactionValidationContext): ValidationResult[F] =
     EitherT.fromEither[F](syntaxValidation(transaction)) >>
+      attestationValidation(transaction) >>
       dataCheck(transaction) >>
       spendableUtxoCheck(context.parentBlockId, transaction)
 
@@ -164,7 +165,7 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
 
   private def witnessValidation(signableBytes: Array[Byte])(witness: Witness): ValidationResult[F] =
     for {
-      _ <- EitherT.cond[F](witness.lock.address == witness.lock, (), NonEmptyChain("Lock-Address Mismatch"))
+      _ <- EitherT.cond[F](witness.lock.address == witness.lockAddress, (), NonEmptyChain("Lock-Address Mismatch"))
       _ <- (witness.lock.value, witness.key.value) match {
         case (l: Lock.Value.Ed25519, k: Key.Value.Ed25519) =>
           EitherT(
@@ -177,10 +178,7 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
     } yield ()
 
 class BodyValidationImpl[F[_]: Sync](transactionValidation: TransactionValidation[F]) extends BodyValidation[F]:
-  override def validate(
-      body: FullBlockBody,
-      context: TransactionValidationContext
-  ): ValidationResult[F] =
+  override def validate(body: FullBlockBody, context: TransactionValidationContext): ValidationResult[F] =
     body.transactions
       .foldLeftM(Set.empty[TransactionOutputReference]) { (spentUtxos, transaction) =>
         val dependencies = transaction.dependencies
@@ -192,5 +190,41 @@ class BodyValidationImpl[F[_]: Sync](transactionValidation: TransactionValidatio
           transactionValidation
             .validate(transaction, context)
             .as(spentUtxos ++ transaction.inputs.map(_.reference))
-      }
+      } >> validateReward(body, context)
+
+  private def validateReward(body: FullBlockBody, context: TransactionValidationContext) =
+    EitherT(
+      Sync[F]
+        .delay(body.transactions.partition(_.rewardParentBlockId.isEmpty))
+        .map((nonRewards, rewards) =>
+          Either.cond(rewards.length <= 1, (nonRewards, rewards.headOption), NonEmptyChain("Duplicate Rewards"))
+        )
+    )
+      .subflatMap((nonRewards, rewardOpt) =>
+        rewardOpt
+          .fold(().asRight[NonEmptyChain[String]])(reward =>
+            Either.cond(
+              reward.rewardParentBlockId.contains(context.parentBlockId),
+              (),
+              NonEmptyChain("RewardHeaderMismatch")
+            ) >>
+              Either.cond(reward.inputs.isEmpty, (), NonEmptyChain("RewardContainsInputs")) >>
+              Either.cond(reward.outputs.length != 1, (), NonEmptyChain("RewardContainsMultipleOutputs")) >>
+              Either.cond(
+                reward.outputs.head.value.accountRegistration.isEmpty,
+                (),
+                NonEmptyChain("RewardContainsRegistration")
+              ) >>
+              Either.cond(
+                reward.outputs.head.value.graphEntry.isEmpty,
+                (),
+                NonEmptyChain("RewardContainsGraphEntry")
+              ) >>
+              Either.cond(
+                nonRewards.foldMap(_.reward) >= reward.outputs.head.value.quantity,
+                (),
+                NonEmptyChain("ExcessiveReward")
+              )
+          )
+      )
       .void

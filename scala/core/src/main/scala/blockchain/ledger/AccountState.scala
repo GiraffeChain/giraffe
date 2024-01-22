@@ -37,17 +37,8 @@ object AccountState:
       fetchTransaction: FetchTransaction[F],
       fetchTransactionOutput: FetchTransactionOutput[F]
   ): Resource[F, BSS[F]] =
-    new AccountStateBSSImpl[F](
-      fetchBody,
-      fetchTransaction,
-      fetchTransactionOutput
-    )
-      .makeBss(
-        initialState,
-        initialBlockId,
-        blockIdTree,
-        onBlockChanged
-      )
+    new AccountStateBSSImpl[F](fetchBody, fetchTransaction, fetchTransactionOutput)
+      .makeBss(initialState, initialBlockId, blockIdTree, onBlockChanged)
 
 class AccountStateImpl[F[_]: MonadCancelThrow](bss: AccountState.BSS[F]) extends AccountState[F]:
   override def accountUtxos(

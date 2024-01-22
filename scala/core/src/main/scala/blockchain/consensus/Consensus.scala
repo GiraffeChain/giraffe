@@ -8,6 +8,7 @@ import blockchain.utility.{Exp, Log1P}
 import cats.effect.{Async, Resource}
 import cats.implicits.*
 import cats.effect.implicits.*
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 case class Consensus[F[_]](
     headerValidation: HeaderValidation[F],
@@ -28,9 +29,8 @@ object Consensus:
       blockHeights: BlockHeights.BSS[F]
   ): Resource[F, Consensus[F]] =
     for {
-      protocolSettings <- Resource.pure[F, ProtocolSettings](
-        ProtocolSettings.Default.merge(genesis.header.settings)
-      )
+      logger <- Slf4jLogger.fromName("Consensus").toResource
+      protocolSettings <- Resource.pure[F, ProtocolSettings](ProtocolSettings.Default.merge(genesis.header.settings))
       etaCalculation <- EtaCalculation
         .make[F](dataStores.headers.getOrRaise, clock, genesis.header.eligibilityCertificate.eta)
       epochBoundariesBSS <- EpochBoundaries.make[F](
@@ -51,6 +51,12 @@ object Consensus:
       )
       stakerTracker <- StakerTracker.make[F](clock, genesis.header.id, stakerDataBSS, epochBoundariesBSS)
       canonicalHeadId <- eventIdGetterSetters.canonicalHead.get().toResource
+      canonicalHead <- dataStores.headers.getOrRaise(canonicalHeadId).toResource
+      _ <- logger
+        .info(
+          show"Canonical head id=$canonicalHeadId height=${canonicalHead.height} slot=${canonicalHead.slot}"
+        )
+        .toResource
       localChain <- LocalChain.make[F](genesis.header.id, blockHeights, canonicalHeadId, dataStores.headers.getOrRaise)
       _ <- localChain.adoptions.evalTap(eventIdGetterSetters.canonicalHead.set).compile.drain.background
       chainSelection <- ChainSelection.make[F](

@@ -5,11 +5,12 @@ import blockchain.crypto.CryptoResources
 import blockchain.codecs.given
 import blockchain.ledger.Ledger
 import blockchain.models.*
-import cats.effect.Async
+import cats.effect.{Async, Resource}
 import cats.implicits.*
 import cats.effect.implicits.*
 import fs2.io.file.{Files, Path}
 import fs2.{Chunk, Pipe, Pull, Stream}
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.time.Instant
 
@@ -59,12 +60,13 @@ case class BlockchainCore[F[_]](
   }
 
 object BlockchainCore:
-  def make[F[_]: Async: Files: CryptoResources](genesis: FullBlock, dataDir: Path) =
+  def make[F[_]: Async: Files: CryptoResources](genesis: FullBlock, dataDir: Path): Resource[F, BlockchainCore[F]] =
     for {
-      clock <- Clock.make(
-        ProtocolSettings.Default,
-        Instant.ofEpochMilli(genesis.header.timestamp)
-      )
+      logger <- Slf4jLogger.fromName("Blockchain").toResource
+      clock <- Clock.make(ProtocolSettings.Default, Instant.ofEpochMilli(genesis.header.timestamp))
+      globalSlot <- clock.globalSlot.toResource
+      globalTimestamp <- clock.globalTimestamp.toResource
+      _ <- logger.info(show"Global slot=$globalSlot timestamp=$globalTimestamp").toResource
       dataStores <- DataStores.make(dataDir)
       _ <- dataStores.isInitialized.ifM(().pure[F], dataStores.init(genesis)).toResource
       blockIdTree <- BlockIdTree.make(
@@ -72,9 +74,7 @@ object BlockchainCore:
         dataStores.blockIdTree.put,
         genesis.header.parentHeaderId
       )
-      eventIdGetterSetters = new EventIdGetterSetters[F](
-        dataStores.currentEventIds
-      )
+      eventIdGetterSetters = new EventIdGetterSetters[F](dataStores.currentEventIds)
       blockHeights <- BlockHeights.make(
         dataStores.blockHeightIndex,
         eventIdGetterSetters.blockHeightTree.get(),

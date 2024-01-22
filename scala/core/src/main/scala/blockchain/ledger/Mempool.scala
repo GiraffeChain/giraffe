@@ -104,18 +104,23 @@ class MempoolImpl[F[_]: Async](
           .stateAt(headId)
           .use(s =>
             if (s.entries.exists(_.transaction.id == transaction.id))
-              logger.info(show"Ignoring duplicate transaction id=${transaction.id}")
+              false.pure[F]
             else
-              bodyValidation
-                .validate(
-                  FullBlockBody(s.entries.map(_.transaction) :+ transaction),
-                  TransactionValidationContext(headId, 0, 0)
-                )
-                .leftMap(errors => new IllegalArgumentException(errors.head))
-                .rethrowT >>
-                saveTransaction(transaction) >>
+              validationContext(headId)
+                .flatMap(
+                  bodyValidation
+                    .validate(FullBlockBody(s.entries.map(_.transaction) :+ transaction), _)
+                    .leftMap(errors => new IllegalArgumentException(errors.head))
+                    .rethrowT
+                ) >>
                 Async[F].delay(s.entries = s.entries :+ Mempool.Entry(transaction, Instant.now())) >>
-                logger.info(show"Included transaction id=${transaction.id}")
+                true.pure[F]
+          )
+          .ifM(
+            saveTransaction(transaction) *>
+              mempoolChangesTopic.publish1(MempoolChange.Added(transaction)) *>
+              logger.info(show"Included transaction id=${transaction.id}"),
+            logger.info(show"Ignoring duplicate transaction id=${transaction.id}")
           )
       )
 
@@ -123,33 +128,29 @@ class MempoolImpl[F[_]: Async](
     mempoolChangesTopic.subscribeUnbounded
 
   override def streamed: fs2.Stream[F, FullBlockBody] =
-    fs2.Stream
-      .apply(())
-      .merge(
-        localChain.adoptions.void
-          .merge(changes.void)
-      )
+    fs2
+      .Stream(())
+      .merge(localChain.adoptions.void)
+      .merge(changes.void)
       .evalMap(_ => read)
       .map(FullBlockBody(_))
 
-  private def retainValid(
-      transactions: List[Transaction]
-  ): F[List[Transaction]] =
+  private def retainValid(transactions: List[Transaction]): F[List[Transaction]] =
     for {
-      headId <- localChain.currentHead
-      head <- fetchHeader(headId)
-      slot <- clock.globalSlot
-      newTransactions <- transactions.foldLeftM(
-        List.empty[Transaction]
-      )((transactions, transaction) =>
+      validationContext <- currentValidationContext
+      newTransactions <- transactions.foldLeftM(List.empty[Transaction])((transactions, transaction) =>
         bodyValidation
-          .validate(
-            FullBlockBody(transactions :+ transaction),
-            TransactionValidationContext(headId, head.height + 1, slot)
-          )
+          .validate(FullBlockBody(transactions :+ transaction), validationContext)
           .fold(_ => transactions, _ => transactions :+ transaction)
       )
     } yield newTransactions
+
+  private def validationContext(id: BlockId) =
+    (fetchHeader(id), clock.globalSlot)
+      .mapN((head, slot) => TransactionValidationContext(id, head.height + 1, slot))
+
+  private def currentValidationContext =
+    localChain.currentHead.flatMap(validationContext)
 
 class MempoolBSS[F[_]: Async](fetchBody: FetchBody[F], fetchTransaction: FetchTransaction[F]):
   def applyBlock(state: Mempool.State, blockId: BlockId): F[Mempool.State] =

@@ -10,14 +10,8 @@ import cats.effect.{Async, Resource, Sync, MonadCancelThrow}
 import cats.implicits.*
 import scodec.bits.BitVector
 
-trait TransactionOutputState[F[_]] {
-
-  def transactionOutputIsSpendable(
-      blockId: BlockId,
-      outputReference: TransactionOutputReference
-  ): F[Boolean]
-
-}
+trait TransactionOutputState[F[_]]:
+  def transactionOutputIsSpendable(blockId: BlockId, outputReference: TransactionOutputReference): F[Boolean]
 
 object TransactionOutputState:
   type State[F[_]] = Store[F, TransactionId, BitVector]
@@ -41,9 +35,8 @@ object TransactionOutputState:
       onBlockChanged
     )
 
-class TransactionOutputStateImpl[F[_]: MonadCancelThrow](
-    bss: TransactionOutputState.BSS[F]
-) extends TransactionOutputState[F]:
+class TransactionOutputStateImpl[F[_]: MonadCancelThrow](bss: TransactionOutputState.BSS[F])
+    extends TransactionOutputState[F]:
   override def transactionOutputIsSpendable(
       blockId: BlockId,
       outputReference: TransactionOutputReference
@@ -52,11 +45,7 @@ class TransactionOutputStateImpl[F[_]: MonadCancelThrow](
       .subflatMap(_.lift(outputReference.index))
       .exists(identity)
 
-class TransactionOutputStateBSSImpl[F[_]: Async](
-    fetchBody: FetchBody[F],
-    fetchTransaction: FetchTransaction[F]
-) {
-
+class TransactionOutputStateBSSImpl[F[_]: Async](fetchBody: FetchBody[F], fetchTransaction: FetchTransaction[F]):
   def makeBss(
       initialState: F[TransactionOutputState.State[F]],
       initialBlockId: F[BlockId],
@@ -93,11 +82,7 @@ class TransactionOutputStateBSSImpl[F[_]: Async](
                   )
                   .as(state)
               ) *>
-                state
-                  .put(
-                    transactionId,
-                    BitVector.high(transaction.outputs.length)
-                  )
+                state.put(transactionId, BitVector.high(transaction.outputs.length))
             )
             .as(state)
         )
@@ -114,7 +99,7 @@ class TransactionOutputStateBSSImpl[F[_]: Async](
           fetchTransaction(transactionId)
             .flatMap(transaction =>
               state.remove(transactionId) *>
-                transaction.inputs.foldLeftM(state)((state, input) =>
+                transaction.inputs.reverse.foldLeftM(state)((state, input) =>
                   OptionT(state.get(input.reference.transactionId))
                     .getOrElseF(
                       fetchTransaction(input.reference.transactionId)
@@ -130,5 +115,3 @@ class TransactionOutputStateBSSImpl[F[_]: Async](
         )
       )
       .as(state)
-
-}

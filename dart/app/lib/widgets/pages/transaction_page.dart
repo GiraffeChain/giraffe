@@ -127,7 +127,7 @@ class TransactionPage extends StatelessWidget {
             columns: const [
               DataColumn(label: Text("UTxO Reference")),
               DataColumn(label: Text("Quantity")),
-              DataColumn(label: Text("Address")),
+              // DataColumn(label: Text("Address")), // TODO
               DataColumn(label: Text("Registration")),
             ],
             rows: transaction.inputs
