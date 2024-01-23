@@ -1,3 +1,4 @@
+import 'package:blockchain/common/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:ribs_core/ribs_core.dart' hide State;
 
@@ -20,12 +21,26 @@ class _ResourceBuilderState<A> extends State<ResourceBuilder<A>> {
   void initState() {
     super.initState();
     _snapshot = AsyncSnapshot<A>.waiting();
-    _cancel = widget.resource
+    final (result, cancelF) = widget.resource
         .flatMap((a) => Resource.eval(IO.delay(() => setState(() {
               _snapshot = AsyncSnapshot<A>.withData(ConnectionState.active, a);
             }))))
         .useForever()
-        .unsafeRunCancelable();
+        .onError((a) => IO
+            .delay(() => setState(() {
+                  _snapshot =
+                      AsyncSnapshot<A>.withError(ConnectionState.done, a);
+                }))
+            .voided())
+        .unsafeRunFutureCancelable();
+    result.then((_) => unit).onError<Object>((error, stackTrace) {
+      error != "Fiber canceled"
+          ? setState(() => _snapshot = AsyncSnapshot<A>.withError(
+              ConnectionState.done, error, stackTrace))
+          : ();
+      return unit;
+    }).ignore();
+    _cancel = cancelF;
   }
 
   @override

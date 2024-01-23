@@ -126,7 +126,7 @@ class RunMintingState extends State<RunMinting> {
             : ResourceBuilder(
                 resource: resource,
                 builder: (context, snapshot) => IconButton(
-                    onPressed: () => setState(() => paused = false),
+                    onPressed: () => setState(() => paused = true),
                     icon: const Icon(Icons.pause)),
               ),
       ));
@@ -188,12 +188,10 @@ class RunMintingState extends State<RunMinting> {
             )));
       });
 
-  Widget get launchButton => Card(
-      child: Center(
-          child: TextButton.icon(
-              onPressed: () => setState(() => paused = false),
-              icon: const Icon(Icons.play_arrow),
-              label: const Text("Launch"))));
+  Widget get launchButton => TextButton.icon(
+      onPressed: () => setState(() => paused = false),
+      icon: const Icon(Icons.play_arrow),
+      label: const Text("Launch"));
 }
 
 Future<Directory> get stakingDirectory async => Directory(

@@ -43,18 +43,28 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: _home(context),
       onGenerateRoute: FluroRouter.appRouter.generator,
+      theme: ThemeData.from(
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.brown, brightness: Brightness.dark)),
     );
   }
 
   Widget _home(BuildContext context) => Scaffold(
-        body: SizedBox.fromSize(
-          size: const Size(500, 500),
-          child: BlockchainConfigForm(
-            onSubmit: (context, config) => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        BlockchainLauncherPage(config: config))),
+        body: Center(
+          child: SizedBox.fromSize(
+            size: const Size(500, 500),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: BlockchainConfigForm(
+                  onSubmit: (context, config) => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              BlockchainLauncherPage(config: config))),
+                ),
+              ),
+            ),
           ),
         ),
       );
