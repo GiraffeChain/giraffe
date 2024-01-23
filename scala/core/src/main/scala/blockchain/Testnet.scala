@@ -93,11 +93,11 @@ class TestnetAccount(
     TransactionOutputReference(transaction.id)
   def save[F[_]: Async: Files](dir: Path): F[Unit] =
     for {
-      _ <- Files[F].createDirectories(dir / "kes")
+      _ <- Files[F].createDirectories(dir)
       _ <- Stream.chunk(Chunk.array(vrfSk)).through(Files[F].writeAll(dir / "vrf")).compile.drain
       _ <- Stream.chunk(Chunk.array(operatorSk)).through(Files[F].writeAll(dir / "operator")).compile.drain
       _ <- Stream.chunk(Chunk.array(account.toByteArray)).through(Files[F].writeAll(dir / "account")).compile.drain
-      _ <- Stream.chunk(Chunk.array(kesSk.toByteArray)).through(Files[F].writeAll(dir / "kes" / "0")).compile.drain
+      _ <- Stream.chunk(Chunk.array(kesSk.toByteArray)).through(Files[F].writeAll(dir / "kes")).compile.drain
     } yield ()
 
 object TestnetAccount:

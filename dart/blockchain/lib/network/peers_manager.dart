@@ -16,9 +16,9 @@ import 'package:blockchain/network/handshake.dart';
 import 'package:blockchain/network/merge_stream_eager_complete.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
 import 'package:rational/rational.dart';
+import 'package:ribs_core/ribs_core.dart';
 import 'package:rxdart/rxdart.dart';
 
 class PeersManager {
@@ -51,8 +51,9 @@ class PeersManager {
         connectOutbound: connect,
       ))
           .tapLogFinalize(log, "Terminating")
-          .onFinalize((manager) => manager.close())
-          .flatTap((manager) => Resource.backgroundStream(
+          .onFinalize(
+              (manager) => IO.fromFutureF(() => manager.close()).voided())
+          .flatTap((manager) => ResourceUtils.backgroundStream(
               manager.connectionInitializer(connect)));
 
   final connectedPeers = <PeerId, PeerState>{};
@@ -93,50 +94,59 @@ class PeersManager {
         "Initializing handshake with remote=${socket.remoteAddress.address}:${socket.remotePort}");
 
     try {
-      await socket.chunkedResource.use((chunkedReader) async {
-        final handshakeResult = await handshake(chunkedReader.readChunk,
-            (data) async => socket.add(data), localPeerKeyPair, magicBytes);
-        final peerId = handshakeResult.peerId;
+      await socket.chunkedResource.use((chunkedReader) =>
+          IO.fromFutureF(() async {
+            final handshakeResult = await handshake(chunkedReader.readChunk,
+                (data) async => socket.add(data), localPeerKeyPair, magicBytes);
+            final peerId = handshakeResult.peerId;
 
-        log.info("Handshake success with peerId=${peerId.show}");
+            log.info("Handshake success with peerId=${peerId.show}");
 
-        await PeerState.make(
-          socket: socket,
-          publicState: PublicP2PState(localPeer: ConnectedPeer(peerId: peerId)),
-        ).onFinalize((state) async {
-          log.info(
-              "Connection closed with peerId=${state.publicState.localPeer.peerId.show}");
-          connectedPeers.remove(state.publicState.localPeer.peerId);
-        }).use((state) async {
-          connectedPeers[peerId] = state;
-          final exchange = MultiplexedDataExchange(
-              MultiplexedIO(FramedIO(socket, chunkedReader)));
-          await PeerBlockchainInterface.make(
-            blockchain: blockchain,
-            remotePeerState: state,
-            exchange: exchange,
-            peersManager: this,
-          ).use((interface) => Resource.backgroundStream(
-                MergeStreamEagerComplete([
-                  interface.background
-                      .doOnDone(() => log.info("Background done")),
-                  PeerHandler(
-                    blockchain: blockchain,
-                    remotePeerId: state.publicState.localPeer.peerId,
-                    peersManager: this,
-                    interface: interface,
-                  ).run().doOnDone(() => log.info("Peer handler done")),
-                ]),
-              )
-                  .tap((sub) => state.addCloseHandler(sub.cancel))
-                  .tapLogFinalize(log, "Closing")
-                  .use((backgroundHandler) async {
-                log.info("Running");
-                await Future.any([backgroundHandler.done, socket.done]);
-                log.info("Done running");
-              }));
-        });
-      });
+            await PeerState.make(
+              socket: socket,
+              publicState:
+                  PublicP2PState(localPeer: ConnectedPeer(peerId: peerId)),
+            )
+                .onFinalize((state) => IO.delay(() {
+                      log.info(
+                          "Connection closed with peerId=${state.publicState.localPeer.peerId.show}");
+                      connectedPeers.remove(state.publicState.localPeer.peerId);
+                      return Unit();
+                    }))
+                .use((state) => IO.fromFutureF(() async {
+                      connectedPeers[peerId] = state;
+                      final exchange = MultiplexedDataExchange(
+                          MultiplexedIO(FramedIO(socket, chunkedReader)));
+                      await PeerBlockchainInterface.make(
+                        blockchain: blockchain,
+                        remotePeerState: state,
+                        exchange: exchange,
+                        peersManager: this,
+                      ).use((interface) => ResourceUtils.backgroundStream(
+                            MergeStreamEagerComplete([
+                              interface.background
+                                  .doOnDone(() => log.info("Background done")),
+                              PeerHandler(
+                                blockchain: blockchain,
+                                remotePeerId:
+                                    state.publicState.localPeer.peerId,
+                                peersManager: this,
+                                interface: interface,
+                              ).run().doOnDone(
+                                  () => log.info("Peer handler done")),
+                            ]),
+                          )
+                              .tap((sub) => state.addCloseHandler(sub.cancel))
+                              .tapLogFinalize(log, "Closing")
+                              .use((backgroundHandler) =>
+                                  IO.fromFutureF(() async {
+                                    log.info("Running");
+                                    await Future.any(
+                                        [backgroundHandler.done, socket.done]);
+                                    log.info("Done running");
+                                  })));
+                    }));
+          }));
     } on GracefulPeerTermination {
     } catch (e) {
       log.warning("Peer error", e);
@@ -165,7 +175,7 @@ class PeerState {
   static Resource<PeerState> make(
           {required Socket socket, required PublicP2PState publicState}) =>
       Resource.pure(PeerState(socket: socket, publicState: publicState))
-          .onFinalize((s) => s.close());
+          .onFinalize((s) => IO.fromFutureF(() => s.close()).voided());
 
   Future<void> close() async {
     final log = Logger("Blockchain.P2P.Peer(${peerId.show})");
@@ -208,7 +218,7 @@ class PeerBlockchainInterface {
               remotePeerState: remotePeerState,
               exchange: exchange,
               peersManager: peersManager))
-          .onFinalize((interface) => interface.close())
+          .onFinalize((interface) => IO.fromFutureF(interface.close).voided())
           .tap((interface) => remotePeerState.addCloseHandler(interface.close));
 
   final _p2pStateQueues = PortQueues<void, PublicP2PState>();

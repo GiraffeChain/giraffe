@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:blockchain/common/resource.dart';
 import 'package:integral_isolates/integral_isolates.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 class IsolatePool {
   final int maxIsolates;
@@ -12,9 +12,10 @@ class IsolatePool {
   IsolatePool(this.maxIsolates);
 
   static Resource<IsolatePool> make({int? maxIsolates}) => Resource.make(
-      () => Future.sync(
-          () => IsolatePool(maxIsolates ?? Platform.numberOfProcessors)),
-      (pool) => Future.wait(pool.instances.map((i) => i.dispose()).toList()));
+      IO.delay(() => IsolatePool(maxIsolates ?? Platform.numberOfProcessors)),
+      (pool) => IList.of(pool.instances)
+          .parTraverseIO((a) => IO.fromFutureF(() => a.dispose()))
+          .voided());
 
   StatefulIsolate getIsolate() {
     if (instances.length < maxIsolates) {

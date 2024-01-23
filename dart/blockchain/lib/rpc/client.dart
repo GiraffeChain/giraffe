@@ -1,11 +1,11 @@
-import 'package:blockchain/common/resource.dart';
 import 'package:grpc/grpc.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 class RpcClient {
   static Resource<ClientChannel> makeChannel(
           {String host = "localhost", int port = 2024, bool secure = false}) =>
       Resource.make(
-          () => Future.sync(() => ClientChannel(
+          IO.delay(() => ClientChannel(
                 host,
                 port: port,
                 options: ChannelOptions(
@@ -15,5 +15,5 @@ class RpcClient {
                   connectionTimeout: Duration(days: 365),
                 ),
               )),
-          (channel) => channel.shutdown());
+          (channel) => IO.fromFutureF(channel.shutdown).voided());
 }

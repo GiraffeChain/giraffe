@@ -3,8 +3,8 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/models/unsigned.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
+import 'package:ribs_core/ribs_core.dart' hide id;
 
 final _bigIntByteMask = new BigInt.from(0xff);
 
@@ -169,8 +169,10 @@ extension FutureOps<T> on Future<T> {
         throw e;
       });
 
-  Future<Either<T, O>> race<O>(Future<O> f) => Future.any(
-      [then((res) => left<T, O>(res)), f.then((res) => right<T, O>(res))]);
+  Future<Either<T, O>> race<O>(Future<O> f) => Future.any([
+        then((res) => Either.left<T, O>(res)),
+        f.then((res) => Either.right<T, O>(res))
+      ]);
 }
 
 initRootLogger() {
@@ -183,3 +185,5 @@ initRootLogger() {
         '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${_errorSuffix}${_stackTraceSuffix}');
   });
 }
+
+final unit = Unit();

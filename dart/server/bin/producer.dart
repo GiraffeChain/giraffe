@@ -16,6 +16,7 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:logging/logging.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 final BlockchainConfig config = BlockchainConfig(
     staking: BlockchainStaking(
@@ -65,30 +66,32 @@ Future<void> main() async {
                 return id;
               }).asyncMap(viewer.getBlockHeaderOrRaise),
               leaderElection,
-              rpcClient,
+              viewer,
               stakerSupportClient,
               config.staking.rewardAddress,
-            ).flatMap((minting) => Resource.forStreamSubscription(() => minting
-                .blockProducer.blocks
-                .asyncMap((block) => stakerSupportClient
-                    .broadcastBlock(BroadcastBlockReq(
-                        block: Block(
-                            header: block.header,
-                            body: BlockBody(
-                                transactionIds: block.fullBody.transactions
-                                    .map((t) => t.id)))))
-                    .then((_) => block))
-                .listen(
-                  (block) => log.info(
-                      "Successfully broadcasted block id=${block.header.id.show}"),
-                  onError: (e) => log.severe("Production failed", e),
-                  onDone: () =>
-                      log.info("Block production finished unexpectedly"),
-                )));
+            ).flatMap((minting) => ResourceUtils.forStreamSubscription(() =>
+                minting
+                    .blockProducer.blocks
+                    .asyncMap((block) => stakerSupportClient
+                        .broadcastBlock(BroadcastBlockReq(
+                            block: Block(
+                                header: block.header,
+                                body: BlockBody(
+                                    transactionIds: block.fullBody.transactions
+                                        .map((t) => t.id)))))
+                        .then((_) => block))
+                    .listen(
+                      (block) => log.info(
+                          "Successfully broadcasted block id=${block.header.id.show}"),
+                      onError: (e) => log.severe("Production failed", e),
+                      onDone: () =>
+                          log.info("Block production finished unexpectedly"),
+                    )));
           }));
 
   await resource
-      .use((subscription) => Future.any(
-          [subscription.asFuture(), ProcessSignal.sigint.watch().first]))
-      .onError<Object>((e, s) => log.warning("Production failed", e, s));
+      .use((subscription) => IO.fromFutureF(() => Future.any(
+              [subscription.asFuture(), ProcessSignal.sigint.watch().first])
+          .onError<Object>((e, s) => log.warning("Production failed", e, s))))
+      .unsafeRunFuture();
 }

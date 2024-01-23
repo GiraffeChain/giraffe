@@ -11,6 +11,7 @@ import 'package:blockchain/ledger/mempool.dart';
 import 'package:blockchain/ledger/transaction_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 class Ledger {
   final TransactionSyntaxValidation transactionSyntaxValidation;
@@ -38,56 +39,61 @@ class Ledger {
     Clock clock,
     LocalChain localChain,
   ) =>
-      Resource.eval(() async => TransactionOutputStateImpl.make(
+      Resource.eval(IO.fromFutureF(() async => TransactionOutputStateImpl.make(
                 dataStores.spendableTransactionOutputs,
                 await currentEventIdGetterSetters.transactionOutputs.get(),
                 dataStores.bodies.getOrRaise,
                 dataStores.transactions.getOrRaise,
                 parentChildTree,
                 currentEventIdGetterSetters.transactionOutputs.set,
-              ))
+              )))
           .flatTap((transactionOutputState) =>
               transactionOutputState.eventSourcedState.followChain(localChain))
-          .evalFlatMap((transactionOutputState) async {
-        final transactionSyntaxValidation = TransactionSyntaxValidationImpl();
-        final transactionSemanticValidation = TransactionSemanticValidationImpl(
-            dataStores.transactions.getOrRaise, transactionOutputState);
-        final bodyValidation = BodyValidationImpl(
-          fetchTransaction: dataStores.transactions.getOrRaise,
-          transactionSyntaxValidation: transactionSyntaxValidation,
-          transactionSemanticValidation: transactionSemanticValidation,
-          inflation: Int64(50),
-        );
+          .evalMap((transactionOutputState) => IO.fromFutureF(() async {
+                final transactionSyntaxValidation =
+                    TransactionSyntaxValidationImpl();
+                final transactionSemanticValidation =
+                    TransactionSemanticValidationImpl(
+                        dataStores.transactions.getOrRaise,
+                        transactionOutputState);
+                final bodyValidation = BodyValidationImpl(
+                  fetchTransaction: dataStores.transactions.getOrRaise,
+                  transactionSyntaxValidation: transactionSyntaxValidation,
+                  transactionSemanticValidation: transactionSemanticValidation,
+                  inflation: Int64(50),
+                );
 
-        final headerToBodyValidation = BlockHeaderToBodyValidationImpl(
-            fetchHeader: dataStores.headers.getOrRaise);
-        return MempoolImpl.make(
-          dataStores.bodies.getOrRaise,
-          dataStores.transactions.getOrRaise,
-          parentChildTree,
-          await currentEventIdGetterSetters.mempool.get(),
-          Duration(minutes: 1),
-          localChain,
-        )
-            .flatTap(
-                (mempool) => mempool.eventSourcedState.followChain(localChain))
-            .flatMap((mempool) {
-          final blockPacker = BlockPackerImpl(
-            mempool,
-            clock,
-            dataStores.transactions.getOrRaise,
-            dataStores.transactions.contains,
-            BlockPackerImpl.makeBodyValidator(bodyValidation),
-          );
-          return Resource.pure(Ledger(
-            transactionSyntaxValidation: transactionSyntaxValidation,
-            transactionSemanticValidation: transactionSemanticValidation,
-            bodyValidation: bodyValidation,
-            headerToBodyValidation: headerToBodyValidation,
-            transactionOutputState: transactionOutputState,
-            mempool: mempool,
-            blockPacker: blockPacker,
-          ));
-        });
-      });
+                final headerToBodyValidation = BlockHeaderToBodyValidationImpl(
+                    fetchHeader: dataStores.headers.getOrRaise);
+                return MempoolImpl.make(
+                  dataStores.bodies.getOrRaise,
+                  dataStores.transactions.getOrRaise,
+                  parentChildTree,
+                  await currentEventIdGetterSetters.mempool.get(),
+                  Duration(minutes: 1),
+                  localChain,
+                )
+                    .flatTap((mempool) =>
+                        mempool.eventSourcedState.followChain(localChain))
+                    .flatMap((mempool) {
+                  final blockPacker = BlockPackerImpl(
+                    mempool,
+                    clock,
+                    dataStores.transactions.getOrRaise,
+                    dataStores.transactions.contains,
+                    BlockPackerImpl.makeBodyValidator(bodyValidation),
+                  );
+                  return Resource.pure(Ledger(
+                    transactionSyntaxValidation: transactionSyntaxValidation,
+                    transactionSemanticValidation:
+                        transactionSemanticValidation,
+                    bodyValidation: bodyValidation,
+                    headerToBodyValidation: headerToBodyValidation,
+                    transactionOutputState: transactionOutputState,
+                    mempool: mempool,
+                    blockPacker: blockPacker,
+                  ));
+                });
+              }))
+          .flatMap(identity);
 }

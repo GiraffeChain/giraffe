@@ -5,7 +5,6 @@ import 'package:blockchain/crypto/impl/kes_helper.dart';
 import 'package:blockchain/crypto/impl/kes_sum.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 
 import '../utils.dart';
 
@@ -281,12 +280,13 @@ class SecretKeyKesProduct {
   }
 
   List<int> _encodeSignature(SignatureKesSum signature) {
-    return [
+    final result = [
       ...signature.verificationKey,
       ...signature.signature,
       ...Int64(signature.witness.length).toBytesBigEndian(),
-      ...signature.witness.flatMap((t) => t)
     ];
+    for (final t in signature.witness) result.addAll(t);
+    return result;
   }
 
   static (KesBinaryTree, Uint8List) _decodeTree(Uint8List bytes) {

@@ -1,5 +1,5 @@
-import 'package:blockchain/common/resource.dart';
 import 'package:flutter/material.dart';
+import 'package:ribs_core/ribs_core.dart' hide State;
 
 class ResourceBuilder<A> extends StatefulWidget {
   final Resource<A> resource;
@@ -13,24 +13,25 @@ class ResourceBuilder<A> extends StatefulWidget {
 }
 
 class _ResourceBuilderState<A> extends State<ResourceBuilder<A>> {
-  (A, Future<void> Function())? _allocated;
+  late Function() _cancel;
   late AsyncSnapshot<A> _snapshot;
 
   @override
   void initState() {
     super.initState();
     _snapshot = AsyncSnapshot<A>.waiting();
-    widget.resource.allocated().then((allocated) => setState(() {
-          _allocated = allocated;
-          _snapshot =
-              AsyncSnapshot<A>.withData(ConnectionState.active, allocated.$1);
-        }));
+    _cancel = widget.resource
+        .flatMap((a) => Resource.eval(IO.delay(() => setState(() {
+              _snapshot = AsyncSnapshot<A>.withData(ConnectionState.active, a);
+            }))))
+        .useForever()
+        .unsafeRunCancelable();
   }
 
   @override
   void dispose() {
     super.dispose();
-    if (_allocated != null) _allocated!.$2();
+    _cancel();
   }
 
   @override

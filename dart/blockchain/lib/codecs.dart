@@ -7,10 +7,10 @@ import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain_protobuf/google/protobuf/struct.pb.dart' as struct;
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fast_base58/fast_base58.dart';
-import 'package:fpdart/fpdart.dart';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:hashlib/hashlib.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 const arr0 = [0x00];
 const arr1 = [0x01];
@@ -98,9 +98,11 @@ extension VerificationKeyKesProductCodecs on VerificationKeyKesProduct {
 }
 
 extension IterableCodecs<T> on Iterable<T> {
-  List<int> immutableBytes(List<int> Function(T) encodeItem) => <int>[]
-    ..addAll(length.immutableBytes)
-    ..addAll(flatMap((t) => encodeItem(t)));
+  List<int> immutableBytes(List<int> Function(T) encodeItem) {
+    final result = <int>[]..addAll(length.immutableBytes);
+    for (final t in this) result.addAll(encodeItem(t));
+    return result;
+  }
 }
 
 extension SignatureKesSumCodecs on SignatureKesSum {

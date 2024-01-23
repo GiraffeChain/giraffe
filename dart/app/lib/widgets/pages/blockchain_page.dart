@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:async/async.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
+import 'package:blockchain_app/widgets/pages/stake_page.dart';
 import 'package:blockchain_app/widgets/pages/transact_page.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/blockchain_view.dart';
@@ -16,7 +17,7 @@ class BlockchainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
-        length: 2,
+        length: 3,
         child: Scaffold(
             appBar: _appBar(context),
             body: Container(
@@ -28,6 +29,7 @@ class BlockchainPage extends StatelessWidget {
     return const TabBar(tabs: [
       Tab(icon: Icon(Icons.square_outlined), child: Text("Chain")),
       Tab(icon: Icon(Icons.send), child: Text("Send")),
+      Tab(icon: Icon(Icons.publish), child: Text("Stake")),
     ]);
   }
 
@@ -36,7 +38,8 @@ class BlockchainPage extends StatelessWidget {
     final blockchainWriter = context.watch<BlockchainWriter>();
     return TabBarView(children: [
       const LiveBlocksView(),
-      StreamedTransactView(view: blockchain, writer: blockchainWriter)
+      StreamedTransactView(view: blockchain, writer: blockchainWriter),
+      StakeView(view: blockchain, writer: blockchainWriter),
     ]);
   }
 

@@ -11,9 +11,9 @@ import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:blockchain/crypto/kes.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:rational/rational.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 abstract class BlockHeaderValidation {
   /**
@@ -63,10 +63,10 @@ class BlockHeaderValidationImpl extends BlockHeaderValidation {
 
     final vrfThresholdOrErrors = await _vrfThresholdFor(header);
 
-    if (vrfThresholdOrErrors.isLeft())
-      return vrfThresholdOrErrors.getLeft().toNullable()!;
+    if (vrfThresholdOrErrors.isLeft)
+      return vrfThresholdOrErrors.swap().toOption().toNullable()!;
 
-    final vrfThreshold = vrfThresholdOrErrors.getRight().toNullable()!;
+    final vrfThreshold = vrfThresholdOrErrors.toOption().toNullable()!;
 
     errors.addAll(_vrfThresholdVerification(header, vrfThreshold));
     if (errors.isNotEmpty) return errors;

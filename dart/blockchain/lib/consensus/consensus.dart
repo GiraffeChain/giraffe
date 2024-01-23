@@ -13,6 +13,7 @@ import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 class Consensus {
   final BlockHeaderValidation blockHeaderValidation;
@@ -40,7 +41,7 @@ class Consensus {
           ParentChildTree<BlockId> parentChildTree,
           BlockHeightTree blockHeightTree,
           DComputeImpl isolate) =>
-      Resource.pure(()).evalFlatMap((_) async {
+      Resource.eval(IO.fromFutureF(() async {
         final genesisBlockId = genesisBlock.header.id;
         final etaCalculation = EtaCalculationImpl(dataStores.headers.getOrRaise,
             clock, genesisBlock.header.eligibilityCertificate.eta);
@@ -77,7 +78,7 @@ class Consensus {
                 parentChildTree)
             .flatTap((localChain) =>
                 stakerTracker.epochBoundaryState.followChain(localChain))
-            .flatTap((localChain) => Resource.forStreamSubscription(() =>
+            .flatTap((localChain) => ResourceUtils.forStreamSubscription(() =>
                 localChain.adoptions
                     .asyncMap(currentEventIdGetterSetters.canonicalHead.set)
                     .listen(null)))
@@ -100,5 +101,5 @@ class Consensus {
               leaderElection: leaderElection,
               localChain: localChain);
         });
-      });
+      })).flatMap(identity);
 }

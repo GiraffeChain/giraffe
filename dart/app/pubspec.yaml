@@ -13,6 +13,7 @@ dependencies:
   fixnum: ^1.1.0
   async: ^2.11.0
   fpdart: ^1.1.0
+  ribs_core: ^1.0.0-dev.8
   rxdart: ^0.27.7
   fast_base58: ^0.2.1
   integral_isolates: ^0.4.1
@@ -22,6 +23,8 @@ dependencies:
   bit_array: ^2.2.0
   provider: ^6.0.5
   fluro: ^2.0.5
+  path_provider: ^2.1.2
+  file_picker: ^6.1.1
   blockchain:
     path: ../blockchain
   blockchain_protobuf:

@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart' as conf;
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/common/isolate_pool.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 final timestamp =
     Int64(DateTime.now().add(Duration(seconds: 5)).millisecondsSinceEpoch);
@@ -51,12 +53,12 @@ Future<void> main() async {
     runChain(conf.BlockchainConfig config) =>
         BlockchainCore.make(config, isolate).flatMap(
           (blockchain) => BlockchainRpc.make(blockchain, config)
-              .productR(BlockchainP2P.make(blockchain, config)),
+              .flatMap((_) => BlockchainP2P.make(blockchain, config)),
         );
     return runChain(config1).flatMap((f) => runChain(config2)
         .flatMap((f1) => runChain(config3).map((f2) => [f, f1, f2])));
   });
 
-  await resource
-      .use((fs) => Future.any([ProcessSignal.sigint.watch().first, ...fs]));
+  await resource.use((fs) => IO.fromFutureF(
+      () => Future.any([ProcessSignal.sigint.watch().first, ...fs])));
 }

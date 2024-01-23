@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/resource.dart';
@@ -17,10 +18,10 @@ import 'package:blockchain/minting/secure_store.dart';
 import 'package:blockchain/minting/staking.dart';
 import 'package:blockchain/minting/vrf_calculator.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
+import 'package:ribs_core/ribs_core.dart';
 import 'package:rxdart/streams.dart';
 import 'package:rxdart/transformers.dart';
 
@@ -51,8 +52,8 @@ class Minting {
     StakerTracker stakerTracker,
     LockAddress? rewardAddress,
   ) =>
-      Resource.pure(Directory("${stakingDir.path}/kes"))
-          .map((kesDir) => DiskSecureStore(baseDir: kesDir))
+      Resource.pure(File("${stakingDir.path}/kes"))
+          .map((kesFile) => DiskSecureStore(file: kesFile))
           .evalFlatMap((secureStore) async {
         final vrfSk = await File("${stakingDir.path}/vrf").readAsBytes();
         final vrfVk = await ed25519Vrf.getVerificationKey(vrfSk);
@@ -126,7 +127,7 @@ class Minting {
     BlockHeader canonicalHead,
     Stream<BlockHeader> adoptedHeaders,
     LeaderElection leaderElection,
-    NodeRpcClient nodeClient,
+    BlockchainView view,
     StakerSupportRpcClient stakerSupportClient,
     LockAddress? rewardAddress,
   ) =>
@@ -134,8 +135,7 @@ class Minting {
         stakingDir,
         protocolSettings,
         clock,
-        BlockPackerForStakerSupportRpc(
-            client: stakerSupportClient, nodeClient: nodeClient),
+        BlockPackerForStakerSupportRpc(client: stakerSupportClient, view: view),
         canonicalHead,
         adoptedHeaders,
         EtaCalculationForStakerSupportRpc(client: stakerSupportClient),
@@ -181,9 +181,8 @@ class StakerTrackerForStakerSupportRpc extends StakerTracker {
 
 class BlockPackerForStakerSupportRpc extends BlockPacker {
   final StakerSupportRpcClient client;
-  final NodeRpcClient nodeClient;
-  BlockPackerForStakerSupportRpc(
-      {required this.client, required this.nodeClient});
+  final BlockchainView view;
+  BlockPackerForStakerSupportRpc({required this.client, required this.view});
 
   @override
   Stream<FullBlockBody> streamed(
@@ -193,19 +192,8 @@ class BlockPackerForStakerSupportRpc extends BlockPacker {
     return s
         .doOnCancel(() => s.cancel())
         .takeWhile((v) => v.hasBody())
-        .map((v) => v.body)
-        .asyncMap(
-          (body) => Future.wait(
-            body.transactionIds.map(
-              (id) => nodeClient
-                  .getTransaction(GetTransactionReq(transactionId: id))
-                  .then((txRes) {
-                assert(txRes.hasTransaction());
-                return txRes.transaction;
-              }),
-            ),
-          ),
-        )
+        .map((v) => v.body.transactionIds.map(view.getTransactionOrRaise))
+        .asyncMap(Future.wait)
         .map((transactions) => FullBlockBody(transactions: transactions));
   }
 }

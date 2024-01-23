@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/network/util.dart';
 import 'package:logging/logging.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 class P2PServer {
   final String bindHost;
@@ -19,9 +20,9 @@ class P2PServer {
   );
 
   Resource<BackgroundHandler> start() => Resource.make(
-          () => ServerSocket.bind(bindHost, bindPort),
-          (server) => server.close())
-      .flatMap((server) => Resource.backgroundStream(server.map((socket) {
+          IO.fromFutureF(() => ServerSocket.bind(bindHost, bindPort)),
+          (server) => IO.fromFutureF(() => server.close()).voided())
+      .flatMap((server) => ResourceUtils.backgroundStream(server.map((socket) {
             log.info("Inbound connection initializing from ${socket.show}");
             _guardedHandler(socket);
           })));

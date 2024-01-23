@@ -6,7 +6,6 @@ import 'package:blockchain/crypto/kes.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:test/test.dart';
 
 import '../test_helpers.dart';
@@ -255,14 +254,14 @@ class TestTreeArg {
 }
 
 KesBinaryTree _buildTestTree(
-    Uint8List sk, Uint8List vk, Iterable<TestTreeArg> args) {
+    Uint8List sk, Uint8List vk, List<TestTreeArg> args) {
   if (args.isEmpty) return KesSigningLeaf(sk, vk);
   final arg0 = args.first;
   if (arg0.leftRight)
     return KesMerkleNode(arg0.seed, arg0.witnessLeft, arg0.witnessRight,
-        KesEmpty(), _buildTestTree(sk, vk, args.tail.toNullable()!));
+        KesEmpty(), _buildTestTree(sk, vk, args.sublist(1)));
   return KesMerkleNode(arg0.seed, arg0.witnessLeft, arg0.witnessRight,
-      _buildTestTree(sk, vk, args.tail.toNullable()!), KesEmpty());
+      _buildTestTree(sk, vk, args.sublist(1)), KesEmpty());
 }
 
 bool _skEqual(SecretKeyKesProduct sk1, SecretKeyKesProduct sk2) {

@@ -7,7 +7,7 @@ import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/consensus/local_chain.dart';
 import 'package:blockchain/ledger/transaction_output_state.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 abstract class Mempool {
   Future<Set<Transaction>> read(BlockId currentHead);
@@ -38,7 +38,7 @@ class MempoolImpl extends Mempool {
     Duration expirationDuration,
     LocalChain localChain,
   ) =>
-      Resource.streamController(
+      ResourceUtils.streamController(
               () => StreamController<MempoolChange>.broadcast())
           .flatMap((mempoolChangesController) {
         final state = <TransactionId, MempoolEntry>{};
@@ -70,7 +70,8 @@ class MempoolImpl extends Mempool {
           mempoolChangesController,
           expirationDuration,
           localChain,
-        )).flatTap((impl) => Resource.backgroundStream(impl._expirationStream));
+        )).flatTap(
+            (impl) => ResourceUtils.backgroundStream(impl._expirationStream));
       });
 
   Stream<TransactionId> get _expirationStream =>
@@ -78,7 +79,8 @@ class MempoolImpl extends Mempool {
         final now = DateTime.now();
         return eventSourcedState.useStateAt(await localChain.currentHead,
             (state) async {
-          final toRemove = state.filter((v) => v.addedAt.isBefore(now));
+          final toRemove = Map.fromEntries(
+              state.entries.where((e) => e.value.addedAt.isBefore(now)));
           for (final entry in toRemove.entries) {
             state.remove(entry.key);
             mempoolChangesController

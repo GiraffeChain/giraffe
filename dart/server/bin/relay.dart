@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:blockchain/blockchain.dart';
+import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart' as conf;
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/common/isolate_pool.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 // final timestamp = null;
 final timestamp = Int64(1704730002907);
@@ -54,8 +56,9 @@ Future<void> main() async {
       .flatMap((isolate) => BlockchainCore.make(config, isolate))
       .flatMap(
         (blockchain) => BlockchainRpc.make(blockchain, config)
-            .productR(BlockchainP2P.make(blockchain, config)),
+            .flatMap((_) => BlockchainP2P.make(blockchain, config)),
       );
 
-  await resource.use((f) => f.race(ProcessSignal.sigint.watch().first));
+  await resource.use(
+      (f) => IO.fromFutureF(() => f.race(ProcessSignal.sigint.watch().first)));
 }

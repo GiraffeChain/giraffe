@@ -1,6 +1,5 @@
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -8,11 +7,13 @@ import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
 import 'package:logging/logging.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 Resource<Server> serveRpcs(String host, int port, NodeRpcServiceBase nodeRpc,
         StakerSupportRpcServiceBase stakerSupportRpc) =>
-    Resource.pure(Server.create(services: [nodeRpc, stakerSupportRpc]))
-        .evalTap((server) => server.serve(address: host, port: port));
+    Resource.pure(Server.create(services: [nodeRpc, stakerSupportRpc])).evalTap(
+        (server) =>
+            IO.fromFutureF(() => server.serve(address: host, port: port)));
 
 class NodeRpcServiceImpl extends NodeRpcServiceBase {
   final BlockchainCore blockchain;

@@ -23,6 +23,7 @@ import 'package:blockchain/network/peers_manager.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain/rpc/server.dart' as rpc;
 import 'package:logging/logging.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 class BlockchainCore {
   final Clock clock;
@@ -54,25 +55,27 @@ class BlockchainCore {
     return Resource.pure(())
         .tapLog(log, (_) => "Initializing")
         .tapLogFinalize(log, "Terminated")
-        .evalMap((_) async => PrivateTestnet.initTo(
+        .evalMap((_) => IO.fromFutureF(() => PrivateTestnet.initTo(
               genesisBaseDir,
               genesisTimestamp,
               config.genesis.stakes,
               ProtocolSettings.defaultSettings.kesTreeHeight,
-            ))
+            )))
         .flatMap(
-          (genesisBlockId) => Resource.eval(() => Genesis.loadFromDisk(
-              Directory(
-                  "${genesisBaseDir.path}/${genesisBlockId.show}/genesis"),
-              genesisBlockId)).flatMap(
+          (genesisBlockId) => Resource.eval(Genesis.loadFromDisk(
+                  Directory(
+                      "${genesisBaseDir.path}/${genesisBlockId.show}/genesis"),
+                  genesisBlockId))
+              .flatMap(
             (genesisBlock) => DataStores.makePersistent(Directory(
                     DataStores.interpolateBlockId(
                         config.data.dataDir, genesisBlockId)))
-                .evalTap((d) async {
-              if (!await d.isInitialized(genesisBlockId)) {
-                await d.init(genesisBlock);
-              }
-            }).flatMap((dataStores) {
+                .evalTap((d) => IO.fromFutureF(() async {
+                      if (!await d.isInitialized(genesisBlockId)) {
+                        await d.init(genesisBlock);
+                      }
+                    }))
+                .flatMap((dataStores) {
               final genesisBlockId = genesisBlock.header.id;
 
               log.info(
@@ -97,16 +100,16 @@ class BlockchainCore {
                 protocolSettings.operationalPeriodLength,
                 genesisTimestamp,
               );
-              return Resource.eval(() async {
+              return Resource.eval(IO.fromFutureF(() async {
                 final canonicalHeadId =
                     await currentEventIdGetterSetters.canonicalHead.get();
                 final canonicalHead =
                     await dataStores.headers.getOrRaise(canonicalHeadId);
                 log.info(
                     "Canonical head id=${canonicalHeadId.show} height=${canonicalHead.height} slot=${canonicalHead.slot}");
-              })
-                  .evalMap(
-                      (_) => currentEventIdGetterSetters.blockHeightTree.get())
+              }))
+                  .evalMap((_) => IO.fromFutureF(
+                      currentEventIdGetterSetters.blockHeightTree.get))
                   .map((eventId) => makeBlockHeightTree(
                       dataStores.blockHeightTree,
                       eventId,
@@ -228,57 +231,63 @@ class BlockchainP2P {
   static Resource<Future<void>> make(
           BlockchainCore blockchain, BlockchainConfig config) =>
       Resource.pure(())
-          .evalFlatMap((_) async {
-            log.info("Preparing P2P Network");
+          .flatMap((_) => Resource.eval(IO.fromFutureF(() async {
+                log.info("Preparing P2P Network");
 
-            late Ed25519KeyPair p2pKey;
-            final maybeSk =
-                await blockchain.dataStores.metadata.get(MetadataIndices.p2pSk);
-            if (maybeSk != null) {
-              final vk = await ed25519.getVerificationKey(maybeSk);
-              p2pKey = Ed25519KeyPair(maybeSk, vk);
-            } else {
-              p2pKey = await ed25519.generateKeyPair();
-              await blockchain.dataStores.metadata
-                  .put(MetadataIndices.p2pSk, p2pKey.sk);
-            }
-            final localPeerId = PeerId(value: p2pKey.vk);
-            log.info(
-                "Local peer id=${localPeerId.show} publicHost=${config.p2p.publicHost} publicPort=${config.p2p.publicPort}");
-            final localPeer = ConnectedPeer(
-              peerId: localPeerId,
-              host: config.p2p.publicHost.stringValue,
-              port: config.p2p.publicPort.uint32Value,
-            );
-            void Function(String, int) connect = (_, __) {};
-            final socketHandlerResource = (Socket socket) {
-              final shown = socket.show;
-              return Resource.pure(socket).onFinalize((socket) async {
-                log.info("Disconnecting $shown");
-                socket.destroy();
-              }).tapLog(log, (socket) => "Connected $shown");
-            };
-            return PeersManager.make(
-              localPeer: localPeer,
-              localPeerKeyPair: p2pKey,
-              magicBytes: config.p2p.magicBytes,
-              blockchain: blockchain,
-              connect: (host, port) => connect(host, port),
-            )
-                .map((peersManager) => P2PServer(
-                      config.p2p.bindHost,
-                      config.p2p.bindPort,
-                      (socket) => socketHandlerResource(socket)
-                          .use(
-                            (socket) => peersManager
-                                .handleConnection(socket)
-                                .onError((e, stacktrace) => log.warning(
-                                    "P2P Connection Error", e, stacktrace)),
-                          )
-                          .ignore(),
-                    ))
-                .tap((server) => connect = server.connectOutbound);
-          })
+                late Ed25519KeyPair p2pKey;
+                final maybeSk = await blockchain.dataStores.metadata
+                    .get(MetadataIndices.p2pSk);
+                if (maybeSk != null) {
+                  final vk = await ed25519.getVerificationKey(maybeSk);
+                  p2pKey = Ed25519KeyPair(maybeSk, vk);
+                } else {
+                  p2pKey = await ed25519.generateKeyPair();
+                  await blockchain.dataStores.metadata
+                      .put(MetadataIndices.p2pSk, p2pKey.sk);
+                }
+                final localPeerId = PeerId(value: p2pKey.vk);
+                log.info(
+                    "Local peer id=${localPeerId.show} publicHost=${config.p2p.publicHost} publicPort=${config.p2p.publicPort}");
+                final localPeer = ConnectedPeer(
+                  peerId: localPeerId,
+                  host: config.p2p.publicHost.stringValue,
+                  port: config.p2p.publicPort.uint32Value,
+                );
+                void Function(String, int) connect = (_, __) {};
+                final socketHandlerResource = (Socket socket) {
+                  final shown = socket.show;
+                  return Resource.pure(socket)
+                      .onFinalize((socket) => IO.delay(() {
+                            log.info("Disconnecting $shown");
+                            socket.destroy();
+                            return unit;
+                          }))
+                      .tapLog(log, (socket) => "Connected $shown");
+                };
+                return PeersManager.make(
+                  localPeer: localPeer,
+                  localPeerKeyPair: p2pKey,
+                  magicBytes: config.p2p.magicBytes,
+                  blockchain: blockchain,
+                  connect: (host, port) => connect(host, port),
+                )
+                    .map((peersManager) => P2PServer(
+                          config.p2p.bindHost,
+                          config.p2p.bindPort,
+                          (socket) => socketHandlerResource(socket)
+                              .use((socket) => IO.fromFutureF(
+                                    () => peersManager
+                                        .handleConnection(socket)
+                                        .onError((e, stacktrace) => log.warning(
+                                            "P2P Connection Error",
+                                            e,
+                                            stacktrace)),
+                                  ))
+                              .unsafeRunAndForget(),
+                        ))
+                    .tap((server) => connect = server.connectOutbound);
+              })))
+          .flatMap(identity)
           .flatMap(
             (p2pServer) => p2pServer.start().tap((_) => config.p2p.knownPeers
                 .map((s) => s.split(":"))

@@ -9,8 +9,8 @@ import 'package:blockchain/genesis.dart';
 import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:logging/logging.dart';
+import 'package:ribs_core/ribs_core.dart';
 import 'package:rxdart/rxdart.dart';
 
 abstract class LocalChain {
@@ -45,12 +45,14 @@ abstract class LocalChain {
   Stream<TraversalStep> traversalBetween(BlockId a, BlockId b) =>
       Stream.fromFuture(_parentChildTree.findCommmonAncestor(a, b)).expand(
           (unapplyApply) => <TraversalStep>[]
-            ..addAll(unapplyApply.$1.tail
-                .toNullable()!
-                .map((id) => TraversalStep_Unapplied(id)))
-            ..addAll(unapplyApply.$2.tail
-                .toNullable()!
-                .map((id) => TraversalStep_Applied(id))));
+            ..addAll(unapplyApply.$1
+                .tail()
+                .map((id) => TraversalStep_Unapplied(id))
+                .toList())
+            ..addAll(unapplyApply.$2
+                .tail()
+                .map((id) => TraversalStep_Applied(id))
+                .toList()));
 }
 
 class LocalChainImpl extends LocalChain {
@@ -75,7 +77,8 @@ class LocalChainImpl extends LocalChain {
     Future<Int64> Function(BlockId) heightOfBlock,
     ParentChildTree parentChildTree,
   ) =>
-      Resource.streamController(() => StreamController<BlockId>.broadcast())
+      ResourceUtils.streamController(
+              () => StreamController<BlockId>.broadcast())
           .map((controller) => LocalChainImpl(
                 genesis,
                 initialHead,

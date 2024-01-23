@@ -33,7 +33,10 @@ Future<R> LocalCompute<Q, R>(DComputeCallback<Q, R> callback, Q message,
         {String? debugLabel}) async =>
     callback(message);
 
-void setComputeFunction(DComputeImpl isolate) {
+DComputeImpl isolate = LocalCompute;
+
+void setComputeFunction(DComputeImpl i) {
+  isolate = i;
   ed25519 = Ed25519Isolated(isolate);
   ed25519Vrf = Ed25519VRFIsolated(isolate);
   kesProduct = KesProudctIsolated(isolate);

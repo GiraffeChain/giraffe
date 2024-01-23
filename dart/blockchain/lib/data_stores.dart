@@ -8,6 +8,7 @@ import 'package:blockchain/common/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 class DataStores {
   final Store<BlockId, (Int64, BlockId)> parentChildTree;
@@ -45,22 +46,22 @@ class DataStores {
 
   static Resource<DataStores> make() {
     makeDb<Key, Value>() => InMemoryStore<Key, Value>();
-    return Resource.make(
-        () async => DataStores(
-              parentChildTree: makeDb(),
-              currentEventIds: makeDb(),
-              headers: makeDb(),
-              bodies: makeDb(),
-              transactions: makeDb(),
-              spendableTransactionOutputs: makeDb(),
-              epochBoundaries: makeDb(),
-              delayedActiveStake: makeDb(),
-              delayedInactiveStake: makeDb(),
-              delayedActiveStakers: makeDb(),
-              blockHeightTree: makeDb(),
-              metadata: makeDb(),
-            ),
-        (_) async {});
+    return Resource.pure(
+      DataStores(
+        parentChildTree: makeDb(),
+        currentEventIds: makeDb(),
+        headers: makeDb(),
+        bodies: makeDb(),
+        transactions: makeDb(),
+        spendableTransactionOutputs: makeDb(),
+        epochBoundaries: makeDb(),
+        delayedActiveStake: makeDb(),
+        delayedInactiveStake: makeDb(),
+        delayedActiveStakers: makeDb(),
+        blockHeightTree: makeDb(),
+        metadata: makeDb(),
+      ),
+    );
   }
 
   static Resource<DataStores> makePersistent(Directory directory) =>
@@ -165,7 +166,7 @@ class DataStores {
           delayedActiveStakersR,
           blockHeightTreeR,
           metadataR
-        ).mapN12((parentChildTree,
+        ).mapN((parentChildTree,
                 currentEventIds,
                 headers,
                 bodies,

@@ -3,13 +3,13 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:async/async.dart';
-import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/network/util.dart';
+import 'package:ribs_core/ribs_core.dart' hide Queue;
 
 extension SocketOps on Socket {
   Resource<ChunkedStreamReader<int>> get chunkedResource => Resource.make(
-      () => Future.value(ChunkedStreamReader(this)),
-      (chunked) => chunked.cancel());
+      IO.pure(ChunkedStreamReader(this)),
+      (chunked) => IO.fromFutureF(() => chunked.cancel()).voided());
 }
 
 class FramedIO {

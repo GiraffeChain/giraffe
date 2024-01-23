@@ -1,10 +1,11 @@
 import 'package:fixnum/fixnum.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 abstract class ParentChildTree<T> {
   Future<T?> parentOf(T t);
   Future<void> assocate(T child, T parent);
   Future<Int64> heightOf(T t);
-  Future<(List<T>, List<T>)> findCommmonAncestor(T a, T b);
+  Future<(IList<T>, IList<T>)> findCommmonAncestor(T a, T b);
 }
 
 class ParentChildTreeImpl<T> extends ParentChildTree<T> {
@@ -25,9 +26,9 @@ class ParentChildTreeImpl<T> extends ParentChildTree<T> {
   }
 
   @override
-  Future<(List<T>, List<T>)> findCommmonAncestor(T a, T b) async {
+  Future<(IList<T>, IList<T>)> findCommmonAncestor(T a, T b) async {
     if (a == b)
-      return ([a], [b]);
+      return (IList.of([a]), IList.of([b]));
     else {
       final aHeight = await heightOf(a);
       final bHeight = await heightOf(b);
@@ -48,7 +49,7 @@ class ParentChildTreeImpl<T> extends ParentChildTree<T> {
         aChain.insert(0, (await _readOrRaise(aChain.first)).$2);
         bChain.insert(0, (await _readOrRaise(bChain.first)).$2);
       }
-      return (aChain, bChain);
+      return (IList.of(aChain), IList.of(bChain));
     }
   }
 

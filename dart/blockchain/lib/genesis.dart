@@ -8,6 +8,7 @@ import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/ledger/block_header_to_body_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 class Genesis {
   static const height = Int64.ONE;
@@ -61,38 +62,38 @@ class Genesis {
     }
   }
 
-  static Future<FullBlock> loadFromDisk(
-      Directory directory, BlockId blockId) async {
-    final blockIdStr = blockId.show;
-    Future<List<int>> load(String name) async {
-      final file = File("${directory.path}/$name");
-      return file.readAsBytes();
-    }
+  static IO<FullBlock> loadFromDisk(Directory directory, BlockId blockId) =>
+      IO.fromFutureF(() async {
+        final blockIdStr = blockId.show;
+        Future<List<int>> load(String name) async {
+          final file = File("${directory.path}/$name");
+          return file.readAsBytes();
+        }
 
-    final header =
-        BlockHeader.fromBuffer(await load("$blockIdStr.header.pbuf"));
+        final header =
+            BlockHeader.fromBuffer(await load("$blockIdStr.header.pbuf"));
 
-    header.embedId();
+        header.embedId();
 
-    assert(header.id == blockId);
+        assert(header.id == blockId);
 
-    final body = BlockBody.fromBuffer(await load("$blockIdStr.body.pbuf"));
-    final transactions = <Transaction>[];
+        final body = BlockBody.fromBuffer(await load("$blockIdStr.body.pbuf"));
+        final transactions = <Transaction>[];
 
-    for (final transactionId in body.transactionIds) {
-      final tx = Transaction.fromBuffer(
-          await load("${transactionId.show}.transaction.pbuf"));
-      tx.embedId();
-      assert(tx.id == transactionId);
-      transactions.add(tx);
-    }
+        for (final transactionId in body.transactionIds) {
+          final tx = Transaction.fromBuffer(
+              await load("${transactionId.show}.transaction.pbuf"));
+          tx.embedId();
+          assert(tx.id == transactionId);
+          transactions.add(tx);
+        }
 
-    final fullBody = FullBlockBody(transactions: transactions);
-    final expectedTxRoot =
-        TxRoot.calculateFromTransactions(Uint8List(32), transactions);
-    assert(expectedTxRoot.sameElements(header.txRoot));
-    return FullBlock(header: header, fullBody: fullBody);
-  }
+        final fullBody = FullBlockBody(transactions: transactions);
+        final expectedTxRoot =
+            TxRoot.calculateFromTransactions(Uint8List(32), transactions);
+        assert(expectedTxRoot.sameElements(header.txRoot));
+        return FullBlock(header: header, fullBody: fullBody);
+      });
 }
 
 class GenesisConfig {

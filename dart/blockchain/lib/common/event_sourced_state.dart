@@ -2,8 +2,8 @@ import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/consensus/local_chain.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:mutex/mutex.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 abstract class EventSourcedState<State, Id> {
   Future<State> stateAt(Id eventId);
@@ -15,7 +15,7 @@ class BlockSourcedState<State> extends EventTreeStateImpl<State, BlockId> {
       super.currentState, super.currentEventId, super.currentEventChanged);
 
   Resource<BackgroundHandler> followChain(LocalChain localChain) =>
-      Resource.backgroundStream(
+      ResourceUtils.backgroundStream(
           localChain.adoptions.asyncMap(stateAt).map((_) {}));
 }
 
@@ -48,18 +48,17 @@ class EventTreeStateImpl<State, Id> extends EventSourcedState<State, Id> {
       else {
         final applyUnapplyChains =
             await parentChildTree.findCommmonAncestor(currentEventId, eventId);
-        await _unapplyEvents(
-            applyUnapplyChains.$1.sublist(1), applyUnapplyChains.$1.first);
-        await _applyEvents(applyUnapplyChains.$2.sublist(1));
+        await _unapplyEvents(applyUnapplyChains.$1.tail(),
+            applyUnapplyChains.$1.headOption.toNullable()!);
+        await _applyEvents(applyUnapplyChains.$2.tail());
       }
       return f(currentState);
     });
   }
 
-  _unapplyEvents(List<Id> eventIds, Id newEventId) async {
-    final indexedEventIds =
-        eventIds.mapWithIndex((t, index) => (t, index)).toList().reversed;
-    for (final idIndex in indexedEventIds) {
+  _unapplyEvents(IList<Id> eventIds, Id newEventId) async {
+    final indexedEventIds = eventIds.zipWithIndex().reverse();
+    for (final idIndex in indexedEventIds.toList()) {
       final newState = await unapplyEvent(currentState, idIndex.$1);
       final nextEventId = idIndex.$2 == 0 ? newEventId : eventIds[idIndex.$2];
       currentState = newState;
@@ -68,8 +67,8 @@ class EventTreeStateImpl<State, Id> extends EventSourcedState<State, Id> {
     }
   }
 
-  _applyEvents(Iterable<Id> eventIds) async {
-    for (final eventId in eventIds) {
+  _applyEvents(IList<Id> eventIds) async {
+    for (final eventId in eventIds.toList()) {
       currentState = await applyEvent(currentState, eventId);
       currentEventId = eventId;
       await currentEventChanged(eventId);

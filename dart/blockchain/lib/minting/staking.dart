@@ -2,7 +2,6 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/models/unsigned.dart';
-import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/consensus/staker_tracker.dart';
 import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
@@ -19,7 +18,7 @@ import 'package:blockchain/crypto/kes.dart';
 import 'package:rational/rational.dart';
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:convert/convert.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 abstract class Staking {
   TransactionOutputReference get account;
@@ -170,12 +169,8 @@ class StakingImpl extends Staking {
 
   Future<T?> _consumeEvolvePersist<T>(
       int timeStep, Future<T> Function(SecretKeyKesProduct) use) async {
-    final fileNames = await secureStore.list();
-    if (fileNames.length != 1)
-      throw Exception("SecureStore contained invalid number of keys");
-    final fileName = fileNames.first;
-    log.info("Consuming key id=$fileName");
-    final diskKeyBytes = await secureStore.consume(fileName);
+    log.info("Consuming key");
+    final diskKeyBytes = await secureStore.consume;
     if (diskKeyBytes == null) return null;
     final SecretKeyKesProduct diskKey =
         SecretKeyKesProduct.decode(Uint8List.fromList(diskKeyBytes));
@@ -187,7 +182,7 @@ class StakingImpl extends Staking {
       log.info(
           "Persisted key timeStep=$latest is greater than current timeStep=$timeStep." +
               "  Re-persisting original key.");
-      secureStore.write(fileName, diskKeyBytes);
+      secureStore.write(diskKeyBytes);
     } else {
       currentPeriodKey = await kesProduct.update(diskKey, timeStep);
     }
@@ -198,7 +193,7 @@ class StakingImpl extends Staking {
     log.info("Updating next key idx=$nextTimeStep");
     final updated = await kesProduct.update(currentPeriodKey, nextTimeStep);
     log.info("Saving next key idx=$nextTimeStep");
-    await secureStore.write("k", updated.encode);
+    await secureStore.write(updated.encode);
     log.info("Saved next key idx=$nextTimeStep");
     return res;
   }

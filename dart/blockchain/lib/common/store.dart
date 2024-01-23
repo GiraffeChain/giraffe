@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:blockchain/common/resource.dart';
 import 'package:fast_base58/fast_base58.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:hive/hive.dart';
 import 'package:quiver/cache.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 abstract class Store<Key, T> {
   Future<T?> get(Key id);
@@ -57,8 +56,9 @@ class HiveStore<Key, Value> extends Store<Key, Value> {
       required this.decodeKey,
       required this.decodeValue});
 
-  static Resource<HiveInterface> makeHive(Directory directory) =>
-      Resource.make(() async => Hive..init(directory.path), (h) => h.close());
+  static Resource<HiveInterface> makeHive(Directory directory) => Resource.make(
+      IO.delay(() => Hive..init(directory.path)),
+      (h) => IO.fromFutureF(() => h.close()).voided());
 
   static Resource<HiveStore<Key, Value>> make<Key, Value>(
     String name,
@@ -68,7 +68,7 @@ class HiveStore<Key, Value> extends Store<Key, Value> {
     ByteDecoder<Key> decodeKey,
     ByteDecoder<Value> decodeValue,
   ) =>
-      Resource.make(() => hive.openBox<Uint8List>(name), (_) async {}).map(
+      Resource.eval(IO.fromFutureF(() => hive.openBox<Uint8List>(name))).map(
           (box) => HiveStore(
               hiveBox: box,
               encodeKey: encodeKey,
@@ -110,7 +110,7 @@ class CacheStore<Key, Value> extends Store<Key, Value> {
   @override
   Future<bool> contains(Key id) async {
     final cached = await cache.get(id);
-    if (cached != null && cached.isNone())
+    if (cached != null && cached.isEmpty)
       return true;
     else
       return underlying.contains(id);
@@ -119,10 +119,10 @@ class CacheStore<Key, Value> extends Store<Key, Value> {
   @override
   Future<Value?> get(Key id) async {
     final cached = await cache.get(id,
-        ifAbsent: (id) async => underlying.get(id).then(Option.fromNullable));
+        ifAbsent: (id) async => underlying.get(id).then(Option.new));
     if (cached == null) {
       final v = await underlying.get(id);
-      cache.set(id, Option.fromNullable(v));
+      cache.set(id, Option.new(v));
       return v;
     } else {
       return cached.toNullable();
@@ -132,7 +132,7 @@ class CacheStore<Key, Value> extends Store<Key, Value> {
   @override
   Future<void> put(Key id, Value value) async {
     await underlying.put(id, value);
-    cache.set(id, Option.of(value));
+    cache.set(id, Option.pure(value));
   }
 
   @override

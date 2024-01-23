@@ -1,5 +1,4 @@
 import 'package:blockchain/blockchain_view.dart';
-import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/rpc/client.dart';
 import 'package:blockchain_app/widgets/resource_builder.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -8,6 +7,7 @@ import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ribs_core/ribs_core.dart' hide State;
 
 class BlockchainLauncherPage extends StatefulWidget {
   final LaunchSettings config;
@@ -29,12 +29,10 @@ class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
           .map((clients) => (
                 BlockchainViewFromRpc(nodeClient: clients.nodeClient),
                 BlockchainWriter(
-                  submitTransaction: (tx) => clients.nodeClient
-                      .broadcastTransaction(
-                          BroadcastTransactionReq(transaction: tx)),
-                  submitBlock: (block) => clients.stakerSupportClient
-                      .broadcastBlock(BroadcastBlockReq(block: block)),
-                ),
+                    submitTransaction: (tx) => clients.nodeClient
+                        .broadcastTransaction(
+                            BroadcastTransactionReq(transaction: tx)),
+                    stakerClient: clients.stakerSupportClient),
               ));
 
   @override
@@ -42,7 +40,12 @@ class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
       ResourceBuilder<(BlockchainView, BlockchainWriter)>(
           resource: launch(),
           builder: (context,
-                  AsyncSnapshot<(BlockchainView, BlockchainWriter)> snapshot) =>
+                  AsyncSnapshot<
+                          (
+                            BlockchainView,
+                            BlockchainWriter,
+                          )>
+                      snapshot) =>
               snapshot.hasData
                   ? MultiProvider(
                       providers: [
@@ -109,8 +112,8 @@ class LaunchSettings {
 
 class BlockchainWriter {
   final Future<void> Function(Transaction) submitTransaction;
-  final Future<void> Function(Block) submitBlock;
+  final StakerSupportRpcClient stakerClient;
 
   BlockchainWriter(
-      {required this.submitTransaction, required this.submitBlock});
+      {required this.submitTransaction, required this.stakerClient});
 }

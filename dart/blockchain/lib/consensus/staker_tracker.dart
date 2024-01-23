@@ -5,7 +5,6 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/common/store.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:rational/rational.dart';
 
