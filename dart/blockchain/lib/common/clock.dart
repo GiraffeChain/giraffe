@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:fixnum/fixnum.dart';
 
 import 'package:blockchain/common/models/common.dart';
+import 'package:ribs_core/ribs_core.dart';
 
 abstract class Clock {
   Duration get slotLength;
@@ -13,9 +14,9 @@ abstract class Clock {
   Int64 timestampToSlot(Int64 timestamp);
   // Returns an inclusive range (minimum, maximum) of valid timestamps for the given slot
   (Int64, Int64) slotToTimestamps(Int64 slot);
-  Future<void> delayedUntilTimestamp(Int64 timestamp);
+  IO<void> delayedUntilTimestamp(Int64 timestamp);
 
-  Future<void> delayedUntilSlot(Int64 slot) =>
+  IO<void> delayedUntilSlot(Int64 slot) =>
       delayedUntilTimestamp(slotToTimestamps(slot).$1);
 
   Timer timerUntilTimestamp(Int64 timestamp, void Function() onComplete) =>
@@ -82,8 +83,10 @@ class ClockImpl extends Clock {
   );
 
   @override
-  Future<void> delayedUntilTimestamp(Int64 timestamp) => Future.delayed(
-      Duration(milliseconds: (timestamp - localTimestamp).toInt()));
+  IO<void> delayedUntilTimestamp(Int64 timestamp) => IO
+      .delay(() => localTimestamp)
+      .map((l) => Duration(milliseconds: (timestamp - l).toInt()))
+      .flatMap(IO.sleep);
 
   @override
   Int64 get globalSlot => timestampToSlot(localTimestamp);

@@ -10,6 +10,7 @@ inThisBuild(
 
 lazy val dockerSettings = Seq(
   dockerBaseImage := "eclipse-temurin:11-jre",
+  dockerUpdateLatest := true,
   dockerLabels ++= Map(
     "blockchain.version" -> version.value
   )
@@ -39,6 +40,8 @@ lazy val blockchain = project
   .aggregate(core, protobuf)
 
 lazy val core = project
+  .enablePlugins(DockerPlugin, JavaAppPackaging)
+  .settings(nodeDockerSettings*)
   .in(file("core"))
   .settings(
     name := "blockchain-core",

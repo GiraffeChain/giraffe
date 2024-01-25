@@ -6,10 +6,12 @@
 import 'dart:async' as _i3;
 
 import 'package:blockchain/common/clock.dart' as _i5;
-import 'package:blockchain/consensus/leader_election_validation.dart' as _i6;
+import 'package:blockchain/consensus/leader_election_validation.dart' as _i8;
 import 'package:fixnum/fixnum.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:mockito/src/dummies.dart' as _i7;
 import 'package:rational/rational.dart' as _i4;
+import 'package:ribs_core/ribs_core.dart' as _i6;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -230,25 +232,49 @@ class MockClock extends _i1.Mock implements _i5.Clock {
       ) as (_i2.Int64, _i2.Int64));
 
   @override
-  _i3.Future<void> delayedUntilTimestamp(_i2.Int64? timestamp) =>
+  _i6.IO<void> delayedUntilTimestamp(_i2.Int64? timestamp) =>
       (super.noSuchMethod(
         Invocation.method(
           #delayedUntilTimestamp,
           [timestamp],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i7.dummyValue<_i6.IO<void>>(
+          this,
+          Invocation.method(
+            #delayedUntilTimestamp,
+            [timestamp],
+          ),
+        ),
+        returnValueForMissingStub: _i7.dummyValue<_i6.IO<void>>(
+          this,
+          Invocation.method(
+            #delayedUntilTimestamp,
+            [timestamp],
+          ),
+        ),
+      ) as _i6.IO<void>);
 
   @override
-  _i3.Future<void> delayedUntilSlot(_i2.Int64? slot) => (super.noSuchMethod(
+  _i6.IO<void> delayedUntilSlot(_i2.Int64? slot) => (super.noSuchMethod(
         Invocation.method(
           #delayedUntilSlot,
           [slot],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i7.dummyValue<_i6.IO<void>>(
+          this,
+          Invocation.method(
+            #delayedUntilSlot,
+            [slot],
+          ),
+        ),
+        returnValueForMissingStub: _i7.dummyValue<_i6.IO<void>>(
+          this,
+          Invocation.method(
+            #delayedUntilSlot,
+            [slot],
+          ),
+        ),
+      ) as _i6.IO<void>);
 
   @override
   _i3.Timer timerUntilTimestamp(
@@ -449,7 +475,7 @@ class MockClock extends _i1.Mock implements _i5.Clock {
 /// A class which mocks [LeaderElection].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockLeaderElection extends _i1.Mock implements _i6.LeaderElection {
+class MockLeaderElection extends _i1.Mock implements _i8.LeaderElection {
   @override
   _i3.Future<_i4.Rational> getThreshold(
     _i4.Rational? relativeStake,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/models/unsigned.dart';
@@ -187,3 +188,36 @@ initRootLogger() {
 }
 
 final unit = Unit();
+
+StreamTransformer<In, Out> AbandoningTransformer<In, Out>(
+        IO<Out> Function(In) f) =>
+    StreamTransformer((Stream<In> stream, cancelOnError) {
+      final controller = StreamController<Out>(sync: true);
+      controller.onListen = () {
+        Future<Unit> Function()? cancel;
+        final subscription = stream.listen((data) {
+          final baseIo = f(data).flatTap((out) => IO.delay(() {
+                cancel = null;
+                if (out != null) controller.add(out);
+              }));
+          final io = (cancel != null)
+              ? IO
+                  .fromFutureF(() => cancel!())
+                  .flatTap((_) => IO.delay(() => cancel = null))
+                  .flatMap((_) => baseIo)
+              : baseIo;
+          cancel = io.unsafeRunCancelable();
+        },
+            onError: controller.addError,
+            onDone: controller.close,
+            cancelOnError: cancelOnError);
+        controller
+          ..onPause = subscription.pause
+          ..onResume = subscription.resume
+          ..onCancel = () async {
+            if (cancel != null) await cancel!();
+            await subscription.cancel;
+          };
+      };
+      return controller.stream.listen(null);
+    });

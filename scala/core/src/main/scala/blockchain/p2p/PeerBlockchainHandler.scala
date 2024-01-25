@@ -21,7 +21,7 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
     remotePeerState: PeerState[F]
 ):
   def handle: Stream[F, Unit] =
-    pingPong.merge(peerState).mergeHaltR(start)
+    pingPong.merge(peerState).mergeHaltR(Stream.exec(start))
 
   private def pingPong =
     Stream
@@ -36,125 +36,115 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
       .evalMap(remotePeerState.publicStateRef.set)
       .void
 
-  private def start = verifyGenesisAgreement ++ syncCheck
+  private def start = verifyGenesisAgreement >> syncCheckForever
 
-  private def verifyGenesisAgreement: Stream[F, Unit] =
-    Stream.exec(
-      for {
-        remoteGenesisId <- OptionT(interface.blockIdAtHeight(Genesis.Height))
-          .getOrRaise(new IllegalArgumentException("No Genesis"))
-        localGenesisId <- core.consensus.localChain.genesis
-        _ <- Async[F].raiseWhen(remoteGenesisId != localGenesisId)(
-          new IllegalArgumentException("Genesis Mismatch")
-        )
-      } yield ()
-    )
+  private def verifyGenesisAgreement: F[Unit] =
+    for {
+      remoteGenesisId <- OptionT(interface.blockIdAtHeight(Genesis.Height))
+        .getOrRaise(new IllegalArgumentException("No Genesis"))
+      localGenesisId <- core.consensus.localChain.genesis
+      _ <- Async[F].raiseWhen(remoteGenesisId != localGenesisId)(new IllegalArgumentException("Genesis Mismatch"))
+    } yield ()
 
-  private def syncCheck: Stream[F, Unit] =
-    Stream.force(
-      for {
-        commonAncestorId <- interface.commonAncestor
-        remoteHeadId <- OptionT(interface.blockIdAtHeight(0))
-          .getOrRaise(new IllegalArgumentException("No Canonical Head"))
-        remoteHeader <- OptionT(interface.fetchHeader(remoteHeadId))
-          .getOrRaise(new IllegalArgumentException("No Canonical Head"))
-        remoteHeaderAtHeightF = (height: Height) =>
-          OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
-        commonAncestorHeader <- core.dataStores.headers.getOrRaise(commonAncestorId)
-        localHeadId <- core.consensus.localChain.currentHead
-        localHeader <- core.dataStores.headers.getOrRaise(localHeadId)
-        localHeaderAtHeightF = (height: Height) =>
-          OptionT(core.consensus.localChain.blockIdAtHeight(height)).flatMapF(core.dataStores.headers.get).value
-        chainSelectionResult <- core.consensus.chainSelection.compare(
-          localHeader,
-          remoteHeader,
-          commonAncestorHeader,
-          localHeaderAtHeightF,
-          remoteHeaderAtHeightF
-        )
-        nextOperation <- chainSelectionResult match {
-          case ChainSelectionOutcome.XStandard =>
-            Logger[F].info("Remote peer is up-to-date but local chain is better") >>
-              inSync.pure[F]
-          case ChainSelectionOutcome.YStandard =>
-            Logger[F].info("Local peer is up-to-date but remote chain is better") >>
-              sync(commonAncestorHeader).pure[F]
-          case ChainSelectionOutcome.XDensity =>
-            Logger[F].info("Remote peer is out-of-sync but local chain is better") >>
-              inSync.pure[F]
-          case ChainSelectionOutcome.YDensity =>
-            Logger[F].info("Local peer out-of-sync and remote chain is better") >>
-              sync(commonAncestorHeader).pure[F]
-        }
-      } yield nextOperation
-    )
+  private def syncCheckForever: F[Unit] =
+    syncCheck.foreverM
 
-  private def inSync: Stream[F, Unit] = awaitBetterBlock.mergeHaltL(mempoolSync)
+  private def syncCheck: F[Unit] =
+    for {
+      commonAncestorId <- interface.commonAncestor
+      remoteHeadId <- OptionT(interface.blockIdAtHeight(0))
+        .getOrRaise(new IllegalArgumentException("No Canonical Head"))
+      remoteHeader <- OptionT(interface.fetchHeader(remoteHeadId))
+        .getOrRaise(new IllegalArgumentException("No Canonical Head"))
+      remoteHeaderAtHeightF = (height: Height) =>
+        OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
+      commonAncestorHeader <- core.dataStores.headers.getOrRaise(commonAncestorId)
+      localHeadId <- core.consensus.localChain.currentHead
+      localHeader <- core.dataStores.headers.getOrRaise(localHeadId)
+      localHeaderAtHeightF = (height: Height) =>
+        OptionT(core.consensus.localChain.blockIdAtHeight(height)).flatMapF(core.dataStores.headers.get).value
+      chainSelectionResult <- core.consensus.chainSelection.compare(
+        localHeader,
+        remoteHeader,
+        commonAncestorHeader,
+        localHeaderAtHeightF,
+        remoteHeaderAtHeightF
+      )
+      _ <- chainSelectionResult match {
+        case ChainSelectionOutcome.XStandard =>
+          Logger[F].info("Remote peer is up-to-date but local chain is better")
+        case ChainSelectionOutcome.YStandard =>
+          Logger[F].info("Local peer is up-to-date but remote chain is better")
+        case ChainSelectionOutcome.XDensity =>
+          Logger[F].info("Remote peer is out-of-sync but local chain is better")
+        case ChainSelectionOutcome.YDensity =>
+          Logger[F].info("Local peer out-of-sync and remote chain is better")
+      }
+      _ <- if (chainSelectionResult.isX) inSync else sync(commonAncestorHeader)
+    } yield ()
 
-  private def awaitBetterBlock: Stream[F, Unit] =
-    Stream.force(
-      interface.nextBlockAdoption.flatMap(blockId =>
+  private def inSync: F[Unit] =
+    awaitBetterBlock.race(mempoolSync).void
+
+  private def awaitBetterBlock: F[Unit] =
+    interface.nextBlockAdoption
+      .flatMap(blockId =>
         Logger[F].info(show"Received block notification id=$blockId") >>
           core.dataStores.headers
             .contains(blockId)
             .ifM(
-              Logger[F].info(show"Ignoring known block id=$blockId") >>
-                inSync.pure[F],
+              Logger[F].info(show"Ignoring known block id=$blockId").as(true),
               OptionT(interface.fetchHeader(blockId))
                 .getOrRaise(new IllegalArgumentException("Remote header not found"))
                 .flatMap(remoteHeader =>
                   core.consensus.localChain.currentHead.flatMap(currentHeadId =>
                     if (remoteHeader.parentHeaderId == currentHeadId)
                       fetchVerifyPersist(remoteHeader)
-                        .flatTap(adoptAndLog) >>
-                        inSync.pure[F]
+                        .flatTap(adoptAndLog)
+                        .as(true)
                     else
-                      Logger[F].info(show"Block id=$blockId is not a direct local extension.  Checking sync.") >>
-                        syncCheck.pure[F]
+                      Logger[F].info(show"Block id=$blockId is not a direct local extension.  Checking sync.").as(false)
                   )
                 )
             )
       )
-    )
+      .iterateWhile(identity)
+      .void
 
-  private def sync(commonAncestor: BlockHeader): Stream[F, Unit] =
-    Stream
-      .eval(
-        (commonAncestor.height + 1, none[FullBlock])
-          .tailRecM((h, lastProcessed) =>
-            OptionT(interface.blockIdAtHeight(h))
-              .semiflatMap(remoteId =>
-                OptionT(interface.fetchHeader(remoteId))
-                  .getOrRaise(new IllegalArgumentException("Remote header not found"))
-                  .ensure(new IllegalStateException("Remote peer branched during syncing"))(header =>
-                    lastProcessed.forall(_.header.id == header.parentHeaderId)
-                  )
-                  .flatMap(fetchVerifyPersist)
-                  .map(_.some)
-                  .tupleLeft(h + 1)
+  private def sync(commonAncestor: BlockHeader): F[Unit] =
+    (commonAncestor.height + 1, none[FullBlock])
+      .tailRecM((h, lastProcessed) =>
+        OptionT(interface.blockIdAtHeight(h))
+          .semiflatMap(remoteId =>
+            OptionT(interface.fetchHeader(remoteId))
+              .getOrRaise(new IllegalArgumentException("Remote header not found"))
+              .ensure(new IllegalStateException("Remote peer branched during syncing"))(header =>
+                lastProcessed.forall(_.header.id == header.parentHeaderId)
               )
-              .flatTapNone(lastProcessed.traverse(adoptAndLog))
-              .toLeft(lastProcessed)
-              .value
+              .flatMap(fetchVerifyPersist)
+              .map(_.some)
+              .tupleLeft(h + 1)
+          )
+          .flatTapNone(lastProcessed.traverse(adoptAndLog))
+          .toLeft(lastProcessed)
+          .value
+      )
+      .flatTap(_.traverse(adoptAndLog))
+      .void
+
+  private def mempoolSync: F[Unit] =
+    interface.nextTransactionNotification
+      .flatMap(id =>
+        core.dataStores.transactions
+          .contains(id)
+          .ifM(
+            ().pure[F],
+            OptionT(interface.fetchTransaction(id))
+              .getOrRaise(new IllegalStateException("Remote peer did not have expected transaction"))
+              .flatMap(core.ledger.mempool.add)
           )
       )
-      .evalTap(_.traverse(adoptAndLog))
-      .void ++ inSync
-
-  private def mempoolSync: Stream[F, Unit] =
-    Stream.repeatEval(
-      interface.nextTransactionNotification
-        .flatMap(id =>
-          core.dataStores.transactions
-            .contains(id)
-            .ifM(
-              ().pure[F],
-              OptionT(interface.fetchTransaction(id))
-                .getOrRaise(new IllegalStateException("Remote peer did not have expected transaction"))
-                .flatMap(core.ledger.mempool.add)
-            )
-        )
-    )
+      .foreverM
 
   private def fetchVerifyPersist(header: BlockHeader): F[FullBlock] =
     for {

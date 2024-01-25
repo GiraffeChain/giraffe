@@ -45,7 +45,10 @@ class MainApp extends StatelessWidget {
       onGenerateRoute: FluroRouter.appRouter.generator,
       theme: ThemeData.from(
           colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.brown, brightness: Brightness.dark)),
+        seedColor: Colors.blueGrey,
+        brightness: Brightness.dark,
+        // surface: Colors.blue[800],
+      )),
     );
   }
 

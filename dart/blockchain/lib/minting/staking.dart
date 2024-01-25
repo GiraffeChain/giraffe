@@ -99,8 +99,7 @@ class StakingImpl extends Staking {
       );
       final unsignedHeader = unsignedBlockBuilder(partialCertificate);
       final List<int> messageToSign = unsignedHeader.signableBytes;
-      final cryptoKeyPair = await Ed25519KeyPair(
-          operationalKeyOutOpt.childKeyPair.sk,
+      final cryptoKeyPair = Ed25519KeyPair(operationalKeyOutOpt.childKeyPair.sk,
           operationalKeyOutOpt.childKeyPair.vk);
       final operationalCertificate = OperationalCertificate()
         ..parentVK = operationalKeyOutOpt.parentVK
