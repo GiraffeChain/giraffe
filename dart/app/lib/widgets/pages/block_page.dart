@@ -1,8 +1,7 @@
-import 'package:blockchain/blockchain.dart';
-import 'package:blockchain/data_stores.dart';
+import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
-import 'package:blockchain_codecs/codecs.dart';
-import 'package:blockchain_common/utils.dart';
+import 'package:blockchain/codecs.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +17,7 @@ class UnloadedBlockPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: _load(context.watch<Blockchain>().dataStores),
+        future: context.watch<BlockchainView>().getFullBlock(id),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data != null) {
@@ -30,17 +29,6 @@ class UnloadedBlockPage extends StatelessWidget {
             return _scaffold(loading);
           }
         });
-  }
-
-  Future<FullBlock?> _load(DataStores dataStores) async {
-    final header = await dataStores.headers.getOrRaise(id);
-    final body = await dataStores.bodies.getOrRaise(id);
-    final transactions = await Future.wait(
-        body.transactionIds.map(dataStores.transactions.getOrRaise));
-    final fullBody = FullBlockBody()..transactions.addAll(transactions);
-    return FullBlock()
-      ..header = header
-      ..fullBody = fullBody;
   }
 
   _scaffold(Widget body) =>

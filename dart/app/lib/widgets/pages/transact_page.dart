@@ -1,19 +1,59 @@
 import 'dart:async';
 
-import 'package:blockchain_codecs/codecs.dart';
+import 'package:blockchain/blockchain_view.dart';
+import 'package:blockchain/codecs.dart';
+import 'package:blockchain/ledger/models/transaction_validation_context.dart';
+import 'package:blockchain/ledger/utils.dart';
+import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:blockchain_wallet/wallet.dart';
+import 'package:blockchain/wallet/wallet.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
+
+class StreamedTransactView extends StatefulWidget {
+  final BlockchainView view;
+  final BlockchainWriter writer;
+
+  const StreamedTransactView(
+      {super.key, required this.view, required this.writer});
+  @override
+  State<StatefulWidget> createState() => StreamedTransactViewState();
+}
+
+class StreamedTransactViewState extends State<StreamedTransactView>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return StreamBuilder(
+      stream: Wallet.streamed(widget.view),
+      builder: (context, snapshot) => snapshot.hasData
+          ? TransactView(
+              wallet: snapshot.data!,
+              view: widget.view,
+              writer: widget.writer,
+            )
+          : const CircularProgressIndicator(),
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+}
 
 class TransactView extends StatefulWidget {
   final Wallet wallet;
-  final Future<void> Function(Transaction) processTransaction;
+  final BlockchainView view;
+  final BlockchainWriter writer;
 
   const TransactView(
-      {super.key, required this.wallet, required this.processTransaction});
+      {super.key,
+      required this.wallet,
+      required this.view,
+      required this.writer});
   @override
   State<StatefulWidget> createState() => TransactViewState();
 }
@@ -67,11 +107,9 @@ class TransactViewState extends State<TransactView> {
 
     for (final ref in _selectedInputs) {
       final output = widget.wallet.spendableOutputs[ref]!;
-      final lock = widget.wallet.locks[output.lockAddress]!;
       final input = TransactionInput()
         ..value = output.value
-        ..reference = ref
-        ..lock = lock;
+        ..reference = ref;
       tx.inputs.add(input);
     }
 
@@ -83,18 +121,29 @@ class TransactViewState extends State<TransactView> {
         ..value = value;
       tx.outputs.add(output);
     }
-    for (final ref in _selectedInputs.toList()) {
-      final output = widget.wallet.spendableOutputs[ref]!;
-      final signer = widget.wallet.signers[output.lockAddress]!;
-      tx = await signer(tx);
+    final head = await widget.view.canonicalHead;
+    final slot = (await widget.view.clock).globalSlot;
+    final witnessContext = WitnessContext(
+      height: head.height + 1,
+      slot: slot,
+      messageToSign: tx.signableBytes,
+    );
+    for (final lockAddress
+        in await tx.requiredWitnesses(widget.view.getTransactionOrRaise)) {
+      final signer = widget.wallet.signers[lockAddress]!;
+      final witness = await signer(witnessContext);
+      tx.attestation.add(witness);
     }
 
     return tx;
   }
 
+  final log = Logger("Transact");
+
   _transact() async {
     final tx = await _createTransaction();
-    await widget.processTransaction(tx);
+    log.info("Broadcasting transaction id=${tx.id.show}");
+    await widget.writer.submitTransaction(tx);
     setState(() {
       _selectedInputs = {};
       _newOutputEntries = [];
@@ -165,13 +214,20 @@ class TransactViewState extends State<TransactView> {
   }
 
   DataRow _feeOutputRow() {
-    final outputSum = _newOutputEntries
-        .map((t) => Int64.parseInt(t.$1))
-        .fold(Int64.ZERO, (a, b) => a + b);
-    final fee = _inputSum() - outputSum;
+    Int64 outputSum = Int64.ZERO;
+    String? errorText;
+    for (final t in _newOutputEntries) {
+      final parsed = Int64.tryParseInt(t.$1);
+      if (parsed == null) {
+        errorText = "?";
+        break;
+      } else {
+        outputSum += parsed;
+      }
+    }
 
     return DataRow(cells: [
-      DataCell(Text(fee.toString())),
+      DataCell(Text(errorText ?? (_inputSum() - outputSum).toString())),
       const DataCell(Text("Tip")),
       const DataCell(IconButton(
         icon: Icon(Icons.cancel),
@@ -213,6 +269,8 @@ class TransactViewState extends State<TransactView> {
             : DataTable(
                 columns: header,
                 rows: widget.wallet.spendableOutputs.entries
+                    // Hide registrations for now
+                    .where((e) => !e.value.value.hasAccountRegistration())
                     .map(_inputEntryRow)
                     .toList(),
               ));

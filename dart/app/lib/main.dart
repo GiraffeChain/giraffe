@@ -1,18 +1,15 @@
 import 'dart:io';
 
-import 'package:blockchain/isolate_pool.dart';
+import 'package:blockchain/common/isolate_pool.dart';
 import 'package:blockchain_app/widgets/pages/block_page.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_page.dart';
 import 'package:blockchain_app/widgets/pages/transaction_page.dart';
-import 'package:blockchain_codecs/codecs.dart';
-import 'package:blockchain_crypto/kes.dart' as kes;
-import 'package:blockchain_crypto/utils.dart';
+import 'package:blockchain/codecs.dart';
+import 'package:blockchain/crypto/utils.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'package:blockchain_crypto/ed25519.dart' as ed25519;
-import 'package:blockchain_crypto/ed25519vrf.dart' as ed25519VRF;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 var _isolate = LocalCompute;
@@ -20,6 +17,7 @@ var _isolate = LocalCompute;
 void main() async {
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
+    // ignore: avoid_print
     print(
         '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}');
   });
@@ -27,9 +25,7 @@ void main() async {
     final computePool = IsolatePool(Platform.numberOfProcessors);
     _isolate = computePool.isolate;
   }
-  ed25519.ed25519 = ed25519.Ed25519Isolated(_isolate);
-  ed25519VRF.ed25519Vrf = ed25519VRF.Ed25519VRFIsolated(_isolate);
-  kes.kesProduct = kes.KesProudctIsolated(_isolate);
+  setComputeFunction(_isolate);
 
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -47,18 +43,31 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: _home(context),
       onGenerateRoute: FluroRouter.appRouter.generator,
+      theme: ThemeData.from(
+          colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blueGrey,
+        brightness: Brightness.dark,
+        // surface: Colors.blue[800],
+      )),
     );
   }
 
   Widget _home(BuildContext context) => Scaffold(
-        body: SizedBox.fromSize(
-          size: const Size(500, 500),
-          child: BlockchainConfigForm(
-            onSubmit: (context, config) => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => BlockchainLauncherPage(
-                        isolate: _isolate, config: config))),
+        body: Center(
+          child: SizedBox.fromSize(
+            size: const Size(500, 500),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: BlockchainConfigForm(
+                  onSubmit: (context, config) => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              BlockchainLauncherPage(config: config))),
+                ),
+              ),
+            ),
           ),
         ),
       );

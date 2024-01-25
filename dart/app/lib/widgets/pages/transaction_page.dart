@@ -1,7 +1,7 @@
-import 'package:blockchain/blockchain.dart';
+import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
-import 'package:blockchain_codecs/codecs.dart';
-import 'package:blockchain_common/utils.dart';
+import 'package:blockchain/codecs.dart';
+import 'package:blockchain/common/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +14,7 @@ class UnloadedTransactionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: context.watch<Blockchain>().dataStores.transactions.get(id),
+        future: context.watch<BlockchainView>().getTransaction(id),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data != null) {
@@ -127,7 +127,7 @@ class TransactionPage extends StatelessWidget {
             columns: const [
               DataColumn(label: Text("UTxO Reference")),
               DataColumn(label: Text("Quantity")),
-              DataColumn(label: Text("Address")),
+              // DataColumn(label: Text("Address")), // TODO
               DataColumn(label: Text("Registration")),
             ],
             rows: transaction.inputs
@@ -140,10 +140,7 @@ class TransactionPage extends StatelessWidget {
                         Text("#${t.reference.index}"),
                       ])),
                       DataCell(Text(t.value.quantity.toString())),
-                      DataCell(SizedBox.square(
-                          dimension: 32,
-                          child: BitMapViewer.forLockAddress(t.lock.address))),
-                      DataCell(t.value.hasRegistration()
+                      DataCell(t.value.hasAccountRegistration()
                           ? const Icon(Icons.app_registration_rounded)
                           : Container()),
                     ]))
@@ -163,6 +160,7 @@ class TransactionPage extends StatelessWidget {
             columns: const [
               DataColumn(label: Text("Quantity")),
               DataColumn(label: Text("Address")),
+              DataColumn(label: Text("Graph Entry")),
               DataColumn(label: Text("Registration")),
             ],
             rows: transaction.outputs
@@ -171,7 +169,12 @@ class TransactionPage extends StatelessWidget {
                       DataCell(SizedBox.square(
                           dimension: 32,
                           child: BitMapViewer.forLockAddress(t.lockAddress))),
-                      DataCell(t.value.hasRegistration()
+                      DataCell(t.value.hasGraphEntry()
+                          ? (t.value.graphEntry.hasVertex()
+                              ? const Icon(Icons.circle)
+                              : const Icon(Icons.compare_arrows_outlined))
+                          : Container()),
+                      DataCell(t.value.hasAccountRegistration()
                           ? const Icon(Icons.account_box)
                           : Container()),
                     ]))

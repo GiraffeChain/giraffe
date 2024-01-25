@@ -1,56 +1,62 @@
-import 'dart:async';
-import 'dart:io';
-
-import 'package:blockchain/blockchain.dart';
-import 'package:blockchain/config.dart';
-import 'package:blockchain_crypto/utils.dart';
+import 'package:blockchain/blockchain_view.dart';
+import 'package:blockchain/rpc/client.dart';
+import 'package:blockchain_app/widgets/resource_builder.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
+import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fluro/fluro.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_background/flutter_background.dart';
 import 'package:provider/provider.dart';
+import 'package:ribs_core/ribs_core.dart' hide State;
 
 class BlockchainLauncherPage extends StatefulWidget {
-  final DComputeImpl isolate;
-  final BlockchainConfig config;
+  final LaunchSettings config;
 
-  const BlockchainLauncherPage(
-      {super.key, required this.isolate, required this.config});
+  const BlockchainLauncherPage({super.key, required this.config});
 
   @override
   BlockchainLauncherPageState createState() => BlockchainLauncherPageState();
 }
 
 class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
-  Future<Blockchain> launch() async {
-    await _flutterBackgroundInit();
-    final blockchain = await Blockchain.init(widget.config, widget.isolate);
-    blockchain.run();
-    return blockchain;
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    unawaited(_flutterBackgroundRelease());
-  }
-
-  @override
-  Widget build(BuildContext context) => FutureBuilder(
-      future: launch(),
-      builder: (context, snapshot) => snapshot.hasData
-          ? MultiProvider(
-              providers: [
-                  Provider(
-                    create: (_) => snapshot.data!,
-                    dispose: (_, blockchain) => blockchain.cleanup(),
-                  )
-                ],
-              child: Navigator(
-                initialRoute: '/',
-                onGenerateRoute: FluroRouter.appRouter.generator,
+  Resource<(BlockchainView, BlockchainWriter)> launch() =>
+      RpcClient.makeChannel(
+              host: widget.config.rpcHost, port: widget.config.rpcPort)
+          .map((channel) => (
+                nodeClient: NodeRpcClient(channel),
+                stakerSupportClient: StakerSupportRpcClient(channel)
               ))
-          : loading);
+          .map((clients) => (
+                BlockchainViewFromRpc(nodeClient: clients.nodeClient),
+                BlockchainWriter(
+                    submitTransaction: (tx) => clients.nodeClient
+                        .broadcastTransaction(
+                            BroadcastTransactionReq(transaction: tx)),
+                    stakerClient: clients.stakerSupportClient),
+              ));
+
+  @override
+  Widget build(BuildContext context) =>
+      ResourceBuilder<(BlockchainView, BlockchainWriter)>(
+          resource: launch(),
+          builder: (context,
+                  AsyncSnapshot<
+                          (
+                            BlockchainView,
+                            BlockchainWriter,
+                          )>
+                      snapshot) =>
+              snapshot.hasData
+                  ? MultiProvider(
+                      providers: [
+                          Provider(create: (_) => snapshot.data!.$1),
+                          Provider(create: (_) => snapshot.data!.$2),
+                        ],
+                      child: Navigator(
+                        initialRoute: '/',
+                        onGenerateRoute: FluroRouter.appRouter.generator,
+                      ))
+                  : loading);
 
   Widget get loading => Scaffold(
       body: Container(
@@ -62,33 +68,26 @@ class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
 
 class BlockchainConfigForm extends StatefulWidget {
   const BlockchainConfigForm({super.key, required this.onSubmit});
-  final void Function(BuildContext, BlockchainConfig) onSubmit;
+  final void Function(BuildContext, LaunchSettings) onSubmit;
 
   @override
   State<StatefulWidget> createState() => BlockchainConfigFormState();
 }
 
 class BlockchainConfigFormState extends State<BlockchainConfigForm> {
-  String? p2pBindHost;
-  String? p2pBindPort;
-  String? p2pKnownPeers;
+  String? rpcHost;
+  String? rpcPort;
   @override
   Widget build(BuildContext context) => Column(
         children: [
           TextField(
-            onChanged: (v) => p2pBindHost = v,
+            onChanged: (v) => rpcHost = v,
             decoration:
-                const InputDecoration(hintText: "P2P Bind Host. i.e. 0.0.0.0"),
+                const InputDecoration(hintText: "RPC Host. i.e. localhost"),
           ),
           TextField(
-            onChanged: (v) => p2pBindPort = v,
-            decoration:
-                const InputDecoration(hintText: "P2P Bind Port. i.e. 2023"),
-          ),
-          TextField(
-            onChanged: (v) => p2pKnownPeers = v,
-            decoration: const InputDecoration(
-                hintText: "P2P Known Peers. i.e. 1.2.3.4:2023,5.6.7.8:1993"),
+            onChanged: (v) => rpcPort = v,
+            decoration: const InputDecoration(hintText: "RPC Port. i.e. 2024"),
           ),
           IconButton(
               onPressed: () => _submit(context), icon: const Icon(Icons.send))
@@ -96,34 +95,25 @@ class BlockchainConfigFormState extends State<BlockchainConfigForm> {
       );
 
   _submit(BuildContext context) {
-    final config = BlockchainConfig(
-        p2p: BlockchainP2P(
-      bindHost: p2pBindHost,
-      bindPort: p2pBindPort != null ? int.parse(p2pBindPort!) : null,
-      knownPeers: p2pKnownPeers?.split(','),
-    ));
+    final config = LaunchSettings(
+        rpcHost: rpcHost ?? "localhost", rpcPort: _parsedPort ?? 2024);
     widget.onSubmit(context, config);
   }
+
+  int? get _parsedPort => (rpcPort != null) ? int.tryParse(rpcPort!) : null;
 }
 
-_flutterBackgroundInit() async {
-  if (!kIsWeb && Platform.isAndroid) {
-    const androidConfig = FlutterBackgroundAndroidConfig(
-      notificationTitle: "Blockchain",
-      notificationText: "Blockchain is running in the background.",
-      notificationImportance: AndroidNotificationImportance.Default,
-      enableWifiLock: true,
-    );
-    bool success =
-        await FlutterBackground.initialize(androidConfig: androidConfig);
+class LaunchSettings {
+  final String rpcHost;
+  final int rpcPort;
 
-    assert(success);
-    await FlutterBackground.enableBackgroundExecution();
-  }
+  LaunchSettings({required this.rpcHost, required this.rpcPort});
 }
 
-_flutterBackgroundRelease() async {
-  if (!kIsWeb && Platform.isAndroid) {
-    await FlutterBackground.disableBackgroundExecution();
-  }
+class BlockchainWriter {
+  final Future<void> Function(Transaction) submitTransaction;
+  final StakerSupportRpcClient stakerClient;
+
+  BlockchainWriter(
+      {required this.submitTransaction, required this.stakerClient});
 }
