@@ -10,7 +10,7 @@ import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
-import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 import 'package:rxdart/rxdart.dart';
 
 abstract class LocalChain {

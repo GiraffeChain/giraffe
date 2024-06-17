@@ -5,6 +5,7 @@ import 'package:fast_base58/fast_base58.dart';
 import 'package:hive/hive.dart';
 import 'package:quiver/cache.dart';
 import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 abstract class Store<Key, T> {
   Future<T?> get(Key id);

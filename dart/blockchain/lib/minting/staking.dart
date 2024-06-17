@@ -18,7 +18,7 @@ import 'package:blockchain/crypto/kes.dart';
 import 'package:rational/rational.dart';
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 abstract class Staking {
   TransactionOutputReference get account;

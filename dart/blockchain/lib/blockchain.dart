@@ -24,6 +24,7 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain/rpc/server.dart' as rpc;
 import 'package:logging/logging.dart';
 import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 class BlockchainCore {
   final Clock clock;

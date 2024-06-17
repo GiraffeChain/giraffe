@@ -4,6 +4,7 @@ import 'package:blockchain/consensus/local_chain.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:mutex/mutex.dart';
 import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 abstract class EventSourcedState<State, Id> {
   Future<State> stateAt(Id eventId);

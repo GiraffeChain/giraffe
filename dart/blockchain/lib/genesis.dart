@@ -8,7 +8,7 @@ import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/ledger/block_header_to_body_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 class Genesis {
   static const height = Int64.ONE;

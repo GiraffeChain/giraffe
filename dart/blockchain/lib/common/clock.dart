@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:fixnum/fixnum.dart';
 
 import 'package:blockchain/common/models/common.dart';
-import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 abstract class Clock {
   Duration get slotLength;

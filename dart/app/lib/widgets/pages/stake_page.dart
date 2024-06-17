@@ -16,7 +16,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:ribs_core/ribs_core.dart' hide State;
+import 'package:ribs_effect/ribs_effect.dart';
 
 class StakeView extends StatefulWidget {
   final BlockchainView view;

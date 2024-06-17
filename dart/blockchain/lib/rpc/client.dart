@@ -1,5 +1,5 @@
 import 'package:grpc/grpc.dart';
-import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 class RpcClient {
   static Resource<ClientChannel> makeChannel(

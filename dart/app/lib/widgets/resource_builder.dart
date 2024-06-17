@@ -1,6 +1,6 @@
 import 'package:blockchain/common/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:ribs_core/ribs_core.dart' hide State;
+import 'package:ribs_effect/ribs_effect.dart';
 
 class ResourceBuilder<A> extends StatefulWidget {
   final Resource<A> resource;

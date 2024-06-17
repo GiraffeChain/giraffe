@@ -7,7 +7,7 @@ import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
 import 'package:logging/logging.dart';
-import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 Resource<Server> serveRpcs(String host, int port, NodeRpcServiceBase nodeRpc,
         StakerSupportRpcServiceBase stakerSupportRpc) =>

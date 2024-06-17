@@ -14,6 +14,7 @@ import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 class Consensus {
   final BlockHeaderValidation blockHeaderValidation;

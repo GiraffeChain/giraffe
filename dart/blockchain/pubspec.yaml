@@ -15,7 +15,8 @@ dependencies:
   rxdart: ^0.27.7
   fixnum: ^1.1.0
   fpdart: ^1.1.0
-  ribs_core: ^1.0.0-dev.8
+  ribs_core: ^1.0.0-dev.11
+  ribs_effect: ^1.0.0-dev.1
   rational: ^2.2.2
   cryptography: ^2.7.0
   fast_base58: ^0.2.1

@@ -7,7 +7,7 @@ import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ribs_core/ribs_core.dart' hide State;
+import 'package:ribs_effect/ribs_effect.dart';
 
 class BlockchainLauncherPage extends StatefulWidget {
   final LaunchSettings config;

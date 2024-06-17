@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/network/util.dart';
 import 'package:logging/logging.dart';
-import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 
 class P2PServer {
   final String bindHost;

@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:async/async.dart';
 import 'package:blockchain/network/util.dart';
-import 'package:ribs_core/ribs_core.dart' hide Queue;
+import 'package:ribs_effect/ribs_effect.dart' hide Queue;
 
 extension SocketOps on Socket {
   Resource<ChunkedStreamReader<int>> get chunkedResource => Resource.make(

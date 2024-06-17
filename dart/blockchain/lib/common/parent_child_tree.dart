@@ -28,7 +28,7 @@ class ParentChildTreeImpl<T> extends ParentChildTree<T> {
   @override
   Future<(IList<T>, IList<T>)> findCommmonAncestor(T a, T b) async {
     if (a == b)
-      return (IList.of([a]), IList.of([b]));
+      return (IList.fromDart([a]), IList.fromDart([b]));
     else {
       final aHeight = await heightOf(a);
       final bHeight = await heightOf(b);
@@ -49,7 +49,7 @@ class ParentChildTreeImpl<T> extends ParentChildTree<T> {
         aChain.insert(0, (await _readOrRaise(aChain.first)).$2);
         bChain.insert(0, (await _readOrRaise(bChain.first)).$2);
       }
-      return (IList.of(aChain), IList.of(bChain));
+      return (IList.fromDart(aChain), IList.fromDart(bChain));
     }
   }
 

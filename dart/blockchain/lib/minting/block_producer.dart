@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/unsigned.dart';
-import 'package:async/async.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/ledger/block_header_to_body_validation.dart';
@@ -14,7 +13,7 @@ import 'package:blockchain/minting/staking.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:ribs_core/ribs_core.dart';
+import 'package:ribs_effect/ribs_effect.dart';
 import 'package:rxdart/rxdart.dart';
 
 abstract class BlockProducer {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:blockchain/blockchain_view.dart';
@@ -27,7 +28,7 @@ Future<void> main() async {
 
   final log = Logger("BlockProducerServer");
 
-  final resource = IsolatePool.make()
+  final Resource<StreamSubscription> resource = IsolatePool.make()
       .map((p) => p.isolate)
       .tap(setComputeFunction)
       .flatMap((isolate) =>
