@@ -9,25 +9,17 @@ inThisBuild(
 )
 
 lazy val dockerSettings = Seq(
-  dockerBaseImage := "eclipse-temurin:11-jre",
-  dockerUpdateLatest := true,
+  dockerBaseImage := "eclipse-temurin:17-jre-alpine",
+  dockerUpdateLatest := sys.env.get("DOCKER_PUBLISH_LATEST_TAG").fold(false)(_.toBoolean),
   dockerLabels ++= Map(
     "blockchain.version" -> version.value
-  )
-)
-
-lazy val nodeDockerSettings =
-  dockerSettings ++ Seq(
-    dockerExposedPorts := Seq(2023, 2024),
-    Docker / packageName := "blockchain-node",
-    dockerExposedVolumes += "/blockchain",
-    dockerExposedVolumes += "/blockchain-staking",
-    dockerEnvVars ++= Map(
-      "BLOCKCHAIN_APPLICATION_DATA_DIR" -> "/blockchain/data/{genesisBlockId}",
-      "BLOCKCHAIN_APPLICATION_STAKING_DIR" -> "/blockchain-staking/{genesisBlockId}",
-      "BLOCKCHAIN_CONFIG_FILE" -> "/blockchain/config/user.yaml"
+  ),
+  dockerAliases := dockerAliases.value.flatMap { alias =>
+    Seq(
+      alias.withRegistryHost(Some("docker.io/seancheatham"))
     )
-  )
+  }
+)
 
 lazy val blockchain = project
   .in(file("."))
@@ -41,7 +33,18 @@ lazy val blockchain = project
 
 lazy val core = project
   .enablePlugins(DockerPlugin, JavaAppPackaging)
-  .settings(nodeDockerSettings*)
+  .settings(dockerSettings)
+  .settings(
+    dockerExposedPorts := Seq(2023, 2024),
+    Docker / packageName := "giraffe-chain-node",
+    dockerExposedVolumes += "/blockchain",
+    dockerExposedVolumes += "/blockchain-staking",
+    dockerEnvVars ++= Map(
+      "BLOCKCHAIN_APPLICATION_DATA_DIR" -> "/blockchain/data/{genesisBlockId}",
+      "BLOCKCHAIN_APPLICATION_STAKING_DIR" -> "/blockchain-staking/{genesisBlockId}",
+      "BLOCKCHAIN_CONFIG_FILE" -> "/blockchain/config/user.yaml"
+    )
+  )
   .in(file("core"))
   .settings(
     name := "blockchain-core",

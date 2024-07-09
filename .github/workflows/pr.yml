@@ -1,0 +1,18 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  sbt-build:
+    uses: ./.github/workflows/_sbt_build.yml
+    with:
+      preserve-cache-between-runs: true
+
+
+  publish-test-results:
+    uses: ./.github/workflows/_publish_test_results.yml
+    needs: [sbt-build]
+    if: always()

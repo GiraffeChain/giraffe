@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v**"
+
+jobs:
+  sbt-build:
+    uses: ./.github/workflows/_sbt_build.yml
+    with:
+      preserve-cache-between-runs: true
+  publish-test-results:
+    uses: ./.github/workflows/_publish_test_results.yml
+    needs: [sbt-build]
+    if: always()
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [sbt-build]
+    steps:
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+  publish-docker-images-official:
+    uses: ./.github/workflows/_docker_publish_release.yml
+    needs: [create-release]
+    secrets: inherit
