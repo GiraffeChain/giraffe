@@ -4,7 +4,8 @@ Seq(
   "com.github.sbt" % "sbt-native-packager" % "1.9.16",
   "com.eed3si9n" % "sbt-buildinfo" % "0.11.0",
   "org.typelevel" % "sbt-fs2-grpc" % "2.7.11",
-  "com.thesamet" % "sbt-protoc" % "1.0.6"
+  "com.thesamet" % "sbt-protoc" % "1.0.6",
+  "com.github.sbt" % "sbt-dynver" % "5.0.1"
 ).map(addSbtPlugin)
 
 libraryDependencies ++= Seq(

@@ -4,17 +4,15 @@ inThisBuild(
   List(
     organization := "blockchain",
     scalaVersion := scala3,
-    testFrameworks += TestFrameworks.MUnit
+    testFrameworks += TestFrameworks.MUnit,
+    versionScheme := Some("early-semver"),
+    dynverSeparator := "-",
+    version := dynverGitDescribeOutput.value.mkVersion(versionFmt, fallbackVersion(dynverCurrentDate.value)),
+    dynver := {
+      val d = new java.util.Date
+      sbtdynver.DynVer.getGitDescribeOutput(d).mkVersion(versionFmt, fallbackVersion(d))
+    }
   )
-)
-
-lazy val dockerSettings = Seq(
-  dockerBaseImage := "eclipse-temurin:17-jre-alpine",
-  dockerUpdateLatest := sys.env.get("DOCKER_PUBLISH_LATEST_TAG").fold(false)(_.toBoolean),
-  dockerLabels ++= Map(
-    "blockchain.version" -> version.value
-  ),
-  dockerRepository := Some("docker.io")
 )
 
 lazy val blockchain = project
@@ -22,15 +20,19 @@ lazy val blockchain = project
   .settings(
     name := "blockchain",
     publish / skip := true,
-    version := "0.1.0",
     scalaVersion := scala3
   )
   .aggregate(core, protobuf)
 
 lazy val core = project
   .enablePlugins(DockerPlugin, JavaAppPackaging)
-  .settings(dockerSettings)
   .settings(
+    dockerBaseImage := "eclipse-temurin:17-jre-alpine",
+    dockerUpdateLatest := sys.env.get("DOCKER_PUBLISH_LATEST_TAG").fold(false)(_.toBoolean),
+    dockerLabels ++= Map(
+      "blockchain.version" -> version.value
+    ),
+    dockerRepository := Some("docker.io"),
     dockerExposedPorts := Seq(2023, 2024),
     Docker / packageName := "blockchain-node",
     dockerExposedVolumes += "/blockchain",
@@ -40,11 +42,6 @@ lazy val core = project
       "BLOCKCHAIN_CONFIG_FILE" -> "/blockchain/config/user.yaml"
     ),
     dockerAlias := DockerAlias(Some("docker.io"), Some("seancheatham"), "blockchain-node", Some(version.value)),
-    dockerAliases ++= (
-      if (sys.env.get("DOCKER_PUBLISH_DEV_TAG").fold(false)(_.toBoolean))
-        Seq(dockerAlias.value.withTag(Some("dev")))
-      else Seq()
-    )
   )
   .in(file("core"))
   .settings(
@@ -237,3 +234,11 @@ def compareProtoContents(a: java.nio.file.Path, b: java.nio.file.Path): Boolean 
     false
   }
 }
+
+def versionFmt(out: sbtdynver.GitDescribeOutput): String = {
+  val dirtySuffix = out.dirtySuffix.dropPlus.mkString("-", "")
+  if (out.isCleanAfterTag) out.ref.dropPrefix + dirtySuffix // no commit info if clean after tag
+  else out.ref.dropPrefix + out.commitSuffix.mkString("-", "-", "") + dirtySuffix
+}
+
+def fallbackVersion(d: java.util.Date): String = s"HEAD-${sbtdynver.DynVer.timestamp(d)}"
