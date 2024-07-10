@@ -13,7 +13,8 @@ lazy val dockerSettings = Seq(
   dockerUpdateLatest := sys.env.get("DOCKER_PUBLISH_LATEST_TAG").fold(false)(_.toBoolean),
   dockerLabels ++= Map(
     "blockchain.version" -> version.value
-  )
+  ),
+  dockerRepository := Some("docker.io")
 )
 
 lazy val blockchain = project
