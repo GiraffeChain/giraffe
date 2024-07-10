@@ -27,7 +27,7 @@ lazy val blockchain = project
   .aggregate(core, protobuf)
 
 lazy val core = project
-  .enablePlugins(DockerPlugin, JavaAppPackaging)
+  .enablePlugins(DockerPlugin, JavaAppPackaging, AshScriptPlugin)
   .settings(
     dockerBaseImage := "eclipse-temurin:17-jre-alpine",
     dockerUpdateLatest := sys.env.get("DOCKER_PUBLISH_LATEST_TAG").fold(false)(_.toBoolean),
