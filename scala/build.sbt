@@ -27,9 +27,9 @@ lazy val blockchain = project
   .aggregate(core, protobuf)
 
 lazy val core = project
-  .enablePlugins(DockerPlugin, JavaAppPackaging, AshScriptPlugin)
+  .enablePlugins(DockerPlugin, JavaAppPackaging)
   .settings(
-    dockerBaseImage := "eclipse-temurin:17-jre-alpine",
+    dockerBaseImage := "eclipse-temurin:17-jre",
     dockerUpdateLatest := sys.env.get("DOCKER_PUBLISH_LATEST_TAG").fold(false)(_.toBoolean),
     dockerLabels ++= Map(
       "blockchain.version" -> version.value
@@ -81,7 +81,6 @@ lazy val protobuf =
       ),
       buildInfoPackage := "blockchain.protobuf",
       publish / skip := true,
-      publishArtifact := false,
       libraryDependencies ++= Seq(
         "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
         "com.thesamet.scalapb" %% "scalapb-validate-core" % scalapb.validate.compiler.BuildInfo.version % "protobuf"
