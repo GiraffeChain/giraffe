@@ -21,6 +21,7 @@ lazy val blockchain = project
   .settings(
     name := "blockchain",
     publish / skip := true,
+    publishArtifact := false,
     scalaVersion := scala3
   )
   .aggregate(core, protobuf)
@@ -79,6 +80,8 @@ lazy val protobuf =
         sbtVersion
       ),
       buildInfoPackage := "blockchain.protobuf",
+      publish / skip := true,
+      publishArtifact := false,
       libraryDependencies ++= Seq(
         "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
         "com.thesamet.scalapb" %% "scalapb-validate-core" % scalapb.validate.compiler.BuildInfo.version % "protobuf"
