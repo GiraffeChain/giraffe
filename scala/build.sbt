@@ -13,12 +13,7 @@ lazy val dockerSettings = Seq(
   dockerUpdateLatest := sys.env.get("DOCKER_PUBLISH_LATEST_TAG").fold(false)(_.toBoolean),
   dockerLabels ++= Map(
     "blockchain.version" -> version.value
-  ),
-  dockerAliases := dockerAliases.value.flatMap { alias =>
-    Seq(
-      alias.withRegistryHost(Some("docker.io/seancheatham"))
-    )
-  }
+  )
 )
 
 lazy val blockchain = project
@@ -36,13 +31,18 @@ lazy val core = project
   .settings(dockerSettings)
   .settings(
     dockerExposedPorts := Seq(2023, 2024),
-    Docker / packageName := "giraffe-chain-node",
+    Docker / packageName := "blockchain-node",
     dockerExposedVolumes += "/blockchain",
     dockerExposedVolumes += "/blockchain-staking",
     dockerEnvVars ++= Map(
       "BLOCKCHAIN_APPLICATION_DATA_DIR" -> "/blockchain/data/{genesisBlockId}",
-      "BLOCKCHAIN_APPLICATION_STAKING_DIR" -> "/blockchain-staking/{genesisBlockId}",
       "BLOCKCHAIN_CONFIG_FILE" -> "/blockchain/config/user.yaml"
+    ),
+    dockerAlias := DockerAlias(Some("docker.io"), Some("seancheatham"), "blockchain-node", Some(version.value)),
+    dockerAliases ++= (
+      if (sys.env.get("DOCKER_PUBLISH_DEV_TAG").fold(false)(_.toBoolean))
+        Seq(dockerAlias.value.withTag(Some("dev")))
+      else Seq()
     )
   )
   .in(file("core"))

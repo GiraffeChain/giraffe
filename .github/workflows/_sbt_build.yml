@@ -32,7 +32,7 @@ jobs:
       - name: Setup SBT
         run: |
           mkdir -p $HOME/bin/sbt
-          set -eux && curl --fail --silent --location --retry 3 https://github.com/sbt/sbt/releases/download/v1.9.7/sbt-1.9.7.tgz | gunzip | tar x -C $HOME/bin/sbt
+          set -eux && curl --fail --silent --location --retry 3 https://github.com/sbt/sbt/releases/download/v1.10.1/sbt-1.10.1.tgz | gunzip | tar x -C $HOME/bin/sbt
           echo "$HOME/bin/sbt" >> $GITHUB_PATH
 
       - name: Cache sbt
