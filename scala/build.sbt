@@ -5,6 +5,7 @@ inThisBuild(
     organization := "blockchain",
     scalaVersion := scala3,
     testFrameworks += TestFrameworks.MUnit,
+    dockerRepository := Some("docker.io"),
     versionScheme := Some("early-semver"),
     dynverSeparator := "-",
     version := dynverGitDescribeOutput.value.mkVersion(versionFmt, fallbackVersion(dynverCurrentDate.value)),
@@ -32,7 +33,6 @@ lazy val core = project
     dockerLabels ++= Map(
       "blockchain.version" -> version.value
     ),
-    dockerRepository := Some("docker.io"),
     dockerExposedPorts := Seq(2023, 2024),
     Docker / packageName := "blockchain-node",
     dockerExposedVolumes += "/blockchain",
