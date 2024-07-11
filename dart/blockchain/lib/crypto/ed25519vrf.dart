@@ -44,7 +44,9 @@ class Ed25519VRFImpl extends Ed25519VRF {
 
   Future<Ed25519VRFKeyPair> generateKeyPairFromSeed(List<int> seed) async {
     assert(seed.length == 32);
-    final sk = (await _sha512Signed(seed)).sublist(0, 32);
+    // TODO ?
+    // final sk = (await _sha512Signed(seed)).sublist(0, 32);
+    final sk = seed;
     final vk = await getVerificationKey(sk);
     return Ed25519VRFKeyPair(sk: Uint8List.fromList(sk), vk: vk);
   }

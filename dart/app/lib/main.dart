@@ -19,7 +19,7 @@ void main() async {
   Logger.root.onRecord.listen((record) {
     // ignore: avoid_print
     print(
-        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}');
+        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${record.error ?? ""}${record.stackTrace != null ? "\n${record.stackTrace}" : ""}');
   });
   if (!kIsWeb) {
     final computePool = IsolatePool(Platform.numberOfProcessors);

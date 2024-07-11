@@ -84,7 +84,7 @@ Future<void> main() async {
                     .listen(
                       (block) => log.info(
                           "Successfully broadcasted block id=${block.header.id.show}"),
-                      onError: (e) => log.severe("Production failed", e),
+                      onError: (e, s) => log.severe("Production failed", e, s),
                       onDone: () =>
                           log.info("Block production finished unexpectedly"),
                     )));

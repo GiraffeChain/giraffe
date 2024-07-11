@@ -36,7 +36,9 @@ class StreamedTransactViewState extends State<StreamedTransactView>
               view: widget.view,
               writer: widget.writer,
             )
-          : const CircularProgressIndicator(),
+          : snapshot.hasError
+              ? Center(child: Text("An error occurred: ${snapshot.error}"))
+              : const Center(child: CircularProgressIndicator()),
     );
   }
 

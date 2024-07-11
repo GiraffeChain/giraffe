@@ -5,9 +5,11 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
+import 'package:blockchain/crypto/kes.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/minting/minting.dart';
+import 'package:blockchain/staker_initializer.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_app/widgets/resource_builder.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -31,13 +33,18 @@ class StakeView extends StatefulWidget {
 class StakeViewState extends State<StakeView>
     with AutomaticKeepAliveClientMixin {
   @override
-  Widget build(BuildContext context) => FutureBuilder(
-      future: stakingIsInitialized,
-      builder: (context, snapshot) => snapshot.hasData
-          ? (snapshot.data!
-              ? RunMinting(viewer: widget.view, writer: widget.writer)
-              : noStaker)
-          : loading);
+  Widget build(BuildContext context) {
+    super.build(context);
+    return FutureBuilder(
+        future: stakingIsInitialized,
+        builder: (context, snapshot) => snapshot.hasData
+            ? (snapshot.data!
+                ? RunMinting(viewer: widget.view, writer: widget.writer)
+                : noStaker)
+            : snapshot.hasError
+                ? Center(child: Text("An error occurred: ${snapshot.error}"))
+                : loading);
+  }
 
   Widget get loading =>
       const Card(child: Center(child: CircularProgressIndicator()));
@@ -47,12 +54,42 @@ class StakeViewState extends State<StakeView>
         children: [
           const Text("No staker is available."),
           const Text(
-              "Please register a new account or import from an different directory."),
+              "Please register a new account or import from a different directory."),
           DirectoryChooser(
               onDirectorySelected: (path) =>
                   _onDirectorySelected(context, path)),
+          const Text(
+              "Alternatively, if this is a testnet, select the desired staker index (0, 1, 2, etc.)."),
+          DropdownButton<int>(
+              items: const [DropdownMenuItem(value: 0, child: Text("0"))],
+              onChanged: (index) =>
+                  _onTestnetStakerSelected(context, index ?? 0)),
         ],
       ));
+
+  Future<void> _onTestnetStakerSelected(BuildContext context, int index) async {
+    final genesis = await widget.view.genesisBlock;
+    final stakingDir = await (await stakingDirectory).create(recursive: true);
+    final genesisTimestamp = genesis.header.timestamp;
+    final seed = [...genesisTimestamp.immutableBytes, ...index.immutableBytes];
+    final stakerInitializer =
+        await StakerInitializer.fromSeed(seed, TreeHeight(9, 9));
+    final stakingAddress =
+        StakingAddress(value: stakerInitializer.operatorKeyPair.vk);
+    final accountTx = genesis.fullBody.transactions.firstWhere((tx) => tx
+        .outputs
+        .where((o) =>
+            o.value.hasAccountRegistration() &&
+            o.value.accountRegistration.stakingRegistration.stakingAddress ==
+                stakingAddress)
+        .isNotEmpty);
+    final account =
+        TransactionOutputReference(transactionId: accountTx.id, index: 0);
+    await stakerInitializer.save(stakingDir);
+    await File("${stakingDir.path}/account")
+        .writeAsBytes(account.writeToBuffer());
+    setState(() {});
+  }
 
   Future<void> _onDirectorySelected(BuildContext context, String path) async {
     final dir = Directory(path);
@@ -183,7 +220,7 @@ class RunMintingState extends State<RunMinting> {
             .listen(
               (block) => log.info(
                   "Successfully broadcasted block id=${block.header.id.show}"),
-              onError: (e) => log.severe("Production failed", e),
+              onError: (e, s) => log.severe("Production failed", e, s),
               onDone: () => log.info("Block production finished unexpectedly"),
             )));
       });

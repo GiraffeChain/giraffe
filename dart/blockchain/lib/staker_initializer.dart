@@ -17,11 +17,11 @@ class StakerInitializer {
   static Future<StakerInitializer> fromSeed(
       List<int> seed, TreeHeight treeHeight) async {
     final operatorKeyPair =
-        await ed25519.generateKeyPairFromSeed(await (seed + [1]).hash256);
+        await ed25519.generateKeyPairFromSeed(await (seed + [0]).hash256);
     final vrfKeyPair =
-        await ed25519Vrf.generateKeyPairFromSeed(await (seed + [3]).hash256);
+        await ed25519Vrf.generateKeyPairFromSeed(await (seed + [1]).hash256);
     final kesKeyPair = await kesProduct.generateKeyPair(
-        await (seed + [4]).hash256, treeHeight, Int64.ZERO);
+        await (seed + [2]).hash256, treeHeight, Int64.ZERO);
 
     return StakerInitializer(
       operatorKeyPair,
@@ -55,9 +55,8 @@ class StakerInitializer {
   }
 
   Future<void> save(Directory directory) async {
-    await Directory("${directory.path}/kes").create(recursive: true);
     await File("${directory.path}/vrf").writeAsBytes(vrfKeyPair.sk);
     await File("${directory.path}/operator").writeAsBytes(operatorKeyPair.sk);
-    await File("${directory.path}/kes/0").writeAsBytes(kesKeyPair.sk.encode);
+    await File("${directory.path}/kes").writeAsBytes(kesKeyPair.sk.encode);
   }
 }
