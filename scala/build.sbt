@@ -43,6 +43,9 @@ lazy val core = project
       "BLOCKCHAIN_CONFIG_FILE" -> "/blockchain/config/user.yaml"
     ),
     dockerAlias := DockerAlias(Some("docker.io"), Some("seancheatham"), "blockchain-node", Some(version.value)),
+    dockerAliases ++= (if (sys.env.get("DOCKER_PUBLISH_DEV_TAG").fold(false)(_.toBoolean))
+                         Seq(dockerAlias.value.withTag(Some("dev")))
+                       else Seq())
   )
   .in(file("core"))
   .settings(
