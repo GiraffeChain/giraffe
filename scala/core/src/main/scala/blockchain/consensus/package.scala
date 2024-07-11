@@ -4,7 +4,7 @@ import blockchain.*
 import blockchain.crypto.{Blake2b256, Blake2b512, Ed25519VRF}
 import blockchain.models.*
 import blockchain.codecs.given
-import blockchain.utility.{*, given}
+import blockchain.utility.*
 import com.google.protobuf.ByteString
 
 import java.nio.charset.StandardCharsets

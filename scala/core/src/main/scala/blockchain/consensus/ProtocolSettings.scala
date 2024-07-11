@@ -1,6 +1,5 @@
 package blockchain.consensus
 
-import blockchain.models.BlockHeader
 import blockchain.utility.Ratio
 import cats.implicits.showInterpolator
 

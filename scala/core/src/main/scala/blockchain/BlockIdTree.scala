@@ -69,9 +69,8 @@ class BlockIdTreeImpl[F[_]: Async](
             traverseBackToHeight(NonEmptyChain(a), aHeight, bHeight).map(
               _._1 -> NonEmptyChain(b)
             )
-        (chainA, chainB) <- (aAtEqualHeight, bAtEqualHeight).iterateUntilM {
-          case (aChain, bChain) =>
-            (prependWithParent(aChain), prependWithParent(bChain)).tupled
+        (chainA, chainB) <- (aAtEqualHeight, bAtEqualHeight).iterateUntilM { case (aChain, bChain) =>
+          (prependWithParent(aChain), prependWithParent(bChain)).tupled
         } { case (aChain, bChain) => aChain.head == bChain.head }
       } yield (chainA, chainB)
 

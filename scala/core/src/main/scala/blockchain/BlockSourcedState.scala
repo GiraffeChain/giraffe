@@ -4,8 +4,8 @@ import blockchain.models.BlockId
 import cats.data.Chain
 import cats.implicits.*
 import cats.effect.implicits.*
-import cats.effect.{Async, Ref, Resource, MonadCancelThrow}
-import cats.effect.std.{Mutex, Semaphore}
+import cats.effect.{Async, Ref, Resource}
+import cats.effect.std.Mutex
 
 trait BlockSourcedState[F[_], State]:
   def stateAt(blockId: BlockId): Resource[F, State]

@@ -15,7 +15,5 @@ object UnsafeResource:
       allocations <- base.allocated.replicateA(parallelism).toResource
       _ <- Resource.onFinalize(allocations.traverse(a => a._2).void)
       _ <- allocations.traverse(a => queue.offer(a._1)).toResource
-      res = Resource.make(Sync[F].defer(queue.take))(t =>
-        Sync[F].defer(queue.offer(t))
-      )
+      res = Resource.make(Sync[F].defer(queue.take))(t => Sync[F].defer(queue.offer(t)))
     } yield res

@@ -7,16 +7,15 @@ import blockchain.crypto.Blake2b256
 import blockchain.models.*
 import cats.Monoid
 import cats.implicits.*
-import com.google.common.primitives.{Doubles, Ints, Longs}
+import com.google.common.primitives.{Ints, Longs}
 import com.google.protobuf
 import com.google.protobuf.{ByteString, struct}
-import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
 import scodec.bits.BitVector
 
 import java.nio.charset.StandardCharsets
 
 trait Codecs {
-  
+
   import Codecs.*
 
   given structValueImmutableBytes: ImmutableBytes[struct.Value] with

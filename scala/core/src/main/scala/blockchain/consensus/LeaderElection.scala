@@ -75,9 +75,7 @@ class LeaderElectionImpl[F[_]: Sync](
 
   override def isEligible(threshold: Ratio, rho: Rho): F[Boolean] =
     blake2b512Resource
-      .use(implicit blake2b512 =>
-        Sync[F].delay(rhoToRhoTestHash(rho).toByteArray)
-      )
+      .use(implicit blake2b512 => Sync[F].delay(rhoToRhoTestHash(rho).toByteArray))
       .map { testRhoHashBytes =>
         val test = Ratio(
           BigInt(Array(0x00.toByte) ++ testRhoHashBytes),
@@ -88,7 +86,6 @@ class LeaderElectionImpl[F[_]: Sync](
       }
 
 object LeaderElectionImpl:
-  /** Normalization constant for test nonce hash evaluation based on 512 byte
-    * hash function output
+  /** Normalization constant for test nonce hash evaluation based on 512 byte hash function output
     */
   private val NormalizationConstant: BigInt = BigInt(2).pow(512)

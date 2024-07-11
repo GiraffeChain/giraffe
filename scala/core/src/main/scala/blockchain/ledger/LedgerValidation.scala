@@ -4,9 +4,8 @@ import blockchain.*
 import blockchain.models.*
 import blockchain.codecs.{*, given}
 import blockchain.crypto.CryptoResources
-import blockchain.ledger.given
-import blockchain.utility.{*, given}
-import cats.data.{EitherT, OptionT, NonEmptyChain}
+import blockchain.utility.*
+import cats.data.{EitherT, NonEmptyChain}
 import cats.effect.{Resource, Sync}
 import cats.implicits.*
 

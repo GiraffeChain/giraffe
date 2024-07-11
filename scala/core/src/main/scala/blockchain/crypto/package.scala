@@ -9,8 +9,7 @@ package object crypto:
     protoModels.VerificationKeyKesProduct,
     VerificationKeyKesProduct
   ] =
-    kesProduct =>
-      VerificationKeyKesProduct(kesProduct.value.toByteArray, kesProduct.step)
+    kesProduct => VerificationKeyKesProduct(kesProduct.value.toByteArray, kesProduct.step)
 
   given cryptoToProtoVerificationKeyKesProduct: Conversion[
     VerificationKeyKesProduct,
@@ -22,8 +21,7 @@ package object crypto:
         kesProduct.step
       )
 
-  given consensusToCryptoSignatureKesSum
-      : Conversion[protoModels.SignatureKesSum, SignatureKesSum] =
+  given consensusToCryptoSignatureKesSum: Conversion[protoModels.SignatureKesSum, SignatureKesSum] =
     kesSum =>
       SignatureKesSum(
         kesSum.verificationKey.toByteArray,
@@ -31,8 +29,7 @@ package object crypto:
         kesSum.witness.map(_.toByteArray)
       )
 
-  given cryptoToConsensusVerificationKeyKesSum
-      : Conversion[SignatureKesSum, protoModels.SignatureKesSum] =
+  given cryptoToConsensusVerificationKeyKesSum: Conversion[SignatureKesSum, protoModels.SignatureKesSum] =
     kesSum =>
       protoModels.SignatureKesSum(
         ByteString.copyFrom(kesSum.verificationKey),
@@ -40,8 +37,7 @@ package object crypto:
         kesSum.witness.map(ByteString.copyFrom)
       )
 
-  given consensusToCryptoSignatureKesProduct
-      : Conversion[protoModels.SignatureKesProduct, SignatureKesProduct] =
+  given consensusToCryptoSignatureKesProduct: Conversion[protoModels.SignatureKesProduct, SignatureKesProduct] =
     kesProduct =>
       SignatureKesProduct(
         kesProduct.superSignature,
@@ -49,8 +45,7 @@ package object crypto:
         kesProduct.subRoot.toByteArray
       )
 
-  given cryptoToConsensusVerificationKeyKesProduct
-      : Conversion[SignatureKesProduct, protoModels.SignatureKesProduct] =
+  given cryptoToConsensusVerificationKeyKesProduct: Conversion[SignatureKesProduct, protoModels.SignatureKesProduct] =
     kesProduct =>
       protoModels.SignatureKesProduct(
         kesProduct.superSignature,

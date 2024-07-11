@@ -20,10 +20,8 @@ object BlockHeights:
     BlockSourcedState.make[F, State[F]](
       Async[F].delay(store.get),
       initialEventId = initialEventId,
-      (state, id) =>
-        fetchHeader(id).map(_.height).flatTap(store.put(_, id)).as(state),
-      (state, id) =>
-        fetchHeader(id).map(_.height).flatTap(store.remove).as(state),
+      (state, id) => fetchHeader(id).map(_.height).flatTap(store.put(_, id)).as(state),
+      (state, id) => fetchHeader(id).map(_.height).flatTap(store.remove).as(state),
       blockTree,
       currentEventChanged
     )

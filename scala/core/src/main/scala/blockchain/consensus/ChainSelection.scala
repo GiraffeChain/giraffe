@@ -4,7 +4,6 @@ import blockchain.*
 import blockchain.crypto.{Blake2b512, Ed25519VRF}
 import blockchain.models.*
 import blockchain.codecs.given
-import cats.Order
 import cats.data.OptionT
 import cats.effect.{Resource, Sync}
 import cats.implicits.*
@@ -51,13 +50,9 @@ object ChainSelectionOutcome:
     def isX = false
     def isY = true
 
-  case object XStandard
-      extends ChainSelectionOutcome
-      with XChainSelectionOutcome
+  case object XStandard extends ChainSelectionOutcome with XChainSelectionOutcome
 
-  case object YStandard
-      extends ChainSelectionOutcome
-      with YChainSelectionOutcome
+  case object YStandard extends ChainSelectionOutcome with YChainSelectionOutcome
 
   case object XDensity extends ChainSelectionOutcome with XChainSelectionOutcome
 
@@ -84,31 +79,28 @@ class ChainSelectionImpl[F[_]: Sync](
       Sync[F].pure[ChainSelectionOutcome](ChainSelectionOutcome.XStandard)
     else if (xHead.id == commonAncestor.id)
       Sync[F].pure[ChainSelectionOutcome](ChainSelectionOutcome.YStandard)
-    else if (
-      xHead.height - commonAncestor.height <= kLookback && yHead.height - commonAncestor.height <= kLookback
-    )
+    else if (xHead.height - commonAncestor.height <= kLookback && yHead.height - commonAncestor.height <= kLookback)
       standardOrderOutcome(xHead, yHead)
     else
       Logger[F].info("Starting density chain selection process") >>
-        densityBoundaryBlock(commonAncestor, fetchXAtHeight).flatMap(
-          xBoundary =>
-            OptionT(fetchYAtHeight(xBoundary.height))
-              .filterNot(_.slot - commonAncestor.slot > sWindow)
-              .foldF[ChainSelectionOutcome](
-                ChainSelectionOutcome.XDensity.pure[F].widen
-              )(yAtX =>
-                OptionT(fetchYAtHeight(xBoundary.height + 1))
-                  .filterNot(_.slot - commonAncestor.slot > sWindow)
-                  .as(ChainSelectionOutcome.YDensity)
-                  .getOrElseF(
-                    // Tie Breaker
-                    standardOrderOutcome(xBoundary, yAtX)
-                      .map(outcome =>
-                        if (outcome.isX) ChainSelectionOutcome.XDensity
-                        else ChainSelectionOutcome.YDensity
-                      )
-                  )
-              )
+        densityBoundaryBlock(commonAncestor, fetchXAtHeight).flatMap(xBoundary =>
+          OptionT(fetchYAtHeight(xBoundary.height))
+            .filterNot(_.slot - commonAncestor.slot > sWindow)
+            .foldF[ChainSelectionOutcome](
+              ChainSelectionOutcome.XDensity.pure[F].widen
+            )(yAtX =>
+              OptionT(fetchYAtHeight(xBoundary.height + 1))
+                .filterNot(_.slot - commonAncestor.slot > sWindow)
+                .as(ChainSelectionOutcome.YDensity)
+                .getOrElseF(
+                  // Tie Breaker
+                  standardOrderOutcome(xBoundary, yAtX)
+                    .map(outcome =>
+                      if (outcome.isX) ChainSelectionOutcome.XDensity
+                      else ChainSelectionOutcome.YDensity
+                    )
+                )
+            )
         )
   )
     .flatTap(logOutcome(xHead, yHead))
@@ -134,26 +126,19 @@ class ChainSelectionImpl[F[_]: Sync](
   private def headerToRhoTestHashBigInt(header: BlockHeader) =
     ed25519VRFResource
       .use(implicit e => Sync[F].delay(header.rho))
-      .flatMap(rho =>
-        blake2b512Resource.use(implicit b =>
-          Sync[F].delay(rhoToRhoTestHash(rho))
-        )
-      )
+      .flatMap(rho => blake2b512Resource.use(implicit b => Sync[F].delay(rhoToRhoTestHash(rho))))
 
-  /** Starting from the given common ancestor, traverses forward along the
-    * chain, keeping all blocks that fall within the protocol's `sWindow`
-    * setting.
+  /** Starting from the given common ancestor, traverses forward along the chain, keeping all blocks that fall within
+    * the protocol's `sWindow` setting.
     *
-    * TODO: Optimization: Use (fEffective * sWindow) + commonAncestor.height to
-    * guide the search process
+    * TODO: Optimization: Use (fEffective * sWindow) + commonAncestor.height to guide the search process
     *
     * @param commonAncestor
     *   The starting point for the search
     * @param fetchHeader
     *   A lookup function to find a block-by-height
     * @return
-    *   The "best" BlockHeader that comes after the common ancestor but within
-    *   the protocol's sWindow
+    *   The "best" BlockHeader that comes after the common ancestor but within the protocol's sWindow
     */
   private def densityBoundaryBlock(
       commonAncestor: BlockHeader,

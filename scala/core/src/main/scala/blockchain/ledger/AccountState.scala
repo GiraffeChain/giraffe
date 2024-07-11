@@ -2,10 +2,7 @@ package blockchain.ledger
 
 import blockchain.*
 import blockchain.models.*
-import blockchain.utility.given
 import blockchain.codecs.given
-import blockchain.ledger.given
-import cats.{Functor, MonadThrow}
 import cats.data.OptionT
 import cats.effect.kernel.MonadCancelThrow
 import cats.effect.{Async, Resource}

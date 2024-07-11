@@ -12,7 +12,9 @@ inThisBuild(
     dynver := {
       val d = new java.util.Date
       sbtdynver.DynVer.getGitDescribeOutput(d).mkVersion(versionFmt, fallbackVersion(d))
-    }
+    },
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision
   )
 )
 
@@ -62,9 +64,9 @@ lazy val core = project
         Dependencies.mUnitTest,
     libraryDependencies += "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
     scalacOptions ++= Seq(
-      "-source",
-      "3.4-migration",
-      "-rewrite"
+      "-source:3.4-migration",
+      "-rewrite",
+      "-Wunused:all"
     )
   )
   .dependsOn(protobuf)
@@ -251,3 +253,7 @@ def versionFmt(out: sbtdynver.GitDescribeOutput): String = {
 }
 
 def fallbackVersion(d: java.util.Date): String = s"HEAD-${sbtdynver.DynVer.timestamp(d)}"
+
+addCommandAlias("checkPR", s"; scalafixAll --check; scalafmtCheckAll; +test")
+addCommandAlias("preparePR", s"; scalafixAll; scalafmtAll; +test")
+addCommandAlias("checkPRTestQuick", s"; scalafixAll --check; scalafmtCheckAll; testQuick")

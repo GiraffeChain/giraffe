@@ -51,8 +51,8 @@ class Ed25519VRF {
 
 }
 
-/** AMS 2021: ECVRF-ED25519-SHA512-TAI Elliptic curve Verifiable Random Function
-  * based on EdDSA https://tools.ietf.org/html/draft-irtf-cfrg-vrf-04
+/** AMS 2021: ECVRF-ED25519-SHA512-TAI Elliptic curve Verifiable Random Function based on EdDSA
+  * https://tools.ietf.org/html/draft-irtf-cfrg-vrf-04
   */
 //noinspection ScalaStyle
 
@@ -282,10 +282,9 @@ private[crypto] class ECVRF25519Impl extends EC {
     out
   }
 
-  /** // commented implementation, it is not used private def isNeutralPoint(p:
-    * PointAccum): Boolean = { val pBytes: Array[Byte] =
-    * Array.fill(POINT_BYTES)(0x00.toByte) encodePoint(p, pBytes, 0) pBytes
-    * sameElements neutralPointBytes }
+  /** // commented implementation, it is not used private def isNeutralPoint(p: PointAccum): Boolean = { val pBytes:
+    * Array[Byte] = Array.fill(POINT_BYTES)(0x00.toByte) encodePoint(p, pBytes, 0) pBytes sameElements neutralPointBytes
+    * }
     */
 
   private def isNeutralPoint(p: PointExt): Boolean = {

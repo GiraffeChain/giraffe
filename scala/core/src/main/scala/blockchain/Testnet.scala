@@ -1,6 +1,6 @@
 package blockchain
 
-import blockchain.models.{SignatureKesProduct as MSignatureKesProduct, *}
+import blockchain.models.{SignatureKesProduct as _, *}
 import blockchain.codecs.{*, given}
 import blockchain.utility.*
 import blockchain.crypto.{*, given}

@@ -1,9 +1,8 @@
 package blockchain.consensus
 
-import blockchain.{BlockSourcedState, FetchHeader, Genesis}
+import blockchain.{FetchHeader, Genesis}
 import blockchain.models.*
 import blockchain.codecs.given
-import blockchain.utility.given
 import cats.data.EitherT
 import cats.effect.{Async, Ref, Resource}
 import cats.implicits.*

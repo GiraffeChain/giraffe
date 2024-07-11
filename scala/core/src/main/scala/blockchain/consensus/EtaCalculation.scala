@@ -4,7 +4,7 @@ import blockchain.*
 import blockchain.codecs.given
 import blockchain.crypto.*
 import blockchain.models.{BlockHeader, BlockId, SlotId}
-import blockchain.utility.{*, given}
+import blockchain.utility.*
 import cats.*
 import cats.data.*
 import cats.effect.{Clock as _, *}

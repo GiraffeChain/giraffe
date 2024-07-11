@@ -1,6 +1,6 @@
 Seq(
   "org.scalameta" % "sbt-scalafmt" % "2.5.2",
-  "ch.epfl.scala" % "sbt-scalafix" % "0.11.1",
+  "ch.epfl.scala" % "sbt-scalafix" % "0.12.1",
   "com.github.sbt" % "sbt-native-packager" % "1.10.0",
   "com.eed3si9n" % "sbt-buildinfo" % "0.11.0",
   "org.typelevel" % "sbt-fs2-grpc" % "2.7.16",

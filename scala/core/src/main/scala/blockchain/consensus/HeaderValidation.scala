@@ -9,7 +9,6 @@ import cats.data.{EitherT, NonEmptyChain}
 import cats.effect.{Resource, Sync}
 import cats.implicits.*
 import com.google.common.primitives.Longs
-import scodec.bits.ByteVector
 
 trait HeaderValidation[F[_]]:
   def validate(blockHeader: BlockHeader): ValidationResult[F]
