@@ -1,7 +1,18 @@
-name: Publish Docker Image (Release)
+name: Publish Docker Images
 
 on:
   workflow_call:
+    inputs:
+      dev_tag:
+        description: 'Publish a development tag.'
+        default: false
+        required: false
+        type: boolean
+      latest_tag:
+        description: 'Publish a latest tag.'
+        default: false
+        required: false
+        type: boolean
 
 jobs:
   docker_release:
@@ -25,4 +36,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push images to registries
-        run: DOCKER_PUBLISH_LATEST_TAG=true sbt Docker/publish
+        run: DOCKER_PUBLISH_DEV_TAG=${{ inputs.dev_tag }} DOCKER_PUBLISH_LATEST_TAG=${{ inputs.latest_tag }} sbt Docker/publish

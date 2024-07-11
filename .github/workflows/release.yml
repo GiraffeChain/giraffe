@@ -22,7 +22,10 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           draft: true
-  publish-docker-images-official:
-    uses: ./.github/workflows/_docker_publish_release.yml
+  publish-docker-images:
+    uses: ./.github/workflows/_docker_publish.yml
     needs: [create-release]
     secrets: inherit
+    with:
+      dev_tag: false
+      latest_tag: true
