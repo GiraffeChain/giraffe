@@ -65,7 +65,7 @@ case class RelayArgs(
     peer: List[String] = Nil,
     testnet: Option[String] = None
 ):
-  def parsedPeers[F[_]: MonadThrow]: F[List[SocketAddress[_]]] =
+  def parsedPeers[F[_]: MonadThrow]: F[List[SocketAddress[?]]] =
     peer.traverse(p =>
       SocketAddress.fromString(p).toRight(new IllegalArgumentException(s"Invalid peer=$p")).pure[F].rethrow
     )

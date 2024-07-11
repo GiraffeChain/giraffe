@@ -20,7 +20,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
     core: BlockchainCore[F],
     localPeer: LocalPeer,
     magicBytes: Array[Byte],
-    connectOutbound: SocketAddress[_] => F[Unit],
+    connectOutbound: SocketAddress[?] => F[Unit],
     stateRef: Ref[F, PeersManager.State[F]]
 ):
 
@@ -57,7 +57,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
       )
     } yield ()
 
-  def handleSocket(socket: Socket[F], outboundAddress: Option[SocketAddress[_]]): F[Unit] = {
+  def handleSocket(socket: Socket[F], outboundAddress: Option[SocketAddress[?]]): F[Unit] = {
     val resource = for {
       _ <- Resource.onFinalize(socket.endOfInput *> socket.endOfOutput)
       remotePeerId <- Handshake.run(socket, magicBytes, localPeer.sk, localPeer.vk).timeout(5.seconds).toResource
@@ -101,8 +101,8 @@ object PeersManager:
       core: BlockchainCore[F],
       localPeer: LocalPeer,
       magicBytes: Array[Byte],
-      connectOutbound: SocketAddress[_] => F[Unit],
-      knownPeers: List[SocketAddress[_]]
+      connectOutbound: SocketAddress[?] => F[Unit],
+      knownPeers: List[SocketAddress[?]]
   ): Resource[F, PeersManager[F]] =
     Ref
       .of(State[F](Map.empty, Map.empty, knownPeers))
@@ -129,7 +129,7 @@ object PeersManager:
   case class State[F[_]](
       connectedPeers: Map[PeerId, PeerState[F]],
       disconnectedPeers: Map[PeerId, PeerState[F]],
-      knownPeers: List[SocketAddress[_]]
+      knownPeers: List[SocketAddress[?]]
   ):
     def withConnectedPeer(peerId: PeerId, peerState: PeerState[F]) =
       copy(

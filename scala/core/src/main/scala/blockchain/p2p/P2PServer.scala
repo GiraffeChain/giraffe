@@ -19,8 +19,8 @@ object P2PServer:
   def serve[F[_]: Async](
       bindHost: String,
       bindPort: Int,
-      handleSocket: (Socket[F], Option[SocketAddress[_]]) => F[Unit],
-      outboundConnections: Stream[F, SocketAddress[_]]
+      handleSocket: (Socket[F], Option[SocketAddress[?]]) => F[Unit],
+      outboundConnections: Stream[F, SocketAddress[?]]
   ): Resource[F, F[Outcome[F, Throwable, Unit]]] =
     for {
       logger <- Slf4jLogger.fromName("P2P").toResource
@@ -57,7 +57,7 @@ object P2PServer:
       publicHost: Option[String],
       publicPort: Option[Int],
       magicBytes: Array[Byte],
-      initialPeers: List[SocketAddress[_]]
+      initialPeers: List[SocketAddress[?]]
   ): Resource[F, F[Outcome[F, Throwable, Unit]]] =
     Slf4jLogger
       .fromName("P2P")
@@ -66,7 +66,7 @@ object P2PServer:
         Resource
           .onFinalize(logger.info("P2P Terminated")) >> (
           Resource
-            .make(Channel.unbounded[F, SocketAddress[_]])(_.close.void)
+            .make(Channel.unbounded[F, SocketAddress[?]])(_.close.void)
             .evalTap(channel => initialPeers.traverse(channel.send)),
           LocalPeer
             .make(core, publicHost, publicPort)

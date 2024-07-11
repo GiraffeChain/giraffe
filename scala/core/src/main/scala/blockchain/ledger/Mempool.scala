@@ -31,7 +31,7 @@ object Mempool:
       bodyValidation: BodyValidation[F],
       clock: Clock[F],
       saveTransaction: Transaction => F[Unit]
-  ): Resource[F, Mempool[F] with BlockPacker[F]] =
+  ): Resource[F, Mempool[F] & BlockPacker[F]] =
     Resource
       .make(Topic[F, MempoolChange])(_.close.void)
       .map(mempoolChangesTopic =>

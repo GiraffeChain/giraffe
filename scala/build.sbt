@@ -1,4 +1,4 @@
-val scala3 = "3.3.1"
+val scala3 = "3.4.2"
 
 inThisBuild(
   List(
@@ -62,7 +62,9 @@ lazy val core = project
         Dependencies.mUnitTest,
     libraryDependencies += "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
     scalacOptions ++= Seq(
-      "-source:future"
+      "-source",
+      "3.4-migration",
+      "-rewrite"
     )
   )
   .dependsOn(protobuf)
@@ -161,13 +163,15 @@ lazy val protobuf =
         files.map { f => (f, f.relativeTo(base).get.getPath) }
       },
       scalapbCodeGeneratorOptions ++= Seq(
-        CodeGeneratorOption.FlatPackage
+        CodeGeneratorOption.FlatPackage,
+        CodeGeneratorOption.Scala3Sources
       ),
       Compile / PB.targets := scalapbCodeGenerators.value
         .map(_.copy(outputPath = (Compile / sourceManaged).value))
         .:+(
           scalapb.validate.gen(
-            scalapb.GeneratorOption.FlatPackage
+            scalapb.GeneratorOption.FlatPackage,
+            scalapb.GeneratorOption.Scala3Sources
           ) -> (Compile / sourceManaged).value: protocbridge.Target
         )
     )

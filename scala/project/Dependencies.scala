@@ -4,7 +4,7 @@ object Dependencies {
   val logging: Seq[ModuleID] = Seq(
     "ch.qos.logback" % "logback-classic" % Versions.logback,
     "ch.qos.logback" % "logback-core" % Versions.logback,
-    "org.slf4j" % "slf4j-api" % "2.0.9",
+    "org.slf4j" % "slf4j-api" % "2.0.12",
     "org.typelevel" %% "log4cats-slf4j" % "2.6.0"
   )
 
@@ -23,7 +23,7 @@ object Dependencies {
   )
 
   val bouncycastle = Seq(
-    "org.bouncycastle" % "bcprov-jdk18on" % "1.77"
+    "org.bouncycastle" % "bcprov-jdk18on" % "1.78.1"
   )
 
   val scodec = Seq(
@@ -39,16 +39,16 @@ object Dependencies {
   )
 
   val mUnitTest = Seq(
-    "org.scalameta" %% "munit" % "0.7.29",
-    "org.scalameta" %% "munit-scalacheck" % "0.7.29",
-    "org.typelevel" %% "munit-cats-effect-3" % "1.0.7",
-    "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4"
+    "org.scalameta" %% "munit" % "1.0.0",
+    "org.scalameta" %% "munit-scalacheck" % "1.0.0",
+    "org.typelevel" %% "munit-cats-effect" % "2.0.0",
+    "org.typelevel" %% "scalacheck-effect-munit" % "2.0-9366e44"
   ).map(_ % Test)
 }
 
 object Versions {
-  val cats = "2.10.0"
+  val cats = "2.12.0"
   val catsEffect = "3.5.2"
-  val fs2 = "3.9.3"
-  val logback = "1.4.14"
+  val fs2 = "3.10.2"
+  val logback = "1.5.6"
 }
