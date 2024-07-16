@@ -207,7 +207,12 @@ StreamTransformer<In, Out> AbandoningTransformer<In, Out>(
                   .flatTap((_) => IO.delay(() => cancel = null))
                   .flatMap((_) => baseIo)
               : baseIo;
-          cancel = io.unsafeRunCancelable();
+          final (future, c) = io.unsafeRunFutureCancelable();
+          cancel = c;
+          future.catchError((e, s) {
+            controller.addError(e!, s);
+            throw e;
+          });
         },
             onError: controller.addError,
             onDone: controller.close,
