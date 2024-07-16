@@ -17,7 +17,7 @@ import scalacache.caffeine.CaffeineCache
 import scalacache.{Cache, Entry}
 
 trait EtaCalculation[F[_]]:
-  def etaToBe(parentslotId: SlotId, childSlot: Long): F[Eta]
+  def etaToBe(parentSlotId: SlotId, childSlot: Long): F[Eta]
 
 object EtaCalculation:
   def make[F[_]: Async: Parallel: CryptoResources](

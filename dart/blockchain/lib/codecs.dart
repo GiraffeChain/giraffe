@@ -307,7 +307,7 @@ extension PeerIdCodecs on PeerId {
 }
 
 extension StringCodecs on String {
-  List<int> get decodeBase58 => Base58Decode(this);
+  List<int> get decodeBase58 => isEmpty ? [] : Base58Decode(this);
   List<int> get utf8Bytes => utf8.encode(this);
 }
 

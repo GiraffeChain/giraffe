@@ -11,7 +11,6 @@ import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/consensus/staker_tracker.dart';
-import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:blockchain/ledger/block_packer.dart';
 import 'package:blockchain/minting/block_producer.dart';
@@ -58,9 +57,6 @@ class Minting {
           .evalFlatMap((secureStore) async {
         final vrfSk = await File("${stakingDir.path}/vrf").readAsBytes();
         final vrfVk = await ed25519Vrf.getVerificationKey(vrfSk);
-        final operatorSk =
-            await File("${stakingDir.path}/operator").readAsBytes();
-        final operatorVk = await ed25519.getVerificationKey(operatorSk);
         final account = TransactionOutputReference.fromBuffer(
             await File("${stakingDir.path}/account").readAsBytes());
 

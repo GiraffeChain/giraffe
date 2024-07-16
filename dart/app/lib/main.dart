@@ -9,6 +9,7 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -31,7 +32,7 @@ void main() async {
 
   initRouter();
 
-  runApp(const MainApp());
+  runApp(const ProviderScope(child: MainApp()));
 }
 
 class MainApp extends StatelessWidget {

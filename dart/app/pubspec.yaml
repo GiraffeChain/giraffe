@@ -4,7 +4,8 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.0.0
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.22.2"
 
 dependencies:
   cryptography: ^2.5.0
@@ -26,18 +27,29 @@ dependencies:
   fluro: ^2.0.5
   path_provider: ^2.1.2
   file_picker: ^8.0.6
+  grpc: ^3.2.4
+  riverpod: ^2.5.1
+  flutter_riverpod: ^2.5.1
+  freezed_annotation: ^2.4.4
   blockchain:
     path: ../blockchain
   blockchain_protobuf:
     path: ../protobuf_dart
   flutter:
     sdk: flutter
-  grpc: ^3.2.4
+  hooks_riverpod: ^2.5.1
+  flutter_hooks: ^0.20.5
+  riverpod_annotation: ^2.3.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  build_runner: ^2.4.11
+  freezed: ^2.5.2
+  riverpod_generator: ^2.4.0
+  custom_lint:
+  analyzer: ^5.13.0
 
 flutter:
   uses-material-design: true

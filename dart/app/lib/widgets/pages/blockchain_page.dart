@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
+import 'package:blockchain_app/widgets/pages/genesis_builder_page.dart';
 import 'package:blockchain_app/widgets/pages/stake_page.dart';
 import 'package:blockchain_app/widgets/pages/transact_page.dart';
 import 'package:blockchain/codecs.dart';
@@ -17,7 +19,7 @@ class BlockchainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
-        length: 3,
+        length: 4,
         child: Scaffold(
             appBar: _appBar(context),
             body: Container(
@@ -30,6 +32,9 @@ class BlockchainPage extends StatelessWidget {
       Tab(icon: Icon(Icons.square_outlined), child: Text("Chain")),
       Tab(icon: Icon(Icons.send), child: Text("Send")),
       Tab(icon: Icon(Icons.publish), child: Text("Stake")),
+      Tab(
+          icon: Icon(Icons.baby_changing_station),
+          child: Text("Genesis Builder")),
     ]);
   }
 
@@ -40,6 +45,7 @@ class BlockchainPage extends StatelessWidget {
       const LiveBlocksView(),
       StreamedTransactView(view: blockchain, writer: blockchainWriter),
       StakeView(view: blockchain, writer: blockchainWriter),
+      GenesisBuilderView(),
     ]);
   }
 
@@ -71,14 +77,19 @@ class BlockchainPage extends StatelessWidget {
 
   _slotText(BuildContext context) {
     final blockchain = context.watch<BlockchainView>();
-    return StreamBuilder(
+    return StreamBuilder<Int64>(
         stream: Stream.fromFuture(blockchain.genesisBlock)
-            .map((b) => b.header)
-            .asyncExpand((header) => Stream.periodic(const Duration(seconds: 1))
-                .map((_) =>
-                    (DateTime.now().millisecondsSinceEpoch -
-                        header.timestamp.toInt()) ~/
-                    int.parse(header.settings["slot-duration-ms"]!))),
+            .map((b) => (
+                  b.header.timestamp,
+                  Int64(ProtocolSettings.defaultSettings
+                      .mergeFromMap(b.header.settings)
+                      .slotDuration
+                      .inMilliseconds)
+                ))
+            .asyncExpand((t) => Stream.periodic(const Duration(seconds: 1)).map(
+                (_) =>
+                    (Int64(DateTime.now().millisecondsSinceEpoch) - t.$1) ~/
+                    t.$2)),
         builder: (context, snapshot) => Row(children: [
               const VerticalDivider(),
               Text("Slot: ${snapshot.data ?? Int64.ZERO}",
