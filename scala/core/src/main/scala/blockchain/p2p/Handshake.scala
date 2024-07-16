@@ -8,9 +8,9 @@ import cats.MonadThrow
 import cats.data.OptionT
 import cats.effect.Sync
 import cats.effect.std.Random
-import com.google.protobuf.ByteString
 import fs2.Chunk
 import fs2.io.net.Socket
+import scodec.bits.ByteVector
 
 object Handshake:
   def run[F[_]: Sync: Random: CryptoResources](
@@ -48,7 +48,7 @@ object Handshake:
       remoteSignature <- exchanger(localSignature)
       signatureIsValid <- ed25519.useSync(_.verify(remoteSignature, localChallenge, remoteVk))
       _ <- Sync[F].raiseWhen(!signatureIsValid)(new IllegalArgumentException("Invalid Signature"))
-    } yield PeerId(ByteString.copyFrom(remoteVk))
+    } yield PeerId(ByteVector(remoteVk).toBase58)
 
   private def exchange[F[_]: MonadThrow](read: Int => F[Array[Byte]], write: Array[Byte] => F[Unit])(
       data: Array[Byte]

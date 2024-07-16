@@ -9,7 +9,6 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fast_base58/fast_base58.dart';
 
 import 'package:fixnum/fixnum.dart';
-import 'package:hashlib/hashlib.dart';
 import 'package:ribs_core/ribs_core.dart';
 
 const arr0 = [0x00];
@@ -25,21 +24,20 @@ extension ListCodec<T> on List<T> {
 
 extension BlockHeaderCodecs on BlockHeader {
   List<int> get immutableBytes => <int>[]
-    ..addAll(parentHeaderId.value)
+    ..addAll(parentHeaderId.immutableBytes)
     ..addAll(parentSlot.immutableBytes)
-    ..addAll(txRoot)
+    ..addAll(txRoot.decodeBase58)
     ..addAll(timestamp.immutableBytes)
     ..addAll(height.immutableBytes)
     ..addAll(slot.immutableBytes)
     ..addAll(eligibilityCertificate.immutableBytes)
     ..addAll(operationalCertificate.immutableBytes)
-    ..addAll(metadata)
+    ..addAll(metadata.utf8Bytes)
     ..addAll(account.immutableBytes);
 
   BlockId get id => hasHeaderId() ? headerId : computeId;
 
-  BlockId get computeId =>
-      BlockId()..value = Uint8List.fromList(immutableBytes.hash256);
+  BlockId get computeId => BlockId()..value = immutableBytes.hash256.base58;
 
   void embedId() => headerId = computeId;
 
@@ -47,53 +45,49 @@ extension BlockHeaderCodecs on BlockHeader {
 }
 
 BlockId decodeBlockId(String input) {
-  if (input.startsWith("b_")) return decodeBlockId(input.substring(2));
-  final decoded = Base58Decode(input);
-  assert(decoded.length == 32);
-  final blockId = BlockId()..value = decoded;
-  return blockId;
+  return BlockId()..value = input.startsWith("b_") ? input.substring(2) : input;
 }
 
 extension UnsignedBlockHeaderCodecs on UnsignedBlockHeader {
   List<int> get signableBytes => <int>[]
-    ..addAll(parentHeaderId.value)
+    ..addAll(parentHeaderId.immutableBytes)
     ..addAll(parentSlot.immutableBytes)
-    ..addAll(txRoot)
+    ..addAll(txRoot.decodeBase58)
     ..addAll(timestamp.immutableBytes)
     ..addAll(height.immutableBytes)
     ..addAll(slot.immutableBytes)
     ..addAll(eligibilityCertificate.immutableBytes)
     ..addAll(partialOperationalCertificate.immutableBytes)
-    ..addAll(metadata)
+    ..addAll(metadata.utf8Bytes)
     ..addAll(account.immutableBytes);
 }
 
 extension EligibilityCertificateCodecs on EligibilityCertificate {
   List<int> get immutableBytes => <int>[]
-    ..addAll(vrfSig)
-    ..addAll(vrfVK)
-    ..addAll(thresholdEvidence)
-    ..addAll(eta);
+    ..addAll(vrfSig.decodeBase58)
+    ..addAll(vrfVK.decodeBase58)
+    ..addAll(thresholdEvidence.decodeBase58)
+    ..addAll(eta.decodeBase58);
 }
 
 extension PartialOperationalCertificateCodecs on PartialOperationalCertificate {
   List<int> get immutableBytes => <int>[]
     ..addAll(parentVK.immutableBytes)
     ..addAll(parentSignature.immutableBytes)
-    ..addAll(childVK);
+    ..addAll(childVK.decodeBase58);
 }
 
 extension OperationalCertificateCodecs on OperationalCertificate {
   List<int> get immutableBytes => <int>[]
     ..addAll(parentVK.immutableBytes)
     ..addAll(parentSignature.immutableBytes)
-    ..addAll(childVK)
-    ..addAll(childSignature);
+    ..addAll(childVK.decodeBase58)
+    ..addAll(childSignature.decodeBase58);
 }
 
 extension VerificationKeyKesProductCodecs on VerificationKeyKesProduct {
   List<int> get immutableBytes => <int>[]
-    ..addAll(value)
+    ..addAll(value.decodeBase58)
     ..addAll(step.immutableBytes);
 }
 
@@ -107,16 +101,16 @@ extension IterableCodecs<T> on Iterable<T> {
 
 extension SignatureKesSumCodecs on SignatureKesSum {
   List<int> get immutableBytes => <int>[]
-    ..addAll(verificationKey)
-    ..addAll(signature)
-    ..addAll(witness.immutableBytes((t) => t));
+    ..addAll(verificationKey.decodeBase58)
+    ..addAll(signature.decodeBase58)
+    ..addAll(witness.immutableBytes((t) => t.decodeBase58));
 }
 
 extension SignatureKesProductCodecs on SignatureKesProduct {
   List<int> get immutableBytes => <int>[]
     ..addAll(superSignature.immutableBytes)
     ..addAll(subSignature.immutableBytes)
-    ..addAll(subRoot);
+    ..addAll(subRoot.decodeBase58);
 }
 
 extension IntCodecs on int {
@@ -133,20 +127,18 @@ extension Int128Codecs on List<int> {
 }
 
 extension BlockIdCodecs on BlockId {
-  List<int> get immutableBytes => value;
-  String get show => "b_${this.value.base58}";
+  List<int> get immutableBytes => value.decodeBase58;
+  String get show => "b_$value";
 }
 
 extension TransactionIdCodecs on TransactionId {
-  List<int> get immutableBytes => List.from(value);
-  String get show => "t_${this.value.base58}";
+  List<int> get immutableBytes => value.decodeBase58;
+  String get show => "t_$value";
 }
 
 TransactionId decodeTransactionId(String input) {
-  if (input.startsWith("t_")) return decodeTransactionId(input.substring(2));
-  final decoded = Base58Decode(input);
-  assert(decoded.length == 32);
-  return TransactionId()..value = decoded;
+  return TransactionId()
+    ..value = input.startsWith("t_") ? input.substring(2) : input;
 }
 
 extension TransactionCodecs on Transaction {
@@ -162,7 +154,7 @@ extension TransactionCodecs on Transaction {
   TransactionId get id => hasTransactionId() ? transactionId : computeId;
 
   TransactionId get computeId =>
-      TransactionId()..value = blake2b256.convert(immutableBytes).bytes;
+      TransactionId()..value = immutableBytes.hash256.base58;
 
   void embedId() => transactionId = computeId;
 
@@ -193,15 +185,15 @@ extension TransactionOutputCodecs on TransactionOutput {
 extension KeyCodecs on Key {
   List<int> get immutableBytes {
     if (hasEd25519())
-      return ed25519.signature;
+      return ed25519.signature.decodeBase58;
     else
       throw ArgumentError("Invalid Key");
   }
 }
 
 extension StakingAddressCodecs on StakingAddress {
-  List<int> get immutableBytes => <int>[]..addAll(value);
-  String get show => "s_${this.value.base58}";
+  List<int> get immutableBytes => <int>[]..addAll(value.decodeBase58);
+  String get show => "s_$value";
 }
 
 extension StakingRegistrationCodecs on StakingRegistration {
@@ -239,14 +231,14 @@ extension GraphEntryCodecs on GraphEntry {
 
 extension VertexCodecs on Vertex {
   List<int> get immutableBytes => [
-        ...label.immutableBytes,
+        ...label.decodeBase58,
         ...condOptCodec(hasData(), data, (v) => v.immutableBytes),
       ];
 }
 
 extension EdgeCodecs on Edge {
   List<int> get immutableBytes => [
-        ...label.immutableBytes,
+        ...label.decodeBase58,
         ...condOptCodec(hasData(), data, (v) => v.immutableBytes),
         ...a.immutableBytes,
         ...b.immutableBytes,
@@ -260,7 +252,7 @@ extension StructCodecs on struct.Struct {
 
     return sorted
         .map((e) => [
-              ...e.key.immutableBytes,
+              ...e.key.decodeBase58,
               ...e.value.immutableBytes,
             ])
         .immutableBytes(identity);
@@ -270,9 +262,9 @@ extension StructCodecs on struct.Struct {
 extension StructValueCodecs on struct.Value {
   List<int> get immutableBytes {
     if (hasNumberValue())
-      return numberValue.toString().immutableBytes;
+      return numberValue.toString().decodeBase58;
     else if (hasStringValue())
-      return stringValue.immutableBytes;
+      return stringValue.decodeBase58;
     else if (hasBoolValue())
       return boolValue.immutableBytes;
     else if (hasStructValue())
@@ -284,17 +276,14 @@ extension StructValueCodecs on struct.Value {
 }
 
 extension LockAddressCodecs on LockAddress {
-  List<int> get immutableBytes => value;
+  List<int> get immutableBytes => value.decodeBase58;
 
-  String get show => "a_${this.value.base58}";
+  String get show => "a_$value";
 }
 
 LockAddress decodeLockAddress(String input) {
-  if (input.startsWith("a_")) return decodeLockAddress(input.substring(2));
-  final decoded = Base58Decode(input);
-  assert(decoded.length == 32);
-  final lockAddress = LockAddress()..value = decoded;
-  return lockAddress;
+  return LockAddress()
+    ..value = input.startsWith("a_") ? input.substring(2) : input;
 }
 
 extension LockCodecs on Lock {
@@ -306,19 +295,20 @@ extension LockCodecs on Lock {
   }
 
   LockAddress get address =>
-      LockAddress()..value = blake2b256.convert(immutableBytes).bytes;
+      LockAddress()..value = immutableBytes.hash256.base58;
 }
 
 extension Lock_Ed25519Codecs on Lock_Ed25519 {
-  List<int> get immutableBytes => vk;
+  List<int> get immutableBytes => vk.decodeBase58;
 }
 
 extension PeerIdCodecs on PeerId {
-  String get show => "p_${value.sublist(0, 8).show}";
+  String get show => "p_${value.substring(0, 8)}";
 }
 
 extension StringCodecs on String {
-  List<int> get immutableBytes => utf8.encode(this);
+  List<int> get decodeBase58 => Base58Decode(this);
+  List<int> get utf8Bytes => utf8.encode(this);
 }
 
 extension BoolCodecs on bool {
@@ -329,20 +319,20 @@ class PersistenceCodecs {
   static Uint8List encodeHeightBlockId((Int64, BlockId) heightBlockTuple) =>
       Uint8List.fromList(<int>[]
         ..addAll(heightBlockTuple.$1.toBytesBigEndian())
-        ..addAll(heightBlockTuple.$2.value));
+        ..addAll(heightBlockTuple.$2.value.decodeBase58));
   static (Int64, BlockId) decodeHeightBlockId(Uint8List bytes) => (
         Int64.fromBytesBigEndian(bytes.sublist(0, 8)),
-        BlockId(value: bytes.sublist(8))
+        BlockId(value: bytes.sublist(8).base58)
       );
 
   static Uint8List encodeBlockId(BlockId blockId) =>
-      Uint8List.fromList(blockId.value);
-  static BlockId decodeBlockId(Uint8List bytes) => BlockId(value: bytes);
+      Uint8List.fromList(blockId.value.decodeBase58);
+  static BlockId decodeBlockId(Uint8List bytes) => BlockId(value: bytes.base58);
 
   static Uint8List encodeTransactionId(TransactionId transactionId) =>
-      Uint8List.fromList(transactionId.value);
+      Uint8List.fromList(transactionId.value.decodeBase58);
   static TransactionId decodeTransactionId(Uint8List bytes) =>
-      TransactionId(value: bytes);
+      TransactionId(value: bytes.base58);
 }
 
 class Codec<T> {
@@ -355,12 +345,12 @@ class Codec<T> {
 class P2PCodecs {
   static final int64Codec =
       Codec<Int64>((v) => v.toBytesBigEndian(), Int64.fromBytesBigEndian);
-  static final blockIdCodec =
-      Codec<BlockId>((v) => v.value, (v) => BlockId(value: v));
+  static final blockIdCodec = Codec<BlockId>(
+      (v) => v.value.decodeBase58, (v) => BlockId(value: v.base58));
 
   static final blockIdOptCodec = optCodec<BlockId>(blockIdCodec);
-  static final transactionIdCodec =
-      Codec<TransactionId>((v) => v.value, (v) => TransactionId(value: v));
+  static final transactionIdCodec = Codec<TransactionId>(
+      (v) => v.value.decodeBase58, (v) => TransactionId(value: v.base58));
 
   static final headerCodec =
       Codec<BlockHeader>((v) => v.writeToBuffer(), BlockHeader.fromBuffer);

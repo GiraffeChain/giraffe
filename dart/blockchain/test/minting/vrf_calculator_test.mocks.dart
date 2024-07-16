@@ -11,7 +11,7 @@ import 'package:fixnum/fixnum.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i7;
 import 'package:rational/rational.dart' as _i4;
-import 'package:ribs_core/ribs_core.dart' as _i6;
+import 'package:ribs_effect/ribs_effect.dart' as _i6;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values

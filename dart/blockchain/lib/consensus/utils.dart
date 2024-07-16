@@ -18,12 +18,12 @@ extension RhoOps on Rho {
 
 extension RatioOps on Rational {
   Uint8List get thresholdEvidence => blake2b256
-      .convert(numerator.toString().immutableBytes +
-          denominator.toString().immutableBytes)
+      .convert(
+          numerator.toString().utf8Bytes + denominator.toString().utf8Bytes)
       .bytes;
 }
 
 extension BlockHeaderOps on BlockHeader {
   Future<Uint8List> get rho =>
-      ed25519Vrf.proofToHash(eligibilityCertificate.vrfSig);
+      ed25519Vrf.proofToHash(eligibilityCertificate.vrfSig.decodeBase58);
 }

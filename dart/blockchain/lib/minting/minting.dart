@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:blockchain/blockchain_view.dart';
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/resource.dart';
@@ -153,8 +154,11 @@ class EtaCalculationForStakerSupportRpc extends EtaCalculation {
   @override
   Future<Eta> etaToBe(SlotId parentSlotId, Int64 childSlot) async =>
       (await client.calculateEta(CalculateEtaReq(
-              parentBlockId: parentSlotId.blockId, slot: childSlot)))
-          .eta;
+        parentBlockId: parentSlotId.blockId,
+        slot: childSlot,
+      )))
+          .eta
+          .decodeBase58;
 }
 
 class StakerTrackerForStakerSupportRpc extends StakerTracker {

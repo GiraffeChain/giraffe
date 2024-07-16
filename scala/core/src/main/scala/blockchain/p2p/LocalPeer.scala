@@ -9,7 +9,7 @@ import cats.data.OptionT
 import cats.implicits.*
 import cats.effect.implicits.*
 import cats.effect.std.Random
-import com.google.protobuf.ByteString
+import scodec.bits.ByteVector
 
 case class LocalPeer(connectedPeer: ConnectedPeer, sk: Array[Byte], vk: Array[Byte])
 
@@ -20,7 +20,7 @@ object LocalPeer:
       publicPort: Option[Int]
   ): Resource[F, LocalPeer] =
     loadP2PKeys(core)
-      .map((sk, vk) => LocalPeer(ConnectedPeer(PeerId(ByteString.copyFrom(vk)), publicHost, publicPort), sk, vk))
+      .map((sk, vk) => LocalPeer(ConnectedPeer(PeerId(ByteVector(vk).toBase58), publicHost, publicPort), sk, vk))
       .toResource
 
   def loadP2PKeys[F[_]: Async: Random: CryptoResources](core: BlockchainCore[F]): F[(Array[Byte], Array[Byte])] =

@@ -63,7 +63,7 @@ class PeersManager {
 
   static final log = Logger("Blockchain.P2P.PeersManager");
 
-  PeerId get localPeerId => PeerId(value: localPeerKeyPair.vk);
+  PeerId get localPeerId => PeerId(value: localPeerKeyPair.vk.base58);
 
   Future<void> close() =>
       Future.wait(connectedPeers.values.map((peer) => peer.close()));

@@ -50,7 +50,9 @@ message CalculateEtaReq {
 }
 
 message CalculateEtaRes {
-    bytes eta = 1 [(validate.rules).bytes.len = 32];
+    // Base58 encoded
+    // length = 32
+    string eta = 1;
 }
 
 message PackBlockReq {

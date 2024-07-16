@@ -17,7 +17,7 @@ class PrivateTestnet {
   static Future<Ed25519KeyPair> get DefaultKeyPair =>
       ed25519.generateKeyPairFromSeed(Uint8List(32));
   static Future<LockAddress> get DefaultLockAddress => DefaultKeyPair.then(
-      (kp) => Lock(ed25519: Lock_Ed25519(vk: kp.vk)).address);
+      (kp) => Lock(ed25519: Lock_Ed25519(vk: kp.vk.base58)).address);
 
   static Future<BlockId> initTo(Directory baseDir, Int64 timestamp,
       List<Int64> stakes, TreeHeight kesTreeHeight) async {
@@ -65,7 +65,8 @@ class PrivateTestnet {
           ..lockAddress = (Lock()
                 ..ed25519 = (Lock_Ed25519()
                   ..vk = (await ed25519.generateKeyPairFromSeed(Uint8List(32)))
-                      .vk))
+                      .vk
+                      .base58))
               .address
           ..value = (Value()..quantity = Int64(10000000))),
     ];

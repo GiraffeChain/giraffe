@@ -45,7 +45,7 @@ class Consensus {
       Resource.eval(IO.fromFutureF(() async {
         final genesisBlockId = genesisBlock.header.id;
         final etaCalculation = EtaCalculationImpl(dataStores.headers.getOrRaise,
-            clock, genesisBlock.header.eligibilityCertificate.eta);
+            clock, genesisBlock.header.eligibilityCertificate.eta.decodeBase58);
 
         final leaderElection = LeaderElectionImpl(protocolSettings, isolate);
 

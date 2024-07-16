@@ -1,6 +1,6 @@
 package blockchain.consensus
 
-import blockchain.codecs.given
+import blockchain.codecs.{*, given}
 import blockchain.crypto.{CryptoResources, given}
 import blockchain.models.{BlockHeader, BlockId, SlotId}
 import blockchain.utility.*
@@ -81,18 +81,18 @@ class HeaderValidationImpl[F[_]: Sync: CryptoResources](
           header.slot
         )
       )
-      eta = header.eligibilityCertificate.eta
+      eta = header.eligibilityCertificate.eta.decodeBase58
       _ <- EitherT.cond[F](eta == expectedEta, (), NonEmptyChain("Invalid Eta"))
       signatureVerificationResult <- EitherT.liftF(
         CryptoResources[F].ed25519VRF
           .useSync(
             _.verify(
-              header.eligibilityCertificate.vrfSig.toByteArray,
+              header.eligibilityCertificate.vrfSig.decodeBase58,
               VrfArgument(
                 expectedEta,
                 header.slot
               ).signableBytes.toByteArray,
-              header.eligibilityCertificate.vrfVK.toByteArray
+              header.eligibilityCertificate.vrfVK.decodeBase58
             )
           )
       )
@@ -108,8 +108,8 @@ class HeaderValidationImpl[F[_]: Sync: CryptoResources](
     for {
       message <- EitherT.liftF(
         Sync[F].delay(
-          header.operationalCertificate.childVK.toByteArray ++ Longs
-            .toByteArray(header.slot)
+          header.operationalCertificate.childVK.decodeBase58.toByteArray ++
+            Longs.toByteArray(header.slot)
         )
       )
       parentCommitmentResult <- EitherT.liftF(
@@ -127,9 +127,9 @@ class HeaderValidationImpl[F[_]: Sync: CryptoResources](
         CryptoResources[F].ed25519
           .useSync(
             _.verify(
-              header.operationalCertificate.childSignature.toByteArray,
+              header.operationalCertificate.childSignature.decodeBase58.toByteArray,
               header.unsigned.signableBytes.toByteArray,
-              header.operationalCertificate.childVK.toByteArray
+              header.operationalCertificate.childVK.decodeBase58.toByteArray
             )
           )
       )
@@ -163,7 +163,7 @@ class HeaderValidationImpl[F[_]: Sync: CryptoResources](
           )
       _ <-
         EitherT.cond[F](
-          header.eligibilityCertificate.thresholdEvidence == evidence,
+          header.eligibilityCertificate.thresholdEvidence.decodeBase58 == evidence,
           (),
           NonEmptyChain("InvalidVRFThreshold")
         )
@@ -181,7 +181,7 @@ class HeaderValidationImpl[F[_]: Sync: CryptoResources](
           CryptoResources[F].ed25519VRF
             .useSync(
               _.proofToHash(
-                header.eligibilityCertificate.vrfSig.toByteArray
+                header.eligibilityCertificate.vrfSig.decodeBase58
               )
             )
         )
@@ -207,8 +207,8 @@ class HeaderValidationImpl[F[_]: Sync: CryptoResources](
         CryptoResources[F].blake2b256
           .useSync(
             _.hash(
-              header.eligibilityCertificate.vrfVK,
-              staker.registration.stakingAddress.value
+              header.eligibilityCertificate.vrfVK.decodeBase58,
+              staker.registration.stakingAddress.value.decodeBase58
             )
           )
       )

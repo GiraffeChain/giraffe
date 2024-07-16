@@ -98,12 +98,13 @@ class BlockHeaderValidationImpl extends BlockHeaderValidation {
           ..slot = header.parentSlot
           ..blockId = header.parentHeaderId,
         header.slot);
-    if (!expectedEta.sameElements(header.eligibilityCertificate.eta))
+    if (!expectedEta
+        .sameElements(header.eligibilityCertificate.eta.decodeBase58))
       return ["InvalidEligibilityCertificateEta"];
     final signatureVerification = await ed25519Vrf.verify(
-      header.eligibilityCertificate.vrfSig,
+      header.eligibilityCertificate.vrfSig.decodeBase58,
       VrfArgument(expectedEta, header.slot).signableBytes,
-      header.eligibilityCertificate.vrfVK,
+      header.eligibilityCertificate.vrfVK.decodeBase58,
     );
     if (!signatureVerification) return ["InvalidEligibilityCertificate"];
     return [];
@@ -112,15 +113,17 @@ class BlockHeaderValidationImpl extends BlockHeaderValidation {
   Future<List<String>> _kesVerification(BlockHeader header) async {
     final parentCommitmentVerification = await kesProduct.verify(
       header.operationalCertificate.parentSignature,
-      header.operationalCertificate.childVK + header.slot.immutableBytes,
+      header.operationalCertificate.childVK.decodeBase58 +
+          header.slot.immutableBytes,
       header.operationalCertificate.parentVK,
     );
     if (!parentCommitmentVerification)
       return ["InvalidOperationalParentSignature"];
     final childSignatureResult = await ed25519.verify(
-        header.operationalCertificate.childSignature,
-        header.unsigned.signableBytes,
-        header.operationalCertificate.childVK);
+      header.operationalCertificate.childSignature.decodeBase58,
+      header.unsigned.signableBytes,
+      header.operationalCertificate.childVK.decodeBase58,
+    );
     if (!childSignatureResult) return ["InvalidBlockProof"];
     return [];
   }
@@ -129,8 +132,8 @@ class BlockHeaderValidationImpl extends BlockHeaderValidation {
     final staker = await consensusValidationState.staker(
         await header.id, header.slot, header.account);
     if (staker == null) return ["Unregistered"];
-    final message = await (header.eligibilityCertificate.vrfVK +
-            staker.registration.stakingAddress.value)
+    final message = await (header.eligibilityCertificate.vrfVK.decodeBase58 +
+            staker.registration.stakingAddress.value.decodeBase58)
         .hash256;
 
     final verificationResult = await kesProduct.verify(
@@ -156,15 +159,16 @@ class BlockHeaderValidationImpl extends BlockHeaderValidation {
   List<String> _vrfThresholdVerification(
       BlockHeader header, Rational threshold) {
     final evidence = threshold.thresholdEvidence;
-    if (!evidence.sameElements(header.eligibilityCertificate.thresholdEvidence))
+    if (!evidence.sameElements(
+        header.eligibilityCertificate.thresholdEvidence.decodeBase58))
       return ["InvalidVrfThreshold"];
     return [];
   }
 
   Future<List<String>> _eligibilityVerification(
       BlockHeader header, Rational threshold) async {
-    final rho =
-        await ed25519Vrf.proofToHash(header.eligibilityCertificate.vrfSig);
+    final rho = await ed25519Vrf
+        .proofToHash(header.eligibilityCertificate.vrfSig.decodeBase58);
     final isSlotLeader =
         await leaderElectionValidation.isEligible(threshold, rho);
     if (!isSlotLeader) return ["Ineligible"];

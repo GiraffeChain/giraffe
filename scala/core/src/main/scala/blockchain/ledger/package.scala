@@ -1,7 +1,7 @@
 package blockchain
 
 import blockchain.models.*
-import blockchain.codecs.given
+import blockchain.codecs.{*, given}
 import blockchain.crypto.Blake2b256
 import cats.Monad
 import cats.data.OptionT
@@ -53,7 +53,7 @@ package object ledger {
     def txRoot(parentTxRoot: Bytes): Bytes =
       ByteString.copyFrom(
         new Blake2b256().hash(
-          (parentTxRoot +: transactionIds.map(_.value)).map(_.toByteArray)*
+          (parentTxRoot +: transactionIds.map(_.value.decodeBase58.toByteArray))*
         )
       )
 }

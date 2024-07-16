@@ -20,6 +20,8 @@ import fs2.grpc.syntax.all.*
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
+import scodec.bits.ByteVector
+
 object BlockchainRpc:
   def serve[F[_]: Async](core: BlockchainCore[F], bindHost: String, bindPort: Int): Resource[F, Server] =
     Slf4jLogger
@@ -150,6 +152,7 @@ class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupp
       .flatMap(header =>
         core.consensus.etaCalculation
           .etaToBe(SlotId(header.slot, header.id), request.slot)
+          .map(eta => ByteVector(eta.toByteArray).toBase58)
           .map(CalculateEtaRes(_))
       )
       .warnLogErrors

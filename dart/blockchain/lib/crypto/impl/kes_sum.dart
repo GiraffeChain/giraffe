@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/impl/kes_helper.dart';
 import 'package:blockchain/crypto/utils.dart';
@@ -29,15 +30,15 @@ class KesSum {
           return loop(keyTree.left, [List.of(keyTree.witnessRight)]..addAll(W));
       } else if (keyTree is KesSigningLeaf) {
         return SignatureKesSum()
-          ..verificationKey = Uint8List.fromList(keyTree.vk)
+          ..verificationKey = Uint8List.fromList(keyTree.vk).base58
           ..signature =
-              Uint8List.fromList(await ed25519.sign(message, keyTree.sk))
-          ..witness.addAll(W.map(Uint8List.fromList).toList());
+              Uint8List.fromList(await ed25519.sign(message, keyTree.sk)).base58
+          ..witness.addAll(W.map((e) => e.base58).toList());
       } else {
         return SignatureKesSum()
-          ..verificationKey = Uint8List(32)
-          ..signature = Uint8List(64)
-          ..witness.addAll([Uint8List(0)]);
+          ..verificationKey = Uint8List(32).base58
+          ..signature = Uint8List(64).base58
+          ..witness.addAll([Uint8List(0).base58]);
       }
     }
 
@@ -47,10 +48,11 @@ class KesSum {
   Future<bool> verify(SignatureKesSum signature, List<int> message,
       VerificationKeyKesSum vk) async {
     bool leftGoing(int level) => ((vk.step ~/ kesHelper.exp(level)) % 2) == 0;
-    Future<bool> emptyWitness() async =>
-        vk.value.sameElements(await kesHelper.hash(signature.verificationKey));
+    Future<bool> emptyWitness() async => vk.value.sameElements(
+        await kesHelper.hash(signature.verificationKey.decodeBase58));
     Future<bool> singleWitness(List<int> witness) async {
-      final hashVkSign = await kesHelper.hash(signature.verificationKey);
+      final hashVkSign =
+          await kesHelper.hash(signature.verificationKey.decodeBase58);
       if (leftGoing(0)) {
         return vk.value
             .sameElements(await kesHelper.hash(hashVkSign + witness));
@@ -86,18 +88,24 @@ class KesSum {
       else if (W.length == 1)
         return singleWitness(W.first);
       else if (leftGoing(0))
-        return multiWitness(W.sublist(1),
-            await kesHelper.hash(signature.verificationKey), W.first, 1);
+        return multiWitness(
+            W.sublist(1),
+            await kesHelper.hash(signature.verificationKey.decodeBase58),
+            W.first,
+            1);
       else
         return multiWitness(W.sublist(1), W.first,
-            await kesHelper.hash(signature.verificationKey), 1);
+            await kesHelper.hash(signature.verificationKey.decodeBase58), 1);
     }
 
     final ed25519Verification = await ed25519.verify(
-        signature.signature, message, signature.verificationKey);
+        signature.signature.decodeBase58,
+        message,
+        signature.verificationKey.decodeBase58);
     if (!ed25519Verification) return false;
 
-    final merkleVerification = await verifyMerkle(signature.witness);
+    final merkleVerification = await verifyMerkle(
+        signature.witness.map((e) => e.decodeBase58).toList());
     return merkleVerification;
   }
 

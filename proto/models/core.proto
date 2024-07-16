@@ -7,7 +7,8 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/struct.proto";
 
 message BlockId {
-    bytes value = 1;
+    // Base58 encoded
+    string value = 1;
 }
 
 // Captures a block producer's consensus-commitment to a new block
@@ -21,7 +22,7 @@ message BlockHeader {
   uint64 parentSlot = 2;
   // The commitment/accumulator of the block body
   // length = 32
-  bytes txRoot = 3 [(validate.rules).bytes.len = 32];
+  string txRoot = 3;
   // The UTC UNIX timestamp (ms) when the block was created
   uint64 timestamp = 4;
   // The 1-based index of this block in the blockchain
@@ -32,9 +33,9 @@ message BlockHeader {
   EligibilityCertificate eligibilityCertificate = 7 [(validate.rules).message.required = true];
   // A certificate indicating the operator's commitment to this block
   OperationalCertificate operationalCertificate = 8 [(validate.rules).message.required = true];
-  // Optional metadata stamped by the operator.  Must be latin-1 encoded, and must be at most 32 bytes in length.
+  // Optional metadata stamped by the operator.
   // optional
-  bytes metadata = 9 [(validate.rules).bytes.max_len = 32];
+  string metadata = 9;
   // The operator's staking account location
   TransactionOutputReference account = 10 [(validate.rules).message.required = true];
   // Configuration or protocol changes
@@ -44,16 +45,22 @@ message BlockHeader {
 // A certificate proving the operator's election
 message EligibilityCertificate {
     // Signs `eta ++ slot` using the `vrfSK`
-    bytes vrfSig = 1 [(validate.rules).bytes.len = 80];
+    // Base58 encoded
+    // length = 80
+    string vrfSig = 1;
     // The VRF VK
-    bytes vrfVK = 2 [(validate.rules).bytes.len = 32];
+    // Base58 encoded
+    // length = 32
+    string vrfVK = 2;
     // Hash of the operator's `threshold`
     // routine = blake2b256
+    // Base58 encoded
     // length = 32
-    bytes thresholdEvidence = 3 [(validate.rules).bytes.len = 32];
+    string thresholdEvidence = 3;
     // The epoch's randomness
+    // Base58 encoded
     // length = 32
-    bytes eta = 4 [(validate.rules).bytes.len = 32];
+    string eta = 4;
   }
 
 // A certificate which commits an operator to a linear key, which is then used to sign the block
@@ -63,29 +70,33 @@ message OperationalCertificate {
     // Signs the `childVK` using the `parentSK`
     SignatureKesProduct parentSignature = 2 [(validate.rules).message.required = true];
     // The linear VK
-    bytes childVK = 3 [(validate.rules).bytes.len = 32];
+    // length = 32
+    string childVK = 3;
     // The signature of the block
-    bytes childSignature = 4 [(validate.rules).bytes.len = 64];
+    // length = 64
+    string childSignature = 4;
 }
 
 message VerificationKeyKesProduct {
     // length = 32
-    bytes value = 1 [(validate.rules).bytes.len = 32];
+    string value = 1;
     uint32 step = 2;
 }
 
 message SignatureKesSum {
-    bytes verificationKey = 1 [(validate.rules).bytes.len = 32];
-    bytes signature = 2 [(validate.rules).bytes.len = 64];
+    // length = 32
+    string verificationKey = 1;
+    // length = 64
+    string signature = 2;
     // item length = 32
-    repeated bytes witness = 3 [(validate.rules).repeated.items.bytes.len = 32];
+    repeated string witness = 3;
 }
 
 message SignatureKesProduct {
     SignatureKesSum superSignature = 1 [(validate.rules).message.required = true];
     SignatureKesSum subSignature = 2 [(validate.rules).message.required = true];
     // length = 32
-    bytes subRoot = 3 [(validate.rules).bytes.len = 32];
+    string subRoot = 3;
 }
 
 // A glorified tuple
@@ -97,7 +108,8 @@ message SlotId {
 }
 
 message StakingAddress {
-    bytes value = 1 [(validate.rules).bytes.len = 32];
+    // length = 32
+    string value = 1;
 }
 
 // Captures the ordering of transaction IDs within a block
@@ -132,8 +144,9 @@ message BlockBody {
 // Represents the identifier of a Transction.  It is constructed from the evidence of the signable bytes of the Transaction.
 message TransactionId {
     // The evidence of the Transaction's signable bytes
+    // Base58 encoded
     // length = 32
-    bytes value = 1;
+    string value = 1;
 }
 
 message Transaction {
@@ -218,7 +231,9 @@ message ActiveStaker {
 }
 
 message LockAddress {
-    bytes value = 1;
+    // Base58 encoded
+    // length = 32
+    string value = 1;
 }
 
 message Lock {
@@ -228,7 +243,9 @@ message Lock {
     }
 
     message Ed25519 {
-        bytes vk = 1;
+        // Base58 encoded
+        // length = 32
+        string vk = 1;
     }
 }
 
@@ -239,12 +256,16 @@ message Key {
     }
 
     message Ed25519 {
-        bytes signature = 1;
+        // Base58 encoded
+        // length = 64
+        string signature = 1;
     }
 }
 
 message PeerId {
-    bytes value = 1 [(validate.rules).bytes.len = 32];
+    // Base58 encoded
+    // length = 32
+    string value = 1;
 }
 
 message PublicP2PState {

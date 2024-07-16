@@ -11,37 +11,42 @@ import 'package:fixnum/fixnum.dart';
 import 'package:ribs_effect/ribs_effect.dart';
 
 class Genesis {
+  static const _emptyBytes32 = "11111111111111111111111111111111";
+  static const _emptyBytes64 =
+      "1111111111111111111111111111111111111111111111111111111111111111";
+  static const _emptyBytes80 =
+      "11111111111111111111111111111111111111111111111111111111111111111111111111111111";
   static const height = Int64.ONE;
   static const slot = Int64.ZERO;
   static final parentSlot = Int64(-1);
 
-  static final parentId = BlockId()..value = Int8List(32);
+  static final parentId = BlockId()..value = Int8List(32).base58;
   static final operationalCertificate = OperationalCertificate()
     ..parentVK = (VerificationKeyKesProduct()
-      ..value = _emptyBytes(32)
+      ..value = _emptyBytes32
       ..step = 0)
     ..parentSignature = (SignatureKesProduct()
-      ..superSignature = (SignatureKesSum()..verificationKey = _emptyBytes(32))
-      ..subSignature = (SignatureKesSum()..verificationKey = _emptyBytes(32))
-      ..subRoot = _emptyBytes(32))
-    ..childVK = _emptyBytes(32)
-    ..childSignature = _emptyBytes(64);
+      ..superSignature = (SignatureKesSum()..verificationKey = _emptyBytes32)
+      ..subSignature = (SignatureKesSum()..verificationKey = _emptyBytes32)
+      ..subRoot = _emptyBytes32)
+    ..childVK = _emptyBytes32
+    ..childSignature = _emptyBytes64;
 
   static final stakingAccount = TransactionOutputReference(
-      transactionId: TransactionId(value: _emptyBytes(32)));
+      transactionId: TransactionId(value: _emptyBytes32));
 
   static Eta eta(List<int> prefix, Iterable<TransactionId> transactionIds) {
     final bytes = <int>[]..addAll(prefix);
-    for (final id in transactionIds) bytes.addAll(id.value);
+    for (final id in transactionIds) bytes.addAll(id.value.decodeBase58);
     return bytes.hash256;
   }
 
   static EligibilityCertificate eligibilityCertificate(Eta eta) =>
       EligibilityCertificate()
-        ..vrfSig = _emptyBytes(80)
-        ..vrfVK = _emptyBytes(32)
-        ..thresholdEvidence = _emptyBytes(32)
-        ..eta = eta;
+        ..vrfSig = _emptyBytes80
+        ..vrfVK = _emptyBytes32
+        ..thresholdEvidence = _emptyBytes32
+        ..eta = eta.base58;
 
   static Future<void> save(Directory directory, FullBlock block) async {
     await directory.create(recursive: true);
@@ -91,7 +96,7 @@ class Genesis {
         final fullBody = FullBlockBody(transactions: transactions);
         final expectedTxRoot =
             TxRoot.calculateFromTransactions(Uint8List(32), transactions);
-        assert(expectedTxRoot.sameElements(header.txRoot));
+        assert(expectedTxRoot.sameElements(header.txRoot.decodeBase58));
         return FullBlock(header: header, fullBody: fullBody);
       });
 }
@@ -114,6 +119,7 @@ class GenesisConfig {
       ..parentSlot = Genesis.parentSlot
       ..txRoot =
           TxRoot.calculateFromTransactionIds(Uint8List(32), transactionIds)
+              .base58
       ..timestamp = timestamp
       ..height = Genesis.height
       ..slot = Genesis.slot
@@ -129,5 +135,3 @@ class GenesisConfig {
       ..fullBody = (FullBlockBody()..transactions.addAll(transactions));
   }
 }
-
-Int8List _emptyBytes(int length) => Int8List(length);
