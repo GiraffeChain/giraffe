@@ -30,5 +30,5 @@ class IsolatePool {
 
   Future<R> isolate<Q, R>(FutureOr<R> Function(Q message) callback, Q message,
           {String? debugLabel}) =>
-      getIsolate().isolate(callback, message, debugLabel: debugLabel);
+      getIsolate().compute(callback, message, debugLabel: debugLabel);
 }

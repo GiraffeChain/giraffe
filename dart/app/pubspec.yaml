@@ -15,9 +15,9 @@ dependencies:
   fpdart: ^1.1.0
   ribs_core: ^1.0.0-dev.11
   ribs_effect: ^1.0.0-dev.1
-  rxdart: ^0.27.7
+  rxdart: ^0.28.0
   fast_base58: ^0.2.1
-  integral_isolates: ^0.4.1
+  integral_isolates: ^0.5.1
   flutter_background: ^1.2.0
   intl: ^0.19.0
   get_time_ago: ^1.2.5
@@ -25,7 +25,7 @@ dependencies:
   provider: ^6.0.5
   fluro: ^2.0.5
   path_provider: ^2.1.2
-  file_picker: ^6.1.1
+  file_picker: ^8.0.6
   blockchain:
     path: ../blockchain
   blockchain_protobuf:
@@ -37,7 +37,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
