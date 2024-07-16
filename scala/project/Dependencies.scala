@@ -38,6 +38,10 @@ object Dependencies {
     "io.grpc" % "grpc-services" % Versions.ioGrpc
   )
 
+  val http4sClient = Seq(
+    "org.http4s" %% "http4s-ember-client" % Versions.http4s
+  )
+
   val caseApp = Seq(
     "com.github.alexarchambault" %% "case-app" % "2.1.0-M26"
   )
@@ -56,4 +60,5 @@ object Versions {
   val fs2 = "3.10.2"
   val logback = "1.5.6"
   val ioGrpc = "1.64.0"
+  val http4s = "0.23.26"
 }

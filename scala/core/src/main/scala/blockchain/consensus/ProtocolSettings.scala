@@ -44,7 +44,7 @@ case class ProtocolSettings(
       case "vrf-baseline-difficulty"       => copy(vrfBaselineDifficulty = parseRational(value))
       case "vrf-amplitude"                 => copy(vrfAmplitude = parseRational(value))
       case "chain-selection-k-lookback"    => copy(chainSelectionKLookback = value.toInt)
-      case "slot-duration-ms"              => copy(slotDuration = Duration(value).asInstanceOf[FiniteDuration])
+      case "slot-duration-ms"              => copy(slotDuration = value.toLong.milli)
       case "operational-periods-per-epoch" => copy(operationalPeriodsPerEpoch = value.toInt)
       case "kes-key-hours"                 => copy(kesKeyHours = value.toInt)
       case "kes-key-minutes"               => copy(kesKeyMinutes = value.toInt)

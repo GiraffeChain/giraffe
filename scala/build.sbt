@@ -62,6 +62,7 @@ lazy val core = project
         Dependencies.fs2 ++
         Dependencies.grpcServices ++
         Dependencies.caseApp ++
+        Dependencies.http4sClient ++
         Dependencies.mUnitTest,
     libraryDependencies += "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
     scalacOptions ++= Seq(

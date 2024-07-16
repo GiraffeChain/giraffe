@@ -30,7 +30,7 @@ object Relay extends IOApp:
         .pure[F]
         .rethrow
         .toResource
-      genesis <- Testnet.init[F](Path("/tmp/blockchain-genesis"), args.testnet.getOrElse("")).toResource
+      genesis <- Genesis.parse[F](args.genesis).toResource
       _ <- logger.info(show"Genesis id=${genesis.header.id} timestamp=${genesis.header.timestamp}").toResource
       dataDir = Path(show"${args.dataDir}/${genesis.header.id}")
       _ <- logger.info(show"Data dir=$dataDir").toResource
@@ -63,7 +63,7 @@ case class RelayArgs(
     p2pPublicHost: Option[String] = Some("localhost"),
     p2pPublicPort: Option[Int] = Some(2023),
     peer: List[String] = Nil,
-    testnet: Option[String] = None
+    genesis: String = "testnet:"
 ):
   def parsedPeers[F[_]: MonadThrow]: F[List[SocketAddress[?]]] =
     peer.traverse(p =>

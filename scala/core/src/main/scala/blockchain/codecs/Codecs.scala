@@ -50,10 +50,16 @@ trait Codecs {
   given ImmutableBytes[Boolean] with
     extension (bool: Boolean) def immutableBytes: Bytes = if (bool) OneBS else ZeroBS
 
-  extension (s: String) def decodeBase58: Bytes = ByteString.copyFrom(ByteVector.fromValidBase58(s).toArray)
+  extension (s: String)
+    def decodeBase58: Bytes = ByteString.copyFrom(ByteVector.fromValidBase58(s).toArray)
+    def decodeBlockId: BlockId = BlockId(if(s.startsWith("b_")) s.substring(2) else s)
+    def decodeTransactionId: TransactionId = TransactionId(if(s.startsWith("t_")) s.substring(2) else s)
+    def decodeLockAddress: LockAddress = LockAddress(if(s.startsWith("a_")) s.substring(2) else s)
 
   given ImmutableBytes[ByteString] with
-    extension (b: ByteString) def immutableBytes: Bytes = b
+    extension (b: ByteString)
+      def immutableBytes: Bytes = b
+      def base58: String = ByteVector(b.toByteArray).toBase58
 
   given ImmutableBytes[BlockHeader] with
     extension (header: BlockHeader)
@@ -203,7 +209,7 @@ trait Codecs {
 
   given ImmutableBytes[StakingAddress] with
     extension (stakingAddress: StakingAddress)
-      def immutableBytes: Bytes = stakingAddress.value.decodeBase58.immutableBytes
+      def immutableBytes: Bytes = stakingAddress.value.decodeBase58
 
   given ImmutableBytes[StakingRegistration] with
     extension (registration: StakingRegistration)
@@ -213,7 +219,7 @@ trait Codecs {
         )
 
   given ImmutableBytes[LockAddress] with
-    extension (lockAddress: LockAddress) def immutableBytes: Bytes = lockAddress.value.decodeBase58.immutableBytes
+    extension (lockAddress: LockAddress) def immutableBytes: Bytes = lockAddress.value.decodeBase58
 
   given ImmutableBytes[Transaction] with
     extension (transaction: Transaction)

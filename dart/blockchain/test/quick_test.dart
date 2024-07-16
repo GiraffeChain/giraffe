@@ -1,15 +1,12 @@
-import 'package:blockchain/common/utils.dart';
-import 'package:hashlib/hashlib.dart';
-import 'package:rational/rational.dart';
+import 'dart:io';
 
-void main() {
-  final r = BigInt.from(534795345).bytesBigEndian;
-  r;
+import 'package:blockchain/codecs.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 
-  final threshold = Rational(BigInt.from(534795345), BigInt.from(153634755855));
-  final evidence = blake2b256
-      .convert(threshold.numerator.bytesBigEndian +
-          threshold.denominator.bytesBigEndian)
-      .bytes;
-  evidence;
+void main() async {
+  final bytes = File(
+          "/home/sean/Documents/blockchain/genesis-init/b_Z3PtvCM6nqfZ4UwgA3Ltv6z7agMeHXhtp7Dn3BtFEjz/genesis/b_Z3PtvCM6nqfZ4UwgA3Ltv6z7agMeHXhtp7Dn3BtFEjz/t_52wAQkoKYsjdkJxgBkAEbkscrx26cLwiEiX2868vLAFi.transaction.pbuf")
+      .readAsBytesSync();
+  final tx = Transaction.fromBuffer(bytes);
+  print(tx.immutableBytes.base58);
 }

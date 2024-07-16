@@ -105,7 +105,9 @@ class GenesisBuilder extends _$GenesisBuilder {
         Directory("${genesisInitDirectory.path}/${genesis.header.id.show}");
     await Future.wait(stakers.mapWithIndex(
         (s, index) => s.save(Directory("${saveDir.path}/stakers/$index"))));
-    await Genesis.save(Directory("${saveDir.path}/genesis"), genesis);
+    await Genesis.save(
+        Directory("${saveDir.path}/genesis/${genesis.header.id.show}"),
+        genesis);
     state = state.copyWith(savedDir: saveDir);
   }
 }

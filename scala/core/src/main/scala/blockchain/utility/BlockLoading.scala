@@ -3,10 +3,9 @@ package blockchain.utility
 import blockchain.codecs.given
 import blockchain.ledger.HeaderToBodyValidation
 import blockchain.models.{Block, BlockBody, BlockHeader, BlockId, FullBlock, FullBlockBody, Transaction, TransactionId}
-import cats.Parallel
 import cats.implicits.*
 import cats.data.{EitherT, ReaderT}
-import cats.effect.{Async, Sync}
+import cats.effect.Async
 import fs2.io.file.{Files, Path}
 import fs2.{Chunk, Stream}
 
@@ -33,12 +32,12 @@ object BlockLoading:
     * @return
     *   a FullBlock associated with the given block ID
     */
-  def load[F[_]: Sync: Parallel](
+  def load[F[_]: Async](
       readFile: ReaderT[F, String, Array[Byte]]
   )(txRootValidation: HeaderToBodyValidation[F])(blockId: BlockId): F[FullBlock] =
     (
       for {
-        genesisBlockIdStr <- EitherT.liftF(Sync[F].delay(blockId.show))
+        genesisBlockIdStr <- EitherT.liftF(Async[F].delay(blockId.show))
         header <-
           EitherT
             .liftF(

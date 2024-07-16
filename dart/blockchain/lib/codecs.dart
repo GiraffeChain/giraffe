@@ -220,7 +220,8 @@ extension ValueCodecs on Value {
 extension AccountRegistrationCodecs on AccountRegistration {
   List<int> get immutableBytes => [
         ...associationLock.immutableBytes,
-        ...stakingRegistration.immutableBytes
+        ...condOptCodec(hasStakingRegistration(), stakingRegistration,
+            (t) => t.immutableBytes)
       ];
 }
 

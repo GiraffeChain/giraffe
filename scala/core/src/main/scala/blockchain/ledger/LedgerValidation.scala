@@ -45,6 +45,16 @@ object HeaderToBodyValidation:
           )
       )
     )
+  
+  def staticParentTxRoot[F[_]: Sync](txRoot: Bytes): Resource[F, HeaderToBodyValidation[F]] =
+    Resource.pure((block: Block) =>
+      EitherT(
+        Sync[F].delay(block.body.transactionIds.txRoot(txRoot))
+          .map(expectedTxRoot =>
+            Either.cond(expectedTxRoot == block.header.txRoot.decodeBase58, (), NonEmptyChain("TxRoot Mismatch"))
+          )
+      )
+    )
 
 case class TransactionValidationContext(
     parentBlockId: BlockId,
