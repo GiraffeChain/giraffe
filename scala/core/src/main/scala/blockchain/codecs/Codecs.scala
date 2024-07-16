@@ -52,9 +52,9 @@ trait Codecs {
 
   extension (s: String)
     def decodeBase58: Bytes = ByteString.copyFrom(ByteVector.fromValidBase58(s).toArray)
-    def decodeBlockId: BlockId = BlockId(if(s.startsWith("b_")) s.substring(2) else s)
-    def decodeTransactionId: TransactionId = TransactionId(if(s.startsWith("t_")) s.substring(2) else s)
-    def decodeLockAddress: LockAddress = LockAddress(if(s.startsWith("a_")) s.substring(2) else s)
+    def decodeBlockId: BlockId = BlockId(if (s.startsWith("b_")) s.substring(2) else s)
+    def decodeTransactionId: TransactionId = TransactionId(if (s.startsWith("t_")) s.substring(2) else s)
+    def decodeLockAddress: LockAddress = LockAddress(if (s.startsWith("a_")) s.substring(2) else s)
 
   given ImmutableBytes[ByteString] with
     extension (b: ByteString)
@@ -208,8 +208,7 @@ trait Codecs {
       LockAddress(ByteVector(new Blake2b256().hash(lock.immutableBytes.toByteArray)).toBase58)
 
   given ImmutableBytes[StakingAddress] with
-    extension (stakingAddress: StakingAddress)
-      def immutableBytes: Bytes = stakingAddress.value.decodeBase58
+    extension (stakingAddress: StakingAddress) def immutableBytes: Bytes = stakingAddress.value.decodeBase58
 
   given ImmutableBytes[StakingRegistration] with
     extension (registration: StakingRegistration)

@@ -3,7 +3,7 @@ package blockchain.consensus
 import blockchain.utility.Ratio
 import cats.implicits.showInterpolator
 
-import scala.concurrent.duration.{Duration, FiniteDuration, given}
+import scala.concurrent.duration.{FiniteDuration, given}
 
 case class ProtocolSettings(
     fEffective: Ratio,
