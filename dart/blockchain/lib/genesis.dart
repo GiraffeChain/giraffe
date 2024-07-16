@@ -56,54 +56,18 @@ class Genesis {
       await file.writeAsBytes(data);
     }
 
-    await save("$blockIdStr.header.pbuf", block.header.writeToBuffer());
-    await save("$blockIdStr.header.json",
-        json.encode(block.header.toProto3Json()).utf8Bytes);
-    final body =
-        BlockBody(transactionIds: block.fullBody.transactions.map((t) => t.id));
-    await save("$blockIdStr.body.pbuf", body.writeToBuffer());
-    await save(
-        "$blockIdStr.body.json", json.encode(body.toProto3Json()).utf8Bytes);
-    for (final transaction in block.fullBody.transactions) {
-      final transactionIdStr = transaction.id.show;
-      await save(
-          "$transactionIdStr.transaction.pbuf", transaction.writeToBuffer());
-      await save("$transactionIdStr.transaction.json",
-          json.encode(transaction.toProto3Json()).utf8Bytes);
-    }
+    await save("$blockIdStr.pbuf", block.writeToBuffer());
+    await save("$blockIdStr.json", json.encode(block.toProto3Json()).utf8Bytes);
   }
 
   static IO<FullBlock> loadFromDisk(Directory directory, BlockId blockId) =>
       IO.fromFutureF(() async {
         final blockIdStr = blockId.show;
-        Future<List<int>> load(String name) async {
-          final file = File("${directory.path}/$name");
-          return file.readAsBytes();
-        }
-
-        final header =
-            BlockHeader.fromBuffer(await load("$blockIdStr.header.pbuf"));
-
-        header.embedId();
-
-        assert(header.id == blockId);
-
-        final body = BlockBody.fromBuffer(await load("$blockIdStr.body.pbuf"));
-        final transactions = <Transaction>[];
-
-        for (final transactionId in body.transactionIds) {
-          final tx = Transaction.fromBuffer(
-              await load("${transactionId.show}.transaction.pbuf"));
-          tx.embedId();
-          assert(tx.id == transactionId);
-          transactions.add(tx);
-        }
-
-        final fullBody = FullBlockBody(transactions: transactions);
-        final expectedTxRoot =
-            TxRoot.calculateFromTransactions(Uint8List(32), transactions);
-        assert(expectedTxRoot.sameElements(header.txRoot.decodeBase58));
-        return FullBlock(header: header, fullBody: fullBody);
+        final bytes =
+            await File("${directory.path}/$blockIdStr.pbuf").readAsBytes();
+        final block = FullBlock.fromBuffer(bytes);
+        assert(block.header.id == blockId);
+        return block;
       });
 }
 

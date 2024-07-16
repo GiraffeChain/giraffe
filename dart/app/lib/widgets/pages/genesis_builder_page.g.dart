@@ -6,7 +6,7 @@ part of 'genesis_builder_page.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$genesisBuilderHash() => r'b303accccfd7a1a07b3cb57cb958fdee34f49b08';
+String _$genesisBuilderHash() => r'fe9180bca6b2b62ba12a71fd34d433a6c4bf802f';
 
 /// See also [GenesisBuilder].
 @ProviderFor(GenesisBuilder)

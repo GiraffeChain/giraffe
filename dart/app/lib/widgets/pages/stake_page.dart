@@ -5,15 +5,17 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
-import 'package:blockchain/crypto/kes.dart';
+import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/minting/minting.dart';
-import 'package:blockchain/staker_initializer.dart';
+import 'package:blockchain/private_testnet.dart';
+import 'package:blockchain/staking_account.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_app/widgets/resource_builder.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pb.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
@@ -71,10 +73,13 @@ class StakeViewState extends State<StakeView>
     final stakingDir = await (await stakingDirectory).create(recursive: true);
     final genesisTimestamp = genesis.header.timestamp;
     final seed = [...genesisTimestamp.immutableBytes, ...index.immutableBytes];
-    final stakerInitializer =
-        await StakerInitializer.fromSeed(seed, TreeHeight(9, 9));
+    final stakerInitializer = await StakingAccount.generate(
+        ProtocolSettings.defaultSettings.kesTreeHeight,
+        Int64(10000000),
+        await PrivateTestnet.DefaultLockAddress,
+        seed);
     final stakingAddress =
-        StakingAddress(value: stakerInitializer.operatorKeyPair.vk.base58);
+        StakingAddress(value: stakerInitializer.operatorVk.base58);
     final accountTx = genesis.fullBody.transactions.firstWhere((tx) => tx
         .outputs
         .where((o) =>

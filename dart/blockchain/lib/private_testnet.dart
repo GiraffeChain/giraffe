@@ -6,7 +6,7 @@ import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/kes.dart';
 import 'package:blockchain/genesis.dart';
-import 'package:blockchain/staker_initializer.dart';
+import 'package:blockchain/staking_account.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
@@ -44,21 +44,21 @@ class PrivateTestnet {
     return genesisId;
   }
 
-  static Future<List<StakerInitializer>> stakerInitializers(
+  static Future<List<StakingAccount>> stakerInitializers(
       Int64 timestamp, int stakerCount, TreeHeight kesTreeHeight) async {
     assert(stakerCount >= 0);
-    final out = <StakerInitializer>[];
+    final out = <StakingAccount>[];
     for (int i = 0; i < stakerCount; i++) {
       final seed = await (timestamp.immutableBytes + i.immutableBytes).hash256;
-      out.add(await StakerInitializer.fromSeed(seed, kesTreeHeight));
+      out.add(await StakingAccount.generate(
+          kesTreeHeight, Int64(10000000), await DefaultLockAddress, seed));
     }
     return out;
   }
 
-  static Future<GenesisConfig> config(Int64 timestamp,
-      List<StakerInitializer> stakers, List<Int64> stakes) async {
+  static Future<GenesisConfig> config(
+      Int64 timestamp, List<StakingAccount> stakers, List<Int64> stakes) async {
     assert(stakers.length == stakes.length);
-    final lockAddress = await DefaultLockAddress;
     final transactions = [
       Transaction()
         ..outputs.add(TransactionOutput()
@@ -72,8 +72,7 @@ class PrivateTestnet {
     ];
     for (int i = 0; i < stakers.length; i++) {
       final staker = stakers[i];
-      final stake = stakes[i];
-      transactions.addAll(await staker.genesisTransactions(stake, lockAddress));
+      transactions.add(staker.transaction);
     }
 
     return GenesisConfig(timestamp, transactions,

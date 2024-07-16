@@ -6,16 +6,15 @@ import blockchain.crypto.{Blake2b256, CryptoResources}
 import blockchain.ledger.*
 import blockchain.models.*
 import blockchain.utility.BlockLoading
-import cats.data.Kleisli
 import cats.effect.std.Random
 import cats.effect.{Async, Sync}
 import com.google.common.primitives.Longs
 import com.google.protobuf.ByteString
 import fs2.io.file.{Files, Path}
 import fs2.io.net.Network
-import scodec.bits.ByteVector
 import org.http4s.client.middleware.FollowRedirect
 import org.http4s.ember.client.EmberClientBuilder
+import scodec.bits.ByteVector
 
 object Genesis:
   private val byteStringZero32 = "11111111111111111111111111111111"
@@ -94,20 +93,26 @@ object Genesis:
           .use(txRootValidation =>
             if (arg.startsWith("http://") || arg.startsWith("https://")) {
               implicit val networkF: Network[F] = Network.forAsync
-              val blockId = (arg.substring(arg.lastIndexOf('/')) + 1).decodeBlockId
+              val fileName = arg.substring(arg.lastIndexOf('/')) + 1
+              // TODO: Use effect
+              assert(fileName.endsWith(".pbuf"))
+              val blockId = fileName.dropRight(5).decodeBlockId
               EmberClientBuilder
                 .default[F]
                 .build
                 .map(FollowRedirect(10))
-                .map(client => Kleisli(fileName => client.expect[Array[Byte]](s"$arg/$fileName")))
+                .map(client => client.expect[Array[Byte]](arg))
                 .use(BlockLoading.load(_)(txRootValidation)(blockId))
             } else {
-              val blockId = (arg.lastIndexOf('/') match {
+              val fileName = arg.lastIndexOf('/') match {
                 case -1 => arg
                 case i  => arg.substring(i + 1)
-              }).decodeBlockId
+              }
+              // TODO: Use effect
+              assert(fileName.endsWith(".pbuf"))
+              val blockId = fileName.dropRight(5).decodeBlockId
               BlockLoading
-                .load(Kleisli(fileName => Files.forAsync[F].readAll(Path(arg) / fileName).compile.to(Array)))(
+                .load(Files.forAsync[F].readAll(Path(arg)).compile.to(Array))(
                   txRootValidation
                 )(blockId)
             }
