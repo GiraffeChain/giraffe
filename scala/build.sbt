@@ -60,6 +60,7 @@ lazy val core = project
         Dependencies.scodec ++
         Dependencies.levelDbJni ++
         Dependencies.fs2 ++
+        Dependencies.grpcServices ++
         Dependencies.caseApp ++
         Dependencies.mUnitTest,
     libraryDependencies += "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,

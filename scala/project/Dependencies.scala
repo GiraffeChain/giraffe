@@ -34,6 +34,10 @@ object Dependencies {
     "com.halibobor" % "leveldbjni-all" % "1.23.2"
   )
 
+  val grpcServices = Seq(
+    "io.grpc" % "grpc-services" % Versions.ioGrpc
+  )
+
   val caseApp = Seq(
     "com.github.alexarchambault" %% "case-app" % "2.1.0-M26"
   )
@@ -51,4 +55,5 @@ object Versions {
   val catsEffect = "3.5.2"
   val fs2 = "3.10.2"
   val logback = "1.5.6"
+  val ioGrpc = "1.64.0"
 }

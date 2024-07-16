@@ -13,13 +13,13 @@ import cats.implicits.*
 import cats.effect.implicits.*
 import io.grpc.{Metadata, Server}
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
+import io.grpc.protobuf.services.ProtoReflectionService
 
 import java.net.InetSocketAddress
 import fs2.Stream
 import fs2.grpc.syntax.all.*
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-
 import scodec.bits.ByteVector
 
 object BlockchainRpc:
@@ -38,6 +38,7 @@ object BlockchainRpc:
               .foldLeft(NettyServerBuilder.forAddress(InetSocketAddress(bindHost, bindPort)))((builder, service) =>
                 builder.addService(service)
               )
+              .addService(ProtoReflectionService.newInstance())
               .resource[F]
           )
           .evalTap(server => Async[F].delay(server.start()))
