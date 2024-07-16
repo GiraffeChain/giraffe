@@ -104,7 +104,8 @@ class Wallet {
 
   Future<void> addPrivateGenesisKey() async {
     final genesisKeyPair = await ed25519.generateKeyPairFromSeed(Uint8List(32));
-    final lock = Lock()..ed25519 = (Lock_Ed25519()..vk = genesisKeyPair.vk);
+    final lock = Lock()
+      ..ed25519 = (Lock_Ed25519()..vk = genesisKeyPair.vk.base58);
     final lockAddress = lock.address;
     final Signer signer = (context) async {
       return Witness(
@@ -113,7 +114,8 @@ class Wallet {
         key: (Key()
           ..ed25519 = (Key_Ed25519()
             ..signature =
-                await ed25519.sign(context.messageToSign, genesisKeyPair.sk))),
+                (await ed25519.sign(context.messageToSign, genesisKeyPair.sk))
+                    .base58)),
       );
     };
     locks[lockAddress] = lock;

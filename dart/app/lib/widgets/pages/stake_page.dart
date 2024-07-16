@@ -75,7 +75,7 @@ class StakeViewState extends State<StakeView>
     final stakerInitializer =
         await StakerInitializer.fromSeed(seed, TreeHeight(9, 9));
     final stakingAddress =
-        StakingAddress(value: stakerInitializer.operatorKeyPair.vk);
+        StakingAddress(value: stakerInitializer.operatorKeyPair.vk.base58);
     final accountTx = genesis.fullBody.transactions.firstWhere((tx) => tx
         .outputs
         .where((o) =>

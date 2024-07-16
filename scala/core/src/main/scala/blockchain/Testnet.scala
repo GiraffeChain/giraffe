@@ -9,9 +9,9 @@ import cats.effect.{Async, Sync}
 import cats.effect.std.Random
 import cats.implicits.*
 import com.google.common.primitives.{Ints, Longs}
-import com.google.protobuf.ByteString
 import fs2.io.file.{Files, Path}
 import fs2.{Chunk, Stream}
+import scodec.bits.ByteVector
 
 object Testnet:
 
@@ -64,7 +64,7 @@ object Testnet:
   val sk: Array[Byte] = Array.fill(32)(0)
   val vk: Array[Byte] = Array[Byte](59, 106, 39, -68, -50, -74, -92, 45, 98, -93, -88, -48, 42, 111, 13, 115, 101, 50,
     21, 119, 29, -30, 67, -90, 58, -64, 72, -95, -117, 89, -38, 41)
-  val lock: Lock = Lock().withEd25519(Lock.Ed25519(ByteString.copyFrom(vk)))
+  val lock: Lock = Lock().withEd25519(Lock.Ed25519(ByteVector(vk).toBase58))
   val lockAddress: LockAddress = lock.address
 
 class TestnetAccount(
@@ -77,7 +77,7 @@ class TestnetAccount(
     val quantity: Long
 ):
   val stakingAddress =
-    StakingAddress(ByteString.copyFrom(operatorVk))
+    StakingAddress(ByteVector(operatorVk).toBase58)
   val stakingRegistration =
     StakingRegistration(registrationSignature, stakingAddress)
   val transaction =

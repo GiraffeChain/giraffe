@@ -34,7 +34,7 @@ class EtaCalculationImpl extends EtaCalculation {
     final childEpoch = clock.epochOfSlot(childSlot);
     final parentHeader = await fetchHeader(parentSlotId.blockId);
     if (parentEpoch == childEpoch)
-      return parentHeader.eligibilityCertificate.eta;
+      return parentHeader.eligibilityCertificate.eta.decodeBase58;
     else if (childEpoch - parentEpoch > 1)
       throw Exception("Empty Epoch");
     else
@@ -62,7 +62,9 @@ class EtaCalculationImpl extends EtaCalculation {
           currentHeader = await fetchHeader(currentHeader.parentHeaderId);
         }
         return _calculateFromValues(
-            twoThirdsBest.eligibilityCertificate.eta, epoch + 1, rhoValues);
+            twoThirdsBest.eligibilityCertificate.eta.decodeBase58,
+            epoch + 1,
+            rhoValues);
       }))!;
 
   Eta _calculateFromValues(

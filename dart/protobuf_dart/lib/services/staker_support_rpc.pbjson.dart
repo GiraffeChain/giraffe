@@ -18,13 +18,15 @@ const BroadcastBlockReq$json = {
   '1': 'BroadcastBlockReq',
   '2': [
     {'1': 'block', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.Block', '8': {}, '10': 'block'},
+    {'1': 'rewardTransaction', '3': 2, '4': 1, '5': 11, '6': '.blockchain.models.Transaction', '10': 'rewardTransaction'},
   ],
 };
 
 /// Descriptor for `BroadcastBlockReq`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List broadcastBlockReqDescriptor = $convert.base64Decode(
     'ChFCcm9hZGNhc3RCbG9ja1JlcRI4CgVibG9jaxgBIAEoCzIYLmJsb2NrY2hhaW4ubW9kZWxzLk'
-    'Jsb2NrQgj6QgWKAQIQAVIFYmxvY2s=');
+    'Jsb2NrQgj6QgWKAQIQAVIFYmxvY2sSTAoRcmV3YXJkVHJhbnNhY3Rpb24YAiABKAsyHi5ibG9j'
+    'a2NoYWluLm1vZGVscy5UcmFuc2FjdGlvblIRcmV3YXJkVHJhbnNhY3Rpb24=');
 
 @$core.Deprecated('Use broadcastBlockResDescriptor instead')
 const BroadcastBlockRes$json = {
@@ -112,13 +114,13 @@ final $typed_data.Uint8List calculateEtaReqDescriptor = $convert.base64Decode(
 const CalculateEtaRes$json = {
   '1': 'CalculateEtaRes',
   '2': [
-    {'1': 'eta', '3': 1, '4': 1, '5': 12, '8': {}, '10': 'eta'},
+    {'1': 'eta', '3': 1, '4': 1, '5': 9, '10': 'eta'},
   ],
 };
 
 /// Descriptor for `CalculateEtaRes`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List calculateEtaResDescriptor = $convert.base64Decode(
-    'Cg9DYWxjdWxhdGVFdGFSZXMSGQoDZXRhGAEgASgMQgf6QgR6AmggUgNldGE=');
+    'Cg9DYWxjdWxhdGVFdGFSZXMSEAoDZXRhGAEgASgJUgNldGE=');
 
 @$core.Deprecated('Use packBlockReqDescriptor instead')
 const PackBlockReq$json = {

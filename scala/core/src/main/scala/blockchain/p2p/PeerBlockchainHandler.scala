@@ -2,7 +2,7 @@ package blockchain.p2p
 
 import blockchain.consensus.ChainSelectionOutcome
 import blockchain.ledger.TransactionValidationContext
-import blockchain.codecs.given
+import blockchain.codecs.{*, given}
 import blockchain.models.*
 import blockchain.ledger.*
 import blockchain.*
@@ -160,7 +160,7 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
         .orElse(
           OptionT(interface.fetchBody(header.id))
             .ensure(new IllegalArgumentException("TxRoot Mismatch"))(body =>
-              body.transactionIds.txRoot(parentHeader.txRoot) == header.txRoot
+              body.transactionIds.txRoot(parentHeader.txRoot.decodeBase58) == header.txRoot.decodeBase58
             )
         )
         .getOrRaise(new IllegalArgumentException("Remote body not found"))

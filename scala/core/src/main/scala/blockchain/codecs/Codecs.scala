@@ -10,7 +10,7 @@ import cats.implicits.*
 import com.google.common.primitives.{Ints, Longs}
 import com.google.protobuf
 import com.google.protobuf.{ByteString, struct}
-import scodec.bits.BitVector
+import scodec.bits.{BitVector, ByteVector}
 
 import java.nio.charset.StandardCharsets
 
@@ -25,9 +25,9 @@ trait Codecs {
           case struct.Value.Kind.Empty        => ZeroBS
           case struct.Value.Kind.NullValue(_) => ZeroBS
           case struct.Value.Kind.NumberValue(num) =>
-            num.toString.immutableBytes // TODO
+            ByteString.copyFromUtf8(num.toString) // TODO
           case struct.Value.Kind.StringValue(string) =>
-            string.immutableBytes
+            ByteString.copyFromUtf8(string)
           case struct.Value.Kind.BoolValue(bool) =>
             bool.immutableBytes
           case struct.Value.Kind.StructValue(str) =>
@@ -50,8 +50,7 @@ trait Codecs {
   given ImmutableBytes[Boolean] with
     extension (bool: Boolean) def immutableBytes: Bytes = if (bool) OneBS else ZeroBS
 
-  given ImmutableBytes[String] with
-    extension (s: String) def immutableBytes: Bytes = ByteString.copyFromUtf8(s)
+  extension (s: String) def decodeBase58: Bytes = ByteString.copyFrom(ByteVector.fromValidBase58(s).toArray)
 
   given ImmutableBytes[ByteString] with
     extension (b: ByteString) def immutableBytes: Bytes = b
@@ -62,22 +61,22 @@ trait Codecs {
         header.headerId.getOrElse(computedId)
       def computedId: BlockId =
         BlockId(
-          ByteString.copyFrom(
-            new Blake2b256().hash(immutableBytes.toByteArray())
-          )
+          ByteVector(
+            new Blake2b256().hash(immutableBytes.toByteArray)
+          ).toBase58
         )
       def withEmbeddedId: BlockHeader =
         header.copy(headerId = computedId.some)
       def immutableBytes: Bytes =
         header.parentHeaderId.immutableBytes
           .concat(header.parentSlot.immutableBytes)
-          .concat(header.txRoot)
+          .concat(header.txRoot.decodeBase58)
           .concat(header.timestamp.immutableBytes)
           .concat(header.height.immutableBytes)
           .concat(header.slot.immutableBytes)
           .concat(header.eligibilityCertificate.immutableBytes)
           .concat(header.operationalCertificate.immutableBytes)
-          .concat(header.metadata)
+          .concat(header.metadata.decodeBase58)
           .concat(header.account.immutableBytes)
 
   given SignableBytes[UnsignedBlockHeader] with
@@ -85,40 +84,41 @@ trait Codecs {
       def signableBytes: Bytes =
         header.parentHeaderId.immutableBytes
           .concat(header.parentSlot.immutableBytes)
-          .concat(header.txRoot)
+          .concat(header.txRoot.decodeBase58)
           .concat(header.timestamp.immutableBytes)
           .concat(header.height.immutableBytes)
           .concat(header.slot.immutableBytes)
           .concat(header.eligibilityCertificate.immutableBytes)
           .concat(header.partialOperationalCertificate.immutableBytes)
-          .concat(header.metadata)
+          .concat(header.metadata.decodeBase58)
           .concat(header.account.immutableBytes)
 
   given ImmutableBytes[EligibilityCertificate] with
     extension (certificate: EligibilityCertificate)
       def immutableBytes: Bytes =
-        certificate.vrfSig
-          .concat(certificate.vrfVK)
-          .concat(certificate.thresholdEvidence)
-          .concat(certificate.eta)
+        certificate.vrfSig.decodeBase58.immutableBytes
+          .concat(certificate.vrfVK.decodeBase58.immutableBytes)
+          .concat(certificate.thresholdEvidence.decodeBase58.immutableBytes)
+          .concat(certificate.eta.decodeBase58.immutableBytes)
 
   given ImmutableBytes[OperationalCertificate] with
     extension (certificate: OperationalCertificate)
       def immutableBytes: Bytes =
         certificate.parentVK.immutableBytes
           .concat(certificate.parentSignature.immutableBytes)
-          .concat(certificate.childVK)
-          .concat(certificate.childSignature)
+          .concat(certificate.childVK.decodeBase58.immutableBytes)
+          .concat(certificate.childSignature.decodeBase58.immutableBytes)
 
   given ImmutableBytes[PartialOperationalCertificate] with
     extension (certificate: PartialOperationalCertificate)
       def immutableBytes: Bytes =
         certificate.parentVK.immutableBytes
           .concat(certificate.parentSignature.immutableBytes)
-          .concat(certificate.childVK)
+          .concat(certificate.childVK.decodeBase58.immutableBytes)
 
   given ImmutableBytes[VerificationKeyKesProduct] with
-    extension (vk: VerificationKeyKesProduct) def immutableBytes: Bytes = vk.value.concat(vk.step.immutableBytes)
+    extension (vk: VerificationKeyKesProduct)
+      def immutableBytes: Bytes = vk.value.decodeBase58.immutableBytes.concat(vk.step.immutableBytes)
 
   given [T: ImmutableBytes]: ImmutableBytes[Seq[T]] with
     extension (iterable: Seq[T])
@@ -133,16 +133,16 @@ trait Codecs {
   given ImmutableBytes[SignatureKesSum] with
     extension (signature: SignatureKesSum)
       def immutableBytes: Bytes =
-        signature.verificationKey
-          .concat(signature.signature)
-          .concat(signature.witness.immutableBytes)
+        signature.verificationKey.decodeBase58
+          .concat(signature.signature.decodeBase58)
+          .concat(signature.witness.map(_.decodeBase58).immutableBytes)
 
   given ImmutableBytes[SignatureKesProduct] with
     extension (signature: SignatureKesProduct)
       def immutableBytes: Bytes =
         signature.superSignature.immutableBytes
           .concat(signature.subSignature.immutableBytes)
-          .concat(signature.subRoot)
+          .concat(signature.subRoot.decodeBase58.immutableBytes)
 
   given ImmutableBytes[TransactionOutputReference] with
     extension (reference: TransactionOutputReference)
@@ -179,9 +179,10 @@ trait Codecs {
     extension (entry: GraphEntry)
       def immutableBytes: Bytes = entry.entry match {
         case GraphEntry.Entry.Vertex(v) =>
-          v.label.immutableBytes.concat(v.data.immutableBytes)
+          ByteString.copyFromUtf8(v.label).concat(v.data.immutableBytes)
         case GraphEntry.Entry.Edge(e) =>
-          e.label.immutableBytes
+          ByteString
+            .copyFromUtf8(e.label)
             .concat(e.data.immutableBytes)
             .concat(e.a.immutableBytes)
             .concat(e.b.immutableBytes)
@@ -192,16 +193,17 @@ trait Codecs {
     extension (lock: Lock)
       def immutableBytes: Bytes =
         lock.value match {
-          case l: Lock.Value.Ed25519 => l.value.vk
+          case l: Lock.Value.Ed25519 => l.value.vk.decodeBase58.immutableBytes
           case _                     => ByteString.empty()
         }
 
   extension (lock: Lock)
     def address: LockAddress =
-      LockAddress(ByteString.copyFrom(new Blake2b256().hash(lock.immutableBytes.toByteArray)))
+      LockAddress(ByteVector(new Blake2b256().hash(lock.immutableBytes.toByteArray)).toBase58)
 
   given ImmutableBytes[StakingAddress] with
-    extension (stakingAddress: StakingAddress) def immutableBytes: Bytes = stakingAddress.value
+    extension (stakingAddress: StakingAddress)
+      def immutableBytes: Bytes = stakingAddress.value.decodeBase58.immutableBytes
 
   given ImmutableBytes[StakingRegistration] with
     extension (registration: StakingRegistration)
@@ -211,7 +213,7 @@ trait Codecs {
         )
 
   given ImmutableBytes[LockAddress] with
-    extension (lockAddress: LockAddress) def immutableBytes: Bytes = lockAddress.value
+    extension (lockAddress: LockAddress) def immutableBytes: Bytes = lockAddress.value.decodeBase58.immutableBytes
 
   given ImmutableBytes[Transaction] with
     extension (transaction: Transaction)
@@ -225,18 +227,18 @@ trait Codecs {
         transaction.transactionId.getOrElse(computedId)
       def computedId: TransactionId =
         TransactionId(
-          ByteString.copyFrom(
-            new Blake2b256().hash(immutableBytes.toByteArray())
-          )
+          ByteVector(
+            new Blake2b256().hash(immutableBytes.toByteArray)
+          ).toBase58
         )
       def withEmbeddedId: Transaction =
         transaction.copy(transactionId = computedId.some)
 
   given ImmutableBytes[TransactionId] with
-    extension (id: TransactionId) def immutableBytes: Bytes = id.value
+    extension (id: TransactionId) def immutableBytes: Bytes = id.value.decodeBase58
 
   given ImmutableBytes[BlockId] with
-    extension (id: BlockId) def immutableBytes: Bytes = id.value
+    extension (id: BlockId) def immutableBytes: Bytes = id.value.decodeBase58
 
   given SignableBytes[VrfArgument] with
     extension (argument: VrfArgument)
@@ -248,7 +250,7 @@ trait Codecs {
       def immutableBytes: Bytes =
         str.fields.toList
           .sortBy(_._1)
-          .map((key, value) => key.immutableBytes.concat(value.immutableBytes))
+          .map((key, value) => ByteString.copyFromUtf8(key).concat(value.immutableBytes))
           .immutableBytes
 
   given Monoid[Bytes] = Monoid.instance(ByteString.EMPTY, _.concat(_))
@@ -322,16 +324,16 @@ trait P2PCodecs {
         Transaction.parseFrom(bytes.newCodedInput())
 
   given P2PEncodable[BlockId] with
-    extension (message: BlockId) def encodeP2P: Bytes = message.value
+    extension (message: BlockId) def encodeP2P: Bytes = message.value.decodeBase58.immutableBytes
 
   given P2PDecodable[BlockId] with
-    extension (bytes: Bytes) def decodeFromP2P: BlockId = BlockId(bytes)
+    extension (bytes: Bytes) def decodeFromP2P: BlockId = BlockId(ByteVector(bytes.toByteArray).toBase58)
 
   given P2PEncodable[TransactionId] with
-    extension (message: TransactionId) def encodeP2P: Bytes = message.value
+    extension (message: TransactionId) def encodeP2P: Bytes = message.value.decodeBase58.immutableBytes
 
   given P2PDecodable[TransactionId] with
-    extension (bytes: Bytes) def decodeFromP2P: TransactionId = TransactionId(bytes)
+    extension (bytes: Bytes) def decodeFromP2P: TransactionId = TransactionId(ByteVector(bytes.toByteArray).toBase58)
 
   given P2PEncodable[PublicP2PState] with
     extension (message: PublicP2PState) def encodeP2P: Bytes = message.toByteString
@@ -367,23 +369,25 @@ trait P2PCodecs {
 trait ArrayCodecs {
 
   given ArrayEncodable[BlockId] with
-    extension (id: BlockId) def encodeArray: Array[Byte] = id.value.toByteArray
+    extension (id: BlockId)
+      def encodeArray: Array[Byte] =
+        id.value.decodeBase58.toByteArray
 
   given ArrayDecodable[BlockId] with
     extension (array: Array[Byte])
       def decodeFromArray: BlockId = BlockId(
-        ByteString.copyFrom(array.ensuring(_.length == 32))
+        ByteVector(array.ensuring(_.length == 32)).toBase58
       )
 
   given ArrayEncodable[TransactionId] with
     extension (id: TransactionId)
       def encodeArray: Array[Byte] =
-        id.value.toByteArray
+        id.value.decodeBase58.toByteArray
 
   given ArrayDecodable[TransactionId] with
     extension (array: Array[Byte])
       def decodeFromArray: TransactionId = TransactionId(
-        ByteString.copyFrom(array.ensuring(_.length == 32))
+        ByteVector(array.ensuring(_.length == 32)).toBase58
       )
 
   given ArrayEncodable[Byte] with
@@ -392,14 +396,14 @@ trait ArrayCodecs {
   given ArrayEncodable[(Long, BlockId)] with
     extension (t: (Long, BlockId))
       def encodeArray: Array[Byte] =
-        t._1.immutableBytes.concat(t._2.value).toByteArray
+        t._1.immutableBytes.toByteArray ++ t._2.encodeArray
 
   given ArrayDecodable[(Long, BlockId)] with
     extension (array: Array[Byte])
       def decodeFromArray: (Long, BlockId) =
         (
           Longs.fromByteArray(array.slice(0, 8)),
-          BlockId(ByteString.copyFrom(array.slice(8, array.length)))
+          BlockId(ByteVector(array.slice(8, array.length)).toBase58)
         )
 
   given ArrayEncodable[BlockHeader] with
@@ -429,13 +433,13 @@ trait ArrayCodecs {
   given ArrayEncodable[TransactionOutputReference] with
     extension (v: TransactionOutputReference)
       def encodeArray: Array[Byte] =
-        v.transactionId.value.toByteArray ++ Ints.toByteArray(v.index)
+        v.transactionId.encodeArray ++ Ints.toByteArray(v.index)
 
   given ArrayDecodable[TransactionOutputReference] with
     extension (array: Array[Byte])
       def decodeFromArray: TransactionOutputReference =
         TransactionOutputReference(
-          TransactionId(ByteString.copyFrom(array.slice(0, 32))),
+          summon[ArrayDecodable[TransactionId]].decodeFromArray(array.slice(0, 32)),
           Ints.fromByteArray(array.slice(32, 36))
         )
 

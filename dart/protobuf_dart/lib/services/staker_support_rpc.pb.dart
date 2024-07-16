@@ -19,10 +19,14 @@ import '../models/core.pb.dart' as $4;
 class BroadcastBlockReq extends $pb.GeneratedMessage {
   factory BroadcastBlockReq({
     $4.Block? block,
+    $4.Transaction? rewardTransaction,
   }) {
     final $result = create();
     if (block != null) {
       $result.block = block;
+    }
+    if (rewardTransaction != null) {
+      $result.rewardTransaction = rewardTransaction;
     }
     return $result;
   }
@@ -32,6 +36,7 @@ class BroadcastBlockReq extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastBlockReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
     ..aOM<$4.Block>(1, _omitFieldNames ? '' : 'block', subBuilder: $4.Block.create)
+    ..aOM<$4.Transaction>(2, _omitFieldNames ? '' : 'rewardTransaction', protoName: 'rewardTransaction', subBuilder: $4.Transaction.create)
     ..hasRequiredFields = false
   ;
 
@@ -66,6 +71,17 @@ class BroadcastBlockReq extends $pb.GeneratedMessage {
   void clearBlock() => clearField(1);
   @$pb.TagNumber(1)
   $4.Block ensureBlock() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $4.Transaction get rewardTransaction => $_getN(1);
+  @$pb.TagNumber(2)
+  set rewardTransaction($4.Transaction v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasRewardTransaction() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRewardTransaction() => clearField(2);
+  @$pb.TagNumber(2)
+  $4.Transaction ensureRewardTransaction() => $_ensure(1);
 }
 
 class BroadcastBlockRes extends $pb.GeneratedMessage {
@@ -418,7 +434,7 @@ class CalculateEtaReq extends $pb.GeneratedMessage {
 
 class CalculateEtaRes extends $pb.GeneratedMessage {
   factory CalculateEtaRes({
-    $core.List<$core.int>? eta,
+    $core.String? eta,
   }) {
     final $result = create();
     if (eta != null) {
@@ -431,7 +447,7 @@ class CalculateEtaRes extends $pb.GeneratedMessage {
   factory CalculateEtaRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CalculateEtaRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'eta', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'eta')
     ..hasRequiredFields = false
   ;
 
@@ -456,10 +472,12 @@ class CalculateEtaRes extends $pb.GeneratedMessage {
   static CalculateEtaRes getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<CalculateEtaRes>(create);
   static CalculateEtaRes? _defaultInstance;
 
+  /// Base58 encoded
+  /// length = 32
   @$pb.TagNumber(1)
-  $core.List<$core.int> get eta => $_getN(0);
+  $core.String get eta => $_getSZ(0);
   @$pb.TagNumber(1)
-  set eta($core.List<$core.int> v) { $_setBytes(0, v); }
+  set eta($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasEta() => $_has(0);
   @$pb.TagNumber(1)

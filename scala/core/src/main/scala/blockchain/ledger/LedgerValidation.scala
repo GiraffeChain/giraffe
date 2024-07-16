@@ -39,9 +39,9 @@ object HeaderToBodyValidation:
       EitherT(
         fetchHeader(block.header.parentHeaderId)
           .map(_.txRoot)
-          .flatMap(parentTxRoot => Sync[F].delay(block.body.transactionIds.txRoot(parentTxRoot)))
+          .flatMap(parentTxRoot => Sync[F].delay(block.body.transactionIds.txRoot(parentTxRoot.decodeBase58)))
           .map(expectedTxRoot =>
-            Either.cond(expectedTxRoot == block.header.txRoot, (), NonEmptyChain("TxRoot Mismatch"))
+            Either.cond(expectedTxRoot == block.header.txRoot.decodeBase58, (), NonEmptyChain("TxRoot Mismatch"))
           )
       )
     )
@@ -169,7 +169,9 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
         case (l: Lock.Value.Ed25519, k: Key.Value.Ed25519) =>
           EitherT(
             CryptoResources[F].ed25519
-              .useSync(e => e.verify(k.value.signature.toByteArray, signableBytes, l.value.vk.toByteArray))
+              .useSync(e =>
+                e.verify(k.value.signature.decodeBase58.toByteArray, signableBytes, l.value.vk.decodeBase58.toByteArray)
+              )
               .map(Either.cond(_, (), NonEmptyChain("InvalidSignature")))
           )
         case _ => EitherT.leftT(NonEmptyChain("InvalidKeyType"))

@@ -28,8 +28,11 @@ class WitnessContext {
     if (witness.lockAddress != expectedAddress) return ["Invalid LockAddress"];
 
     if (witness.lock.hasEd25519() && witness.key.hasEd25519()) {
-      final isValid = await ed25519.verify(witness.key.ed25519.signature,
-          messageToSign, witness.lock.ed25519.vk);
+      final isValid = await ed25519.verify(
+        witness.key.ed25519.signature.decodeBase58,
+        messageToSign,
+        witness.lock.ed25519.vk.decodeBase58,
+      );
       if (isValid)
         return [];
       else

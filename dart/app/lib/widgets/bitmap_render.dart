@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:bit_array/bit_array.dart';
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:flutter/material.dart';
 
@@ -39,18 +40,18 @@ class BitMapViewer extends StatelessWidget {
       required this.offColor});
 
   static BitMapViewer forBlock(BlockId blockId) => BitMapViewer(
-      bitMap: decodeBitMap(blockId.value),
+      bitMap: decodeBitMap(blockId.value.decodeBase58),
       onColor: Colors.red.shade50,
       offColor: Colors.red.shade900);
 
   static BitMapViewer forTransaction(TransactionId transactionId) =>
       BitMapViewer(
-          bitMap: decodeBitMap(transactionId.value),
+          bitMap: decodeBitMap(transactionId.value.decodeBase58),
           onColor: Colors.blue.shade50,
           offColor: Colors.blue.shade900);
 
   static BitMapViewer forLockAddress(LockAddress lockAddress) => BitMapViewer(
-      bitMap: decodeBitMap(lockAddress.value),
+      bitMap: decodeBitMap(lockAddress.value.decodeBase58),
       onColor: Colors.green.shade50,
       offColor: Colors.green.shade900);
 

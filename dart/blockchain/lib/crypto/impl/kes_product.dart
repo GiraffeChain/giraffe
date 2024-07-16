@@ -1,5 +1,7 @@
+import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/crypto/impl/kes_helper.dart';
 import 'package:blockchain/crypto/impl/kes_sum.dart';
@@ -33,7 +35,8 @@ class KesProductImpl extends KesProduct {
     return SignatureKesProduct()
       ..superSignature = sk.subSignature
       ..subSignature = await kesSum.sign(sk.subTree, message)
-      ..subRoot = (await kesSum.generateVerificationKey(sk.subTree)).value;
+      ..subRoot =
+          (await kesSum.generateVerificationKey(sk.subTree)).value.base58;
   }
 
   Future<bool> verify(SignatureKesProduct signature, List<int> message,
@@ -43,15 +46,17 @@ class KesProductImpl extends KesProduct {
     final keyTimeSub = vk.step % totalStepsSub;
     final superVerification = await kesSum.verify(
         signature.superSignature,
-        signature.subRoot,
+        signature.subRoot.decodeBase58,
         VerificationKeyKesSum(
-            value: Uint8List.fromList(vk.value), step: keyTimeSup));
+            value: Uint8List.fromList(vk.value.decodeBase58),
+            step: keyTimeSup));
     if (!superVerification) return false;
     final subVerification = await kesSum.verify(
         signature.subSignature,
         message,
         VerificationKeyKesSum(
-            value: Uint8List.fromList(signature.subRoot), step: keyTimeSub));
+            value: Uint8List.fromList(signature.subRoot.decodeBase58),
+            step: keyTimeSub));
     return subVerification;
   }
 
@@ -143,15 +148,15 @@ class KesProductImpl extends KesProduct {
     final superTree = sk.superTree;
     if (superTree is KesMerkleNode) {
       return VerificationKeyKesProduct()
-        ..value = await kesHelper.witness(sk.superTree)
+        ..value = (await kesHelper.witness(sk.superTree)).base58
         ..step = await getCurrentStep(sk);
     } else if (superTree is KesSigningLeaf) {
       return VerificationKeyKesProduct()
-        ..value = await kesHelper.witness(sk.superTree)
+        ..value = (await kesHelper.witness(sk.superTree)).base58
         ..step = 0;
     } else {
       return VerificationKeyKesProduct()
-        ..value = Uint8List(32)
+        ..value = Uint8List(32).base58
         ..step = 0;
     }
   }
@@ -281,11 +286,11 @@ class SecretKeyKesProduct {
 
   List<int> _encodeSignature(SignatureKesSum signature) {
     final result = [
-      ...signature.verificationKey,
-      ...signature.signature,
+      ...signature.verificationKey.decodeBase58,
+      ...signature.signature.decodeBase58,
       ...Int64(signature.witness.length).toBytesBigEndian(),
     ];
-    for (final t in signature.witness) result.addAll(t);
+    for (final t in signature.witness) result.addAll(t.decodeBase58);
     return result;
   }
 
@@ -321,9 +326,9 @@ class SecretKeyKesProduct {
     });
 
     final kesSignature = SignatureKesSum()
-      ..verificationKey = vk
-      ..signature = signature
-      ..witness.addAll(witness);
+      ..verificationKey = vk.base58
+      ..signature = signature.base58
+      ..witness.addAll(witness.map((e) => e.base58));
     return (kesSignature, bytes.sublist(cursor));
   }
 

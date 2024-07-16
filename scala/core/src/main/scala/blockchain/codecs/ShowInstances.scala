@@ -19,12 +19,12 @@ trait ShowInstances {
   extension (b: BlockId$)
     def fromShow(shown: String): BlockId = {
       val s = if (shown.startsWith("b_")) shown.substring(2) else shown
-      BlockId(ByteString.copyFrom(ByteVector.fromValidBase58(s).toByteBuffer))
+      BlockId(s)
     }
 
   extension (t: TransactionId$)
     def fromShow(shown: String): TransactionId = {
       val s = if (shown.startsWith("t_")) shown.substring(2) else shown
-      TransactionId(ByteString.copyFrom(ByteVector.fromValidBase58(s).toByteBuffer))
+      TransactionId(s)
     }
 }

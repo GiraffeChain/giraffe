@@ -95,7 +95,7 @@ class StakingImpl extends Staking {
       final partialCertificate = PartialOperationalCertificate(
         operationalKeyOutOpt.parentVK,
         operationalKeyOutOpt.parentSignature,
-        operationalKeyOutOpt.childKeyPair.vk,
+        operationalKeyOutOpt.childKeyPair.vk.base58,
       );
       final unsignedHeader = unsignedBlockBuilder(partialCertificate);
       final List<int> messageToSign = unsignedHeader.signableBytes;
@@ -104,11 +104,12 @@ class StakingImpl extends Staking {
       final operationalCertificate = OperationalCertificate()
         ..parentVK = operationalKeyOutOpt.parentVK
         ..parentSignature = operationalKeyOutOpt.parentSignature
-        ..childVK = operationalKeyOutOpt.childKeyPair.vk
-        ..childSignature = await ed25519.signKeyPair(
+        ..childVK = operationalKeyOutOpt.childKeyPair.vk.base58
+        ..childSignature = (await ed25519.signKeyPair(
           messageToSign,
           cryptoKeyPair,
-        );
+        ))
+            .base58;
       final header = BlockHeader()
         ..parentHeaderId = unsignedHeader.parentHeaderId
         ..parentSlot = unsignedHeader.parentSlot
@@ -140,10 +141,10 @@ class StakingImpl extends Staking {
       final evidence = threshold.thresholdEvidence;
       final testProof = await vrfCalculator.proofForSlot(slot, eta);
       final cert = EligibilityCertificate()
-        ..vrfSig = testProof
-        ..vrfVK = vkVrf
-        ..thresholdEvidence = evidence
-        ..eta = eta;
+        ..vrfSig = testProof.base58
+        ..vrfVK = vkVrf.base58
+        ..thresholdEvidence = evidence.base58
+        ..eta = eta.base58;
       return VrfHit(cert, slot, threshold);
     }
     return null;

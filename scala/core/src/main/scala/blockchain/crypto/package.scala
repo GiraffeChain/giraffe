@@ -1,7 +1,8 @@
 package blockchain
 
-import com.google.protobuf.ByteString
 import blockchain.models as protoModels
+import blockchain.codecs.*
+import scodec.bits.ByteVector
 
 package object crypto:
 
@@ -9,7 +10,7 @@ package object crypto:
     protoModels.VerificationKeyKesProduct,
     VerificationKeyKesProduct
   ] =
-    kesProduct => VerificationKeyKesProduct(kesProduct.value.toByteArray, kesProduct.step)
+    kesProduct => VerificationKeyKesProduct(kesProduct.value.decodeBase58.toByteArray, kesProduct.step)
 
   given cryptoToProtoVerificationKeyKesProduct: Conversion[
     VerificationKeyKesProduct,
@@ -17,24 +18,24 @@ package object crypto:
   ] =
     kesProduct =>
       protoModels.VerificationKeyKesProduct(
-        ByteString.copyFrom(kesProduct.value),
+        ByteVector(kesProduct.value).toBase58,
         kesProduct.step
       )
 
   given consensusToCryptoSignatureKesSum: Conversion[protoModels.SignatureKesSum, SignatureKesSum] =
     kesSum =>
       SignatureKesSum(
-        kesSum.verificationKey.toByteArray,
-        kesSum.signature.toByteArray,
-        kesSum.witness.map(_.toByteArray)
+        kesSum.verificationKey.decodeBase58.toByteArray,
+        kesSum.signature.decodeBase58.toByteArray,
+        kesSum.witness.map(_.decodeBase58.toByteArray)
       )
 
   given cryptoToConsensusVerificationKeyKesSum: Conversion[SignatureKesSum, protoModels.SignatureKesSum] =
     kesSum =>
       protoModels.SignatureKesSum(
-        ByteString.copyFrom(kesSum.verificationKey),
-        ByteString.copyFrom(kesSum.signature),
-        kesSum.witness.map(ByteString.copyFrom)
+        ByteVector(kesSum.verificationKey).toBase58,
+        ByteVector(kesSum.signature).toBase58,
+        kesSum.witness.map(ByteVector(_).toBase58)
       )
 
   given consensusToCryptoSignatureKesProduct: Conversion[protoModels.SignatureKesProduct, SignatureKesProduct] =
@@ -42,7 +43,7 @@ package object crypto:
       SignatureKesProduct(
         kesProduct.superSignature,
         kesProduct.subSignature,
-        kesProduct.subRoot.toByteArray
+        kesProduct.subRoot.decodeBase58.toByteArray
       )
 
   given cryptoToConsensusVerificationKeyKesProduct: Conversion[SignatureKesProduct, protoModels.SignatureKesProduct] =
@@ -50,5 +51,5 @@ package object crypto:
       protoModels.SignatureKesProduct(
         kesProduct.superSignature,
         kesProduct.subSignature,
-        ByteString.copyFrom(kesProduct.subRoot)
+        ByteVector(kesProduct.subRoot).toBase58
       )

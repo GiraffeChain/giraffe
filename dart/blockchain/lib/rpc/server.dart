@@ -157,7 +157,7 @@ class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
         await blockchain.dataStores.headers.getOrRaise(request.parentBlockId);
     final eta = await blockchain.consensus.etaCalculation
         .etaToBe(parentHeader.slotId, request.slot);
-    return CalculateEtaRes(eta: eta);
+    return CalculateEtaRes(eta: eta.base58);
   }
 
   @override

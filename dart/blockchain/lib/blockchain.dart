@@ -246,7 +246,7 @@ class BlockchainP2P {
                   await blockchain.dataStores.metadata
                       .put(MetadataIndices.p2pSk, p2pKey.sk);
                 }
-                final localPeerId = PeerId(value: p2pKey.vk);
+                final localPeerId = PeerId(value: p2pKey.vk.base58);
                 log.info(
                     "Local peer id=${localPeerId.show} publicHost=${config.p2p.publicHost} publicPort=${config.p2p.publicPort}");
                 final localPeer = ConnectedPeer(

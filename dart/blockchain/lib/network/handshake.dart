@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/network/util.dart';
@@ -30,6 +31,6 @@ Future<HandshakeResult> handshake(BytesReader reader, BytesWriter writer,
   final remoteSignature = await reader(64).timeout(_timeout);
   if (!(await ed25519.verify(remoteSignature, localChallenge, remoteVk)))
     throw ArgumentError("Invalid remote signature");
-  final peerId = PeerId(value: Uint8List.fromList(remoteVk));
+  final peerId = PeerId(value: remoteVk.base58);
   return HandshakeResult(peerId);
 }

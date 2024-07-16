@@ -141,13 +141,14 @@ class BlockProducerImpl extends BlockProducer {
                 parentHeader.id,
                 parentHeader.slot,
                 TxRoot.calculateFromTransactions(
-                    parentHeader.txRoot, fullBody.transactions),
+                        parentHeader.txRoot.decodeBase58, fullBody.transactions)
+                    .base58,
                 timestamp,
                 parentHeader.height + 1,
                 nextHit.slot,
                 nextHit.cert,
                 partialOperationalCertificate,
-                [],
+                "",
                 staker.account,
               );
 

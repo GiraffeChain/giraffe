@@ -1,9 +1,9 @@
 package blockchain
 
 import blockchain.*
+import blockchain.codecs.*
 import blockchain.crypto.{Blake2b256, Blake2b512, Ed25519VRF}
 import blockchain.models.*
-import blockchain.codecs.given
 import blockchain.utility.*
 import com.google.protobuf.ByteString
 
@@ -24,8 +24,8 @@ package object consensus:
       blake2b256: Blake2b256
   ): Bytes =
     blake2b256.hash(
-      threshold.numerator.toString().immutableBytes,
-      threshold.denominator.toString().immutableBytes
+      ByteString.copyFromUtf8(threshold.numerator.toString()),
+      ByteString.copyFromUtf8(threshold.denominator.toString())
     )
 
   /** @param rho
@@ -48,7 +48,7 @@ package object consensus:
     def rho: Ed25519VRF ?=> Rho =
       ByteString.copyFrom(
         summon[Ed25519VRF].proofToHash(
-          header.eligibilityCertificate.vrfSig.toByteArray
+          header.eligibilityCertificate.vrfSig.decodeBase58.toByteArray
         )
       )
     def unsigned: UnsignedBlockHeader =
@@ -72,13 +72,13 @@ package object consensus:
   case class UnsignedBlockHeader(
       parentHeaderId: BlockId,
       parentSlot: Slot,
-      txRoot: Bytes,
+      txRoot: String,
       timestamp: Timestamp,
       height: Height,
       slot: Slot,
       eligibilityCertificate: EligibilityCertificate,
       partialOperationalCertificate: UnsignedBlockHeader.PartialOperationalCertificate,
-      metadata: Bytes,
+      metadata: String,
       account: TransactionOutputReference
   )
 
@@ -86,5 +86,5 @@ package object consensus:
     case class PartialOperationalCertificate(
         parentVK: VerificationKeyKesProduct,
         parentSignature: SignatureKesProduct,
-        childVK: Bytes
+        childVK: String
     )

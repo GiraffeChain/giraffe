@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:blockchain/crypto/kes.dart';
@@ -41,7 +42,7 @@ class StakerInitializer {
     ..stakingAddress = stakingAddress;
 
   StakingAddress get stakingAddress =>
-      StakingAddress()..value = operatorKeyPair.vk;
+      StakingAddress()..value = operatorKeyPair.vk.base58;
 
   Future<List<Transaction>> genesisTransactions(
       Int64 stake, LockAddress lockAddress) async {

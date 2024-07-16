@@ -1,6 +1,6 @@
 package blockchain
 
-import blockchain.codecs.given
+import blockchain.codecs.{*, given}
 import blockchain.consensus.Eta
 import blockchain.crypto.Blake2b256
 import blockchain.ledger.*
@@ -8,9 +8,12 @@ import blockchain.models.*
 import cats.effect.Sync
 import com.google.common.primitives.Longs
 import com.google.protobuf.ByteString
+import scodec.bits.ByteVector
 
 object Genesis:
-  private val byteStringZero32 = ByteString.copyFrom(Array.fill[Byte](32)(0))
+  private val byteStringZero32 = "11111111111111111111111111111111"
+  private val byteStringZero64 = "1111111111111111111111111111111111111111111111111111111111111111"
+  private val byteStringZero80 = "11111111111111111111111111111111111111111111111111111111111111111111111111111111"
   val Height: Long = 1
   val Slot: Long = 0
   val ParentId: BlockId = BlockId(byteStringZero32)
@@ -20,10 +23,10 @@ object Genesis:
   )
 
   def vrfCertificate(eta: Eta): EligibilityCertificate = EligibilityCertificate(
-    ByteString.copyFrom(Array.fill[Byte](80)(0)),
+    byteStringZero80,
     byteStringZero32,
     byteStringZero32,
-    eta = eta
+    eta = ByteVector(eta.toByteArray).toBase58
   )
 
   val kesCertificate: OperationalCertificate = OperationalCertificate(
@@ -31,18 +34,18 @@ object Genesis:
     SignatureKesProduct(
       SignatureKesSum(
         byteStringZero32,
-        ByteString.copyFrom(Array.fill[Byte](64)(0)),
+        byteStringZero64,
         Vector.empty
       ),
       SignatureKesSum(
         byteStringZero32,
-        ByteString.copyFrom(Array.fill[Byte](64)(0)),
+        byteStringZero64,
         Vector.empty
       ),
       byteStringZero32
     ),
     byteStringZero32,
-    ByteString.copyFrom(Array.fill[Byte](64)(0))
+    byteStringZero64
   )
 
   def init[F[_]: Sync](timestamp: Timestamp, transactions: List[Transaction]): F[FullBlock] =
@@ -52,7 +55,7 @@ object Genesis:
         ByteString.copyFrom(
           new Blake2b256().hash(
             Longs.toByteArray(timestamp) +:
-              transactions.map(_.id.value.toByteArray)*
+              transactions.map(_.id.value.decodeBase58.toByteArray)*
           )
         )
 
@@ -60,13 +63,14 @@ object Genesis:
         BlockHeader(
           parentHeaderId = ParentId,
           parentSlot = ParentSlot,
-          txRoot = transactions.map(_.id).txRoot(byteStringZero32),
+          txRoot =
+            ByteVector(transactions.map(_.id).txRoot(byteStringZero32.decodeBase58.toByteArray).toByteArray).toBase58,
           timestamp = timestamp,
           height = Height,
           slot = Slot,
           eligibilityCertificate = vrfCertificate(eta),
           operationalCertificate = kesCertificate,
-          metadata = ByteString.EMPTY,
+          metadata = "",
           account = StakingAccount
         ).withEmbeddedId
       FullBlock(header, FullBlockBody(transactions))

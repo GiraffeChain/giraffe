@@ -19,7 +19,7 @@ import '../google/protobuf/wrappers.pb.dart' as $3;
 
 class BlockId extends $pb.GeneratedMessage {
   factory BlockId({
-    $core.List<$core.int>? value,
+    $core.String? value,
   }) {
     final $result = create();
     if (value != null) {
@@ -32,7 +32,7 @@ class BlockId extends $pb.GeneratedMessage {
   factory BlockId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockId', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'value')
     ..hasRequiredFields = false
   ;
 
@@ -57,10 +57,11 @@ class BlockId extends $pb.GeneratedMessage {
   static BlockId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<BlockId>(create);
   static BlockId? _defaultInstance;
 
+  /// Base58 encoded
   @$pb.TagNumber(1)
-  $core.List<$core.int> get value => $_getN(0);
+  $core.String get value => $_getSZ(0);
   @$pb.TagNumber(1)
-  set value($core.List<$core.int> v) { $_setBytes(0, v); }
+  set value($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasValue() => $_has(0);
   @$pb.TagNumber(1)
@@ -72,13 +73,13 @@ class BlockHeader extends $pb.GeneratedMessage {
   factory BlockHeader({
     BlockId? parentHeaderId,
     $fixnum.Int64? parentSlot,
-    $core.List<$core.int>? txRoot,
+    $core.String? txRoot,
     $fixnum.Int64? timestamp,
     $fixnum.Int64? height,
     $fixnum.Int64? slot,
     EligibilityCertificate? eligibilityCertificate,
     OperationalCertificate? operationalCertificate,
-    $core.List<$core.int>? metadata,
+    $core.String? metadata,
     TransactionOutputReference? account,
     $core.Map<$core.String, $core.String>? settings,
     BlockId? headerId,
@@ -129,13 +130,13 @@ class BlockHeader extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockHeader', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<BlockId>(1, _omitFieldNames ? '' : 'parentHeaderId', protoName: 'parentHeaderId', subBuilder: BlockId.create)
     ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'parentSlot', $pb.PbFieldType.OU6, protoName: 'parentSlot', defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'txRoot', $pb.PbFieldType.OY, protoName: 'txRoot')
+    ..aOS(3, _omitFieldNames ? '' : 'txRoot', protoName: 'txRoot')
     ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'timestamp', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOM<EligibilityCertificate>(7, _omitFieldNames ? '' : 'eligibilityCertificate', protoName: 'eligibilityCertificate', subBuilder: EligibilityCertificate.create)
     ..aOM<OperationalCertificate>(8, _omitFieldNames ? '' : 'operationalCertificate', protoName: 'operationalCertificate', subBuilder: OperationalCertificate.create)
-    ..a<$core.List<$core.int>>(9, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
+    ..aOS(9, _omitFieldNames ? '' : 'metadata')
     ..aOM<TransactionOutputReference>(10, _omitFieldNames ? '' : 'account', subBuilder: TransactionOutputReference.create)
     ..m<$core.String, $core.String>(11, _omitFieldNames ? '' : 'settings', entryClassName: 'BlockHeader.SettingsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('blockchain.models'))
     ..aOM<BlockId>(12, _omitFieldNames ? '' : 'headerId', protoName: 'headerId', subBuilder: BlockId.create)
@@ -188,9 +189,9 @@ class BlockHeader extends $pb.GeneratedMessage {
   /// The commitment/accumulator of the block body
   /// length = 32
   @$pb.TagNumber(3)
-  $core.List<$core.int> get txRoot => $_getN(2);
+  $core.String get txRoot => $_getSZ(2);
   @$pb.TagNumber(3)
-  set txRoot($core.List<$core.int> v) { $_setBytes(2, v); }
+  set txRoot($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasTxRoot() => $_has(2);
   @$pb.TagNumber(3)
@@ -250,12 +251,12 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   OperationalCertificate ensureOperationalCertificate() => $_ensure(7);
 
-  /// Optional metadata stamped by the operator.  Must be latin-1 encoded, and must be at most 32 bytes in length.
+  /// Optional metadata stamped by the operator.
   /// optional
   @$pb.TagNumber(9)
-  $core.List<$core.int> get metadata => $_getN(8);
+  $core.String get metadata => $_getSZ(8);
   @$pb.TagNumber(9)
-  set metadata($core.List<$core.int> v) { $_setBytes(8, v); }
+  set metadata($core.String v) { $_setString(8, v); }
   @$pb.TagNumber(9)
   $core.bool hasMetadata() => $_has(8);
   @$pb.TagNumber(9)
@@ -294,10 +295,10 @@ class BlockHeader extends $pb.GeneratedMessage {
 /// A certificate proving the operator's election
 class EligibilityCertificate extends $pb.GeneratedMessage {
   factory EligibilityCertificate({
-    $core.List<$core.int>? vrfSig,
-    $core.List<$core.int>? vrfVK,
-    $core.List<$core.int>? thresholdEvidence,
-    $core.List<$core.int>? eta,
+    $core.String? vrfSig,
+    $core.String? vrfVK,
+    $core.String? thresholdEvidence,
+    $core.String? eta,
   }) {
     final $result = create();
     if (vrfSig != null) {
@@ -319,10 +320,10 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
   factory EligibilityCertificate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EligibilityCertificate', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'vrfSig', $pb.PbFieldType.OY, protoName: 'vrfSig')
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'vrfVK', $pb.PbFieldType.OY, protoName: 'vrfVK')
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'thresholdEvidence', $pb.PbFieldType.OY, protoName: 'thresholdEvidence')
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'eta', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'vrfSig', protoName: 'vrfSig')
+    ..aOS(2, _omitFieldNames ? '' : 'vrfVK', protoName: 'vrfVK')
+    ..aOS(3, _omitFieldNames ? '' : 'thresholdEvidence', protoName: 'thresholdEvidence')
+    ..aOS(4, _omitFieldNames ? '' : 'eta')
     ..hasRequiredFields = false
   ;
 
@@ -348,20 +349,24 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
   static EligibilityCertificate? _defaultInstance;
 
   /// Signs `eta ++ slot` using the `vrfSK`
+  /// Base58 encoded
+  /// length = 80
   @$pb.TagNumber(1)
-  $core.List<$core.int> get vrfSig => $_getN(0);
+  $core.String get vrfSig => $_getSZ(0);
   @$pb.TagNumber(1)
-  set vrfSig($core.List<$core.int> v) { $_setBytes(0, v); }
+  set vrfSig($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasVrfSig() => $_has(0);
   @$pb.TagNumber(1)
   void clearVrfSig() => clearField(1);
 
   /// The VRF VK
+  /// Base58 encoded
+  /// length = 32
   @$pb.TagNumber(2)
-  $core.List<$core.int> get vrfVK => $_getN(1);
+  $core.String get vrfVK => $_getSZ(1);
   @$pb.TagNumber(2)
-  set vrfVK($core.List<$core.int> v) { $_setBytes(1, v); }
+  set vrfVK($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasVrfVK() => $_has(1);
   @$pb.TagNumber(2)
@@ -369,22 +374,24 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
 
   /// Hash of the operator's `threshold`
   /// routine = blake2b256
+  /// Base58 encoded
   /// length = 32
   @$pb.TagNumber(3)
-  $core.List<$core.int> get thresholdEvidence => $_getN(2);
+  $core.String get thresholdEvidence => $_getSZ(2);
   @$pb.TagNumber(3)
-  set thresholdEvidence($core.List<$core.int> v) { $_setBytes(2, v); }
+  set thresholdEvidence($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasThresholdEvidence() => $_has(2);
   @$pb.TagNumber(3)
   void clearThresholdEvidence() => clearField(3);
 
   /// The epoch's randomness
+  /// Base58 encoded
   /// length = 32
   @$pb.TagNumber(4)
-  $core.List<$core.int> get eta => $_getN(3);
+  $core.String get eta => $_getSZ(3);
   @$pb.TagNumber(4)
-  set eta($core.List<$core.int> v) { $_setBytes(3, v); }
+  set eta($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasEta() => $_has(3);
   @$pb.TagNumber(4)
@@ -396,8 +403,8 @@ class OperationalCertificate extends $pb.GeneratedMessage {
   factory OperationalCertificate({
     VerificationKeyKesProduct? parentVK,
     SignatureKesProduct? parentSignature,
-    $core.List<$core.int>? childVK,
-    $core.List<$core.int>? childSignature,
+    $core.String? childVK,
+    $core.String? childSignature,
   }) {
     final $result = create();
     if (parentVK != null) {
@@ -421,8 +428,8 @@ class OperationalCertificate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationalCertificate', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<VerificationKeyKesProduct>(1, _omitFieldNames ? '' : 'parentVK', protoName: 'parentVK', subBuilder: VerificationKeyKesProduct.create)
     ..aOM<SignatureKesProduct>(2, _omitFieldNames ? '' : 'parentSignature', protoName: 'parentSignature', subBuilder: SignatureKesProduct.create)
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'childVK', $pb.PbFieldType.OY, protoName: 'childVK')
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'childSignature', $pb.PbFieldType.OY, protoName: 'childSignature')
+    ..aOS(3, _omitFieldNames ? '' : 'childVK', protoName: 'childVK')
+    ..aOS(4, _omitFieldNames ? '' : 'childSignature', protoName: 'childSignature')
     ..hasRequiredFields = false
   ;
 
@@ -472,20 +479,22 @@ class OperationalCertificate extends $pb.GeneratedMessage {
   SignatureKesProduct ensureParentSignature() => $_ensure(1);
 
   /// The linear VK
+  /// length = 32
   @$pb.TagNumber(3)
-  $core.List<$core.int> get childVK => $_getN(2);
+  $core.String get childVK => $_getSZ(2);
   @$pb.TagNumber(3)
-  set childVK($core.List<$core.int> v) { $_setBytes(2, v); }
+  set childVK($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasChildVK() => $_has(2);
   @$pb.TagNumber(3)
   void clearChildVK() => clearField(3);
 
   /// The signature of the block
+  /// length = 64
   @$pb.TagNumber(4)
-  $core.List<$core.int> get childSignature => $_getN(3);
+  $core.String get childSignature => $_getSZ(3);
   @$pb.TagNumber(4)
-  set childSignature($core.List<$core.int> v) { $_setBytes(3, v); }
+  set childSignature($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasChildSignature() => $_has(3);
   @$pb.TagNumber(4)
@@ -494,7 +503,7 @@ class OperationalCertificate extends $pb.GeneratedMessage {
 
 class VerificationKeyKesProduct extends $pb.GeneratedMessage {
   factory VerificationKeyKesProduct({
-    $core.List<$core.int>? value,
+    $core.String? value,
     $core.int? step,
   }) {
     final $result = create();
@@ -511,7 +520,7 @@ class VerificationKeyKesProduct extends $pb.GeneratedMessage {
   factory VerificationKeyKesProduct.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'VerificationKeyKesProduct', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'value')
     ..a<$core.int>(2, _omitFieldNames ? '' : 'step', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
   ;
@@ -539,9 +548,9 @@ class VerificationKeyKesProduct extends $pb.GeneratedMessage {
 
   /// length = 32
   @$pb.TagNumber(1)
-  $core.List<$core.int> get value => $_getN(0);
+  $core.String get value => $_getSZ(0);
   @$pb.TagNumber(1)
-  set value($core.List<$core.int> v) { $_setBytes(0, v); }
+  set value($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasValue() => $_has(0);
   @$pb.TagNumber(1)
@@ -559,9 +568,9 @@ class VerificationKeyKesProduct extends $pb.GeneratedMessage {
 
 class SignatureKesSum extends $pb.GeneratedMessage {
   factory SignatureKesSum({
-    $core.List<$core.int>? verificationKey,
-    $core.List<$core.int>? signature,
-    $core.Iterable<$core.List<$core.int>>? witness,
+    $core.String? verificationKey,
+    $core.String? signature,
+    $core.Iterable<$core.String>? witness,
   }) {
     final $result = create();
     if (verificationKey != null) {
@@ -580,9 +589,9 @@ class SignatureKesSum extends $pb.GeneratedMessage {
   factory SignatureKesSum.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignatureKesSum', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'verificationKey', $pb.PbFieldType.OY, protoName: 'verificationKey')
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..p<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'witness', $pb.PbFieldType.PY)
+    ..aOS(1, _omitFieldNames ? '' : 'verificationKey', protoName: 'verificationKey')
+    ..aOS(2, _omitFieldNames ? '' : 'signature')
+    ..pPS(3, _omitFieldNames ? '' : 'witness')
     ..hasRequiredFields = false
   ;
 
@@ -607,19 +616,21 @@ class SignatureKesSum extends $pb.GeneratedMessage {
   static SignatureKesSum getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SignatureKesSum>(create);
   static SignatureKesSum? _defaultInstance;
 
+  /// length = 32
   @$pb.TagNumber(1)
-  $core.List<$core.int> get verificationKey => $_getN(0);
+  $core.String get verificationKey => $_getSZ(0);
   @$pb.TagNumber(1)
-  set verificationKey($core.List<$core.int> v) { $_setBytes(0, v); }
+  set verificationKey($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasVerificationKey() => $_has(0);
   @$pb.TagNumber(1)
   void clearVerificationKey() => clearField(1);
 
+  /// length = 64
   @$pb.TagNumber(2)
-  $core.List<$core.int> get signature => $_getN(1);
+  $core.String get signature => $_getSZ(1);
   @$pb.TagNumber(2)
-  set signature($core.List<$core.int> v) { $_setBytes(1, v); }
+  set signature($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasSignature() => $_has(1);
   @$pb.TagNumber(2)
@@ -627,14 +638,14 @@ class SignatureKesSum extends $pb.GeneratedMessage {
 
   /// item length = 32
   @$pb.TagNumber(3)
-  $core.List<$core.List<$core.int>> get witness => $_getList(2);
+  $core.List<$core.String> get witness => $_getList(2);
 }
 
 class SignatureKesProduct extends $pb.GeneratedMessage {
   factory SignatureKesProduct({
     SignatureKesSum? superSignature,
     SignatureKesSum? subSignature,
-    $core.List<$core.int>? subRoot,
+    $core.String? subRoot,
   }) {
     final $result = create();
     if (superSignature != null) {
@@ -655,7 +666,7 @@ class SignatureKesProduct extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignatureKesProduct', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
     ..aOM<SignatureKesSum>(1, _omitFieldNames ? '' : 'superSignature', protoName: 'superSignature', subBuilder: SignatureKesSum.create)
     ..aOM<SignatureKesSum>(2, _omitFieldNames ? '' : 'subSignature', protoName: 'subSignature', subBuilder: SignatureKesSum.create)
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'subRoot', $pb.PbFieldType.OY, protoName: 'subRoot')
+    ..aOS(3, _omitFieldNames ? '' : 'subRoot', protoName: 'subRoot')
     ..hasRequiredFields = false
   ;
 
@@ -704,9 +715,9 @@ class SignatureKesProduct extends $pb.GeneratedMessage {
 
   /// length = 32
   @$pb.TagNumber(3)
-  $core.List<$core.int> get subRoot => $_getN(2);
+  $core.String get subRoot => $_getSZ(2);
   @$pb.TagNumber(3)
-  set subRoot($core.List<$core.int> v) { $_setBytes(2, v); }
+  set subRoot($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasSubRoot() => $_has(2);
   @$pb.TagNumber(3)
@@ -784,7 +795,7 @@ class SlotId extends $pb.GeneratedMessage {
 
 class StakingAddress extends $pb.GeneratedMessage {
   factory StakingAddress({
-    $core.List<$core.int>? value,
+    $core.String? value,
   }) {
     final $result = create();
     if (value != null) {
@@ -797,7 +808,7 @@ class StakingAddress extends $pb.GeneratedMessage {
   factory StakingAddress.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StakingAddress', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'value')
     ..hasRequiredFields = false
   ;
 
@@ -822,10 +833,11 @@ class StakingAddress extends $pb.GeneratedMessage {
   static StakingAddress getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StakingAddress>(create);
   static StakingAddress? _defaultInstance;
 
+  /// length = 32
   @$pb.TagNumber(1)
-  $core.List<$core.int> get value => $_getN(0);
+  $core.String get value => $_getSZ(0);
   @$pb.TagNumber(1)
-  set value($core.List<$core.int> v) { $_setBytes(0, v); }
+  set value($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasValue() => $_has(0);
   @$pb.TagNumber(1)
@@ -1069,7 +1081,7 @@ class FullBlock extends $pb.GeneratedMessage {
 /// Represents the identifier of a Transction.  It is constructed from the evidence of the signable bytes of the Transaction.
 class TransactionId extends $pb.GeneratedMessage {
   factory TransactionId({
-    $core.List<$core.int>? value,
+    $core.String? value,
   }) {
     final $result = create();
     if (value != null) {
@@ -1082,7 +1094,7 @@ class TransactionId extends $pb.GeneratedMessage {
   factory TransactionId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionId', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'value')
     ..hasRequiredFields = false
   ;
 
@@ -1108,11 +1120,12 @@ class TransactionId extends $pb.GeneratedMessage {
   static TransactionId? _defaultInstance;
 
   /// The evidence of the Transaction's signable bytes
+  /// Base58 encoded
   /// length = 32
   @$pb.TagNumber(1)
-  $core.List<$core.int> get value => $_getN(0);
+  $core.String get value => $_getSZ(0);
   @$pb.TagNumber(1)
-  set value($core.List<$core.int> v) { $_setBytes(0, v); }
+  set value($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasValue() => $_has(0);
   @$pb.TagNumber(1)
@@ -2072,7 +2085,7 @@ class ActiveStaker extends $pb.GeneratedMessage {
 
 class LockAddress extends $pb.GeneratedMessage {
   factory LockAddress({
-    $core.List<$core.int>? value,
+    $core.String? value,
   }) {
     final $result = create();
     if (value != null) {
@@ -2085,7 +2098,7 @@ class LockAddress extends $pb.GeneratedMessage {
   factory LockAddress.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LockAddress', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'value')
     ..hasRequiredFields = false
   ;
 
@@ -2110,10 +2123,12 @@ class LockAddress extends $pb.GeneratedMessage {
   static LockAddress getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<LockAddress>(create);
   static LockAddress? _defaultInstance;
 
+  /// Base58 encoded
+  /// length = 32
   @$pb.TagNumber(1)
-  $core.List<$core.int> get value => $_getN(0);
+  $core.String get value => $_getSZ(0);
   @$pb.TagNumber(1)
-  set value($core.List<$core.int> v) { $_setBytes(0, v); }
+  set value($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasValue() => $_has(0);
   @$pb.TagNumber(1)
@@ -2122,7 +2137,7 @@ class LockAddress extends $pb.GeneratedMessage {
 
 class Lock_Ed25519 extends $pb.GeneratedMessage {
   factory Lock_Ed25519({
-    $core.List<$core.int>? vk,
+    $core.String? vk,
   }) {
     final $result = create();
     if (vk != null) {
@@ -2135,7 +2150,7 @@ class Lock_Ed25519 extends $pb.GeneratedMessage {
   factory Lock_Ed25519.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Lock.Ed25519', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'vk', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'vk')
     ..hasRequiredFields = false
   ;
 
@@ -2160,10 +2175,12 @@ class Lock_Ed25519 extends $pb.GeneratedMessage {
   static Lock_Ed25519 getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Lock_Ed25519>(create);
   static Lock_Ed25519? _defaultInstance;
 
+  /// Base58 encoded
+  /// length = 32
   @$pb.TagNumber(1)
-  $core.List<$core.int> get vk => $_getN(0);
+  $core.String get vk => $_getSZ(0);
   @$pb.TagNumber(1)
-  set vk($core.List<$core.int> v) { $_setBytes(0, v); }
+  set vk($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasVk() => $_has(0);
   @$pb.TagNumber(1)
@@ -2237,7 +2254,7 @@ class Lock extends $pb.GeneratedMessage {
 
 class Key_Ed25519 extends $pb.GeneratedMessage {
   factory Key_Ed25519({
-    $core.List<$core.int>? signature,
+    $core.String? signature,
   }) {
     final $result = create();
     if (signature != null) {
@@ -2250,7 +2267,7 @@ class Key_Ed25519 extends $pb.GeneratedMessage {
   factory Key_Ed25519.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Key.Ed25519', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'signature')
     ..hasRequiredFields = false
   ;
 
@@ -2275,10 +2292,12 @@ class Key_Ed25519 extends $pb.GeneratedMessage {
   static Key_Ed25519 getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Key_Ed25519>(create);
   static Key_Ed25519? _defaultInstance;
 
+  /// Base58 encoded
+  /// length = 64
   @$pb.TagNumber(1)
-  $core.List<$core.int> get signature => $_getN(0);
+  $core.String get signature => $_getSZ(0);
   @$pb.TagNumber(1)
-  set signature($core.List<$core.int> v) { $_setBytes(0, v); }
+  set signature($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasSignature() => $_has(0);
   @$pb.TagNumber(1)
@@ -2352,7 +2371,7 @@ class Key extends $pb.GeneratedMessage {
 
 class PeerId extends $pb.GeneratedMessage {
   factory PeerId({
-    $core.List<$core.int>? value,
+    $core.String? value,
   }) {
     final $result = create();
     if (value != null) {
@@ -2365,7 +2384,7 @@ class PeerId extends $pb.GeneratedMessage {
   factory PeerId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PeerId', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'value')
     ..hasRequiredFields = false
   ;
 
@@ -2390,10 +2409,12 @@ class PeerId extends $pb.GeneratedMessage {
   static PeerId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PeerId>(create);
   static PeerId? _defaultInstance;
 
+  /// Base58 encoded
+  /// length = 32
   @$pb.TagNumber(1)
-  $core.List<$core.int> get value => $_getN(0);
+  $core.String get value => $_getSZ(0);
   @$pb.TagNumber(1)
-  set value($core.List<$core.int> v) { $_setBytes(0, v); }
+  set value($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasValue() => $_has(0);
   @$pb.TagNumber(1)
