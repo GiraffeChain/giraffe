@@ -93,7 +93,7 @@ object Genesis:
           .use(txRootValidation =>
             if (arg.startsWith("http://") || arg.startsWith("https://")) {
               implicit val networkF: Network[F] = Network.forAsync
-              val fileName = arg.substring(arg.lastIndexOf('/')) + 1
+              val fileName = arg.substring(arg.lastIndexOf('/') + 1)
               // TODO: Use effect
               assert(fileName.endsWith(".pbuf"))
               val blockId = fileName.dropRight(5).decodeBlockId
