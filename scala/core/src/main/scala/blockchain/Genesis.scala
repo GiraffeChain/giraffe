@@ -101,8 +101,7 @@ object Genesis:
                 .default[F]
                 .build
                 .map(FollowRedirect(10))
-                .map(client => client.expect[Array[Byte]](arg))
-                .use(BlockLoading.load(_)(txRootValidation)(blockId))
+                .use(client => BlockLoading.load(client.expect[Array[Byte]](arg))(txRootValidation)(blockId))
             } else {
               val fileName = arg.lastIndexOf('/') match {
                 case -1 => arg

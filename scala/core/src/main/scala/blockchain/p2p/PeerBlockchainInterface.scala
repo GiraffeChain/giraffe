@@ -45,7 +45,9 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
   def blockIdAtHeight(height: Height): F[Option[BlockId]] =
     writeRequest(MultiplexerIds.BlockIdAtHeightRequest, height, allPortQueues.blockIdAtHeight)
   def ping(message: Bytes): F[Bytes] =
-    writeRequest(MultiplexerIds.PingRequest, message, allPortQueues.pingPong)
+    writeRequest(MultiplexerIds.PingRequest, message, allPortQueues.pingPong).ensure(
+      new IllegalArgumentException("Invalid PingPong Response")
+    )(_ == message)
   def commonAncestor: F[BlockId] =
     for {
       localHeadId <- core.consensus.localChain.currentHead

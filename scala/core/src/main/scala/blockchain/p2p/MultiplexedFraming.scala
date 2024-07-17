@@ -28,7 +28,12 @@ object MultiplexedFraming:
           )
           .flatMap((port, length) =>
             if (length == 0) OptionT.some[F]((port, Chunk.empty[Byte]))
-            else OptionT(socket.read(length)).tupleLeft(port)
+            else
+              OptionT(socket.read(length))
+                .ensureOr(chunk =>
+                  new IllegalArgumentException(s"Expected $length bytes. Received ${chunk.size} bytes.")
+                )(_.size == length)
+                .tupleLeft(port)
           )
           .value
       )

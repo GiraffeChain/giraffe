@@ -10,7 +10,6 @@ import cats.data.OptionT
 import cats.effect.Async
 import cats.implicits.*
 import cats.effect.implicits.*
-import com.google.protobuf.ByteString
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 import scala.concurrent.duration.*
@@ -26,7 +25,7 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
   private def pingPong =
     Stream
       .awakeEvery(5.seconds)
-      .evalMap(_ => interface.ping(ByteString.EMPTY))
+      .evalMap(_ => interface.ping(Codecs.OneBS))
       .void
 
   private def peerState =
