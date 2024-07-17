@@ -94,21 +94,49 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
 
   private def cacheStreams =
     Stream(
-      core.consensus.localChain.adoptions.enqueueUnterminated(cache.localBlockAdoptions).void,
+      core.consensus.localChain.adoptions
+        .evalMap(
+          cache.localBlockAdoptions
+            .tryOffer(_)
+            .flatMap(
+              Async[F].raiseUnless(_)(new IllegalStateException("Slow peer subscriber of local block adoptions"))
+            )
+        )
+        .void,
       core.ledger.mempool.changes
         .collect { case MempoolChange.Added(transaction) => transaction.id }
-        .enqueueUnterminated(cache.localTransactionAdoptions)
+        .evalMap(
+          cache.localTransactionAdoptions
+            .tryOffer(_)
+            .flatMap(
+              Async[F]
+                .raiseUnless(_)(new IllegalStateException("Slow peer subscriber of local transaction notifications"))
+            )
+        )
         .void,
       Stream
         .repeatEval(
           writeRequestNoTimeout(MultiplexerIds.BlockAdoptionRequest, (), allPortQueues.blockAdoptions)
         )
-        .enqueueUnterminated(cache.remoteBlockAdoptions),
+        .evalMap(
+          cache.remoteBlockAdoptions
+            .tryOffer(_)
+            .flatMap(
+              Async[F].raiseUnless(_)(new IllegalStateException("Slow local subscriber of peer block adoptions"))
+            )
+        ),
       Stream
         .repeatEval(
           writeRequestNoTimeout(MultiplexerIds.TransactionNotificationRequest, (), allPortQueues.transactionAdoptions)
         )
-        .enqueueUnterminated(cache.remoteTransactionAdoptions)
+        .evalMap(
+          cache.remoteTransactionAdoptions
+            .tryOffer(_)
+            .flatMap(
+              Async[F]
+                .raiseUnless(_)(new IllegalStateException("Slow local subscriber of peer transaction notifications"))
+            )
+        )
     ).parJoinUnbounded
 
   private def processRequest(port: Int, data: Bytes) =
@@ -255,10 +283,10 @@ class PeerCache[F[_]](
 object PeerCache:
   def make[F[_]: Async]: Resource[F, PeerCache[F]] =
     (
-      Queue.circularBuffer[F, BlockId](32),
-      Queue.circularBuffer[F, TransactionId](32),
-      Queue.circularBuffer[F, BlockId](32),
-      Queue.circularBuffer[F, TransactionId](32)
+      Queue.bounded[F, BlockId](64),
+      Queue.bounded[F, TransactionId](64),
+      Queue.bounded[F, BlockId](64),
+      Queue.bounded[F, TransactionId](64)
     )
       .mapN(new PeerCache[F](_, _, _, _))
       .toResource
