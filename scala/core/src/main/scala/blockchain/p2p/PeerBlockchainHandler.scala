@@ -24,7 +24,7 @@ class PeerBlockchainHandler[F[_]: Async: Logger](
 
   private def pingPong =
     Stream
-      .awakeEvery(5.seconds)
+      .awakeEvery(15.seconds)
       .evalMap(_ => interface.ping(Codecs.OneBS))
       .void
 

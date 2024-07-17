@@ -13,6 +13,7 @@ import com.google.protobuf.ByteString
 import fs2.io.net.Socket
 import fs2.{Chunk, Stream, *}
 
+import scala.concurrent.TimeoutException
 import scala.concurrent.duration.*
 
 object MultiplexedFraming:
@@ -47,7 +48,8 @@ object MultiplexedFraming:
             Chunk.array(Ints.toByteArray(data.size)) ++
             data
         )
-        .timeout(3.seconds)
+        .timeout(15.seconds)
+        .adaptError { case _: TimeoutException => new TimeoutException(s"Write timeout in port=$port") }
 
 case class MultiplexedReaderWriter[F[_]](
     read: Stream[F, (Int, Bytes)],

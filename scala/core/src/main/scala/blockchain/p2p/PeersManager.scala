@@ -132,12 +132,12 @@ object PeersManager:
       disconnectedPeers: Map[PeerId, PeerState[F]],
       knownPeers: List[SocketAddress[?]]
   ):
-    def withConnectedPeer(peerId: PeerId, peerState: PeerState[F]) =
+    def withConnectedPeer(peerId: PeerId, peerState: PeerState[F]): State[F] =
       copy(
         connectedPeers = connectedPeers.updated(peerId, peerState),
         disconnectedPeers = disconnectedPeers.removed(peerId)
       )
-    def withDisconnectedPeer(peerId: PeerId, peerState: PeerState[F]) =
+    def withDisconnectedPeer(peerId: PeerId, peerState: PeerState[F]): State[F] =
       copy(
         connectedPeers = connectedPeers.removed(peerId),
         disconnectedPeers = disconnectedPeers.updated(peerId, peerState)

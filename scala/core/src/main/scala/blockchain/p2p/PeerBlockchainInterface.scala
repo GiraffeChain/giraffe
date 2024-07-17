@@ -14,6 +14,7 @@ import cats.implicits.*
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 
+import scala.concurrent.TimeoutException
 import scala.concurrent.duration.*
 
 class PeerBlockchainInterface[F[_]: Async: Logger](
@@ -59,7 +60,7 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
               .getOrRaise(new IllegalStateException("Local height not found")),
           blockIdAtHeight,
           Ratio(2, 3)
-        )(1L, localHeader.height).timeout(8.seconds)
+        )(1L, localHeader.height).timeout(30.seconds)
       ).getOrRaise(new IllegalStateException("Common ancestor not found"))
     } yield intersection
 
@@ -77,8 +78,6 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
               .raiseError(new IllegalArgumentException("Not RequestResponse"))
         }
       )
-
-  extension [A](fa: F[A]) def withDefaultTimeout: F[A] = fa.timeout(3.seconds)
 
   private def portQueueStreams =
     Stream(
@@ -188,7 +187,9 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
       message: Message,
       buffer: PortQueues[F, Message, Response]
   ): F[Response] =
-    writeRequestNoTimeout(port, message, buffer).withDefaultTimeout
+    writeRequestNoTimeout(port, message, buffer).timeout(15.seconds).adaptError { case _: TimeoutException =>
+      new TimeoutException(s"Request timeout in port=$port")
+    }
 
   private def writeRequestNoTimeout[Message: P2PEncodable, Response](
       port: Int,
