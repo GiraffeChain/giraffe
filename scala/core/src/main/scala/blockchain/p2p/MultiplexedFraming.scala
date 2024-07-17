@@ -54,7 +54,7 @@ object MultiplexedReaderWriter:
     val writer = MultiplexedFraming.writer(socket)
     Mutex[F].toResource.map(mutex =>
       MultiplexedReaderWriter[F](
-        MultiplexedFraming(socket).buffer(1).map((port, chunk) => (port, ByteString.copyFrom(chunk.toByteBuffer))),
+        MultiplexedFraming(socket).map((port, chunk) => (port, ByteString.copyFrom(chunk.toByteBuffer))),
         (port, data) => mutex.lock.surround(writer.apply(port, Chunk.byteBuffer(data.asReadOnlyByteBuffer())))
       )
     )
