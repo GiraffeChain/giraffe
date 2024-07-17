@@ -9,7 +9,7 @@ import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.implicits.*
 import cats.effect.kernel.Resource
-import cats.effect.std.Queue
+import cats.effect.std.{Mutex, Queue}
 import cats.implicits.*
 import fs2.Stream
 import org.typelevel.log4cats.Logger
@@ -21,36 +21,31 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
     manager: PeersManager[F],
     allPortQueues: AllPortQueues[F],
     readerWriter: MultiplexedReaderWriter[F],
-    cache: PeerCache[F]
+    cache: PeerCache[F],
+    requestMutex: Mutex[F]
 ):
   def publicState: F[PublicP2PState] =
-    writeRequest(MultiplexerIds.PeerStateRequest, ()) *>
-      allPortQueues.p2pState.createResponse.withDefaultTimeout
+    writeRequest(MultiplexerIds.PeerStateRequest, (), allPortQueues.p2pState)
   def nextBlockAdoption: F[BlockId] =
     cache.remoteBlockAdoptions.take
   def nextTransactionNotification: F[TransactionId] =
     cache.remoteTransactionAdoptions.take
   def fetchHeader(id: BlockId): F[Option[BlockHeader]] =
-    writeRequest(MultiplexerIds.HeaderRequest, id) *>
-      OptionT(allPortQueues.headers.createResponse.withDefaultTimeout)
-        .map(_.withEmbeddedId)
-        .ensure(new IllegalArgumentException("Header ID Mismatch"))(_.id == id)
-        .value
+    OptionT(writeRequest(MultiplexerIds.HeaderRequest, id, allPortQueues.headers))
+      .map(_.withEmbeddedId)
+      .ensure(new IllegalArgumentException("Header ID Mismatch"))(_.id == id)
+      .value
   def fetchBody(id: BlockId): F[Option[BlockBody]] =
-    writeRequest(MultiplexerIds.BodyRequest, id) *>
-      allPortQueues.bodies.createResponse.withDefaultTimeout
+    writeRequest(MultiplexerIds.BodyRequest, id, allPortQueues.bodies)
   def fetchTransaction(id: TransactionId): F[Option[Transaction]] =
-    writeRequest(MultiplexerIds.TransactionRequest, id) *>
-      OptionT(allPortQueues.transactions.createResponse.withDefaultTimeout)
-        .map(_.withEmbeddedId)
-        .ensure(new IllegalArgumentException("Transaction ID Mismatch"))(_.id == id)
-        .value
+    OptionT(writeRequest(MultiplexerIds.TransactionRequest, id, allPortQueues.transactions))
+      .map(_.withEmbeddedId)
+      .ensure(new IllegalArgumentException("Transaction ID Mismatch"))(_.id == id)
+      .value
   def blockIdAtHeight(height: Height): F[Option[BlockId]] =
-    writeRequest(MultiplexerIds.BlockIdAtHeightRequest, height) *>
-      allPortQueues.blockIdAtHeight.createResponse.withDefaultTimeout
+    writeRequest(MultiplexerIds.BlockIdAtHeightRequest, height, allPortQueues.blockIdAtHeight)
   def ping(message: Bytes): F[Bytes] =
-    writeRequest(MultiplexerIds.PingRequest, message) *>
-      allPortQueues.pingPong.createResponse.withDefaultTimeout
+    writeRequest(MultiplexerIds.PingRequest, message, allPortQueues.pingPong)
   def commonAncestor: F[BlockId] =
     for {
       localHeadId <- core.consensus.localChain.currentHead
@@ -104,15 +99,12 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
         .void,
       Stream
         .repeatEval(
-          writeRequest(MultiplexerIds.BlockAdoptionRequest, ()) *> allPortQueues.blockAdoptions.createResponse
+          writeRequestNoTimeout(MultiplexerIds.BlockAdoptionRequest, (), allPortQueues.blockAdoptions)
         )
         .enqueueUnterminated(cache.remoteBlockAdoptions),
       Stream
         .repeatEval(
-          writeRequest(
-            MultiplexerIds.TransactionNotificationRequest,
-            ()
-          ) *> allPortQueues.transactionAdoptions.createResponse
+          writeRequestNoTimeout(MultiplexerIds.TransactionNotificationRequest, (), allPortQueues.transactionAdoptions)
         )
         .enqueueUnterminated(cache.remoteTransactionAdoptions)
     ).parJoinUnbounded
@@ -161,11 +153,24 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
         Async[F].raiseError(new IllegalArgumentException(s"Invalid port=$port"))
     }
 
-  private def writeRequest[Message: P2PEncodable](
+  private def writeRequest[Message: P2PEncodable, Response](
       port: Int,
-      message: Message
-  ): F[Unit] =
-    readerWriter.write(port, Codecs.ZeroBS.concat(P2PEncodable[Message].encodeP2P(message)))
+      message: Message,
+      buffer: PortQueues[F, Message, Response]
+  ): F[Response] =
+    writeRequestNoTimeout(port, message, buffer).withDefaultTimeout
+
+  private def writeRequestNoTimeout[Message: P2PEncodable, Response](
+      port: Int,
+      message: Message,
+      buffer: PortQueues[F, Message, Response]
+  ): F[Response] =
+    requestMutex.lock
+      .surround(
+        buffer.expectResponse <*
+          readerWriter.write(port, Codecs.ZeroBS.concat(P2PEncodable[Message].encodeP2P(message)))
+      )
+      .flatten
 
   private def writeResponse[Message: P2PEncodable](
       port: Int,

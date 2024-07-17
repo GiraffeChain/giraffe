@@ -77,8 +77,8 @@ case class PortQueues[F[_], Request, Response](
     Stream
       .fromQueueUnterminated(requests)
       .evalMap(subProcessor)
-  def createResponse(using Async[F]): F[Response] =
-    Deferred[F, Response].flatTap(responses.offer).flatMap(_.get)
+  def expectResponse(using Async[F]): F[F[Response]] =
+    Deferred[F, Response].flatTap(responses.offer).map(_.get)
 
 object PortQueues:
   def make[F[_]: Async, Request, Response]: Resource[F, PortQueues[F, Request, Response]] =

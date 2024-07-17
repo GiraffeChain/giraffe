@@ -318,7 +318,7 @@ trait P2PCodecs {
   given P2PDecodable[BlockBody] with
     extension (bytes: Bytes)
       def decodeFromP2P: BlockBody =
-        BlockBody.parseFrom(bytes.newCodedInput())
+        BlockBody.parseFrom(bytes.toByteArray)
 
   given P2PEncodable[Transaction] with
     extension (message: Transaction) def encodeP2P: Bytes = message.toByteString
@@ -326,7 +326,7 @@ trait P2PCodecs {
   given P2PDecodable[Transaction] with
     extension (bytes: Bytes)
       def decodeFromP2P: Transaction =
-        Transaction.parseFrom(bytes.newCodedInput())
+        Transaction.parseFrom(bytes.toByteArray)
 
   given P2PEncodable[BlockId] with
     extension (message: BlockId) def encodeP2P: Bytes = message.value.decodeBase58.immutableBytes
@@ -346,7 +346,7 @@ trait P2PCodecs {
   given P2PDecodable[PublicP2PState] with
     extension (bytes: Bytes)
       def decodeFromP2P: PublicP2PState =
-        PublicP2PState.parseFrom(bytes.newCodedInput())
+        PublicP2PState.parseFrom(bytes.toByteArray)
 
   given P2PEncodable[Bytes] with
     extension (message: Bytes) def encodeP2P: Bytes = message
