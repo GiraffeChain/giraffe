@@ -38,6 +38,7 @@ object MultiplexedFraming:
           )
           .value
       )
+      .buffer(1)
       .unNoneTerminate
 
   def writer[F[_]: Async](socket: Socket[F]): (Int, Chunk[Byte]) => F[Unit] =
@@ -61,8 +62,8 @@ object MultiplexedReaderWriter:
     val writer = MultiplexedFraming.writer(socket)
     Mutex[F].toResource.map(mutex =>
       MultiplexedReaderWriter[F](
-        MultiplexedFraming(socket).map((port, chunk) => (port, ByteString.copyFrom(chunk.toByteBuffer))),
-        (port, data) => mutex.lock.surround(writer.apply(port, Chunk.byteBuffer(data.asReadOnlyByteBuffer())))
+        MultiplexedFraming(socket).map((port, chunk) => (port, ByteString.copyFrom(chunk.toArray))),
+        (port, data) => mutex.lock.surround(writer.apply(port, Chunk.array(data.toByteArray)))
       )
     )
   }

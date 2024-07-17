@@ -11,8 +11,9 @@ import cats.implicits.*
 import com.comcast.ip4s.{Host, Port, SocketAddress}
 import fs2.Stream
 import fs2.concurrent.Channel
-import fs2.io.net.{Network, Socket}
+import fs2.io.net.{Network, Socket, SocketOption}
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+
 import scala.concurrent.duration.*
 
 object P2PServer:
@@ -37,14 +38,21 @@ object P2PServer:
         .rethrow
         .toResource
       network = Network.forAsync[F]
-      inboundSockets = network.server(h.some, p.some)
+      inboundSockets = network.server(h.some, p.some, socketOptions)
       inboundHandler = inboundSockets
         .evalTap(socket => socket.remoteAddress.flatTap(address => logger.info(show"Inbound connection from $address")))
         .map(socket => Stream.exec(handleSocket(socket, None)))
         .parJoinUnbounded
       outboundHandler = outboundConnections
         .evalTap(address => logger.info(show"Outbound connection to $address"))
-        .map(address => Stream.exec(network.client(address).timeout(5.seconds).use(handleSocket(_, address.some))))
+        .map(address =>
+          Stream.exec(
+            network
+              .client(address, socketOptions)
+              .timeout(5.seconds)
+              .use(handleSocket(_, address.some))
+          )
+        )
         .parJoinUnbounded
       handler = inboundHandler.merge(outboundHandler).compile.drain
       outcome <- handler.void.background
@@ -83,3 +91,5 @@ object P2PServer:
             )
           )
       )
+
+  private val socketOptions = List(SocketOption.noDelay(true))
