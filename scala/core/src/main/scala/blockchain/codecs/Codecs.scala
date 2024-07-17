@@ -310,7 +310,7 @@ trait P2PCodecs {
   given P2PDecodable[BlockHeader] with
     extension (bytes: Bytes)
       def decodeFromP2P: BlockHeader =
-        BlockHeader.parseFrom(bytes.newCodedInput())
+        BlockHeader.parseFrom(bytes.toByteArray)
 
   given P2PEncodable[BlockBody] with
     extension (message: BlockBody) def encodeP2P: Bytes = message.toByteString
