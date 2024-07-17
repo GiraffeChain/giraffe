@@ -77,7 +77,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
       )(_ => stateRef.update(_.withDisconnectedPeer(remotePeerId, peerState)))
       _ <- Async[F].raiseWhen(!isNewPeer)(new IllegalStateException("Duplicate Connection")).toResource
       portQueues <- AllPortQueues.make[F]
-      readerWriter = MultiplexedReaderWriter.forSocket(socket)
+      readerWriter <- MultiplexedReaderWriter.forSocket(socket)
       peerCache <- PeerCache.make[F]
       interface = new PeerBlockchainInterface[F](core, this, portQueues, readerWriter, peerCache)
       handler = new PeerBlockchainHandler[F](core, interface, peerState)

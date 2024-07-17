@@ -2,12 +2,12 @@ package blockchain.p2p
 
 import blockchain.models.*
 import blockchain.{Bytes, Height}
-import cats.{Monad, MonadThrow}
 import cats.data.OptionT
 import cats.effect.implicits.*
-import cats.effect.std.Queue
+import cats.effect.std.{Mutex, Queue}
 import cats.effect.{Async, Deferred, Resource}
 import cats.implicits.*
+import cats.{Monad, MonadThrow}
 import com.google.common.primitives.Ints
 import com.google.protobuf.ByteString
 import fs2.io.net.Socket
@@ -50,11 +50,13 @@ case class MultiplexedReaderWriter[F[_]](
 )
 
 object MultiplexedReaderWriter:
-  def forSocket[F[_]: Async](socket: Socket[F]): MultiplexedReaderWriter[F] = {
+  def forSocket[F[_]: Async](socket: Socket[F]): Resource[F, MultiplexedReaderWriter[F]] = {
     val writer = MultiplexedFraming.writer(socket)
-    MultiplexedReaderWriter[F](
-      MultiplexedFraming(socket).buffer(1).map((port, chunk) => (port, ByteString.copyFrom(chunk.toByteBuffer))),
-      (port, data) => writer.apply(port, Chunk.byteBuffer(data.asReadOnlyByteBuffer()))
+    Mutex[F].toResource.map(mutex =>
+      MultiplexedReaderWriter[F](
+        MultiplexedFraming(socket).buffer(1).map((port, chunk) => (port, ByteString.copyFrom(chunk.toByteBuffer))),
+        (port, data) => mutex.lock.surround(writer.apply(port, Chunk.byteBuffer(data.asReadOnlyByteBuffer())))
+      )
     )
   }
 
