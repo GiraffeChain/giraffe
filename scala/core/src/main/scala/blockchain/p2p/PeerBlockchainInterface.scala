@@ -14,7 +14,6 @@ import cats.implicits.*
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 
-import scala.concurrent.TimeoutException
 import scala.concurrent.duration.*
 
 class PeerBlockchainInterface[F[_]: Async: Logger](
@@ -61,9 +60,8 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
               .localTimeout("BlockIdAtHeight.CommonAncestor"),
           blockIdAtHeight,
           Ratio(2, 3)
-        )(1L, localHeader.height).timeout(30.seconds).adaptError { case _: TimeoutException =>
-          new TimeoutException("Common ancestor trace")
-        }
+        )(1L, localHeader.height)
+          .timeoutWithMessage(30.seconds, "Common ancestor trace")
       ).getOrRaise(new IllegalStateException("Common ancestor not found"))
     } yield intersection
 
@@ -72,7 +70,6 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
 
   private def readerStream =
     readerWriter.read
-      .buffer(8)
       .evalMap((port, bytes) =>
         bytes.byteAt(0) match {
           case 0 => processRequest(port, bytes.substring(1))
@@ -191,9 +188,8 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
       message: Message,
       buffer: PortQueues[F, Message, Response]
   ): F[Response] =
-    writeRequestNoTimeout(port, message, buffer).timeout(15.seconds).adaptError { case _: TimeoutException =>
-      new TimeoutException(s"Request timeout in port=$port")
-    }
+    writeRequestNoTimeout(port, message, buffer)
+      .timeoutWithMessage(DefaultReadTimeout, s"Request timeout in port=$port")
 
   private def writeRequestNoTimeout[Message: P2PEncodable, Response](
       port: Int,
@@ -214,9 +210,8 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
     readerWriter.write(port, Codecs.OneBS.concat(P2PEncodable[Message].encodeP2P(message)))
 
   extension [A](fa: F[A])
-    def localTimeout(name: String): F[A] = fa.timeout(2.seconds).adaptError { case _: TimeoutException =>
-      new TimeoutException(s"Local operation '$name' timeout")
-    }
+    def localTimeout(name: String): F[A] =
+      fa.timeoutWithMessage(DefaultLocalOperationTimeout, s"Local operation '$name' timeout'")
 
   private def onPeerRequestedBlockIdAtHeight(height: Height) =
     core.consensus.localChain

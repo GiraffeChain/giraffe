@@ -7,17 +7,14 @@ import cats.effect.implicits.*
 import cats.effect.std.{Mutex, Queue}
 import cats.effect.{Async, Deferred, Resource}
 import cats.implicits.*
-import cats.{Monad, MonadThrow}
+import cats.MonadThrow
 import com.google.common.primitives.Ints
 import com.google.protobuf.ByteString
 import fs2.io.net.Socket
 import fs2.{Chunk, Stream, *}
 
-import scala.concurrent.TimeoutException
-import scala.concurrent.duration.*
-
 object MultiplexedFraming:
-  def apply[F[_]: Monad](socket: Socket[F]): Stream[F, (Int, Chunk[Byte])] =
+  def apply[F[_]: Async](socket: Socket[F]): Stream[F, (Int, Chunk[Byte])] =
     Stream
       .repeatEval(
         OptionT(socket.read(8))
@@ -31,6 +28,7 @@ object MultiplexedFraming:
             if (length == 0) OptionT.some[F]((port, Chunk.empty[Byte]))
             else
               OptionT(socket.read(length))
+                .timeoutWithMessage(DefaultWriteTimeout, s"Read timeout in port=$port")
                 .ensureOr(chunk =>
                   new IllegalArgumentException(s"Expected $length bytes. Received ${chunk.size} bytes.")
                 )(_.size == length)
@@ -48,8 +46,7 @@ object MultiplexedFraming:
             Chunk.array(Ints.toByteArray(data.size)) ++
             data
         )
-        .timeout(15.seconds)
-        .adaptError { case _: TimeoutException => new TimeoutException(s"Write timeout in port=$port") }
+        .timeoutWithMessage(DefaultWriteTimeout, s"Write timeout in port=$port")
 
 case class MultiplexedReaderWriter[F[_]](
     read: Stream[F, (Int, Bytes)],
