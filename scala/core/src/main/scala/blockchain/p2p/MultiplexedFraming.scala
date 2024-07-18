@@ -2,12 +2,12 @@ package blockchain.p2p
 
 import blockchain.models.*
 import blockchain.{Bytes, Height}
+import cats.MonadThrow
 import cats.data.OptionT
 import cats.effect.implicits.*
 import cats.effect.std.{Mutex, Queue}
 import cats.effect.{Async, Deferred, Resource}
 import cats.implicits.*
-import cats.MonadThrow
 import com.google.common.primitives.Ints
 import com.google.protobuf.ByteString
 import fs2.io.net.Socket
@@ -55,18 +55,37 @@ case class MultiplexedReaderWriter[F[_]](
 
 object MultiplexedReaderWriter:
   def forSocket[F[_]: Async](socket: Socket[F]): Resource[F, MultiplexedReaderWriter[F]] = {
-    val writer = MultiplexedFraming.writer(socket)
-    Mutex[F].toResource.map(mutex =>
-      MultiplexedReaderWriter[F](
-        MultiplexedFraming(socket).map((port, chunk) => (port, ByteString.copyFrom(chunk.toArray))),
-        (port, data) => mutex.lock.surround(writer.apply(port, Chunk.array(data.toByteArray)))
+    Queue
+      .unbounded[F, (Int, Bytes)]
+      .toResource
+      .flatTap(
+        Stream
+          .fromQueueUnterminated(_)
+          .evalMap((port, data) =>
+            Async[F].delay(
+              Chunk.array(Ints.toByteArray(port)) ++
+                Chunk.array(Ints.toByteArray(data.size)) ++
+                Chunk.array(data.toByteArray)
+            )
+          )
+          .unchunks
+          .through(socket.writes)
+          .compile
+          .drain
+          .background
       )
-    )
+      .map(queue =>
+        MultiplexedReaderWriter[F](
+          MultiplexedFraming(socket).map((port, chunk) => (port, ByteString.copyFrom(chunk.toArray))),
+          (port, data) => queue.offer(port, data)
+        )
+      )
   }
 
 case class PortQueues[F[_], Request, Response](
     requests: Queue[F, Request],
-    responses: Queue[F, Deferred[F, Response]]
+    responses: Queue[F, Deferred[F, Response]],
+    mutex: Mutex[F]
 ):
   def processRequest(request: Request): F[Unit] =
     requests.offer(request)
@@ -81,16 +100,15 @@ case class PortQueues[F[_], Request, Response](
     Stream
       .fromQueueUnterminated(requests)
       .evalMap(subProcessor)
-  def expectResponse(using Async[F]): F[F[Response]] =
-    Deferred[F, Response].flatTap(responses.offer).map(_.get)
+  def expectResponse(innerEffect: F[Unit])(using Async[F]): F[Response] =
+    mutex.lock.surround(Deferred[F, Response].flatTap(responses.offer).map(_.get) <* innerEffect).flatten
 
 object PortQueues:
   def make[F[_]: Async, Request, Response]: Resource[F, PortQueues[F, Request, Response]] =
     (
       Queue.unbounded[F, Request].toResource,
-      Queue
-        .unbounded[F, Deferred[F, Response]]
-        .toResource
+      Queue.unbounded[F, Deferred[F, Response]].toResource,
+      Mutex[F].toResource
     )
       .mapN(PortQueues.apply)
 

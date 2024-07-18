@@ -9,7 +9,7 @@ import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.implicits.*
 import cats.effect.kernel.Resource
-import cats.effect.std.{Mutex, Queue}
+import cats.effect.std.Queue
 import cats.implicits.*
 import fs2.Stream
 import org.typelevel.log4cats.Logger
@@ -21,8 +21,7 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
     manager: PeersManager[F],
     allPortQueues: AllPortQueues[F],
     readerWriter: MultiplexedReaderWriter[F],
-    cache: PeerCache[F],
-    requestMutex: Mutex[F]
+    cache: PeerCache[F]
 ):
   def publicState: F[PublicP2PState] =
     writeRequest(MultiplexerIds.PeerStateRequest, (), allPortQueues.p2pState)
@@ -71,13 +70,17 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
   private def readerStream =
     readerWriter.read
       .evalMap((port, bytes) =>
-        bytes.byteAt(0) match {
-          case 0 => processRequest(port, bytes.substring(1))
-          case 1 => processResponse(port, bytes.substring(1))
-          case _ =>
-            Async[F]
-              .raiseError(new IllegalArgumentException("Not RequestResponse"))
-        }
+        if (bytes.size() == 0)
+          Async[F]
+            .raiseError(new IllegalArgumentException("Not RequestResponse"))
+        else
+          bytes.byteAt(0) match {
+            case 0 => processRequest(port, bytes.substring(1))
+            case 1 => processResponse(port, bytes.substring(1))
+            case _ =>
+              Async[F]
+                .raiseError(new IllegalArgumentException("Not RequestResponse"))
+          }
       )
 
   private def portQueueStreams =
@@ -196,12 +199,9 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
       message: Message,
       buffer: PortQueues[F, Message, Response]
   ): F[Response] =
-    requestMutex.lock
-      .surround(
-        buffer.expectResponse <*
-          readerWriter.write(port, Codecs.ZeroBS.concat(P2PEncodable[Message].encodeP2P(message)))
-      )
-      .flatten
+    buffer.expectResponse(
+      readerWriter.write(port, Codecs.ZeroBS.concat(P2PEncodable[Message].encodeP2P(message)))
+    )
 
   private def writeResponse[Message: P2PEncodable](
       port: Int,

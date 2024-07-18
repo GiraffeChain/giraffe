@@ -5,7 +5,7 @@ import blockchain.codecs.given
 import blockchain.crypto.CryptoResources
 import blockchain.models.*
 import cats.effect.implicits.*
-import cats.effect.std.{Mutex, Random}
+import cats.effect.std.Random
 import cats.effect.{Async, Ref, Resource}
 import cats.implicits.*
 import com.comcast.ip4s.{Host, Port, SocketAddress}
@@ -83,8 +83,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
       portQueues <- AllPortQueues.make[F]
       readerWriter <- MultiplexedReaderWriter.forSocket(socket)
       peerCache <- PeerCache.make[F]
-      peerReadMutex <- Mutex[F].toResource
-      interface = new PeerBlockchainInterface[F](core, this, portQueues, readerWriter, peerCache, peerReadMutex)
+      interface = new PeerBlockchainInterface[F](core, this, portQueues, readerWriter, peerCache)
       handler = new PeerBlockchainHandler[F](core, interface, peerState)
       _ <- interface.background.merge(handler.handle).compile.drain.toResource
     } yield ()
