@@ -12,12 +12,14 @@ import com.comcast.ip4s.{Host, Port, SocketAddress}
 import fs2.Stream
 import fs2.concurrent.Channel
 import fs2.io.net.{Network, Socket, SocketOption}
+import org.http4s.ember.client.EmberClientBuilder
+import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import scala.concurrent.duration.*
 
 object P2PServer:
-  def serve[F[_]: Async](
+  def serve[F[_]: Async: Network](
       bindHost: String,
       bindPort: Int,
       handleSocket: (Socket[F], Option[SocketAddress[?]]) => F[Unit],
@@ -37,7 +39,7 @@ object P2PServer:
         .pure[F]
         .rethrow
         .toResource
-      network = Network.forAsync[F]
+      network = Network[F]
       inboundSockets = network.server(h.some, p.some, socketOptions)
       inboundHandler = inboundSockets
         .evalTap(socket => socket.remoteAddress.flatTap(address => logger.info(show"Inbound connection from $address")))
@@ -58,7 +60,7 @@ object P2PServer:
       outcome <- handler.void.background
     } yield outcome
 
-  def serveBlockchain[F[_]: Async: Random: CryptoResources](
+  def serveBlockchain[F[_]: Async: Network: Random: CryptoResources](
       core: BlockchainCore[F],
       bindHost: String,
       bindPort: Int,
@@ -67,29 +69,38 @@ object P2PServer:
       magicBytes: Array[Byte],
       initialPeers: List[SocketAddress[?]]
   ): Resource[F, F[Outcome[F, Throwable, Unit]]] =
-    Slf4jLogger
-      .fromName("P2P")
-      .toResource
-      .flatMap(logger =>
-        Resource
-          .onFinalize(logger.info("P2P Terminated")) >> (
-          Resource
-            .make(Channel.unbounded[F, SocketAddress[?]])(_.close.void)
-            .evalTap(channel => initialPeers.traverse(channel.send)),
-          LocalPeer
-            .make(core, publicHost, publicPort)
-            .evalTap(localPeer => logger.info(show"Local peer id=${localPeer.connectedPeer.peerId}"))
-        ).tupled
-          .flatMap((outboundConnectionsChannel, localPeer) =>
-            PeersManager
-              .make(core, localPeer, magicBytes, outboundConnectionsChannel.send(_).void, initialPeers)
-              .flatMap(manager => serve(bindHost, bindPort, manager.handleSocket, outboundConnectionsChannel.stream))
-          )
-          .evalTap(_ =>
-            logger.info(
-              s"Serving P2P on binding=$bindHost:$bindPort public=${publicHost.getOrElse("")}${publicPort.fold("")(":" + _)}"
-            )
-          )
-      )
+    for {
+      given Logger[F] <- Slf4jLogger.fromName("P2P").toResource
+      _ <- Resource.onFinalize(Logger[F].info("P2P Terminated"))
+      outboundConnectionsChannel <- Resource
+        .make(Channel.unbounded[F, SocketAddress[?]])(_.close.void)
+        .evalTap(channel => initialPeers.traverse(channel.send))
+      derivedPublicHost <- publicHost.traverse {
+        case "auto" => determinePublicIp[F].toResource
+        case h      => h.pure[F].toResource
+      }
+      localPeer <- LocalPeer
+        .make(core, derivedPublicHost, publicPort)
+        .evalTap(localPeer => Logger[F].info(show"Local peer id=${localPeer.connectedPeer.peerId}"))
+      peersManager <- PeersManager
+        .make(core, localPeer, magicBytes, outboundConnectionsChannel.send(_).void, initialPeers)
+      outcomeF <- serve(bindHost, bindPort, peersManager.handleSocket, outboundConnectionsChannel.stream)
+      _ <- Logger[F]
+        .info(
+          "Serving P2P on" +
+            s" binding=$bindHost:$bindPort" +
+            s" public=${localPeer.connectedPeer.host.getOrElse("")}${localPeer.connectedPeer.port.fold("")(":" + _)}"
+        )
+        .toResource
+    } yield outcomeF
 
   private val socketOptions = List(SocketOption.noDelay(true), SocketOption.keepAlive(true))
+
+  private def determinePublicIp[F[_]: Async: Network: Logger]: F[String] =
+    EmberClientBuilder
+      .default[F]
+      .build
+      .use(_.expect[String]("https://checkip.amazonaws.com"))
+      // Endpoint might return a comma-delimited list, with the last entry being most "correct"
+      .map(_.trim.split(',').last)
+      .flatTap(ip => Logger[F].warn(s"IP address auto-detected as address=$ip"))

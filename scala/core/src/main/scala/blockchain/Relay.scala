@@ -55,12 +55,12 @@ object Relay extends IOApp:
 @AppName("Blockchain")
 case class RelayArgs(
     @HelpMessage("Path to data storage (will be suffixed with the block ID)")
-    dataDir: String = "/tmp/blockchain/data",
+    dataDir: String = Option(System.getenv("BLOCKCHAIN_DATA_DIR")).getOrElse("/tmp/blockchain/data"),
     rpcBindHost: String = "0.0.0.0",
     rpcBindPort: Int = 2024,
     p2pBindHost: String = "0.0.0.0",
     p2pBindPort: Int = 2023,
-    p2pPublicHost: Option[String] = Some("localhost"),
+    p2pPublicHost: Option[String] = None,
     p2pPublicPort: Option[Int] = Some(2023),
     peer: List[String] = Nil,
     genesis: String = "testnet:"
