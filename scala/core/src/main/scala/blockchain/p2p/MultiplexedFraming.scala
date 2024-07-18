@@ -38,7 +38,6 @@ object MultiplexedFraming:
           )
           .value
       )
-      .buffer(1)
       .unNoneTerminate
 
   def writer[F[_]: Async](socket: Socket[F]): (Int, Chunk[Byte]) => F[Unit] =

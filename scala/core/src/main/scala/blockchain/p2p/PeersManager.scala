@@ -35,7 +35,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
   def connectNext(): F[Unit] =
     for {
       state <- stateRef.get
-      targets <- state.connectedPeers.values.toList
+      candidates <- state.connectedPeers.values.toList
         .traverse(
           _.publicStateRef.get.map(
             _.peers.flatMap(p =>
@@ -52,9 +52,13 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
             .values
             .toList
         )
-      _ <- Async[F].whenA(targets.nonEmpty)(
-        Random[F].elementOf(targets).flatMap(connectOutbound)
-      )
+      _ <-
+        if (candidates.nonEmpty)
+          Random[F].elementOf(candidates).flatMap(connectOutbound)
+        else if (state.connectedPeers.isEmpty && state.knownPeers.nonEmpty)
+          Random[F].elementOf(state.knownPeers).flatMap(connectOutbound)
+        else
+          ().pure[F]
     } yield ()
 
   def handleSocket(socket: Socket[F], outboundAddress: Option[SocketAddress[?]]): F[Unit] = {

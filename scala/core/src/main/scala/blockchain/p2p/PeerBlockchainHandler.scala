@@ -27,14 +27,14 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
 
   private def pingPong =
     Stream
-      .awakeEvery(5.seconds)
+      .fixedRate(5.seconds)
       .evalMap(_ => Random[F].nextBytes(1024).map(ByteString.copyFrom))
       .evalMap(interface.ping)
       .void
 
   private def peerState =
     Stream
-      .awakeEvery(30.seconds)
+      .fixedRate(30.seconds)
       .evalMap(_ => interface.publicState)
       .evalMap(remotePeerState.publicStateRef.set)
       .void

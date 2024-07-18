@@ -92,4 +92,4 @@ object P2PServer:
           )
       )
 
-  private val socketOptions = List(SocketOption.noDelay(true))
+  private val socketOptions = List(SocketOption.noDelay(true), SocketOption.keepAlive(true))

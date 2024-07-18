@@ -60,7 +60,9 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
               .getOrRaise(new IllegalStateException("Local height not found")),
           blockIdAtHeight,
           Ratio(2, 3)
-        )(1L, localHeader.height).timeout(30.seconds)
+        )(1L, localHeader.height).timeout(30.seconds).adaptError { case _: TimeoutException =>
+          new TimeoutException("Common ancestor trace")
+        }
       ).getOrRaise(new IllegalStateException("Common ancestor not found"))
     } yield intersection
 
@@ -69,6 +71,7 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
 
   private def readerStream =
     readerWriter.read
+      .buffer(8)
       .evalMap((port, bytes) =>
         bytes.byteAt(0) match {
           case 0 => processRequest(port, bytes.substring(1))
@@ -250,7 +253,7 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
       getRemote: Long => F[Option[T]],
       searchSpaceTarget: Ratio
   ): (Long, Long) => F[Option[T]] = {
-    lazy val f: (Long, Long, Option[T]) => F[Option[T]] = (min, max, ifNone) =>
+    def f(min: Long, max: Long, ifNone: Option[T]): F[Option[T]] =
       (min === max)
         .pure[F]
         .ifM(
