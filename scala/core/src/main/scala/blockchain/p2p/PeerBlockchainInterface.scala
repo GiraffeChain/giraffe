@@ -57,7 +57,8 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
         narySearch[BlockId](
           height =>
             OptionT(core.consensus.localChain.blockIdAtHeight(height))
-              .getOrRaise(new IllegalStateException("Local height not found")),
+              .getOrRaise(new IllegalStateException("Local height not found"))
+              .localTimeout("BlockIdAtHeight.CommonAncestor"),
           blockIdAtHeight,
           Ratio(2, 3)
         )(1L, localHeader.height).timeout(30.seconds).adaptError { case _: TimeoutException =>
@@ -212,30 +213,41 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
   ): F[Unit] =
     readerWriter.write(port, Codecs.OneBS.concat(P2PEncodable[Message].encodeP2P(message)))
 
+  extension [A](fa: F[A])
+    def localTimeout(name: String): F[A] = fa.timeout(2.seconds).adaptError { case _: TimeoutException =>
+      new TimeoutException(s"Local operation '$name' timeout")
+    }
+
   private def onPeerRequestedBlockIdAtHeight(height: Height) =
     core.consensus.localChain
       .blockIdAtHeight(height)
+      .localTimeout("BlockIdAtHeight")
       .flatMap(writeResponse(MultiplexerIds.BlockIdAtHeightRequest, _))
 
   private def onPeerRequestedHeader(id: BlockId) =
     core.dataStores.headers
       .get(id)
+      .localTimeout("GetHeader")
       .flatMap(writeResponse(MultiplexerIds.HeaderRequest, _))
 
   private def onPeerRequestedBody(id: BlockId) =
     core.dataStores.bodies
       .get(id)
+      .localTimeout("GetBody")
       .flatMap(writeResponse(MultiplexerIds.BodyRequest, _))
 
   private def onPeerRequestedTransaction(id: TransactionId) =
     core.dataStores.transactions
       .get(id)
+      .localTimeout("GetTransaction")
       .flatMap(writeResponse(MultiplexerIds.TransactionRequest, _))
 
   private def onPeerRequestedState() =
-    manager.currentState.flatMap(
-      writeResponse(MultiplexerIds.PeerStateRequest, _)
-    )
+    manager.currentState
+      .localTimeout("PeerState")
+      .flatMap(
+        writeResponse(MultiplexerIds.PeerStateRequest, _)
+      )
 
   private def onPeerRequestedPing(message: Bytes) =
     writeResponse(MultiplexerIds.PingRequest, message)
