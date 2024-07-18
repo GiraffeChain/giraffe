@@ -2,7 +2,7 @@ package blockchain.p2p
 
 import blockchain.models.*
 import blockchain.{Bytes, Height}
-import cats.MonadThrow
+import cats.{Monad, MonadThrow}
 import cats.data.OptionT
 import cats.effect.implicits.*
 import cats.effect.std.{Mutex, Queue}
@@ -17,7 +17,7 @@ object MultiplexedFraming:
   def apply[F[_]: Async](socket: Socket[F]): Stream[F, (Int, Chunk[Byte])] =
     Stream
       .repeatEval(
-        OptionT(socket.read(8))
+        OptionT(readExactly(socket)(8))
           .map(prefix =>
             (
               Ints.fromBytes(prefix(0), prefix(1), prefix(2), prefix(3)),
@@ -27,7 +27,7 @@ object MultiplexedFraming:
           .flatMap((port, length) =>
             if (length == 0) OptionT.some[F]((port, Chunk.empty[Byte]))
             else
-              OptionT(socket.read(length))
+              OptionT(readExactly(socket)(length))
                 .timeoutWithMessage(DefaultWriteTimeout, s"Read timeout in port=$port")
                 .ensureOr(chunk =>
                   new IllegalArgumentException(s"Expected $length bytes. Received ${chunk.size} bytes.")
@@ -47,6 +47,15 @@ object MultiplexedFraming:
             data
         )
         .timeoutWithMessage(DefaultWriteTimeout, s"Write timeout in port=$port")
+
+  private def readExactly[F[_]: Monad](socket: Socket[F])(length: Int): F[Option[Chunk[Byte]]] =
+    (length, Chunk.empty[Byte]).tailRecM((remaining, acc) =>
+      OptionT(socket.read(remaining))
+        .fold(none[Chunk[Byte]].asRight)(bytes =>
+          if (bytes.size < remaining) Left((remaining - bytes.size, acc ++ bytes))
+          else Right(Some(acc ++ bytes))
+        )
+    )
 
 case class MultiplexedReaderWriter[F[_]](
     read: Stream[F, (Int, Bytes)],
