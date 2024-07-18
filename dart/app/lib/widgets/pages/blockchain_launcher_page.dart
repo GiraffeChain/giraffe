@@ -23,8 +23,10 @@ class BlockchainLauncherPageState extends State<BlockchainLauncherPage> {
       RpcClient.makeChannel(
               host: widget.config.rpcHost, port: widget.config.rpcPort)
           .map((channel) => (
-                nodeClient: NodeRpcClient(channel),
-                stakerSupportClient: StakerSupportRpcClient(channel)
+                nodeClient: NodeRpcClientWithRetry(channel,
+                    delegate: NodeRpcClient(channel), maxTries: 10),
+                stakerSupportClient: StakerSupportRpcClientWithRetry(channel,
+                    delegate: StakerSupportRpcClient(channel), maxTries: 10)
               ))
           .map((clients) => (
                 BlockchainViewFromRpc(nodeClient: clients.nodeClient),

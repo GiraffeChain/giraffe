@@ -5,6 +5,7 @@ import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:logging/logging.dart';
 import 'package:rxdart/transformers.dart';
 
 abstract class BlockchainView {
@@ -165,8 +166,19 @@ class BlockchainViewFromRpc extends BlockchainView {
       .then((v) => v.hasTransaction() ? v.transaction : null);
 
   @override
-  Stream<TraversalStep> get traversal =>
-      nodeClient.follow(FollowReq()).map((followR) => followR.hasAdopted()
-          ? TraversalStep_Applied(followR.adopted)
-          : TraversalStep_Unapplied(followR.unadopted));
+  Stream<TraversalStep> get traversal {
+    _follow() {
+      final x = nodeClient.follow(FollowReq());
+      return x.doOnCancel(x.cancel).onErrorResume((e, s) {
+        _log.warning("Error in follow stream. Restarting.", e, s);
+        return _follow();
+      });
+    }
+
+    return _follow().map((followR) => followR.hasAdopted()
+        ? TraversalStep_Applied(followR.adopted)
+        : TraversalStep_Unapplied(followR.unadopted));
+  }
 }
+
+final Logger _log = Logger("Blockchain.View");

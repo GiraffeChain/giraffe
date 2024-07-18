@@ -187,10 +187,18 @@ class BlockPackerForStakerSupportRpc extends BlockPacker {
   @override
   Stream<FullBlockBody> streamed(
       BlockId parentBlockId, Int64 height, Int64 slot) {
-    final s = client
-        .packBlock(PackBlockReq(parentBlockId: parentBlockId, untilSlot: slot));
-    return s
-        .doOnCancel(() => s.cancel())
+    s() {
+      final x = client.packBlock(
+          PackBlockReq(parentBlockId: parentBlockId, untilSlot: slot));
+      return x.doOnCancel(() => x.cancel()).onErrorResume((e, st) {
+        Minting.log.warning(
+            "Error from remote block packer stream. Restarting.", e, st);
+        return Stream.fromFuture(Future.delayed(Duration(milliseconds: 200)))
+            .asyncExpand((_) => s());
+      });
+    }
+
+    return s()
         .takeWhile((v) => v.hasBody())
         .map((v) => v.body.transactionIds.map(view.getTransactionOrRaise))
         .asyncMap(Future.wait)
