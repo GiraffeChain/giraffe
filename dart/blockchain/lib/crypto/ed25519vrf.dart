@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:cryptography/cryptography.dart';
+import 'package:blockchain_sdk/crypto_ec.dart' as ec;
+import 'package:blockchain_sdk/crypto_x25519_field.dart';
 
 abstract class Ed25519VRF {
   Future<Ed25519VRFKeyPair> generateKeyPair();

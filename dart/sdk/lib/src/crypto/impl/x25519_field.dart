@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import './ec.dart';
+import 'ec.dart';
 import 'package:fixnum/fixnum.dart';
 
 /**
