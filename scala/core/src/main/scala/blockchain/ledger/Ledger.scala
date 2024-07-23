@@ -14,6 +14,7 @@ case class Ledger[F[_]](
     mempool: Mempool[F],
     transactionOutputState: TransactionOutputState[F],
     accountState: AccountState[F],
+    addressState: AddressState[F],
     blockPacker: BlockPacker[F]
 )
 
@@ -87,5 +88,6 @@ object Ledger:
       mempoolBlockPacker,
       transactionOutputState,
       accountState,
+      addressState,
       mempoolBlockPacker
     )

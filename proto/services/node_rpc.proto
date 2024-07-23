@@ -13,6 +13,8 @@ service NodeRpc {
     rpc GetTransaction(GetTransactionReq) returns (GetTransactionRes);
     rpc GetBlockIdAtHeight(GetBlockIdAtHeightReq) returns (GetBlockIdAtHeightRes);
     rpc Follow(FollowReq) returns (stream FollowRes);
+    rpc GetAccountState(GetAccountStateReq) returns (GetAccountStateRes);
+    rpc GetLockAddressState(GetLockAddressStateReq) returns (GetLockAddressStateRes);
 }
 
 message BroadcastTransactionReq {
@@ -70,4 +72,20 @@ message GetBlockIdAtHeightReq {
 
 message GetBlockIdAtHeightRes {
     blockchain.models.BlockId blockId = 1;
+}
+
+message GetAccountStateReq {
+    blockchain.models.TransactionOutputReference account = 1 [(validate.rules).message.required = true];
+}
+
+message GetAccountStateRes {
+    repeated blockchain.models.TransactionOutputReference transactionOutputs = 1;
+}
+
+message GetLockAddressStateReq {
+    blockchain.models.LockAddress address = 1 [(validate.rules).message.required = true];
+}
+
+message GetLockAddressStateRes {
+    repeated blockchain.models.TransactionOutputReference transactionOutputs = 1;
 }

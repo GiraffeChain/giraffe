@@ -84,6 +84,20 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
         await blockchain.consensus.localChain.blockIdAtHeight(request.height);
     return GetBlockIdAtHeightRes(blockId: blockId);
   }
+
+  @override
+  Future<GetAccountStateRes> getAccountState(
+      ServiceCall call, GetAccountStateReq request) async {
+    // TODO: implement getAccountState
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<GetLockAddressStateRes> getLockAddressState(
+      ServiceCall call, GetLockAddressStateReq request) async {
+    // TODO: implement getLockAddressState
+    throw UnimplementedError();
+  }
 }
 
 class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {
