@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:blockchain/codecs.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/common/event_sourced_state.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/common/store.dart';

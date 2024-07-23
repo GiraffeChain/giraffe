@@ -1,7 +1,8 @@
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'codecs.dart';
 import 'package:fixnum/fixnum.dart';
+
+import 'crypto/ed25519.dart';
 
 class TransactionValidationContext {
   final BlockId parentHeaderId;

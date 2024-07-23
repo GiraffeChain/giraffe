@@ -1,9 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/crypto/ed25519.dart';
-import 'package:blockchain/crypto/utils.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/network/util.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 

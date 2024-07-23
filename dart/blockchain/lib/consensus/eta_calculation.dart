@@ -2,7 +2,8 @@ import 'dart:typed_data';
 
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
-import 'package:blockchain/common/utils.dart';
+import 'package:blockchain/common/models/unsigned.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/consensus/utils.dart';
 import 'package:logging/logging.dart';

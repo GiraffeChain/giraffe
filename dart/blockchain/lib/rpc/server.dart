@@ -1,7 +1,7 @@
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/utils.dart';
-import 'package:blockchain/traversal.dart';
+import 'package:blockchain/common/models/unsigned.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';

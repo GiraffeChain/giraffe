@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:blockchain/crypto/impl/ec.dart' as ec;
-import 'package:blockchain/crypto/utils.dart';
+import 'impl/ec.dart' as ec;
+import 'utils.dart';
 import 'package:cryptography/cryptography.dart' as c;
 
 abstract class Ed25519 {

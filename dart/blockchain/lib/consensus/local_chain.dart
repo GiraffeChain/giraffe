@@ -1,12 +1,11 @@
 import 'dart:async';
 
-import 'package:blockchain/codecs.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/event_sourced_state.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/genesis.dart';
-import 'package:blockchain/traversal.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';

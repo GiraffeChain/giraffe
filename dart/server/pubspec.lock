@@ -29,10 +29,10 @@ packages:
     dependency: transitive
     description:
       name: args
-      sha256: eef6c46b622e0494a36c5a12d10d77fb4e855501a91c1b9ef9339326e58f0596
+      sha256: "7cf60b9f0cc88203c5a190b4cd62a99feea42759a7fa695010eb5de1c0b2252a"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.2"
+    version: "2.5.0"
   async:
     dependency: transitive
     description:
@@ -55,6 +55,13 @@ packages:
       relative: true
     source: path
     version: "2.0.0+1"
+  blockchain_sdk:
+    dependency: "direct main"
+    description:
+      path: "../sdk"
+      relative: true
+    source: path
+    version: "1.0.0+1"
   boolean_selector:
     dependency: transitive
     description:
@@ -159,14 +166,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1"
-  fast_immutable_collections:
-    dependency: transitive
-    description:
-      name: fast_immutable_collections
-      sha256: "3eb1d7495c70598964add20e10666003fad6e855b108fe684ebcbf8ad0c8e120"
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.2.0"
   ffi:
     dependency: transitive
     description:
@@ -235,18 +234,18 @@ packages:
     dependency: transitive
     description:
       name: hashlib
-      sha256: "71bf102329ddb8e50c8a995ee4645ae7f1728bb65e575c17196b4d8262121a96"
+      sha256: d41795742c10947930630118c6836608deeb9047cd05aee32d2baeb697afd66a
       url: "https://pub.dev"
     source: hosted
-    version: "1.12.0"
+    version: "1.19.2"
   hashlib_codecs:
     dependency: transitive
     description:
       name: hashlib_codecs
-      sha256: "49e2a471f74b15f1854263e58c2ac11f2b631b5b12c836f9708a35397d36d626"
+      sha256: "2b570061f5a4b378425be28a576c1e11783450355ad4345a19f606ff3d96db0f"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.5.0"
   hive:
     dependency: transitive
     description:
@@ -291,10 +290,10 @@ packages:
     dependency: "direct main"
     description:
       name: integral_isolates
-      sha256: "31b8ef45985ebfba628f1df5366df263578bc62119409588dbd679a2e27f2225"
+      sha256: "62b1b45ea6350edc92d555aa1a98cbda09836b42e51e19e39d49bc39a686e601"
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.1"
+    version: "0.5.1"
   io:
     dependency: transitive
     description:
@@ -427,26 +426,34 @@ packages:
     dependency: transitive
     description:
       name: rational
-      sha256: ba58e9e18df9abde280e8b10051e4bce85091e41e8e7e411b6cde2e738d357cf
+      sha256: cb808fb6f1a839e6fc5f7d8cb3b0a10e1db48b3be102de73938c627f0b636336
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.2"
+    version: "2.2.3"
   ribs_core:
     dependency: "direct main"
     description:
       name: ribs_core
-      sha256: "8554d768c9a1b2249cc33288db096c7f667c58af21ec390e6e17fde56cd8d4ce"
+      sha256: e70624aa6c2b76fd9cc0590fc3be11af587a0a92555dff2db9b9f8fc77bf9b90
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0-dev.8"
+    version: "1.0.0-dev.11"
+  ribs_effect:
+    dependency: "direct main"
+    description:
+      name: ribs_effect
+      sha256: "587fc5c98d342b2ba231f1f5ddfdd5ac52963e592e8d75f8fdd15caf5d145a23"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0-dev.1"
   rxdart:
     dependency: transitive
     description:
       name: rxdart
-      sha256: "0c7c0cedd93788d996e33041ffecda924cc54389199cde4e6a34b440f50044cb"
+      sha256: "5c3004a4a8dbb94bd4bf5412a4def4acdaa12e12f269737a5751369e12d1a962"
       url: "https://pub.dev"
     source: hosted
-    version: "0.27.7"
+    version: "0.28.0"
   shelf:
     dependency: transitive
     description:

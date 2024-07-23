@@ -3,13 +3,12 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:async/async.dart';
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/resource.dart';
-import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/consensus/chain_selection.dart';
-import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/ledger/mempool.dart';
 import 'package:blockchain/network/framing.dart';
 import 'package:blockchain/network/handshake.dart';

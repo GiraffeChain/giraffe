@@ -1,4 +1,3 @@
-import 'package:blockchain/crypto/impl/kes_product.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rational/rational.dart';
 
@@ -118,4 +117,22 @@ _parseRational(String value) {
     return Rational(BigInt.parse(split[0]));
   else
     return Rational(BigInt.parse(split[0]), BigInt.parse(split[1]));
+}
+
+class TreeHeight {
+  final int sup;
+  final int sub;
+
+  TreeHeight(this.sup, this.sub);
+
+  @override
+  int get hashCode => Object.hash(sup, sub);
+
+  @override
+  bool operator ==(Object other) {
+    if (other is TreeHeight) {
+      return sup == other.sup && sub == other.sub;
+    }
+    return false;
+  }
 }

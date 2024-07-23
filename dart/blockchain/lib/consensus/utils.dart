@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:blockchain/common/models/common.dart';
-import 'package:blockchain/codecs.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:hashlib/hashlib.dart';
 import 'package:rational/rational.dart';

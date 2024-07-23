@@ -1,6 +1,5 @@
 import 'package:blockchain/consensus/leader_election_validation.dart';
-import 'package:blockchain/consensus/models/protocol_settings.dart';
-import 'package:blockchain/crypto/utils.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:convert/convert.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rational/rational.dart';

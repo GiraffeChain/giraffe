@@ -1,3 +1,4 @@
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
@@ -34,4 +35,24 @@ class PartialOperationalCertificate {
 
   PartialOperationalCertificate(
       this.parentVK, this.parentSignature, this.childVK);
+}
+
+extension BlockHeaderOps on BlockHeader {
+  UnsignedBlockHeader get unsigned => UnsignedBlockHeader(
+        parentHeaderId,
+        parentSlot,
+        txRoot,
+        timestamp,
+        height,
+        slot,
+        eligibilityCertificate,
+        PartialOperationalCertificate(
+            operationalCertificate.parentVK,
+            operationalCertificate.parentSignature,
+            operationalCertificate.childVK),
+        metadata,
+        account,
+      );
+
+  SlotId get slotId => SlotId(slot: slot, blockId: id);
 }

@@ -1,13 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/crypto/impl/kes_helper.dart';
 import 'package:blockchain/crypto/impl/kes_sum.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
-
-import '../utils.dart';
 
 abstract class KesProduct {
   Future<KeyPairKesProduct> generateKeyPair(
@@ -187,24 +184,6 @@ final _sign = _impl.sign;
 final _update = _impl.update;
 final _verify = _impl.verify;
 final _generateVerificationKey = _impl.generateVerificationKey;
-
-class TreeHeight {
-  final int sup;
-  final int sub;
-
-  TreeHeight(this.sup, this.sub);
-
-  @override
-  int get hashCode => Object.hash(sup, sub);
-
-  @override
-  bool operator ==(Object other) {
-    if (other is TreeHeight) {
-      return sup == other.sup && sub == other.sub;
-    }
-    return false;
-  }
-}
 
 class SecretKeyKesProduct {
   final KesBinaryTree superTree;

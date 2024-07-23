@@ -1,11 +1,9 @@
 import 'dart:io';
 
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:blockchain/crypto/kes.dart';
-import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:hashlib/hashlib.dart';
 

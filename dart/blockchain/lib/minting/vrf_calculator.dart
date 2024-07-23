@@ -1,8 +1,7 @@
-import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
-import 'package:blockchain/consensus/models/protocol_settings.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/consensus/models/vrf_argument.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:fixnum/fixnum.dart';
