@@ -263,8 +263,8 @@ trait Codecs {
 }
 
 object Codecs:
-  val ZeroBS = ByteString.copyFrom(Array[Byte](0))
-  val OneBS = ByteString.copyFrom(Array[Byte](1))
+  val ZeroBS: ByteString = ByteString.copyFrom(Array[Byte](0))
+  val OneBS: ByteString = ByteString.copyFrom(Array[Byte](1))
 
 trait ImmutableBytes[T]:
   extension (t: T) def immutableBytes: Bytes
@@ -448,6 +448,16 @@ trait ArrayCodecs {
           Ints.fromByteArray(array.slice(32, 36))
         )
 
+  given ArrayEncodable[LockAddress] with
+    extension (v: LockAddress)
+      def encodeArray: Array[Byte] =
+        v.value.encodeArray
+
+  given ArrayDecodable[LockAddress] with
+    extension (array: Array[Byte])
+      def decodeFromArray: LockAddress =
+        LockAddress(summon[ArrayDecodable[String]].decodeFromArray(array))
+
   given ArrayEncodable[List[TransactionOutputReference]] with
     extension (v: List[TransactionOutputReference])
       def encodeArray: Array[Byte] =
@@ -499,5 +509,10 @@ trait ArrayCodecs {
     extension (v: String)
       def encodeArray: Array[Byte] =
         v.getBytes(StandardCharsets.UTF_8)
+
+  given ArrayDecodable[String] with
+    extension (array: Array[Byte])
+      def decodeFromArray: String =
+        new String(array, StandardCharsets.UTF_8)
 
 }

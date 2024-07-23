@@ -35,7 +35,17 @@ object Ledger:
         dataStores.transactions.getOrRaise,
         dataStores.transactionOutputs.getOrRaise
       )
+      addressStateBSS <- AddressState.makeBSS(
+        dataStores.addresses.pure[F],
+        eventIdGetterSetters.accountState.get(),
+        blockIdTree,
+        eventIdGetterSetters.accountState.set,
+        dataStores.bodies.getOrRaise,
+        dataStores.transactions.getOrRaise,
+        dataStores.transactionOutputs.getOrRaise
+      )
       accountState <- AccountState.make(accountStateBSS)
+      addressState <- AddressState.make(addressStateBSS)
       transactionOutputStateBSS <- TransactionOutputState.makeBSS(
         dataStores.spendableOutputs.pure[F],
         eventIdGetterSetters.transactionOutputState.get(),
