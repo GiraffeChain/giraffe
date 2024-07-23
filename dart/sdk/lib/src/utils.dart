@@ -205,3 +205,20 @@ StreamTransformer<In, Out> AbandoningTransformer<In, Out>(
       };
       return controller.stream.listen(null);
     });
+
+// Alias's Flutter's "compute()" function signature
+typedef DComputeCallback<Q, R> = FutureOr<R> Function(Q message);
+
+typedef DComputeImpl = Future<R> Function<Q, R>(
+    DComputeCallback<Q, R> callback, Q message,
+    {String? debugLabel});
+
+Future<R> LocalCompute<Q, R>(DComputeCallback<Q, R> callback, Q message,
+        {String? debugLabel}) async =>
+    callback(message);
+
+DComputeImpl isolate = LocalCompute;
+
+void setComputeFunction(DComputeImpl i) {
+  isolate = i;
+}

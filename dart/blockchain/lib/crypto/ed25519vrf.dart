@@ -1,9 +1,7 @@
 import 'dart:typed_data';
-
+import 'package:blockchain_sdk/crypto_ec.dart' as ec;
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:cryptography/cryptography.dart';
-import 'package:blockchain_sdk/crypto_ec.dart' as ec;
-import 'package:blockchain_sdk/crypto_x25519_field.dart';
 
 abstract class Ed25519VRF {
   Future<Ed25519VRFKeyPair> generateKeyPair();
@@ -35,7 +33,7 @@ class Ed25519VRFImpl extends Ed25519VRF {
   static const C_BYTES = 16;
   static const PI_BYTES = ec.POINT_BYTES + ec.SCALAR_BYTES + C_BYTES;
   static final neutralPointBytes = Int8List(ec.SCALAR_BYTES);
-  final NP = PointAccum.create();
+  final NP = ec.PointAccum.create();
 
   Future<Ed25519VRFKeyPair> generateKeyPair() async {
     final random = SecureRandom.safe;
@@ -74,18 +72,18 @@ class Ed25519VRFImpl extends Ed25519VRF {
     final s = Int8List.fromList(signature.sublist(ec.POINT_BYTES + C_BYTES));
     final H =
         await _hashToCurveTryAndIncrement(_vk, Int8List.fromList(message));
-    final gamma = PointExt.create();
-    final Y = PointExt.create();
+    final gamma = ec.PointExt.create();
+    final Y = ec.PointExt.create();
     ec.decodePointVar(gamma_str, 0, false, gamma);
     ec.decodePointVar(_vk, 0, false, Y);
-    final A = PointAccum.create();
-    final B = PointAccum.create();
-    final C = PointAccum.create();
-    final D = PointAccum.create();
-    final U = PointAccum.create();
-    final V = PointAccum.create();
-    final g = PointAccum.create();
-    final t = PointExt.create();
+    final A = ec.PointAccum.create();
+    final B = ec.PointAccum.create();
+    final C = ec.PointAccum.create();
+    final D = ec.PointAccum.create();
+    final U = ec.PointAccum.create();
+    final V = ec.PointAccum.create();
+    final g = ec.PointAccum.create();
+    final t = ec.PointExt.create();
     ec.scalarMultBase(s, A);
     ec.decodeScalar(c, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
@@ -112,14 +110,14 @@ class Ed25519VRFImpl extends Ed25519VRF {
     final x = await _pruneHash(sk);
     final pk = ec.createScalarMultBaseEncoded(x);
     final H = await _hashToCurveTryAndIncrement(pk, Int8List.fromList(message));
-    final gamma = PointAccum.create();
+    final gamma = ec.PointAccum.create();
     ec.decodeScalar(x, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
     ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.$1), gamma);
     final k = await _nonceGenerationRFC8032(sk, H.$2);
     assert(ec.checkScalarVar(k));
-    final kB = PointAccum.create();
-    final kH = PointAccum.create();
+    final kB = ec.PointAccum.create();
+    final kH = ec.PointAccum.create();
     ec.scalarMultBase(k, kB);
     ec.decodeScalar(k, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
@@ -138,8 +136,8 @@ class Ed25519VRFImpl extends Ed25519VRF {
     final gamma_str = Int8List.fromList(signature.sublist(0, ec.POINT_BYTES));
     final zero = [0x00];
     final three = [0x03];
-    final gamma = PointExt.create();
-    final cg = PointAccum.create();
+    final gamma = ec.PointExt.create();
+    final cg = ec.PointAccum.create();
     ec.decodePointVar(gamma_str, 0, false, gamma);
     ec.decodeScalar(cofactor, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
@@ -162,12 +160,12 @@ class Ed25519VRFImpl extends Ed25519VRF {
     return h;
   }
 
-  Future<(PointAccum, Int8List)> _hashToCurveTryAndIncrement(
+  Future<(ec.PointAccum, Int8List)> _hashToCurveTryAndIncrement(
       Int8List Y, Int8List a) async {
     int ctr = 0;
     final hash = Int8List(ec.POINT_BYTES);
-    final H = PointExt.create();
-    final HR = PointAccum.create();
+    final H = ec.PointExt.create();
+    final HR = ec.PointAccum.create();
     bool isPoint = false;
     while (!isPoint) {
       final ctr_byte = [ctr.toByte];
@@ -194,9 +192,9 @@ class Ed25519VRFImpl extends Ed25519VRF {
     return (HR, hash);
   }
 
-  _isNeutralPoint(PointExt p) {
+  _isNeutralPoint(ec.PointExt p) {
     final pBytes = Int8List(ec.POINT_BYTES);
-    final pA = PointAccum.create();
+    final pA = ec.PointAccum.create();
     ec.decodeScalar(oneScalar, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
     ec.scalarMultStraussVar(nb, np, p, pA);
@@ -213,8 +211,8 @@ class Ed25519VRFImpl extends Ed25519VRF {
     return ec.reduceScalar(out);
   }
 
-  Future<Int8List> _hashPoints(
-      PointAccum p1, PointAccum p2, PointAccum p3, PointAccum p4) async {
+  Future<Int8List> _hashPoints(ec.PointAccum p1, ec.PointAccum p2,
+      ec.PointAccum p3, ec.PointAccum p4) async {
     final zero = const [0x00];
     final two = const [0x02];
     final str = [...suite, ...two];
@@ -253,7 +251,7 @@ class Ed25519VRFKeyPair {
 
 final _impl = Ed25519VRFImpl();
 
-Ed25519VRF ed25519Vrf = _impl;
+Ed25519VRF ed25519Vrf = Ed25519VRFIsolated();
 
 final _generateKeyPair = _impl.generateKeyPair;
 final _generateKeyPairFromSeed = _impl.generateKeyPairFromSeed;
@@ -263,32 +261,28 @@ final _sign = _impl.sign;
 final _proofToHash = _impl.proofToHash;
 
 class Ed25519VRFIsolated extends Ed25519VRF {
-  final DComputeImpl _compute;
-
-  Ed25519VRFIsolated(this._compute);
-
   @override
   Future<Ed25519VRFKeyPair> generateKeyPair() =>
-      _compute((v) => _generateKeyPair(), "");
+      isolate((v) => _generateKeyPair(), "");
 
   @override
   Future<Ed25519VRFKeyPair> generateKeyPairFromSeed(List<int> seed) =>
-      _compute(_generateKeyPairFromSeed, seed);
+      isolate(_generateKeyPairFromSeed, seed);
 
   @override
   Future<Uint8List> getVerificationKey(List<int> secretKey) =>
-      _compute(_getVerificationKey, secretKey);
+      isolate(_getVerificationKey, secretKey);
 
   @override
   Future<Uint8List> proofToHash(List<int> signature) =>
-      _compute(_proofToHash, signature);
+      isolate(_proofToHash, signature);
 
   @override
   Future<Uint8List> sign(List<int> sk, List<int> message) =>
-      _compute((t) => _sign(t.$1, t.$2), (sk, message));
+      isolate((t) => _sign(t.$1, t.$2), (sk, message));
 
   @override
   Future<bool> verify(List<int> signature, List<int> message, List<int> vk) =>
-      _compute(
+      isolate(
           (t) => _verify(t.$1.$1, t.$1.$2, t.$2), ((signature, message), vk));
 }

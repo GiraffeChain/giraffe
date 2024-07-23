@@ -176,7 +176,7 @@ class KesProductImpl extends KesProduct {
 
 final _impl = KesProductImpl();
 
-KesProduct kesProduct = KesProductImpl();
+KesProduct kesProduct = KesProudctIsolated();
 
 final _generateKeyPair = _impl.generateKeyPair;
 final _getCurrentStep = _impl.getCurrentStep;
@@ -331,38 +331,34 @@ class KeyPairKesProduct {
 }
 
 class KesProudctIsolated extends KesProduct {
-  final DComputeImpl _compute;
-
-  KesProudctIsolated(this._compute);
-
   @override
   Future<KeyPairKesProduct> generateKeyPair(
           List<int> seed, TreeHeight height, Int64 offset) =>
-      _compute((args) => _generateKeyPair(args.$1.$1, args.$1.$2, args.$2),
+      isolate((args) => _generateKeyPair(args.$1.$1, args.$1.$2, args.$2),
           ((seed, height), offset));
 
   @override
   Future<int> getCurrentStep(SecretKeyKesProduct sk) =>
-      _compute(_getCurrentStep, sk);
+      isolate(_getCurrentStep, sk);
 
   @override
   Future<SignatureKesProduct> sign(SecretKeyKesProduct sk, List<int> message) =>
-      _compute((args) => _sign(args.$1, args.$2), (sk, message));
+      isolate((args) => _sign(args.$1, args.$2), (sk, message));
 
   @override
   Future<SecretKeyKesProduct> update(SecretKeyKesProduct sk, int step) =>
-      _compute((args) => _update(args.$1, args.$2), (sk, step));
+      isolate((args) => _update(args.$1, args.$2), (sk, step));
 
   @override
   Future<bool> verify(SignatureKesProduct signature, List<int> message,
           VerificationKeyKesProduct vk) =>
-      _compute((args) => _verify(args.$1.$1, args.$1.$2, args.$2),
+      isolate((args) => _verify(args.$1.$1, args.$1.$2, args.$2),
           ((signature, message), vk));
 
   @override
   Future<VerificationKeyKesProduct> generateVerificationKey(
           SecretKeyKesProduct sk) =>
-      _compute(_generateVerificationKey, sk);
+      isolate(_generateVerificationKey, sk);
 }
 
 // class VerificationKeyKesProduct {

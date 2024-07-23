@@ -2,12 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain_sdk/sdk.dart' hide setComputeFunction;
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
-import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/common/isolate_pool.dart';
 import 'package:blockchain/minting/minting.dart';
