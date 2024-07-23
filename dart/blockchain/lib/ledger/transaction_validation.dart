@@ -159,7 +159,6 @@ class TransactionSemanticValidationImpl extends TransactionSemanticValidation {
       return ["Insufficient attestation"];
     final witnessContext = WitnessContext(
       height: context.height,
-      slot: context.slot,
       messageToSign: transaction.signableBytes,
     );
     return Stream.fromIterable(transaction.attestation)

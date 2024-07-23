@@ -1,12 +1,9 @@
 import 'dart:async';
 
-import 'package:blockchain/blockchain_view.dart';
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/ledger/models/transaction_validation_context.dart';
 import 'package:blockchain/ledger/utils.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:blockchain/wallet/wallet.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart' hide State;
@@ -124,10 +121,8 @@ class TransactViewState extends State<TransactView> {
       tx.outputs.add(output);
     }
     final head = await widget.view.canonicalHead;
-    final slot = (await widget.view.clock).globalSlot;
     final witnessContext = WitnessContext(
       height: head.height + 1,
-      slot: slot,
       messageToSign: tx.signableBytes,
     );
     for (final lockAddress

@@ -1,4 +1,6 @@
+import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_sdk/src/traversal.dart';
+import 'package:logging/logging.dart';
 import 'protocol_settings.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
@@ -73,21 +75,55 @@ abstract class BlockchainView {
 
   Future<BlockHeader> get canonicalHead async =>
       getBlockHeaderOrRaise(await canonicalHeadId);
-
-// TODO?
-  // Clock? _clock;
-
-  // Future<Clock> get clock async {
-  //   if (_clock != null) return _clock!;
-  //   final protocol = await protocolSettings;
-  //   final genesisTimestamp = (await genesisHeader).timestamp;
-  //   final c = ClockImpl(
-  //     protocol.slotDuration,
-  //     protocol.epochLength,
-  //     protocol.operationalPeriodLength,
-  //     genesisTimestamp,
-  //   );
-  //   _clock = c;
-  //   return c;
-  // }
 }
+
+class BlockchainViewFromRpc extends BlockchainView {
+  final NodeRpcClient nodeClient;
+
+  BlockchainViewFromRpc({required this.nodeClient});
+
+  @override
+  Future<BlockId> get canonicalHeadId =>
+      getBlockIdAtHeight(Int64.ZERO).then((v) => v!);
+
+  @override
+  Future<BlockId> get genesisBlockId =>
+      getBlockIdAtHeight(Int64.ONE).then((v) => v!);
+
+  @override
+  Future<BlockBody?> getBlockBody(BlockId blockId) => nodeClient
+      .getBlockBody(GetBlockBodyReq(blockId: blockId))
+      .then((v) => v.hasBody() ? v.body : null);
+
+  @override
+  Future<BlockHeader?> getBlockHeader(BlockId blockId) => nodeClient
+      .getBlockHeader(GetBlockHeaderReq(blockId: blockId))
+      .then((v) => v.hasHeader() ? v.header : null);
+
+  @override
+  Future<BlockId?> getBlockIdAtHeight(Int64 height) => nodeClient
+      .getBlockIdAtHeight(GetBlockIdAtHeightReq(height: height))
+      .then((v) => v.hasBlockId() ? v.blockId : null);
+
+  @override
+  Future<Transaction?> getTransaction(TransactionId transactionId) => nodeClient
+      .getTransaction(GetTransactionReq(transactionId: transactionId))
+      .then((v) => v.hasTransaction() ? v.transaction : null);
+
+  @override
+  Stream<TraversalStep> get traversal {
+    _follow() {
+      final x = nodeClient.follow(FollowReq());
+      return x.doOnCancel(x.cancel).onErrorResume((e, s) {
+        _log.warning("Error in follow stream. Restarting.", e, s);
+        return _follow();
+      });
+    }
+
+    return _follow().map((followR) => followR.hasAdopted()
+        ? TraversalStep_Applied(followR.adopted)
+        : TraversalStep_Unapplied(followR.unadopted));
+  }
+}
+
+final Logger _log = Logger("Blockchain.View");

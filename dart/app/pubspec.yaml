@@ -33,6 +33,8 @@ dependencies:
   freezed_annotation: ^2.4.4
   blockchain:
     path: ../blockchain
+  blockchain_sdk:
+    path: ../sdk
   blockchain_protobuf:
     path: ../protobuf_dart
   flutter:

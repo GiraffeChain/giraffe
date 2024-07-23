@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain_sdk/sdk.dart' hide setComputeFunction;
-import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/resource.dart';
 import 'package:blockchain/config.dart';

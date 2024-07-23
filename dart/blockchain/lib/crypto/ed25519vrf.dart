@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:blockchain/crypto/impl/ec.dart' as ec;
-import 'package:blockchain/crypto/utils.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:cryptography/cryptography.dart';
 
 abstract class Ed25519VRF {
@@ -34,7 +33,7 @@ class Ed25519VRFImpl extends Ed25519VRF {
   static const C_BYTES = 16;
   static const PI_BYTES = ec.POINT_BYTES + ec.SCALAR_BYTES + C_BYTES;
   static final neutralPointBytes = Int8List(ec.SCALAR_BYTES);
-  final NP = ec.PointAccum.create();
+  final NP = PointAccum.create();
 
   Future<Ed25519VRFKeyPair> generateKeyPair() async {
     final random = SecureRandom.safe;
@@ -73,18 +72,18 @@ class Ed25519VRFImpl extends Ed25519VRF {
     final s = Int8List.fromList(signature.sublist(ec.POINT_BYTES + C_BYTES));
     final H =
         await _hashToCurveTryAndIncrement(_vk, Int8List.fromList(message));
-    final gamma = ec.PointExt.create();
-    final Y = ec.PointExt.create();
+    final gamma = PointExt.create();
+    final Y = PointExt.create();
     ec.decodePointVar(gamma_str, 0, false, gamma);
     ec.decodePointVar(_vk, 0, false, Y);
-    final A = ec.PointAccum.create();
-    final B = ec.PointAccum.create();
-    final C = ec.PointAccum.create();
-    final D = ec.PointAccum.create();
-    final U = ec.PointAccum.create();
-    final V = ec.PointAccum.create();
-    final g = ec.PointAccum.create();
-    final t = ec.PointExt.create();
+    final A = PointAccum.create();
+    final B = PointAccum.create();
+    final C = PointAccum.create();
+    final D = PointAccum.create();
+    final U = PointAccum.create();
+    final V = PointAccum.create();
+    final g = PointAccum.create();
+    final t = PointExt.create();
     ec.scalarMultBase(s, A);
     ec.decodeScalar(c, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
@@ -111,14 +110,14 @@ class Ed25519VRFImpl extends Ed25519VRF {
     final x = await _pruneHash(sk);
     final pk = ec.createScalarMultBaseEncoded(x);
     final H = await _hashToCurveTryAndIncrement(pk, Int8List.fromList(message));
-    final gamma = ec.PointAccum.create();
+    final gamma = PointAccum.create();
     ec.decodeScalar(x, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
     ec.scalarMultStraussVar(nb, np, ec.pointCopyAccum(H.$1), gamma);
     final k = await _nonceGenerationRFC8032(sk, H.$2);
     assert(ec.checkScalarVar(k));
-    final kB = ec.PointAccum.create();
-    final kH = ec.PointAccum.create();
+    final kB = PointAccum.create();
+    final kH = PointAccum.create();
     ec.scalarMultBase(k, kB);
     ec.decodeScalar(k, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
@@ -137,8 +136,8 @@ class Ed25519VRFImpl extends Ed25519VRF {
     final gamma_str = Int8List.fromList(signature.sublist(0, ec.POINT_BYTES));
     final zero = [0x00];
     final three = [0x03];
-    final gamma = ec.PointExt.create();
-    final cg = ec.PointAccum.create();
+    final gamma = PointExt.create();
+    final cg = PointAccum.create();
     ec.decodePointVar(gamma_str, 0, false, gamma);
     ec.decodeScalar(cofactor, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
@@ -161,12 +160,12 @@ class Ed25519VRFImpl extends Ed25519VRF {
     return h;
   }
 
-  Future<(ec.PointAccum, Int8List)> _hashToCurveTryAndIncrement(
+  Future<(PointAccum, Int8List)> _hashToCurveTryAndIncrement(
       Int8List Y, Int8List a) async {
     int ctr = 0;
     final hash = Int8List(ec.POINT_BYTES);
-    final H = ec.PointExt.create();
-    final HR = ec.PointAccum.create();
+    final H = PointExt.create();
+    final HR = PointAccum.create();
     bool isPoint = false;
     while (!isPoint) {
       final ctr_byte = [ctr.toByte];
@@ -193,9 +192,9 @@ class Ed25519VRFImpl extends Ed25519VRF {
     return (HR, hash);
   }
 
-  _isNeutralPoint(ec.PointExt p) {
+  _isNeutralPoint(PointExt p) {
     final pBytes = Int8List(ec.POINT_BYTES);
-    final pA = ec.PointAccum.create();
+    final pA = PointAccum.create();
     ec.decodeScalar(oneScalar, 0, np);
     ec.decodeScalar(zeroScalar, 0, nb);
     ec.scalarMultStraussVar(nb, np, p, pA);
@@ -212,8 +211,8 @@ class Ed25519VRFImpl extends Ed25519VRF {
     return ec.reduceScalar(out);
   }
 
-  Future<Int8List> _hashPoints(ec.PointAccum p1, ec.PointAccum p2,
-      ec.PointAccum p3, ec.PointAccum p4) async {
+  Future<Int8List> _hashPoints(
+      PointAccum p1, PointAccum p2, PointAccum p3, PointAccum p4) async {
     final zero = const [0x00];
     final two = const [0x02];
     final str = [...suite, ...two];

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'impl/ec.dart' as ec;
+import 'impl/ec.dart';
 import 'utils.dart';
 import 'package:cryptography/cryptography.dart' as c;
 

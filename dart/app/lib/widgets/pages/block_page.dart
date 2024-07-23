@@ -1,8 +1,7 @@
-import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:get_time_ago/get_time_ago.dart';

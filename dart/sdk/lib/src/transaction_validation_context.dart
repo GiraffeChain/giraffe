@@ -18,11 +18,9 @@ class TransactionValidationContext {
 
 class WitnessContext {
   final Int64 height;
-  final Int64 slot;
   final List<int> messageToSign;
 
-  WitnessContext(
-      {required this.height, required this.slot, required this.messageToSign});
+  WitnessContext({required this.height, required this.messageToSign});
 
   Future<List<String>> validate(Witness witness) async {
     final expectedAddress = witness.lock.address;
