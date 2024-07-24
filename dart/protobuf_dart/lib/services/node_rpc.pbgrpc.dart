@@ -57,6 +57,10 @@ class NodeRpcClient extends $grpc.Client {
       '/blockchain.services.NodeRpc/GetLockAddressState',
       ($0.GetLockAddressStateReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.GetLockAddressStateRes.fromBuffer(value));
+  static final _$getTransactionOutput = $grpc.ClientMethod<$0.GetTransactionOutputReq, $0.GetTransactionOutputRes>(
+      '/blockchain.services.NodeRpc/GetTransactionOutput',
+      ($0.GetTransactionOutputReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetTransactionOutputRes.fromBuffer(value));
 
   NodeRpcClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
@@ -98,6 +102,10 @@ class NodeRpcClient extends $grpc.Client {
 
   $grpc.ResponseFuture<$0.GetLockAddressStateRes> getLockAddressState($0.GetLockAddressStateReq request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getLockAddressState, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.GetTransactionOutputRes> getTransactionOutput($0.GetTransactionOutputReq request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$getTransactionOutput, request, options: options);
   }
 }
 
@@ -169,6 +177,13 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.GetLockAddressStateReq.fromBuffer(value),
         ($0.GetLockAddressStateRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetTransactionOutputReq, $0.GetTransactionOutputRes>(
+        'GetTransactionOutput',
+        getTransactionOutput_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.GetTransactionOutputReq.fromBuffer(value),
+        ($0.GetTransactionOutputRes value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.BroadcastTransactionRes> broadcastTransaction_Pre($grpc.ServiceCall call, $async.Future<$0.BroadcastTransactionReq> request) async {
@@ -207,6 +222,10 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
     return getLockAddressState(call, await request);
   }
 
+  $async.Future<$0.GetTransactionOutputRes> getTransactionOutput_Pre($grpc.ServiceCall call, $async.Future<$0.GetTransactionOutputReq> request) async {
+    return getTransactionOutput(call, await request);
+  }
+
   $async.Future<$0.BroadcastTransactionRes> broadcastTransaction($grpc.ServiceCall call, $0.BroadcastTransactionReq request);
   $async.Future<$0.GetBlockHeaderRes> getBlockHeader($grpc.ServiceCall call, $0.GetBlockHeaderReq request);
   $async.Future<$0.GetBlockBodyRes> getBlockBody($grpc.ServiceCall call, $0.GetBlockBodyReq request);
@@ -216,4 +235,5 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
   $async.Stream<$0.FollowRes> follow($grpc.ServiceCall call, $0.FollowReq request);
   $async.Future<$0.GetAccountStateRes> getAccountState($grpc.ServiceCall call, $0.GetAccountStateReq request);
   $async.Future<$0.GetLockAddressStateRes> getLockAddressState($grpc.ServiceCall call, $0.GetLockAddressStateReq request);
+  $async.Future<$0.GetTransactionOutputRes> getTransactionOutput($grpc.ServiceCall call, $0.GetTransactionOutputReq request);
 }

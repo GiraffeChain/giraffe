@@ -101,6 +101,12 @@ class NodeServiceImpl[F[_]: Async](core: BlockchainCore[F]) extends NodeRpcFs2Gr
       .getOrElse(Nil)
       .map(GetLockAddressStateRes(_))
 
+  override def getTransactionOutput(request: GetTransactionOutputReq, ctx: Metadata): F[GetTransactionOutputRes] =
+    OptionT(core.dataStores.transactions.get(request.reference.transactionId))
+      .subflatMap(_.outputs.lift(request.reference.index))
+      .value
+      .map(GetTransactionOutputRes(_))
+
 class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupportRpcFs2Grpc[F, Metadata]:
   private given logger: Logger[F] = Slf4jLogger.getLoggerFromName("RPC")
 

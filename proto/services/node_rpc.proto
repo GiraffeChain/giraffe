@@ -15,6 +15,7 @@ service NodeRpc {
     rpc Follow(FollowReq) returns (stream FollowRes);
     rpc GetAccountState(GetAccountStateReq) returns (GetAccountStateRes);
     rpc GetLockAddressState(GetLockAddressStateReq) returns (GetLockAddressStateRes);
+    rpc GetTransactionOutput(GetTransactionOutputReq) returns (GetTransactionOutputRes);
 }
 
 message BroadcastTransactionReq {
@@ -88,4 +89,12 @@ message GetLockAddressStateReq {
 
 message GetLockAddressStateRes {
     repeated blockchain.models.TransactionOutputReference transactionOutputs = 1;
+}
+
+message GetTransactionOutputReq {
+    blockchain.models.TransactionOutputReference reference = 1 [(validate.rules).message.required = true];
+}
+
+message GetTransactionOutputRes {
+    blockchain.models.TransactionOutput transactionOutput = 1;
 }

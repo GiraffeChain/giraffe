@@ -26,7 +26,8 @@ class StreamedTransactViewState extends State<StreamedTransactView>
   Widget build(BuildContext context) {
     super.build(context);
     return StreamBuilder(
-      stream: Wallet.streamed(widget.view),
+      stream: Stream.fromFuture(Wallet.genesis)
+          .asyncExpand((w) => w.streamed(widget.view)),
       builder: (context, snapshot) => snapshot.hasData
           ? TransactView(
               wallet: snapshot.data!,

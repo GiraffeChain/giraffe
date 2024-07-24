@@ -336,4 +336,18 @@ class BlockchainViewFromBlockchain extends BlockchainView {
   @override
   Stream<TraversalStep> get traversal =>
       blockchain.consensus.localChain.traversal;
+
+  @override
+  Future<List<TransactionOutputReference>> getLockAddressState(
+      LockAddress lock) {
+    // TODO: implement getLockAddressState
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<TransactionOutput?> getTransactionOutput(
+      TransactionOutputReference reference) {
+    // TODO: implement getTransactionOutput
+    throw UnimplementedError();
+  }
 }

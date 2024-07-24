@@ -98,6 +98,13 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
     // TODO: implement getLockAddressState
     throw UnimplementedError();
   }
+
+  @override
+  Future<GetTransactionOutputRes> getTransactionOutput(
+      ServiceCall call, GetTransactionOutputReq request) {
+    // TODO: implement getTransactionOutput
+    throw UnimplementedError();
+  }
 }
 
 class StakerSupportRpcImpl extends StakerSupportRpcServiceBase {

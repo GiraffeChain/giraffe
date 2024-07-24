@@ -245,3 +245,30 @@ final $typed_data.Uint8List getLockAddressStateResDescriptor = $convert.base64De
     'Jsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UmVmZXJlbmNlUhJ0cmFuc2FjdGlv'
     'bk91dHB1dHM=');
 
+@$core.Deprecated('Use getTransactionOutputReqDescriptor instead')
+const GetTransactionOutputReq$json = {
+  '1': 'GetTransactionOutputReq',
+  '2': [
+    {'1': 'reference', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '8': {}, '10': 'reference'},
+  ],
+};
+
+/// Descriptor for `GetTransactionOutputReq`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getTransactionOutputReqDescriptor = $convert.base64Decode(
+    'ChdHZXRUcmFuc2FjdGlvbk91dHB1dFJlcRJVCglyZWZlcmVuY2UYASABKAsyLS5ibG9ja2NoYW'
+    'luLm1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZUII+kIFigECEAFSCXJlZmVyZW5j'
+    'ZQ==');
+
+@$core.Deprecated('Use getTransactionOutputResDescriptor instead')
+const GetTransactionOutputRes$json = {
+  '1': 'GetTransactionOutputRes',
+  '2': [
+    {'1': 'transactionOutput', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutput', '10': 'transactionOutput'},
+  ],
+};
+
+/// Descriptor for `GetTransactionOutputRes`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getTransactionOutputResDescriptor = $convert.base64Decode(
+    'ChdHZXRUcmFuc2FjdGlvbk91dHB1dFJlcxJSChF0cmFuc2FjdGlvbk91dHB1dBgBIAEoCzIkLm'
+    'Jsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UhF0cmFuc2FjdGlvbk91dHB1dA==');
+
