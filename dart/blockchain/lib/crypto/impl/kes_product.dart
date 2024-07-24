@@ -1,13 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/crypto/impl/kes_helper.dart';
 import 'package:blockchain/crypto/impl/kes_sum.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
-
-import '../utils.dart';
 
 abstract class KesProduct {
   Future<KeyPairKesProduct> generateKeyPair(
@@ -179,7 +176,7 @@ class KesProductImpl extends KesProduct {
 
 final _impl = KesProductImpl();
 
-KesProduct kesProduct = KesProductImpl();
+KesProduct kesProduct = KesProudctIsolated();
 
 final _generateKeyPair = _impl.generateKeyPair;
 final _getCurrentStep = _impl.getCurrentStep;
@@ -187,24 +184,6 @@ final _sign = _impl.sign;
 final _update = _impl.update;
 final _verify = _impl.verify;
 final _generateVerificationKey = _impl.generateVerificationKey;
-
-class TreeHeight {
-  final int sup;
-  final int sub;
-
-  TreeHeight(this.sup, this.sub);
-
-  @override
-  int get hashCode => Object.hash(sup, sub);
-
-  @override
-  bool operator ==(Object other) {
-    if (other is TreeHeight) {
-      return sup == other.sup && sub == other.sub;
-    }
-    return false;
-  }
-}
 
 class SecretKeyKesProduct {
   final KesBinaryTree superTree;
@@ -352,38 +331,34 @@ class KeyPairKesProduct {
 }
 
 class KesProudctIsolated extends KesProduct {
-  final DComputeImpl _compute;
-
-  KesProudctIsolated(this._compute);
-
   @override
   Future<KeyPairKesProduct> generateKeyPair(
           List<int> seed, TreeHeight height, Int64 offset) =>
-      _compute((args) => _generateKeyPair(args.$1.$1, args.$1.$2, args.$2),
+      isolate((args) => _generateKeyPair(args.$1.$1, args.$1.$2, args.$2),
           ((seed, height), offset));
 
   @override
   Future<int> getCurrentStep(SecretKeyKesProduct sk) =>
-      _compute(_getCurrentStep, sk);
+      isolate(_getCurrentStep, sk);
 
   @override
   Future<SignatureKesProduct> sign(SecretKeyKesProduct sk, List<int> message) =>
-      _compute((args) => _sign(args.$1, args.$2), (sk, message));
+      isolate((args) => _sign(args.$1, args.$2), (sk, message));
 
   @override
   Future<SecretKeyKesProduct> update(SecretKeyKesProduct sk, int step) =>
-      _compute((args) => _update(args.$1, args.$2), (sk, step));
+      isolate((args) => _update(args.$1, args.$2), (sk, step));
 
   @override
   Future<bool> verify(SignatureKesProduct signature, List<int> message,
           VerificationKeyKesProduct vk) =>
-      _compute((args) => _verify(args.$1.$1, args.$1.$2, args.$2),
+      isolate((args) => _verify(args.$1.$1, args.$1.$2, args.$2),
           ((signature, message), vk));
 
   @override
   Future<VerificationKeyKesProduct> generateVerificationKey(
           SecretKeyKesProduct sk) =>
-      _compute(_generateVerificationKey, sk);
+      isolate(_generateVerificationKey, sk);
 }
 
 // class VerificationKeyKesProduct {

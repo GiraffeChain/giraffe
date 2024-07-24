@@ -7,6 +7,7 @@ import blockchain.ledger.TransactionValidationContext
 import blockchain.models.{BlockBody, FullBlockBody, SlotId}
 import blockchain.services.*
 import cats.MonadThrow
+import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.kernel.Resource
 import cats.implicits.*
@@ -89,6 +90,22 @@ class NodeServiceImpl[F[_]: Async](core: BlockchainCore[F]) extends NodeRpcFs2Gr
       case TraversalStep.Applied(id)   => FollowRes().withAdopted(id)
       case TraversalStep.Unapplied(id) => FollowRes().withUnadopted(id)
     }.adaptErrorsToGrpc
+
+  override def getAccountState(request: GetAccountStateReq, ctx: Metadata): F[GetAccountStateRes] =
+    OptionT(core.consensus.localChain.currentHead.flatMap(core.ledger.accountState.accountUtxos(_, request.account)))
+      .getOrElse(Nil)
+      .map(GetAccountStateRes(_))
+
+  override def getLockAddressState(request: GetLockAddressStateReq, ctx: Metadata): F[GetLockAddressStateRes] =
+    OptionT(core.consensus.localChain.currentHead.flatMap(core.ledger.addressState.addressUtxos(_, request.address)))
+      .getOrElse(Nil)
+      .map(GetLockAddressStateRes(_))
+
+  override def getTransactionOutput(request: GetTransactionOutputReq, ctx: Metadata): F[GetTransactionOutputRes] =
+    OptionT(core.dataStores.transactions.get(request.reference.transactionId))
+      .subflatMap(_.outputs.lift(request.reference.index))
+      .value
+      .map(GetTransactionOutputRes(_))
 
 class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupportRpcFs2Grpc[F, Metadata]:
   private given logger: Logger[F] = Slf4jLogger.getLoggerFromName("RPC")

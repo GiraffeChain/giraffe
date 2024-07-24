@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:blockchain/crypto/impl/x25519_field.dart' as x25519Field;
+import 'x25519_field.dart' as x25519Field;
 import 'package:fixnum/fixnum.dart';
 
 /*

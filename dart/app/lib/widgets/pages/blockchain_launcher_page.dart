@@ -1,9 +1,8 @@
-import 'package:blockchain/blockchain_view.dart';
-import 'package:blockchain/rpc/client.dart';
 import 'package:blockchain_app/widgets/resource_builder.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

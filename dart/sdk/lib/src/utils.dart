@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/models/unsigned.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
@@ -109,26 +107,6 @@ extension ListIntOps on List<int> {
   }
 }
 
-extension BlockHeaderOps on BlockHeader {
-  UnsignedBlockHeader get unsigned => UnsignedBlockHeader(
-        parentHeaderId,
-        parentSlot,
-        txRoot,
-        timestamp,
-        height,
-        slot,
-        eligibilityCertificate,
-        PartialOperationalCertificate(
-            operationalCertificate.parentVK,
-            operationalCertificate.parentSignature,
-            operationalCertificate.childVK),
-        metadata,
-        account,
-      );
-
-  SlotId get slotId => SlotId(slot: slot, blockId: id);
-}
-
 extension TransactionOps on Transaction {
   Int64 get inputSum =>
       inputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
@@ -227,3 +205,20 @@ StreamTransformer<In, Out> AbandoningTransformer<In, Out>(
       };
       return controller.stream.listen(null);
     });
+
+// Alias's Flutter's "compute()" function signature
+typedef DComputeCallback<Q, R> = FutureOr<R> Function(Q message);
+
+typedef DComputeImpl = Future<R> Function<Q, R>(
+    DComputeCallback<Q, R> callback, Q message,
+    {String? debugLabel});
+
+Future<R> LocalCompute<Q, R>(DComputeCallback<Q, R> callback, Q message,
+        {String? debugLabel}) async =>
+    callback(message);
+
+DComputeImpl isolate = LocalCompute;
+
+void setComputeFunction(DComputeImpl i) {
+  isolate = i;
+}

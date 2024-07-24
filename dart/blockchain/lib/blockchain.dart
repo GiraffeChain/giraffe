@@ -1,27 +1,24 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/block_height_tree.dart';
 import 'package:blockchain/common/resource.dart';
-import 'package:blockchain/common/utils.dart';
 import 'package:blockchain/config.dart';
 import 'package:blockchain/consensus/consensus.dart';
-import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/genesis.dart';
 import 'package:blockchain/ledger/ledger.dart';
-import 'package:blockchain/ledger/models/transaction_validation_context.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/network/util.dart';
 import 'package:blockchain/private_testnet.dart';
-import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/parent_child_tree.dart';
-import 'package:blockchain/crypto/ed25519.dart';
-import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain/network/p2p_server.dart';
 import 'package:blockchain/network/peers_manager.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain/rpc/server.dart' as rpc;
+import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:ribs_core/ribs_core.dart';
 import 'package:ribs_effect/ribs_effect.dart';
@@ -302,4 +299,55 @@ class BlockchainP2P {
               (_) =>
                   "Served on host=${config.p2p.bindHost} port=${config.p2p.bindPort}")
           .tapLogFinalize(log, "Terminating");
+}
+
+class BlockchainViewFromBlockchain extends BlockchainView {
+  final BlockchainCore blockchain;
+
+  BlockchainViewFromBlockchain({required this.blockchain});
+
+  @override
+  Stream<BlockId> get adoptions => blockchain.consensus.localChain.adoptions;
+
+  @override
+  Future<BlockId> get canonicalHeadId =>
+      blockchain.consensus.localChain.currentHead;
+
+  @override
+  Future<BlockId> get genesisBlockId =>
+      Future.value(blockchain.consensus.localChain.genesis);
+
+  @override
+  Future<BlockBody?> getBlockBody(BlockId blockId) =>
+      blockchain.dataStores.bodies.get(blockId);
+
+  @override
+  Future<BlockHeader?> getBlockHeader(BlockId blockId) =>
+      blockchain.dataStores.headers.get(blockId);
+
+  @override
+  Future<BlockId?> getBlockIdAtHeight(Int64 height) =>
+      blockchain.consensus.localChain.blockIdAtHeight(height);
+
+  @override
+  Future<Transaction?> getTransaction(TransactionId transactionId) =>
+      blockchain.dataStores.transactions.get(transactionId);
+
+  @override
+  Stream<TraversalStep> get traversal =>
+      blockchain.consensus.localChain.traversal;
+
+  @override
+  Future<List<TransactionOutputReference>> getLockAddressState(
+      LockAddress lock) {
+    // TODO: implement getLockAddressState
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<TransactionOutput?> getTransactionOutput(
+      TransactionOutputReference reference) {
+    // TODO: implement getTransactionOutput
+    throw UnimplementedError();
+  }
 }

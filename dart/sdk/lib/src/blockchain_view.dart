@@ -1,20 +1,22 @@
-import 'package:blockchain/blockchain.dart';
-import 'package:blockchain/common/clock.dart';
-import 'package:blockchain/consensus/models/protocol_settings.dart';
-import 'package:blockchain/traversal.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
-import 'package:fixnum/fixnum.dart';
+import 'package:blockchain_sdk/src/traversal.dart';
 import 'package:logging/logging.dart';
+import 'protocol_settings.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:rxdart/transformers.dart';
 
 abstract class BlockchainView {
   Future<BlockHeader?> getBlockHeader(BlockId blockId);
   Future<BlockBody?> getBlockBody(BlockId blockId);
   Future<Transaction?> getTransaction(TransactionId transactionId);
+  Future<TransactionOutput?> getTransactionOutput(
+      TransactionOutputReference reference);
   Future<BlockId?> getBlockIdAtHeight(Int64 height);
   Future<BlockId> get canonicalHeadId;
   Future<BlockId> get genesisBlockId;
+  Future<List<TransactionOutputReference>> getLockAddressState(
+      LockAddress lock);
   Stream<TraversalStep> get traversal;
 
   Stream<BlockId> get adoptions =>
@@ -77,59 +79,6 @@ abstract class BlockchainView {
 
   Future<BlockHeader> get canonicalHead async =>
       getBlockHeaderOrRaise(await canonicalHeadId);
-
-  Clock? _clock;
-
-  Future<Clock> get clock async {
-    if (_clock != null) return _clock!;
-    final protocol = await protocolSettings;
-    final genesisTimestamp = (await genesisHeader).timestamp;
-    final c = ClockImpl(
-      protocol.slotDuration,
-      protocol.epochLength,
-      protocol.operationalPeriodLength,
-      genesisTimestamp,
-    );
-    _clock = c;
-    return c;
-  }
-}
-
-class BlockchainViewFromBlockchain extends BlockchainView {
-  final BlockchainCore blockchain;
-
-  BlockchainViewFromBlockchain({required this.blockchain});
-
-  @override
-  Stream<BlockId> get adoptions => blockchain.consensus.localChain.adoptions;
-
-  @override
-  Future<BlockId> get canonicalHeadId =>
-      blockchain.consensus.localChain.currentHead;
-
-  @override
-  Future<BlockId> get genesisBlockId =>
-      Future.value(blockchain.consensus.localChain.genesis);
-
-  @override
-  Future<BlockBody?> getBlockBody(BlockId blockId) =>
-      blockchain.dataStores.bodies.get(blockId);
-
-  @override
-  Future<BlockHeader?> getBlockHeader(BlockId blockId) =>
-      blockchain.dataStores.headers.get(blockId);
-
-  @override
-  Future<BlockId?> getBlockIdAtHeight(Int64 height) =>
-      blockchain.consensus.localChain.blockIdAtHeight(height);
-
-  @override
-  Future<Transaction?> getTransaction(TransactionId transactionId) =>
-      blockchain.dataStores.transactions.get(transactionId);
-
-  @override
-  Stream<TraversalStep> get traversal =>
-      blockchain.consensus.localChain.traversal;
 }
 
 class BlockchainViewFromRpc extends BlockchainView {
@@ -164,6 +113,19 @@ class BlockchainViewFromRpc extends BlockchainView {
   Future<Transaction?> getTransaction(TransactionId transactionId) => nodeClient
       .getTransaction(GetTransactionReq(transactionId: transactionId))
       .then((v) => v.hasTransaction() ? v.transaction : null);
+
+  Future<TransactionOutput?> getTransactionOutput(
+          TransactionOutputReference reference) =>
+      nodeClient
+          .getTransactionOutput(GetTransactionOutputReq(reference: reference))
+          .then((v) => v.hasTransactionOutput() ? v.transactionOutput : null);
+
+  @override
+  Future<List<TransactionOutputReference>> getLockAddressState(
+          LockAddress lock) =>
+      nodeClient
+          .getLockAddressState(GetLockAddressStateReq(address: lock))
+          .then((v) => v.transactionOutputs);
 
   @override
   Stream<TraversalStep> get traversal {

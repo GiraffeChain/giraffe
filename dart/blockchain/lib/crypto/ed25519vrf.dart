@@ -1,7 +1,6 @@
 import 'dart:typed_data';
-
-import 'package:blockchain/crypto/impl/ec.dart' as ec;
-import 'package:blockchain/crypto/utils.dart';
+import 'package:blockchain_sdk/crypto_ec.dart' as ec;
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:cryptography/cryptography.dart';
 
 abstract class Ed25519VRF {
@@ -252,7 +251,7 @@ class Ed25519VRFKeyPair {
 
 final _impl = Ed25519VRFImpl();
 
-Ed25519VRF ed25519Vrf = _impl;
+Ed25519VRF ed25519Vrf = Ed25519VRFIsolated();
 
 final _generateKeyPair = _impl.generateKeyPair;
 final _generateKeyPairFromSeed = _impl.generateKeyPairFromSeed;
@@ -262,32 +261,28 @@ final _sign = _impl.sign;
 final _proofToHash = _impl.proofToHash;
 
 class Ed25519VRFIsolated extends Ed25519VRF {
-  final DComputeImpl _compute;
-
-  Ed25519VRFIsolated(this._compute);
-
   @override
   Future<Ed25519VRFKeyPair> generateKeyPair() =>
-      _compute((v) => _generateKeyPair(), "");
+      isolate((v) => _generateKeyPair(), "");
 
   @override
   Future<Ed25519VRFKeyPair> generateKeyPairFromSeed(List<int> seed) =>
-      _compute(_generateKeyPairFromSeed, seed);
+      isolate(_generateKeyPairFromSeed, seed);
 
   @override
   Future<Uint8List> getVerificationKey(List<int> secretKey) =>
-      _compute(_getVerificationKey, secretKey);
+      isolate(_getVerificationKey, secretKey);
 
   @override
   Future<Uint8List> proofToHash(List<int> signature) =>
-      _compute(_proofToHash, signature);
+      isolate(_proofToHash, signature);
 
   @override
   Future<Uint8List> sign(List<int> sk, List<int> message) =>
-      _compute((t) => _sign(t.$1, t.$2), (sk, message));
+      isolate((t) => _sign(t.$1, t.$2), (sk, message));
 
   @override
   Future<bool> verify(List<int> signature, List<int> message, List<int> vk) =>
-      _compute(
+      isolate(
           (t) => _verify(t.$1.$1, t.$1.$2, t.$2), ((signature, message), vk));
 }

@@ -1,7 +1,7 @@
 import 'package:blockchain/blockchain.dart';
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/utils.dart';
-import 'package:blockchain/traversal.dart';
+import 'package:blockchain/common/models/unsigned.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
@@ -83,6 +83,27 @@ class NodeRpcServiceImpl extends NodeRpcServiceBase {
     final blockId =
         await blockchain.consensus.localChain.blockIdAtHeight(request.height);
     return GetBlockIdAtHeightRes(blockId: blockId);
+  }
+
+  @override
+  Future<GetAccountStateRes> getAccountState(
+      ServiceCall call, GetAccountStateReq request) async {
+    // TODO: implement getAccountState
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<GetLockAddressStateRes> getLockAddressState(
+      ServiceCall call, GetLockAddressStateReq request) async {
+    // TODO: implement getLockAddressState
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<GetTransactionOutputRes> getTransactionOutput(
+      ServiceCall call, GetTransactionOutputReq request) {
+    // TODO: implement getTransactionOutput
+    throw UnimplementedError();
   }
 }
 

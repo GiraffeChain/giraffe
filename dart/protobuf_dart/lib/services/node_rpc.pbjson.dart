@@ -191,3 +191,84 @@ final $typed_data.Uint8List getBlockIdAtHeightResDescriptor = $convert.base64Dec
     'ChVHZXRCbG9ja0lkQXRIZWlnaHRSZXMSNAoHYmxvY2tJZBgBIAEoCzIaLmJsb2NrY2hhaW4ubW'
     '9kZWxzLkJsb2NrSWRSB2Jsb2NrSWQ=');
 
+@$core.Deprecated('Use getAccountStateReqDescriptor instead')
+const GetAccountStateReq$json = {
+  '1': 'GetAccountStateReq',
+  '2': [
+    {'1': 'account', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '8': {}, '10': 'account'},
+  ],
+};
+
+/// Descriptor for `GetAccountStateReq`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getAccountStateReqDescriptor = $convert.base64Decode(
+    'ChJHZXRBY2NvdW50U3RhdGVSZXESUQoHYWNjb3VudBgBIAEoCzItLmJsb2NrY2hhaW4ubW9kZW'
+    'xzLlRyYW5zYWN0aW9uT3V0cHV0UmVmZXJlbmNlQgj6QgWKAQIQAVIHYWNjb3VudA==');
+
+@$core.Deprecated('Use getAccountStateResDescriptor instead')
+const GetAccountStateRes$json = {
+  '1': 'GetAccountStateRes',
+  '2': [
+    {'1': 'transactionOutputs', '3': 1, '4': 3, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '10': 'transactionOutputs'},
+  ],
+};
+
+/// Descriptor for `GetAccountStateRes`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getAccountStateResDescriptor = $convert.base64Decode(
+    'ChJHZXRBY2NvdW50U3RhdGVSZXMSXQoSdHJhbnNhY3Rpb25PdXRwdXRzGAEgAygLMi0uYmxvY2'
+    'tjaGFpbi5tb2RlbHMuVHJhbnNhY3Rpb25PdXRwdXRSZWZlcmVuY2VSEnRyYW5zYWN0aW9uT3V0'
+    'cHV0cw==');
+
+@$core.Deprecated('Use getLockAddressStateReqDescriptor instead')
+const GetLockAddressStateReq$json = {
+  '1': 'GetLockAddressStateReq',
+  '2': [
+    {'1': 'address', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.LockAddress', '8': {}, '10': 'address'},
+  ],
+};
+
+/// Descriptor for `GetLockAddressStateReq`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getLockAddressStateReqDescriptor = $convert.base64Decode(
+    'ChZHZXRMb2NrQWRkcmVzc1N0YXRlUmVxEkIKB2FkZHJlc3MYASABKAsyHi5ibG9ja2NoYWluLm'
+    '1vZGVscy5Mb2NrQWRkcmVzc0II+kIFigECEAFSB2FkZHJlc3M=');
+
+@$core.Deprecated('Use getLockAddressStateResDescriptor instead')
+const GetLockAddressStateRes$json = {
+  '1': 'GetLockAddressStateRes',
+  '2': [
+    {'1': 'transactionOutputs', '3': 1, '4': 3, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '10': 'transactionOutputs'},
+  ],
+};
+
+/// Descriptor for `GetLockAddressStateRes`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getLockAddressStateResDescriptor = $convert.base64Decode(
+    'ChZHZXRMb2NrQWRkcmVzc1N0YXRlUmVzEl0KEnRyYW5zYWN0aW9uT3V0cHV0cxgBIAMoCzItLm'
+    'Jsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UmVmZXJlbmNlUhJ0cmFuc2FjdGlv'
+    'bk91dHB1dHM=');
+
+@$core.Deprecated('Use getTransactionOutputReqDescriptor instead')
+const GetTransactionOutputReq$json = {
+  '1': 'GetTransactionOutputReq',
+  '2': [
+    {'1': 'reference', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutputReference', '8': {}, '10': 'reference'},
+  ],
+};
+
+/// Descriptor for `GetTransactionOutputReq`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getTransactionOutputReqDescriptor = $convert.base64Decode(
+    'ChdHZXRUcmFuc2FjdGlvbk91dHB1dFJlcRJVCglyZWZlcmVuY2UYASABKAsyLS5ibG9ja2NoYW'
+    'luLm1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZUII+kIFigECEAFSCXJlZmVyZW5j'
+    'ZQ==');
+
+@$core.Deprecated('Use getTransactionOutputResDescriptor instead')
+const GetTransactionOutputRes$json = {
+  '1': 'GetTransactionOutputRes',
+  '2': [
+    {'1': 'transactionOutput', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionOutput', '10': 'transactionOutput'},
+  ],
+};
+
+/// Descriptor for `GetTransactionOutputRes`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getTransactionOutputResDescriptor = $convert.base64Decode(
+    'ChdHZXRUcmFuc2FjdGlvbk91dHB1dFJlcxJSChF0cmFuc2FjdGlvbk91dHB1dBgBIAEoCzIkLm'
+    'Jsb2NrY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UhF0cmFuc2FjdGlvbk91dHB1dA==');
+

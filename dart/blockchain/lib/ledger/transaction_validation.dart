@@ -1,6 +1,5 @@
-import 'package:blockchain/codecs.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/ledger/transaction_output_state.dart';
-import 'package:blockchain/ledger/models/transaction_validation_context.dart';
 import 'package:blockchain/ledger/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:collection/collection.dart';
@@ -160,7 +159,6 @@ class TransactionSemanticValidationImpl extends TransactionSemanticValidation {
       return ["Insufficient attestation"];
     final witnessContext = WitnessContext(
       height: context.height,
-      slot: context.slot,
       messageToSign: transaction.signableBytes,
     );
     return Stream.fromIterable(transaction.attestation)

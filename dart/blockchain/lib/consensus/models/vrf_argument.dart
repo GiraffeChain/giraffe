@@ -1,6 +1,5 @@
 import 'package:blockchain/common/models/common.dart';
-import 'package:blockchain/common/utils.dart';
-import 'package:blockchain/crypto/utils.dart';
+import 'package:blockchain_sdk/sdk.dart';
 
 class VrfArgument {
   final Eta eta;

@@ -735,6 +735,302 @@ class GetBlockIdAtHeightRes extends $pb.GeneratedMessage {
   $4.BlockId ensureBlockId() => $_ensure(0);
 }
 
+class GetAccountStateReq extends $pb.GeneratedMessage {
+  factory GetAccountStateReq({
+    $4.TransactionOutputReference? account,
+  }) {
+    final $result = create();
+    if (account != null) {
+      $result.account = account;
+    }
+    return $result;
+  }
+  GetAccountStateReq._() : super();
+  factory GetAccountStateReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetAccountStateReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetAccountStateReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
+    ..aOM<$4.TransactionOutputReference>(1, _omitFieldNames ? '' : 'account', subBuilder: $4.TransactionOutputReference.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetAccountStateReq clone() => GetAccountStateReq()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetAccountStateReq copyWith(void Function(GetAccountStateReq) updates) => super.copyWith((message) => updates(message as GetAccountStateReq)) as GetAccountStateReq;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetAccountStateReq create() => GetAccountStateReq._();
+  GetAccountStateReq createEmptyInstance() => create();
+  static $pb.PbList<GetAccountStateReq> createRepeated() => $pb.PbList<GetAccountStateReq>();
+  @$core.pragma('dart2js:noInline')
+  static GetAccountStateReq getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetAccountStateReq>(create);
+  static GetAccountStateReq? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $4.TransactionOutputReference get account => $_getN(0);
+  @$pb.TagNumber(1)
+  set account($4.TransactionOutputReference v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasAccount() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAccount() => clearField(1);
+  @$pb.TagNumber(1)
+  $4.TransactionOutputReference ensureAccount() => $_ensure(0);
+}
+
+class GetAccountStateRes extends $pb.GeneratedMessage {
+  factory GetAccountStateRes({
+    $core.Iterable<$4.TransactionOutputReference>? transactionOutputs,
+  }) {
+    final $result = create();
+    if (transactionOutputs != null) {
+      $result.transactionOutputs.addAll(transactionOutputs);
+    }
+    return $result;
+  }
+  GetAccountStateRes._() : super();
+  factory GetAccountStateRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetAccountStateRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetAccountStateRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
+    ..pc<$4.TransactionOutputReference>(1, _omitFieldNames ? '' : 'transactionOutputs', $pb.PbFieldType.PM, protoName: 'transactionOutputs', subBuilder: $4.TransactionOutputReference.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetAccountStateRes clone() => GetAccountStateRes()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetAccountStateRes copyWith(void Function(GetAccountStateRes) updates) => super.copyWith((message) => updates(message as GetAccountStateRes)) as GetAccountStateRes;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetAccountStateRes create() => GetAccountStateRes._();
+  GetAccountStateRes createEmptyInstance() => create();
+  static $pb.PbList<GetAccountStateRes> createRepeated() => $pb.PbList<GetAccountStateRes>();
+  @$core.pragma('dart2js:noInline')
+  static GetAccountStateRes getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetAccountStateRes>(create);
+  static GetAccountStateRes? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$4.TransactionOutputReference> get transactionOutputs => $_getList(0);
+}
+
+class GetLockAddressStateReq extends $pb.GeneratedMessage {
+  factory GetLockAddressStateReq({
+    $4.LockAddress? address,
+  }) {
+    final $result = create();
+    if (address != null) {
+      $result.address = address;
+    }
+    return $result;
+  }
+  GetLockAddressStateReq._() : super();
+  factory GetLockAddressStateReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetLockAddressStateReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetLockAddressStateReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
+    ..aOM<$4.LockAddress>(1, _omitFieldNames ? '' : 'address', subBuilder: $4.LockAddress.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetLockAddressStateReq clone() => GetLockAddressStateReq()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetLockAddressStateReq copyWith(void Function(GetLockAddressStateReq) updates) => super.copyWith((message) => updates(message as GetLockAddressStateReq)) as GetLockAddressStateReq;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetLockAddressStateReq create() => GetLockAddressStateReq._();
+  GetLockAddressStateReq createEmptyInstance() => create();
+  static $pb.PbList<GetLockAddressStateReq> createRepeated() => $pb.PbList<GetLockAddressStateReq>();
+  @$core.pragma('dart2js:noInline')
+  static GetLockAddressStateReq getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetLockAddressStateReq>(create);
+  static GetLockAddressStateReq? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $4.LockAddress get address => $_getN(0);
+  @$pb.TagNumber(1)
+  set address($4.LockAddress v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasAddress() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAddress() => clearField(1);
+  @$pb.TagNumber(1)
+  $4.LockAddress ensureAddress() => $_ensure(0);
+}
+
+class GetLockAddressStateRes extends $pb.GeneratedMessage {
+  factory GetLockAddressStateRes({
+    $core.Iterable<$4.TransactionOutputReference>? transactionOutputs,
+  }) {
+    final $result = create();
+    if (transactionOutputs != null) {
+      $result.transactionOutputs.addAll(transactionOutputs);
+    }
+    return $result;
+  }
+  GetLockAddressStateRes._() : super();
+  factory GetLockAddressStateRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetLockAddressStateRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetLockAddressStateRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
+    ..pc<$4.TransactionOutputReference>(1, _omitFieldNames ? '' : 'transactionOutputs', $pb.PbFieldType.PM, protoName: 'transactionOutputs', subBuilder: $4.TransactionOutputReference.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetLockAddressStateRes clone() => GetLockAddressStateRes()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetLockAddressStateRes copyWith(void Function(GetLockAddressStateRes) updates) => super.copyWith((message) => updates(message as GetLockAddressStateRes)) as GetLockAddressStateRes;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetLockAddressStateRes create() => GetLockAddressStateRes._();
+  GetLockAddressStateRes createEmptyInstance() => create();
+  static $pb.PbList<GetLockAddressStateRes> createRepeated() => $pb.PbList<GetLockAddressStateRes>();
+  @$core.pragma('dart2js:noInline')
+  static GetLockAddressStateRes getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetLockAddressStateRes>(create);
+  static GetLockAddressStateRes? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$4.TransactionOutputReference> get transactionOutputs => $_getList(0);
+}
+
+class GetTransactionOutputReq extends $pb.GeneratedMessage {
+  factory GetTransactionOutputReq({
+    $4.TransactionOutputReference? reference,
+  }) {
+    final $result = create();
+    if (reference != null) {
+      $result.reference = reference;
+    }
+    return $result;
+  }
+  GetTransactionOutputReq._() : super();
+  factory GetTransactionOutputReq.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetTransactionOutputReq.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTransactionOutputReq', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
+    ..aOM<$4.TransactionOutputReference>(1, _omitFieldNames ? '' : 'reference', subBuilder: $4.TransactionOutputReference.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetTransactionOutputReq clone() => GetTransactionOutputReq()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetTransactionOutputReq copyWith(void Function(GetTransactionOutputReq) updates) => super.copyWith((message) => updates(message as GetTransactionOutputReq)) as GetTransactionOutputReq;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetTransactionOutputReq create() => GetTransactionOutputReq._();
+  GetTransactionOutputReq createEmptyInstance() => create();
+  static $pb.PbList<GetTransactionOutputReq> createRepeated() => $pb.PbList<GetTransactionOutputReq>();
+  @$core.pragma('dart2js:noInline')
+  static GetTransactionOutputReq getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetTransactionOutputReq>(create);
+  static GetTransactionOutputReq? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $4.TransactionOutputReference get reference => $_getN(0);
+  @$pb.TagNumber(1)
+  set reference($4.TransactionOutputReference v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasReference() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReference() => clearField(1);
+  @$pb.TagNumber(1)
+  $4.TransactionOutputReference ensureReference() => $_ensure(0);
+}
+
+class GetTransactionOutputRes extends $pb.GeneratedMessage {
+  factory GetTransactionOutputRes({
+    $4.TransactionOutput? transactionOutput,
+  }) {
+    final $result = create();
+    if (transactionOutput != null) {
+      $result.transactionOutput = transactionOutput;
+    }
+    return $result;
+  }
+  GetTransactionOutputRes._() : super();
+  factory GetTransactionOutputRes.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetTransactionOutputRes.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTransactionOutputRes', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.services'), createEmptyInstance: create)
+    ..aOM<$4.TransactionOutput>(1, _omitFieldNames ? '' : 'transactionOutput', protoName: 'transactionOutput', subBuilder: $4.TransactionOutput.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetTransactionOutputRes clone() => GetTransactionOutputRes()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetTransactionOutputRes copyWith(void Function(GetTransactionOutputRes) updates) => super.copyWith((message) => updates(message as GetTransactionOutputRes)) as GetTransactionOutputRes;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetTransactionOutputRes create() => GetTransactionOutputRes._();
+  GetTransactionOutputRes createEmptyInstance() => create();
+  static $pb.PbList<GetTransactionOutputRes> createRepeated() => $pb.PbList<GetTransactionOutputRes>();
+  @$core.pragma('dart2js:noInline')
+  static GetTransactionOutputRes getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetTransactionOutputRes>(create);
+  static GetTransactionOutputRes? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $4.TransactionOutput get transactionOutput => $_getN(0);
+  @$pb.TagNumber(1)
+  set transactionOutput($4.TransactionOutput v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasTransactionOutput() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTransactionOutput() => clearField(1);
+  @$pb.TagNumber(1)
+  $4.TransactionOutput ensureTransactionOutput() => $_ensure(0);
+}
+
 
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
 const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

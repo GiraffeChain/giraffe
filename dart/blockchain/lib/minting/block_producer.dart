@@ -5,7 +5,7 @@ import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/unsigned.dart';
 import 'package:blockchain/common/resource.dart';
-import 'package:blockchain/common/utils.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/ledger/block_header_to_body_validation.dart';
 import 'package:blockchain/ledger/block_packer.dart';
 import 'package:blockchain/minting/models/vrf_hit.dart';

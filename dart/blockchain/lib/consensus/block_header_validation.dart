@@ -1,15 +1,14 @@
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
-import 'package:blockchain/common/utils.dart';
+import 'package:blockchain/common/models/unsigned.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/consensus/staker_tracker.dart';
 import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/models/vrf_argument.dart';
 import 'package:blockchain/consensus/utils.dart';
-import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain/crypto/ed25519vrf.dart';
 import 'package:blockchain/crypto/kes.dart';
-import 'package:blockchain/crypto/utils.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rational/rational.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';

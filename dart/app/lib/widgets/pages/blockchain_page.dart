@@ -1,14 +1,13 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
-import 'package:blockchain/consensus/models/protocol_settings.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_app/widgets/pages/genesis_builder_page.dart';
 import 'package:blockchain_app/widgets/pages/stake_page.dart';
 import 'package:blockchain_app/widgets/pages/transact_page.dart';
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/blockchain_view.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
@@ -45,7 +44,7 @@ class BlockchainPage extends StatelessWidget {
       const LiveBlocksView(),
       StreamedTransactView(view: blockchain, writer: blockchainWriter),
       StakeView(view: blockchain, writer: blockchainWriter),
-      GenesisBuilderView(),
+      const GenesisBuilderView(),
     ]);
   }
 

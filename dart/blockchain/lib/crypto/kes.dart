@@ -4,8 +4,7 @@ export './impl/kes_product.dart'
         KesProduct,
         KesProudctIsolated,
         KeyPairKesProduct,
-        SecretKeyKesProduct,
-        TreeHeight;
+        SecretKeyKesProduct;
 
 export './impl/kes_sum.dart'
     show kesSum, KesSum, KeyPairKesSum, SecretKeyKesSum, KesBinaryTree;

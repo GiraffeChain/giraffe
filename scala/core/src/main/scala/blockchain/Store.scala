@@ -33,9 +33,8 @@ case class DataStores[F[_]](
     bodies: Store[F, BlockId, BlockBody],
     transactions: Store[F, TransactionId, Transaction],
     spendableOutputs: Store[F, TransactionId, BitVector],
-    accounts: Store[F, TransactionOutputReference, List[
-      TransactionOutputReference
-    ]],
+    accounts: Store[F, TransactionOutputReference, List[TransactionOutputReference]],
+    addresses: Store[F, LockAddress, List[TransactionOutputReference]],
     epochBoundaries: Store[F, Long, BlockId],
     activeStake: Store[F, Unit, Long],
     inactiveStake: Store[F, Unit, Long],
@@ -132,6 +131,9 @@ object DataStores:
           makeCachedStore[F, TransactionOutputReference, List[
             TransactionOutputReference
           ]](factory, basePath / "account-state", 128),
+          makeCachedStore[F, LockAddress, List[
+            TransactionOutputReference
+          ]](factory, basePath / "address-state", 128),
           makeCachedStore[F, Long, BlockId](
             factory,
             basePath / "epoch-boundaries",
@@ -171,6 +173,7 @@ object DataStores:
               transactions,
               spendableOutputs,
               accounts,
+              addresses,
               epochBoundaries,
               activeStake,
               inactiveStake,
@@ -186,6 +189,7 @@ object DataStores:
               transactions,
               spendableOutputs,
               accounts,
+              addresses,
               epochBoundaries,
               activeStake,
               inactiveStake,

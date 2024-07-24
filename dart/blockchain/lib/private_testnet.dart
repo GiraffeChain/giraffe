@@ -2,13 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:blockchain/codecs.dart';
-import 'package:blockchain/consensus/models/protocol_settings.dart';
-import 'package:blockchain/crypto/ed25519.dart';
-import 'package:blockchain/crypto/kes.dart';
 import 'package:blockchain/genesis.dart';
 import 'package:blockchain/staking_account.dart';
-import 'package:blockchain/crypto/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 
 class PrivateTestnet {

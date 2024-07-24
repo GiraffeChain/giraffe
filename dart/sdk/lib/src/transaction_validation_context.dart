@@ -1,7 +1,8 @@
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/crypto/ed25519.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'codecs.dart';
 import 'package:fixnum/fixnum.dart';
+
+import 'crypto/ed25519.dart';
 
 class TransactionValidationContext {
   final BlockId parentHeaderId;
@@ -17,11 +18,9 @@ class TransactionValidationContext {
 
 class WitnessContext {
   final Int64 height;
-  final Int64 slot;
   final List<int> messageToSign;
 
-  WitnessContext(
-      {required this.height, required this.slot, required this.messageToSign});
+  WitnessContext({required this.height, required this.messageToSign});
 
   Future<List<String>> validate(Witness witness) async {
     final expectedAddress = witness.lock.address;

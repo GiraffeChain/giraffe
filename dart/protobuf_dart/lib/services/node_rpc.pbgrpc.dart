@@ -49,6 +49,18 @@ class NodeRpcClient extends $grpc.Client {
       '/blockchain.services.NodeRpc/Follow',
       ($0.FollowReq value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.FollowRes.fromBuffer(value));
+  static final _$getAccountState = $grpc.ClientMethod<$0.GetAccountStateReq, $0.GetAccountStateRes>(
+      '/blockchain.services.NodeRpc/GetAccountState',
+      ($0.GetAccountStateReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetAccountStateRes.fromBuffer(value));
+  static final _$getLockAddressState = $grpc.ClientMethod<$0.GetLockAddressStateReq, $0.GetLockAddressStateRes>(
+      '/blockchain.services.NodeRpc/GetLockAddressState',
+      ($0.GetLockAddressStateReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetLockAddressStateRes.fromBuffer(value));
+  static final _$getTransactionOutput = $grpc.ClientMethod<$0.GetTransactionOutputReq, $0.GetTransactionOutputRes>(
+      '/blockchain.services.NodeRpc/GetTransactionOutput',
+      ($0.GetTransactionOutputReq value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.GetTransactionOutputRes.fromBuffer(value));
 
   NodeRpcClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
@@ -82,6 +94,18 @@ class NodeRpcClient extends $grpc.Client {
 
   $grpc.ResponseStream<$0.FollowRes> follow($0.FollowReq request, {$grpc.CallOptions? options}) {
     return $createStreamingCall(_$follow, $async.Stream.fromIterable([request]), options: options);
+  }
+
+  $grpc.ResponseFuture<$0.GetAccountStateRes> getAccountState($0.GetAccountStateReq request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$getAccountState, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.GetLockAddressStateRes> getLockAddressState($0.GetLockAddressStateReq request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$getLockAddressState, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.GetTransactionOutputRes> getTransactionOutput($0.GetTransactionOutputReq request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$getTransactionOutput, request, options: options);
   }
 }
 
@@ -139,6 +163,27 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
         true,
         ($core.List<$core.int> value) => $0.FollowReq.fromBuffer(value),
         ($0.FollowRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetAccountStateReq, $0.GetAccountStateRes>(
+        'GetAccountState',
+        getAccountState_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.GetAccountStateReq.fromBuffer(value),
+        ($0.GetAccountStateRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetLockAddressStateReq, $0.GetLockAddressStateRes>(
+        'GetLockAddressState',
+        getLockAddressState_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.GetLockAddressStateReq.fromBuffer(value),
+        ($0.GetLockAddressStateRes value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetTransactionOutputReq, $0.GetTransactionOutputRes>(
+        'GetTransactionOutput',
+        getTransactionOutput_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.GetTransactionOutputReq.fromBuffer(value),
+        ($0.GetTransactionOutputRes value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.BroadcastTransactionRes> broadcastTransaction_Pre($grpc.ServiceCall call, $async.Future<$0.BroadcastTransactionReq> request) async {
@@ -169,6 +214,18 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
     yield* follow(call, await request);
   }
 
+  $async.Future<$0.GetAccountStateRes> getAccountState_Pre($grpc.ServiceCall call, $async.Future<$0.GetAccountStateReq> request) async {
+    return getAccountState(call, await request);
+  }
+
+  $async.Future<$0.GetLockAddressStateRes> getLockAddressState_Pre($grpc.ServiceCall call, $async.Future<$0.GetLockAddressStateReq> request) async {
+    return getLockAddressState(call, await request);
+  }
+
+  $async.Future<$0.GetTransactionOutputRes> getTransactionOutput_Pre($grpc.ServiceCall call, $async.Future<$0.GetTransactionOutputReq> request) async {
+    return getTransactionOutput(call, await request);
+  }
+
   $async.Future<$0.BroadcastTransactionRes> broadcastTransaction($grpc.ServiceCall call, $0.BroadcastTransactionReq request);
   $async.Future<$0.GetBlockHeaderRes> getBlockHeader($grpc.ServiceCall call, $0.GetBlockHeaderReq request);
   $async.Future<$0.GetBlockBodyRes> getBlockBody($grpc.ServiceCall call, $0.GetBlockBodyReq request);
@@ -176,4 +233,7 @@ abstract class NodeRpcServiceBase extends $grpc.Service {
   $async.Future<$0.GetTransactionRes> getTransaction($grpc.ServiceCall call, $0.GetTransactionReq request);
   $async.Future<$0.GetBlockIdAtHeightRes> getBlockIdAtHeight($grpc.ServiceCall call, $0.GetBlockIdAtHeightReq request);
   $async.Stream<$0.FollowRes> follow($grpc.ServiceCall call, $0.FollowReq request);
+  $async.Future<$0.GetAccountStateRes> getAccountState($grpc.ServiceCall call, $0.GetAccountStateReq request);
+  $async.Future<$0.GetLockAddressStateRes> getLockAddressState($grpc.ServiceCall call, $0.GetLockAddressStateReq request);
+  $async.Future<$0.GetTransactionOutputRes> getTransactionOutput($grpc.ServiceCall call, $0.GetTransactionOutputReq request);
 }

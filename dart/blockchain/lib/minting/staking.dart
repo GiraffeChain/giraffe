@@ -6,7 +6,7 @@ import 'package:blockchain/consensus/staker_tracker.dart';
 import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/utils.dart';
-import 'package:blockchain/crypto/ed25519.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/crypto/impl/kes_product.dart';
 import 'package:blockchain/minting/models/vrf_hit.dart';
 import 'package:blockchain/minting/secure_store.dart';

@@ -2,11 +2,9 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:blockchain/common/models/common.dart';
-import 'package:blockchain/common/utils.dart';
-import 'package:blockchain/consensus/models/protocol_settings.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/consensus/numeric_utils.dart';
 import 'package:blockchain/consensus/utils.dart';
-import 'package:blockchain/crypto/utils.dart';
 import 'package:quiver/cache.dart';
 import 'package:rational/rational.dart';
 import 'package:fixnum/fixnum.dart';

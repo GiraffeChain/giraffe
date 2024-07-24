@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:blockchain/crypto/impl/ec.dart' as ec;
-import 'package:blockchain/crypto/utils.dart';
+import 'package:blockchain_sdk/sdk.dart';
+
+import 'impl/ec.dart' as ec;
 import 'package:cryptography/cryptography.dart' as c;
 
 abstract class Ed25519 {
@@ -13,7 +14,7 @@ abstract class Ed25519 {
   Future<List<int>> getVerificationKey(List<int> sk);
 }
 
-Ed25519 ed25519 = Ed25519Impl();
+Ed25519 ed25519 = Ed25519Isolated();
 
 class Ed25519KeyPair {
   final List<int> sk;
@@ -46,35 +47,31 @@ class Ed25519Impl extends Ed25519 {
 }
 
 class Ed25519Isolated extends Ed25519 {
-  final DComputeImpl _compute;
-
-  Ed25519Isolated(this._compute);
-
   @override
   Future<Ed25519KeyPair> generateKeyPair() async =>
-      _compute((v) => _generateKeyPair(), {});
+      isolate((v) => _generateKeyPair(), {});
 
   @override
   Future<Ed25519KeyPair> generateKeyPairFromSeed(List<int> seed) async =>
-      _compute(_generateKeyPairFromSeed, seed);
+      isolate(_generateKeyPairFromSeed, seed);
 
   @override
   Future<List<int>> getVerificationKey(List<int> sk) async =>
-      _compute(_getVerificationKey, sk);
+      isolate(_getVerificationKey, sk);
 
   @override
   Future<List<int>> sign(List<int> message, List<int> sk) async =>
-      _compute((t) => _sign(t.$1, t.$2), (message, sk));
+      isolate((t) => _sign(t.$1, t.$2), (message, sk));
 
   @override
   Future<List<int>> signKeyPair(
           List<int> message, Ed25519KeyPair keyPair) async =>
-      _compute((t) => _signKeyPair(t.$1, t.$2), (message, keyPair));
+      isolate((t) => _signKeyPair(t.$1, t.$2), (message, keyPair));
 
   @override
   Future<bool> verify(
           List<int> signature, List<int> message, List<int> vk) async =>
-      _compute(
+      isolate(
           (t) => _verify(t.$1.$1, t.$1.$2, t.$2), ((signature, message), vk));
 }
 
