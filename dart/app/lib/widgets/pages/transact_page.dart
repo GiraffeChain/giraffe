@@ -1,14 +1,16 @@
 import 'dart:async';
 
 import 'package:blockchain/ledger/utils.dart';
+import 'package:blockchain_app/providers/transact.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:fpdart/fpdart.dart' hide State;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
+import 'package:fpdart/fpdart.dart' hide State;
 
 class StreamedTransactView extends StatefulWidget {
   final BlockchainView view;
@@ -44,26 +46,21 @@ class StreamedTransactViewState extends State<StreamedTransactView>
   bool get wantKeepAlive => true;
 }
 
-class TransactView extends StatefulWidget {
+class TransactView extends ConsumerWidget {
+  TransactView({
+    super.key,
+    required this.wallet,
+    required this.view,
+    required this.writer,
+  });
+
   final Wallet wallet;
   final BlockchainView view;
   final BlockchainWriter writer;
 
-  const TransactView(
-      {super.key,
-      required this.wallet,
-      required this.view,
-      required this.writer});
   @override
-  State<StatefulWidget> createState() => TransactViewState();
-}
-
-class TransactViewState extends State<TransactView> {
-  Set<TransactionOutputReference> _selectedInputs = {};
-  List<(String valueStr, String addressStr)> _newOutputEntries = [];
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(transactProvider);
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Card(
@@ -76,18 +73,18 @@ class TransactViewState extends State<TransactView> {
                     value: "Inputs",
                     headerBuilder: (context, isExpanded) =>
                         const ListTile(title: Text("Inputs")),
-                    body: _inputsTile(),
+                    body: _inputsTile(ref, state),
                   ),
                   ExpansionPanelRadio(
                       value: "Outputs",
                       headerBuilder: (context, isExpanded) =>
                           const ListTile(title: Text("Outputs")),
-                      body: _outputsTile()),
+                      body: _outputsTile(ref, state)),
                 ]),
               ),
             ),
             IconButton(
-              onPressed: _transact,
+              onPressed: () => _transact(ref, state),
               icon: const Icon(Icons.send),
             )
           ],
@@ -96,24 +93,25 @@ class TransactViewState extends State<TransactView> {
     );
   }
 
-  Int64 _inputSum() => _selectedInputs
+  Int64 _inputSum(WidgetRef ref, TransactState state) => state.selectedInputs
       .toList()
-      .map((v) => widget.wallet.spendableOutputs[v]!.value)
+      .map((v) => wallet.spendableOutputs[v]!.value)
       .map((v) => v.quantity)
       .fold(Int64.ZERO, (a, b) => a + b);
 
-  Future<Transaction> _createTransaction() async {
+  Future<Transaction> _createTransaction(
+      WidgetRef ref, TransactState state) async {
     var tx = Transaction();
 
-    for (final ref in _selectedInputs) {
-      final output = widget.wallet.spendableOutputs[ref]!;
+    for (final ref in state.selectedInputs) {
+      final output = wallet.spendableOutputs[ref]!;
       final input = TransactionInput()
         ..value = output.value
         ..reference = ref;
       tx.inputs.add(input);
     }
 
-    for (final e in _newOutputEntries) {
+    for (final e in state.newOutputEntries) {
       final lockAddress = decodeLockAddress(e.$2);
       final value = Value()..quantity = Int64.parseInt(e.$1);
       final output = TransactionOutput()
@@ -121,14 +119,14 @@ class TransactViewState extends State<TransactView> {
         ..value = value;
       tx.outputs.add(output);
     }
-    final head = await widget.view.canonicalHead;
+    final head = await view.canonicalHead;
     final witnessContext = WitnessContext(
       height: head.height + 1,
       messageToSign: tx.signableBytes,
     );
     for (final lockAddress
-        in await tx.requiredWitnesses(widget.view.getTransactionOrRaise)) {
-      final signer = widget.wallet.signers[lockAddress]!;
+        in await tx.requiredWitnesses(view.getTransactionOrRaise)) {
+      final signer = wallet.signers[lockAddress]!;
       final witness = await signer(witnessContext);
       tx.attestation.add(witness);
     }
@@ -138,27 +136,27 @@ class TransactViewState extends State<TransactView> {
 
   final log = Logger("Transact");
 
-  _transact() async {
-    final tx = await _createTransaction();
+  _transact(WidgetRef ref, TransactState state) async {
+    final tx = await _createTransaction(ref, state);
     log.info("Broadcasting transaction id=${tx.id.show}");
-    await widget.writer.submitTransaction(tx);
-    setState(() {
-      _selectedInputs = {};
-      _newOutputEntries = [];
-    });
+    await writer.submitTransaction(tx);
+    ref.read(transactProvider.notifier).reset();
   }
 
-  Widget _outputsTile() {
+  Widget _outputsTile(WidgetRef ref, TransactState state) {
     return Column(
       children: [
         DataTable(
           columns: _outputTableHeader,
           rows: [
-            ..._newOutputEntries.mapWithIndex(_outputEntryRow),
-            _feeOutputRow()
+            ...state.newOutputEntries
+                .mapWithIndex((v, i) => _outputEntryRow(v, i, ref, state)),
+            _feeOutputRow(ref, state)
           ],
         ),
-        IconButton(onPressed: _addOutputEntry, icon: const Icon(Icons.add))
+        IconButton(
+            onPressed: () => ref.read(transactProvider.notifier).addOutput(),
+            icon: const Icon(Icons.add))
       ],
     );
   }
@@ -190,31 +188,37 @@ class TransactViewState extends State<TransactView> {
     ),
   ];
 
-  DataRow _outputEntryRow((String, String) entry, int index) {
+  DataRow _outputEntryRow(
+      (String, String) entry, int index, WidgetRef ref, TransactState state) {
     return DataRow(
       cells: [
         DataCell(TextFormField(
           initialValue: entry.$1,
-          onChanged: (value) => _updateOutputEntryQuantity(index, value),
+          onChanged: (value) => ref
+              .read(transactProvider.notifier)
+              .updateOutput(index, value, state.newOutputEntries[index].$2),
         )),
         DataCell(TextFormField(
           initialValue: entry.$2,
-          onChanged: (value) => _updateOutputEntryAddress(index, value),
+          onChanged: (value) => ref
+              .read(transactProvider.notifier)
+              .updateOutput(index, state.newOutputEntries[index].$1, value),
         )),
         DataCell(
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () => _deleteOutputEntry(index),
+            onPressed: () =>
+                ref.read(transactProvider.notifier).removeOutput(index),
           ),
         ),
       ],
     );
   }
 
-  DataRow _feeOutputRow() {
+  DataRow _feeOutputRow(WidgetRef ref, TransactState state) {
     Int64 outputSum = Int64.ZERO;
     String? errorText;
-    for (final t in _newOutputEntries) {
+    for (final t in state.newOutputEntries) {
       final parsed = Int64.tryParseInt(t.$1);
       if (parsed == null) {
         errorText = "?";
@@ -225,7 +229,8 @@ class TransactViewState extends State<TransactView> {
     }
 
     return DataRow(cells: [
-      DataCell(Text(errorText ?? (_inputSum() - outputSum).toString())),
+      DataCell(
+          Text(errorText ?? (_inputSum(ref, state) - outputSum).toString())),
       const DataCell(Text("Tip")),
       const DataCell(IconButton(
         icon: Icon(Icons.cancel),
@@ -234,48 +239,24 @@ class TransactViewState extends State<TransactView> {
     ]);
   }
 
-  _updateOutputEntryQuantity(int index, String value) {
-    setState(() {
-      final (_, a) = _newOutputEntries[index];
-      _newOutputEntries[index] = (value, a);
-    });
-  }
-
-  _updateOutputEntryAddress(int index, String value) {
-    setState(() {
-      final (v, _) = _newOutputEntries[index];
-      _newOutputEntries[index] = (v, value);
-    });
-  }
-
-  _addOutputEntry() {
-    setState(() {
-      _newOutputEntries.add(const ("100", ""));
-    });
-  }
-
-  _deleteOutputEntry(int index) {
-    setState(() {
-      _newOutputEntries.removeAt(index);
-    });
-  }
-
-  Widget _inputsTile() {
+  Widget _inputsTile(WidgetRef ref, TransactState state) {
     return Container(
-        child: widget.wallet.spendableOutputs.isEmpty
+        child: wallet.spendableOutputs.isEmpty
             ? const Text("Empty wallet")
             : DataTable(
                 columns: header,
-                rows: widget.wallet.spendableOutputs.entries
+                rows: wallet.spendableOutputs.entries
                     // Hide registrations for now
                     .where((e) => !e.value.value.hasAccountRegistration())
-                    .map(_inputEntryRow)
+                    .map((entry) => _inputEntryRow(entry, ref, state))
                     .toList(),
               ));
   }
 
   DataRow _inputEntryRow(
-      MapEntry<TransactionOutputReference, TransactionOutput> entry) {
+      MapEntry<TransactionOutputReference, TransactionOutput> entry,
+      WidgetRef ref,
+      TransactState state) {
     return DataRow(
       cells: [
         DataCell(Text("${entry.value.value.quantity}",
@@ -288,22 +269,16 @@ class TransactViewState extends State<TransactView> {
           child: Text(entry.value.lockAddress.show,
               style: const TextStyle(fontSize: 12)),
         )),
-        DataCell(Checkbox(
-            value: _selectedInputs.contains(entry.key),
-            onChanged: (newValue) =>
-                _updateInputEntry(entry.key, newValue ?? false))),
+        DataCell(
+          Checkbox(
+            value: state.selectedInputs.contains(entry.key),
+            onChanged: (newValue) => newValue ?? false
+                ? ref.read(transactProvider.notifier).selectInput(entry.key)
+                : ref.read(transactProvider.notifier).unselectInput(entry.key),
+          ),
+        ),
       ],
     );
-  }
-
-  _updateInputEntry(TransactionOutputReference ref, bool retain) {
-    setState(() {
-      if (retain) {
-        _selectedInputs.add(ref);
-      } else {
-        _selectedInputs.remove(ref);
-      }
-    });
   }
 
   static const header = <DataColumn>[

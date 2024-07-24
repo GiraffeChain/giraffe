@@ -35,12 +35,16 @@ final NormalizationConstant = BigInt.from(2).pow(512);
 final _thresholdCache =
     MapCache<(Rational, Int64), Rational>.lru(maximumSize: 1024);
 
-Future<Rational> _getThreshold(Rational relativeStake, Int64 slotDiff,
+Future<Rational> _getThreshold(Rational relativeStake, Int64 slotDiffIn,
     ProtocolSettings protocolSettings) async {
-  final cacheKey = (
-    relativeStake,
-    Int64(min(protocolSettings.vrfLddCutoff + 1, slotDiff.toInt()))
-  );
+  if (slotDiffIn <= protocolSettings.vrfSlotGap) {
+    return Rational.zero;
+  }
+  final slotDiff = Int64(max(
+      0,
+      min(protocolSettings.vrfLddCutoff + 1,
+          slotDiffIn.toInt() - protocolSettings.vrfSlotGap)));
+  final cacheKey = (relativeStake, slotDiff);
   return (await _thresholdCache.get(cacheKey, ifAbsent: (_) {
     final difficultyCurve = (slotDiff > protocolSettings.vrfLddCutoff)
         ? protocolSettings.vrfBaselineDifficulty
