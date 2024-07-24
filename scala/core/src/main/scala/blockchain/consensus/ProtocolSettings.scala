@@ -11,6 +11,7 @@ case class ProtocolSettings(
     vrfPrecision: Int,
     vrfBaselineDifficulty: Ratio,
     vrfAmplitude: Ratio,
+    vrfSlotGap: Int,
     chainSelectionKLookback: Int,
     slotDuration: FiniteDuration,
     operationalPeriodsPerEpoch: Int,
@@ -30,8 +31,14 @@ case class ProtocolSettings(
   val kesTreeHeight: TreeHeight =
     TreeHeight(kesKeyHours, kesKeyMinutes)
 
+  require(epochLength % 3L == 0, s"Epoch length=$epochLength must be divisible by 3")
+  require(
+    epochLength % operationalPeriodsPerEpoch == 0,
+    s"Epoch length=$epochLength must be divisible by $operationalPeriodsPerEpoch"
+  )
+
   override def toString: String =
-    show"ProtocolSettings(fEffective=$fEffective, vrfLddCutoff=$vrfLddCutoff, vrfPrecision=$vrfPrecision, vrfBaselineDifficulty=$vrfBaselineDifficulty, vrfAmplitude=$vrfAmplitude, kLookback=$chainSelectionKLookback, slotDuration=$slotDuration, operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch, kesHeight=($kesKeyHours, $kesKeyMinutes), operationalPeriodLength=$operationalPeriodLength, epochLength=$epochLength)"
+    show"ProtocolSettings(fEffective=$fEffective, vrfLddCutoff=$vrfLddCutoff, vrfPrecision=$vrfPrecision, vrfBaselineDifficulty=$vrfBaselineDifficulty, vrfAmplitude=$vrfAmplitude, vrfSlotGap=$vrfSlotGap, kLookback=$chainSelectionKLookback, slotDuration=$slotDuration, operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch, kesHeight=($kesKeyHours, $kesKeyMinutes), operationalPeriodLength=$operationalPeriodLength, epochLength=$epochLength)"
 
   def merge(map: Map[String, String]): ProtocolSettings =
     map.foldLeft(this)(_.withSetting.apply.tupled(_))
@@ -43,6 +50,7 @@ case class ProtocolSettings(
       case "vrf-precision"                 => copy(vrfPrecision = value.toInt)
       case "vrf-baseline-difficulty"       => copy(vrfBaselineDifficulty = parseRational(value))
       case "vrf-amplitude"                 => copy(vrfAmplitude = parseRational(value))
+      case "vrf-slot-gap"                  => copy(vrfSlotGap = value.toInt)
       case "chain-selection-k-lookback"    => copy(chainSelectionKLookback = value.toInt)
       case "slot-duration-ms"              => copy(slotDuration = value.toLong.milli)
       case "operational-periods-per-epoch" => copy(operationalPeriodsPerEpoch = value.toInt)
@@ -59,17 +67,20 @@ case class ProtocolSettings(
 
 object ProtocolSettings:
 
-  val Default = ProtocolSettings(
-    fEffective = Ratio(3, 25),
-    vrfLddCutoff = 15,
+  val Default: ProtocolSettings = ProtocolSettings(
+    fEffective = Ratio(1, 25),
+    vrfLddCutoff = 50,
     vrfPrecision = 40,
-    vrfBaselineDifficulty = Ratio(1, 20),
-    vrfAmplitude = Ratio(1, 2),
-    chainSelectionKLookback = 81, // 5184
+    vrfBaselineDifficulty = Ratio(1, 60),
+    vrfAmplitude = Ratio(1, 8),
+    vrfSlotGap = 3,
+    chainSelectionKLookback = 576,
     slotDuration = 1000.milli,
-    operationalPeriodsPerEpoch = 25,
-    kesKeyHours = 9,
-    kesKeyMinutes = 9
+    operationalPeriodsPerEpoch = 12,
+    kesKeyHours = 5,
+    kesKeyMinutes = 5
   )
 
-case class TreeHeight(hours: Int, minutes: Int)
+case class TreeHeight(hours: Int, minutes: Int) {
+  def asTuple: (Int, Int) = (hours, minutes)
+}

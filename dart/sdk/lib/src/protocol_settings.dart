@@ -7,6 +7,7 @@ class ProtocolSettings {
   final int vrfPrecision;
   final Rational vrfBaselineDifficulty;
   final Rational vrfAmplitude;
+  final int vrfSlotGap;
   final int chainSelectionKLookback;
   final Duration slotDuration;
   final int operationalPeriodsPerEpoch;
@@ -19,6 +20,7 @@ class ProtocolSettings {
       required this.vrfPrecision,
       required this.vrfBaselineDifficulty,
       required this.vrfAmplitude,
+      required this.vrfSlotGap,
       required this.chainSelectionKLookback,
       required this.slotDuration,
       required this.operationalPeriodsPerEpoch,
@@ -31,6 +33,7 @@ class ProtocolSettings {
       vrfPrecision: int.parse(map["vrf-precision"]!),
       vrfBaselineDifficulty: _parseRational(map["vrf-baseline-difficulty"]!),
       vrfAmplitude: _parseRational(map["vrf-amplitude"]!),
+      vrfSlotGap: int.parse(map["vrf-slot-gap"]!),
       chainSelectionKLookback: int.parse(map["chain-selection-k-lookback"]!),
       slotDuration: Duration(milliseconds: int.parse(map["slot-duration-ms"]!)),
       operationalPeriodsPerEpoch:
@@ -54,6 +57,9 @@ class ProtocolSettings {
         vrfAmplitude: map.containsKey("vrf-amplitude")
             ? _parseRational(map["vrf-amplitude"]!)
             : vrfAmplitude,
+        vrfSlotGap: map.containsKey("vrf-slot-gap")
+            ? int.parse(map["vrf-slot-gap"]!)
+            : vrfSlotGap,
         chainSelectionKLookback: map.containsKey("chain-selection-k-lookback")
             ? int.parse(map["chain-selection-k-lookback"]!)
             : chainSelectionKLookback,
@@ -73,21 +79,22 @@ class ProtocolSettings {
       );
 
   static const defaultAsMap = {
-    "f-effective": "3/25",
-    "vrf-ldd-cutoff": "15",
+    "f-effective": "1/25",
+    "vrf-ldd-cutoff": "50",
     "vrf-precision": "40",
-    "vrf-baseline-difficulty": "1/20",
-    "vrf-amplitude": "1/2",
-    "chain-selection-k-lookback": "81", // 5184
+    "vrf-baseline-difficulty": "1/60",
+    "vrf-amplitude": "1/8",
+    "vrf-slot-gap": "3",
+    "chain-selection-k-lookback": "576",
     "slot-duration-ms": "1000",
-    "operational-periods-per-epoch": "25",
-    "kes-key-hours": "9",
-    "kes-key-minutes": "9"
+    "operational-periods-per-epoch": "12",
+    "kes-key-hours": "5",
+    "kes-key-minutes": "5"
   };
 
   @override
   String toString() =>
-      "ProtocolSettings(fEffective=$fEffective, vrfLddCutoff=$vrfLddCutoff, vrfPrecision=$vrfPrecision, vrfBaselineDifficulty=$vrfBaselineDifficulty, vrfAmplitude=$vrfAmplitude, kLookback=$chainSelectionKLookback, slotDuration=${slotDuration.inMilliseconds}ms, operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch, kesHeight=(${kesKeyHours}, ${kesKeyMinutes}), operationalPeriodLength=$operationalPeriodLength, epochLength=$epochLength)";
+      "ProtocolSettings(fEffective=$fEffective, vrfLddCutoff=$vrfLddCutoff, vrfPrecision=$vrfPrecision, vrfBaselineDifficulty=$vrfBaselineDifficulty, vrfAmplitude=$vrfAmplitude, vrfSlotGap=$vrfSlotGap, kLookback=$chainSelectionKLookback slotDuration=${slotDuration.inMilliseconds}ms, operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch, kesHeight=(${kesKeyHours}, ${kesKeyMinutes}), operationalPeriodLength=$operationalPeriodLength, epochLength=$epochLength)";
 
   static final ProtocolSettings defaultSettings =
       ProtocolSettings.fromMap(defaultAsMap);

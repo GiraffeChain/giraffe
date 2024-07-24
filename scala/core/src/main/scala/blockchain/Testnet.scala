@@ -1,12 +1,13 @@
 package blockchain
 
-import blockchain.models.{SignatureKesProduct as _, *}
 import blockchain.codecs.{*, given}
-import blockchain.utility.*
+import blockchain.consensus.ProtocolSettings
 import blockchain.crypto.{*, given}
+import blockchain.models.{SignatureKesProduct as _, *}
+import blockchain.utility.*
 import cats.data.OptionT
-import cats.effect.{Async, Sync}
 import cats.effect.std.Random
+import cats.effect.{Async, Sync}
 import cats.implicits.*
 import com.google.common.primitives.{Ints, Longs}
 import fs2.io.file.{Files, Path}
@@ -37,7 +38,11 @@ object Testnet:
       timestampValue <- OptionT.fromOption[F](timestamp).getOrElseF(Async[F].realTime.map(_.toMillis))
       stakesValue = stakes.getOrElse(List(10000000L))
       accounts <- stakesValue.traverseWithIndexM((quantity, index) =>
-        TestnetAccount.generate((9, 9), quantity, Longs.toByteArray(timestampValue) ++ Ints.toByteArray(index))
+        TestnetAccount.generate(
+          ProtocolSettings.Default.kesTreeHeight.asTuple,
+          quantity,
+          Longs.toByteArray(timestampValue) ++ Ints.toByteArray(index)
+        )
       )
       registrationTransactions = accounts.map(_.transaction)
       otherTransactions = List(

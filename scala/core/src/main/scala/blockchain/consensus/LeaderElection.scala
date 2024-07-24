@@ -3,8 +3,8 @@ package blockchain.consensus
 import blockchain.Slot
 import blockchain.crypto.Blake2b512
 import blockchain.utility.{Exp, Log1P, Ratio}
-import cats.implicits.*
 import cats.effect.{Resource, Sync}
+import cats.implicits.*
 import com.github.benmanes.caffeine.cache.Caffeine
 import scalacache.Entry
 import scalacache.caffeine.CaffeineCache
@@ -49,7 +49,8 @@ class LeaderElectionImpl[F[_]: Sync](
       relativeStake: Ratio,
       uncappedSlotDiff: Long
   ): F[Ratio] = {
-    val slotDiff = uncappedSlotDiff.min(protocolSettings.vrfLddCutoff + 1)
+    if (uncappedSlotDiff <= protocolSettings.vrfSlotGap) Ratio.Zero.pure[F]
+    val slotDiff = (uncappedSlotDiff - protocolSettings.vrfSlotGap).min(protocolSettings.vrfLddCutoff + 1).max(0)
     cache.cachingF((relativeStake, slotDiff))(ttl = None)(
       Sync[F]
         .delay(

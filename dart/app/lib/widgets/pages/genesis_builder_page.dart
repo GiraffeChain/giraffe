@@ -92,7 +92,13 @@ class GenesisBuilder extends _$GenesisBuilder {
       final seed = utf8.encode(state.seed + index.toString());
       return StakingAccount.generate(kesTreeHeight, e.$2, e.$1, seed);
     }).toList());
-    final genesisTransactions = stakers.map((s) => s.transaction).toList();
+    final unstakedTransaction = Transaction(
+        outputs: state.unstaked.map((t) => TransactionOutput(
+            lockAddress: t.$1, value: Value(quantity: t.$2))));
+    final genesisTransactions = [
+      unstakedTransaction,
+      ...stakers.map((s) => s.transaction)
+    ];
     final genesisConfig = GenesisConfig(
         Int64(DateTime.now().millisecondsSinceEpoch),
         genesisTransactions,
