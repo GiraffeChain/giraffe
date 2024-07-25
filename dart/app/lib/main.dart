@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:blockchain/common/isolate_pool.dart';
+import 'package:blockchain_app/providers/settings.dart';
 import 'package:blockchain_app/widgets/pages/block_page.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_app/widgets/pages/blockchain_page.dart';
@@ -34,25 +35,25 @@ void main() async {
   runApp(const ProviderScope(child: MainApp()));
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: _home(context),
+      home: _home(context, ref),
       onGenerateRoute: FluroRouter.appRouter.generator,
       theme: ThemeData.from(
           colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blueGrey,
-        brightness: Brightness.dark,
-        // surface: Colors.blue[800],
+        seedColor: Colors.brown,
+        brightness: Brightness.light,
+        surface: Colors.brown[100],
       )),
     );
   }
 
-  Widget _home(BuildContext context) => Scaffold(
+  Widget _home(BuildContext context, WidgetRef ref) => Scaffold(
         body: Center(
           child: SizedBox.fromSize(
             size: const Size(500, 500),
@@ -60,11 +61,18 @@ class MainApp extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: BlockchainConfigForm(
-                  onSubmit: (context, config) => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              BlockchainLauncherPage(config: config))),
+                  onSubmit: (context, config) {
+                    ref.read(podSettingsProvider.notifier).setRpc(
+                        config.rpcHost, config.rpcPort, config.rpcSecure);
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => Navigator(
+                                  initialRoute: '/',
+                                  onGenerateRoute:
+                                      FluroRouter.appRouter.generator,
+                                )));
+                  },
                 ),
               ),
             ),

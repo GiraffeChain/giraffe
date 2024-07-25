@@ -8,7 +8,7 @@ import 'package:blockchain/data_stores.dart';
 import 'package:blockchain/minting/minting.dart';
 import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain/staking_account.dart';
-import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
+import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/widgets/resource_builder.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_protobuf/services/staker_support_rpc.pb.dart';

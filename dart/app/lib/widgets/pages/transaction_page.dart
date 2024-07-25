@@ -1,18 +1,22 @@
+import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class UnloadedTransactionPage extends StatelessWidget {
+class UnloadedTransactionPage extends ConsumerWidget {
   final TransactionId id;
 
   const UnloadedTransactionPage({super.key, required this.id});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder(
-        future: context.watch<BlockchainView>().getTransaction(id),
+        future: ref
+            .watch(podBlockchainReaderWriterProvider)
+            .view
+            .getTransaction(id),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data != null) {

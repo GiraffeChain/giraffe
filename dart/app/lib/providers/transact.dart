@@ -1,6 +1,5 @@
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:blockchain/private_testnet.dart';
@@ -9,7 +8,7 @@ part 'transact.freezed.dart';
 part 'transact.g.dart';
 
 @riverpod
-class Transact extends _$Transact {
+class PodTransact extends _$PodTransact {
   @override
   TransactState build() =>
       const TransactState(selectedInputs: {}, newOutputEntries: []);

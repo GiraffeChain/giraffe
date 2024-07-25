@@ -1,136 +1,17 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/staking_account.dart';
-import 'package:blockchain/genesis.dart';
-import 'package:blockchain/private_testnet.dart';
+import 'package:blockchain_app/providers/genesis_builder.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:fpdart/fpdart.dart' hide State;
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-part 'genesis_builder_page.freezed.dart';
-part 'genesis_builder_page.g.dart';
-
-@riverpod
-class GenesisBuilder extends _$GenesisBuilder {
-  @override
-  GenesisBuilderState build() => GenesisBuilderState(
-        seed: "test",
-        stakers: List.empty(growable: true),
-        unstaked: List.empty(growable: true),
-        savedDir: null,
-      );
-
-  void setSeed(String seed) => state = state.copyWith(seed: seed);
-
-  void addStaker() async {
-    final stakers = state.stakers;
-    state = state.copyWith(stakers: [
-      ...stakers,
-      (await PrivateTestnet.DefaultLockAddress, Int64(10000))
-    ]);
-  }
-
-  void updateStakerQuantity(int index, Int64 quantity) {
-    final stakers = state.stakers;
-    stakers[index] = (stakers[index].$1, quantity);
-    state = state.copyWith(stakers: stakers);
-  }
-
-  void updateStakerAddress(int index, LockAddress address) {
-    final stakers = state.stakers;
-    stakers[index] = (address, stakers[index].$2);
-    state = state.copyWith(stakers: stakers);
-  }
-
-  void deleteStaker(int index) {
-    final stakers = state.stakers;
-    stakers.removeAt(index);
-    state = state.copyWith(stakers: stakers);
-  }
-
-  void addUnstaked() async {
-    final unstaked = state.unstaked;
-    state = state.copyWith(unstaked: [
-      ...unstaked,
-      (await PrivateTestnet.DefaultLockAddress, Int64(10000))
-    ]);
-  }
-
-  void updateUnstakedQuantity(int index, Int64 quantity) {
-    final unstaked = state.unstaked;
-    unstaked[index] = (unstaked[index].$1, quantity);
-    state = state.copyWith(unstaked: unstaked);
-  }
-
-  void updateUnstakedAddress(int index, LockAddress address) {
-    final unstaked = state.unstaked;
-    unstaked[index] = (address, unstaked[index].$2);
-    state = state.copyWith(unstaked: unstaked);
-  }
-
-  void deleteUnstaked(int index) {
-    final unstaked = state.unstaked;
-    unstaked.removeAt(index);
-    state = state.copyWith(unstaked: unstaked);
-  }
-
-  Future<void> save() async {
-    final genesisInitDirectory = Directory(
-        "${(await getApplicationDocumentsDirectory()).path}/blockchain/genesis-init");
-    final kesTreeHeight = TreeHeight(
-        ProtocolSettings.defaultSettings.kesKeyHours,
-        ProtocolSettings.defaultSettings.kesKeyMinutes);
-    final stakers = await Future.wait(state.stakers.mapWithIndex((e, index) {
-      final seed = utf8.encode(state.seed + index.toString());
-      return StakingAccount.generate(kesTreeHeight, e.$2, e.$1, seed);
-    }).toList());
-    final unstakedTransaction = Transaction(
-        outputs: state.unstaked.map((t) => TransactionOutput(
-            lockAddress: t.$1, value: Value(quantity: t.$2))));
-    final genesisTransactions = [
-      unstakedTransaction,
-      ...stakers.map((s) => s.transaction)
-    ];
-    final genesisConfig = GenesisConfig(
-        Int64(DateTime.now().millisecondsSinceEpoch),
-        genesisTransactions,
-        [],
-        ProtocolSettings.defaultAsMap);
-    final genesis = genesisConfig.block;
-
-    final saveDir =
-        Directory("${genesisInitDirectory.path}/${genesis.header.id.show}");
-    await Future.wait(stakers.mapWithIndex(
-        (s, index) => s.save(Directory("${saveDir.path}/stakers/$index"))));
-    await Genesis.save(saveDir, genesis);
-    state = state.copyWith(savedDir: saveDir);
-  }
-}
-
-@Freezed(makeCollectionsUnmodifiable: false)
-class GenesisBuilderState with _$GenesisBuilderState {
-  const factory GenesisBuilderState({
-    required String seed,
-    required List<(LockAddress, Int64)> stakers,
-    required List<(LockAddress, Int64)> unstaked,
-    required Directory? savedDir,
-  }) = _GenesisBuilderState;
-}
+import 'package:fpdart/fpdart.dart' hide State;
 
 class GenesisBuilderView extends ConsumerWidget {
   const GenesisBuilderView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(genesisBuilderProvider);
+    final state = ref.watch(podGenesisBuilderProvider);
     return SingleChildScrollView(
       child: Center(
         child: SizedBox(
@@ -170,7 +51,7 @@ class GenesisBuilderView extends ConsumerWidget {
           width: 150,
           child: TextField(
             controller: TextEditingController(text: state.seed),
-            onChanged: ref.read(genesisBuilderProvider.notifier).setSeed,
+            onChanged: ref.read(podGenesisBuilderProvider.notifier).setSeed,
           ),
         ));
   }
@@ -197,7 +78,7 @@ class GenesisBuilderView extends ConsumerWidget {
               .toList(),
         ),
         IconButton(
-            onPressed: ref.read(genesisBuilderProvider.notifier).addStaker,
+            onPressed: ref.read(podGenesisBuilderProvider.notifier).addStaker,
             icon: const Icon(Icons.add))
       ],
     );
@@ -213,7 +94,7 @@ class GenesisBuilderView extends ConsumerWidget {
               .toList(),
         ),
         IconButton(
-            onPressed: ref.read(genesisBuilderProvider.notifier).addUnstaked,
+            onPressed: ref.read(podGenesisBuilderProvider.notifier).addUnstaked,
             icon: const Icon(Icons.add))
       ],
     );
@@ -253,20 +134,21 @@ class GenesisBuilderView extends ConsumerWidget {
         DataCell(TextFormField(
           initialValue: entry.$2.toString(),
           onChanged: (value) => ref
-              .read(genesisBuilderProvider.notifier)
+              .read(podGenesisBuilderProvider.notifier)
               .updateStakerQuantity(index, Int64.parseInt(value)),
         )),
         DataCell(TextFormField(
           initialValue: entry.$1.show,
           onChanged: (value) => ref
-              .read(genesisBuilderProvider.notifier)
+              .read(podGenesisBuilderProvider.notifier)
               .updateStakerAddress(index, decodeLockAddress(value)),
         )),
         DataCell(
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () =>
-                ref.read(genesisBuilderProvider.notifier).deleteStaker(index),
+            onPressed: () => ref
+                .read(podGenesisBuilderProvider.notifier)
+                .deleteStaker(index),
           ),
         ),
       ],
@@ -280,20 +162,21 @@ class GenesisBuilderView extends ConsumerWidget {
         DataCell(TextFormField(
           initialValue: entry.$2.toString(),
           onChanged: (value) => ref
-              .read(genesisBuilderProvider.notifier)
+              .read(podGenesisBuilderProvider.notifier)
               .updateUnstakedQuantity(index, Int64.parseInt(value)),
         )),
         DataCell(TextFormField(
           initialValue: entry.$1.show,
           onChanged: (value) => ref
-              .read(genesisBuilderProvider.notifier)
+              .read(podGenesisBuilderProvider.notifier)
               .updateUnstakedAddress(index, decodeLockAddress(value)),
         )),
         DataCell(
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () =>
-                ref.read(genesisBuilderProvider.notifier).deleteUnstaked(index),
+            onPressed: () => ref
+                .read(podGenesisBuilderProvider.notifier)
+                .deleteUnstaked(index),
           ),
         ),
       ],
@@ -302,7 +185,7 @@ class GenesisBuilderView extends ConsumerWidget {
 
   Widget _saveButton(GenesisBuilderState state, WidgetRef ref) {
     final button = TextButton.icon(
-      onPressed: ref.read(genesisBuilderProvider.notifier).save,
+      onPressed: ref.read(podGenesisBuilderProvider.notifier).save,
       icon: const Icon(Icons.save),
       label: const Text("Save"),
     );

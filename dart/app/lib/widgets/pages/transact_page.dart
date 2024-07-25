@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:blockchain/ledger/utils.dart';
+import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/providers/transact.dart';
-import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
@@ -60,7 +60,7 @@ class TransactView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(transactProvider);
+    final state = ref.watch(podTransactProvider);
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Card(
@@ -140,7 +140,7 @@ class TransactView extends ConsumerWidget {
     final tx = await _createTransaction(ref, state);
     log.info("Broadcasting transaction id=${tx.id.show}");
     await writer.submitTransaction(tx);
-    ref.read(transactProvider.notifier).reset();
+    ref.read(podTransactProvider.notifier).reset();
   }
 
   Widget _outputsTile(WidgetRef ref, TransactState state) {
@@ -155,7 +155,7 @@ class TransactView extends ConsumerWidget {
           ],
         ),
         IconButton(
-            onPressed: () => ref.read(transactProvider.notifier).addOutput(),
+            onPressed: () => ref.read(podTransactProvider.notifier).addOutput(),
             icon: const Icon(Icons.add))
       ],
     );
@@ -195,20 +195,20 @@ class TransactView extends ConsumerWidget {
         DataCell(TextFormField(
           initialValue: entry.$1,
           onChanged: (value) => ref
-              .read(transactProvider.notifier)
+              .read(podTransactProvider.notifier)
               .updateOutput(index, value, state.newOutputEntries[index].$2),
         )),
         DataCell(TextFormField(
           initialValue: entry.$2,
           onChanged: (value) => ref
-              .read(transactProvider.notifier)
+              .read(podTransactProvider.notifier)
               .updateOutput(index, state.newOutputEntries[index].$1, value),
         )),
         DataCell(
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () =>
-                ref.read(transactProvider.notifier).removeOutput(index),
+                ref.read(podTransactProvider.notifier).removeOutput(index),
           ),
         ),
       ],
@@ -273,8 +273,10 @@ class TransactView extends ConsumerWidget {
           Checkbox(
             value: state.selectedInputs.contains(entry.key),
             onChanged: (newValue) => newValue ?? false
-                ? ref.read(transactProvider.notifier).selectInput(entry.key)
-                : ref.read(transactProvider.notifier).unselectInput(entry.key),
+                ? ref.read(podTransactProvider.notifier).selectInput(entry.key)
+                : ref
+                    .read(podTransactProvider.notifier)
+                    .unselectInput(entry.key),
           ),
         ),
       ],

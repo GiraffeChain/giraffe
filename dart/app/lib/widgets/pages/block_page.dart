@@ -1,22 +1,24 @@
+import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_time_ago/get_time_ago.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
-class UnloadedBlockPage extends StatelessWidget {
+class UnloadedBlockPage extends ConsumerWidget {
   final BlockId id;
 
   const UnloadedBlockPage({super.key, required this.id});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder(
-        future: context.watch<BlockchainView>().getFullBlock(id),
+        future:
+            ref.watch(podBlockchainReaderWriterProvider).view.getFullBlock(id),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data != null) {

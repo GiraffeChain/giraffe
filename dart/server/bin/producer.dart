@@ -28,8 +28,8 @@ Future<void> main() async {
   final Resource<StreamSubscription> resource = IsolatePool.make()
       .map((p) => p.isolate)
       .tap(setComputeFunction)
-      .flatMap((isolate) =>
-          RpcClient.makeChannel(port: 2024).evalFlatMap((channel) async {
+      .flatMap((isolate) => RpcClient.makeChannelResource(port: 2024)
+              .evalFlatMap((channel) async {
             final rpcClient = NodeRpcClient(channel);
             final viewer = BlockchainViewFromRpc(nodeClient: rpcClient);
             final canonicalHeadId = await viewer.canonicalHeadId;

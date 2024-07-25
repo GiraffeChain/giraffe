@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
-import 'package:blockchain_app/widgets/pages/blockchain_launcher_page.dart';
+import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/widgets/pages/genesis_builder_page.dart';
 import 'package:blockchain_app/widgets/pages/stake_page.dart';
 import 'package:blockchain_app/widgets/pages/transact_page.dart';
@@ -11,20 +11,23 @@ import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BlockchainPage extends StatelessWidget {
+class BlockchainPage extends ConsumerWidget {
   const BlockchainPage({super.key});
 
   @override
-  Widget build(BuildContext context) => DefaultTabController(
-        length: 4,
-        child: Scaffold(
-            appBar: _appBar(context),
-            body: Container(
-                constraints: const BoxConstraints.expand(),
-                child: _tabBarView(context))),
-      );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final readerWriter = ref.watch(podBlockchainReaderWriterProvider);
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+          appBar: _appBar(context, readerWriter),
+          body: Container(
+              constraints: const BoxConstraints.expand(),
+              child: _tabBarView(context, readerWriter))),
+    );
+  }
 
   _tabBar(BuildContext context) {
     return const TabBar(tabs: [
@@ -37,13 +40,12 @@ class BlockchainPage extends StatelessWidget {
     ]);
   }
 
-  _tabBarView(BuildContext context) {
-    final blockchain = context.watch<BlockchainView>();
-    final blockchainWriter = context.watch<BlockchainWriter>();
+  _tabBarView(BuildContext context, BlockchainReaderWriter readerWriter) {
     return TabBarView(children: [
-      const LiveBlocksView(),
-      StreamedTransactView(view: blockchain, writer: blockchainWriter),
-      StakeView(view: blockchain, writer: blockchainWriter),
+      LiveBlocksView(view: readerWriter.view),
+      StreamedTransactView(
+          view: readerWriter.view, writer: readerWriter.writer),
+      StakeView(view: readerWriter.view, writer: readerWriter.writer),
       const GenesisBuilderView(),
     ]);
   }
@@ -51,13 +53,11 @@ class BlockchainPage extends StatelessWidget {
   static const _metadataTextStyle =
       TextStyle(fontSize: 12, fontWeight: FontWeight.bold);
 
-  AppBar _appBar(BuildContext context) {
-    final slotTicker = _slotText(context);
+  AppBar _appBar(BuildContext context, BlockchainReaderWriter readerWriter) {
+    final slotTicker = _slotText(context, readerWriter);
     return AppBar(
       title: StreamBuilder(
-        stream: context
-            .watch<BlockchainView>()
-            .adoptedBlocks
+        stream: readerWriter.view.adoptedBlocks
             .map((b) => b.header)
             .asyncMap((header) async => [
                   const VerticalDivider(),
@@ -74,60 +74,34 @@ class BlockchainPage extends StatelessWidget {
     );
   }
 
-  _slotText(BuildContext context) {
-    final blockchain = context.watch<BlockchainView>();
-    return StreamBuilder<Int64>(
-        stream: Stream.fromFuture(blockchain.genesisBlock)
-            .map((b) => (
-                  b.header.timestamp,
-                  Int64(ProtocolSettings.defaultSettings
-                      .mergeFromMap(b.header.settings)
-                      .slotDuration
-                      .inMilliseconds)
-                ))
-            .asyncExpand((t) => Stream.periodic(const Duration(seconds: 1)).map(
-                (_) =>
-                    (Int64(DateTime.now().millisecondsSinceEpoch) - t.$1) ~/
-                    t.$2)),
-        builder: (context, snapshot) => Row(children: [
-              const VerticalDivider(),
-              Text("Slot: ${snapshot.data ?? Int64.ZERO}",
-                  style: _metadataTextStyle),
-            ]));
-  }
+  _slotText(BuildContext context, BlockchainReaderWriter readerWriter) =>
+      StreamBuilder<Int64>(
+          stream: Stream.fromFuture(readerWriter.view.genesisBlock)
+              .map((b) => (
+                    b.header.timestamp,
+                    Int64(ProtocolSettings.defaultSettings
+                        .mergeFromMap(b.header.settings)
+                        .slotDuration
+                        .inMilliseconds)
+                  ))
+              .asyncExpand((t) => Stream.periodic(const Duration(seconds: 1))
+                  .map((_) =>
+                      (Int64(DateTime.now().millisecondsSinceEpoch) - t.$1) ~/
+                      t.$2)),
+          builder: (context, snapshot) => Row(children: [
+                const VerticalDivider(),
+                Text("Slot: ${snapshot.data ?? Int64.ZERO}",
+                    style: _metadataTextStyle),
+              ]));
 }
 
-class LatestBlockView extends StatelessWidget {
-  final BlockchainView blockchain;
+class LiveBlocksView extends StatelessWidget {
+  final BlockchainView view;
 
-  const LatestBlockView({super.key, required this.blockchain});
-  @override
-  Widget build(BuildContext context) => Center(
-        child: StreamBuilder(
-          stream: _fullBlocks(blockchain),
-          builder: (context, snapshot) => snapshot.data != null
-              ? _card(snapshot.data!)
-              : const CircularProgressIndicator(),
-        ),
-      );
+  const LiveBlocksView({super.key, required this.view});
 
-  Widget _card(FullBlock block) => BlockCard(
-        block: block,
-      );
-}
-
-class LiveBlocksView extends StatefulWidget {
-  const LiveBlocksView({super.key});
-
-  @override
-  State<StatefulWidget> createState() => LiveBlocksViewState();
-}
-
-class LiveBlocksViewState extends State<StatefulWidget>
-    with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Center(
       child: StreamBuilder(
         stream: _accumulateBlocksStream(context),
@@ -137,8 +111,7 @@ class LiveBlocksViewState extends State<StatefulWidget>
   }
 
   Stream<List<FullBlock>> _accumulateBlocksStream(BuildContext context) =>
-      _fullBlocks(context.read<BlockchainView>())
-          .transform(StreamTransformer.fromBind((inStream) {
+      _fullBlocks.transform(StreamTransformer.fromBind((inStream) {
         final List<FullBlock> state = [];
         return inStream.map((block) {
           state.insert(0, block);
@@ -156,23 +129,10 @@ class LiveBlocksViewState extends State<StatefulWidget>
         ),
       );
 
-  @override
-  bool get wantKeepAlive => true;
+  Stream<FullBlock> get _fullBlocks => StreamGroup.merge(
+          [Stream.fromFuture(view.canonicalHeadId), view.adoptions])
+      .asyncMap(view.getFullBlockOrRaise);
 }
-
-Stream<FullBlock> _fullBlocks(BlockchainView blockchain) => StreamGroup.merge([
-      Stream.fromFuture(blockchain.canonicalHeadId),
-      blockchain.adoptions
-    ]).asyncMap((id) async {
-      final header = await blockchain.getBlockHeaderOrRaise(id);
-      final body = await blockchain.getBlockBodyOrRaise(id);
-      final transactions = await Future.wait(
-          body.transactionIds.map(blockchain.getTransactionOrRaise));
-      final fullBlock = FullBlock()
-        ..header = header
-        ..fullBody = (FullBlockBody()..transactions.addAll(transactions));
-      return fullBlock;
-    });
 
 class BlockCard extends StatelessWidget {
   final FullBlock block;

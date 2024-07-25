@@ -1,25 +1,25 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'transact.dart';
+part of 'settings.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podTransactHash() => r'4e7b0c328ca02ce2a8739180a1ecc86337f698d2';
+String _$podSettingsHash() => r'26f6b843c179c4abd3e2f9a351d33d57dd32f6f8';
 
-/// See also [PodTransact].
-@ProviderFor(PodTransact)
-final podTransactProvider =
-    AutoDisposeNotifierProvider<PodTransact, TransactState>.internal(
-  PodTransact.new,
-  name: r'podTransactProvider',
+/// See also [PodSettings].
+@ProviderFor(PodSettings)
+final podSettingsProvider =
+    AutoDisposeNotifierProvider<PodSettings, SettingsState>.internal(
+  PodSettings.new,
+  name: r'podSettingsProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$podTransactHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$podSettingsHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$PodTransact = AutoDisposeNotifier<TransactState>;
+typedef _$PodSettings = AutoDisposeNotifier<SettingsState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
