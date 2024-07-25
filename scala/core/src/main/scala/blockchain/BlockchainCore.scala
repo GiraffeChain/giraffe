@@ -1,13 +1,13 @@
 package blockchain
 
+import blockchain.codecs.{given}
 import blockchain.consensus.*
 import blockchain.crypto.CryptoResources
-import blockchain.codecs.given
 import blockchain.ledger.Ledger
 import blockchain.models.*
+import cats.effect.implicits.*
 import cats.effect.{Async, Resource}
 import cats.implicits.*
-import cats.effect.implicits.*
 import fs2.io.file.{Files, Path}
 import fs2.{Chunk, Pipe, Pull, Stream}
 import org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -15,6 +15,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import java.time.Instant
 
 case class BlockchainCore[F[_]](
+    protocolSettings: ProtocolSettings,
     clock: Clock[F],
     dataStores: DataStores[F],
     blockIdTree: BlockIdTree[F],
@@ -63,7 +64,9 @@ object BlockchainCore:
   def make[F[_]: Async: Files: CryptoResources](genesis: FullBlock, dataDir: Path): Resource[F, BlockchainCore[F]] =
     for {
       logger <- Slf4jLogger.fromName("Blockchain").toResource
-      clock <- Clock.make(ProtocolSettings.Default, Instant.ofEpochMilli(genesis.header.timestamp))
+      protocolSettings = ProtocolSettings.Default.merge(genesis.header.settings)
+      _ <- logger.info(protocolSettings.show).toResource
+      clock <- Clock.make(protocolSettings, Instant.ofEpochMilli(genesis.header.timestamp))
       globalSlot <- clock.globalSlot.toResource
       globalTimestamp <- clock.globalTimestamp.toResource
       _ <- logger.info(show"Global slot=$globalSlot timestamp=$globalTimestamp").toResource
@@ -98,6 +101,7 @@ object BlockchainCore:
         consensus.localChain
       )
     } yield BlockchainCore(
+      protocolSettings,
       clock,
       dataStores,
       blockIdTree,
