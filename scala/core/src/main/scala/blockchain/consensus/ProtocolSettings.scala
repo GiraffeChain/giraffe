@@ -1,6 +1,7 @@
 package blockchain.consensus
 
 import blockchain.utility.Ratio
+import cats.Show
 import cats.implicits.showInterpolator
 
 import scala.concurrent.duration.{FiniteDuration, given}
@@ -38,7 +39,20 @@ case class ProtocolSettings(
   )
 
   override def toString: String =
-    show"ProtocolSettings(fEffective=$fEffective, vrfLddCutoff=$vrfLddCutoff, vrfPrecision=$vrfPrecision, vrfBaselineDifficulty=$vrfBaselineDifficulty, vrfAmplitude=$vrfAmplitude, vrfSlotGap=$vrfSlotGap, kLookback=$chainSelectionKLookback, slotDuration=$slotDuration, operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch, kesHeight=($kesKeyHours, $kesKeyMinutes), operationalPeriodLength=$operationalPeriodLength, epochLength=$epochLength)"
+    show"ProtocolSettings(" +
+      show"fEffective=$fEffective," +
+      show" vrfLddCutoff=$vrfLddCutoff," +
+      show" vrfPrecision=$vrfPrecision," +
+      show" vrfBaselineDifficulty=$vrfBaselineDifficulty," +
+      show" vrfAmplitude=$vrfAmplitude," +
+      show" vrfSlotGap=$vrfSlotGap," +
+      show" kLookback=$chainSelectionKLookback," +
+      show" slotDuration=$slotDuration," +
+      show" operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch," +
+      show" kesHeight=($kesKeyHours, $kesKeyMinutes)," +
+      show" operationalPeriodLength=$operationalPeriodLength slots," +
+      show" epochLength=$epochLength slots" +
+      show")"
 
   def merge(map: Map[String, String]): ProtocolSettings =
     map.foldLeft(this)(_.withSetting.apply.tupled(_))
@@ -64,22 +78,38 @@ case class ProtocolSettings(
       case Array(numerator, denominator) => Ratio(BigInt(numerator), BigInt(denominator))
       case _                             => throw IllegalArgumentException(value)
     }
+  def toMap: Map[String, String] =
+    Map(
+      "f-effective" -> fEffective.toString,
+      "vrf-ldd-cutoff" -> vrfLddCutoff.toString,
+      "vrf-precision" -> vrfPrecision.toString,
+      "vrf-baseline-difficulty" -> vrfBaselineDifficulty.toString,
+      "vrf-amplitude" -> vrfAmplitude.toString,
+      "vrf-slot-gap" -> vrfSlotGap.toString,
+      "chain-selection-k-lookback" -> chainSelectionKLookback.toString,
+      "slot-duration-ms" -> slotDuration.toMillis.toString,
+      "operational-periods-per-epoch" -> operationalPeriodsPerEpoch.toString,
+      "kes-key-hours" -> kesKeyHours.toString,
+      "kes-key-minutes" -> kesKeyMinutes.toString
+    )
 
 object ProtocolSettings:
 
   val Default: ProtocolSettings = ProtocolSettings(
-    fEffective = Ratio(1, 25),
-    vrfLddCutoff = 50,
+    fEffective = Ratio(3, 25),
+    vrfLddCutoff = 18,
     vrfPrecision = 40,
-    vrfBaselineDifficulty = Ratio(1, 60),
-    vrfAmplitude = Ratio(1, 8),
-    vrfSlotGap = 3,
+    vrfBaselineDifficulty = Ratio(1, 20),
+    vrfAmplitude = Ratio(1, 2),
+    vrfSlotGap = 1,
     chainSelectionKLookback = 576,
-    slotDuration = 1000.milli,
+    slotDuration = 3000.milli,
     operationalPeriodsPerEpoch = 12,
     kesKeyHours = 5,
     kesKeyMinutes = 5
   )
+
+  given Show[ProtocolSettings] = Show.fromToString
 
 case class TreeHeight(hours: Int, minutes: Int) {
   def asTuple: (Int, Int) = (hours, minutes)

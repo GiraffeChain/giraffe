@@ -79,14 +79,14 @@ class ProtocolSettings {
       );
 
   static const defaultAsMap = {
-    "f-effective": "1/25",
-    "vrf-ldd-cutoff": "50",
+    "f-effective": "3/25",
+    "vrf-ldd-cutoff": "18",
     "vrf-precision": "40",
-    "vrf-baseline-difficulty": "1/60",
-    "vrf-amplitude": "1/8",
-    "vrf-slot-gap": "3",
+    "vrf-baseline-difficulty": "1/20",
+    "vrf-amplitude": "1/2",
+    "vrf-slot-gap": "1",
     "chain-selection-k-lookback": "576",
-    "slot-duration-ms": "1000",
+    "slot-duration-ms": "3000",
     "operational-periods-per-epoch": "12",
     "kes-key-hours": "5",
     "kes-key-minutes": "5"

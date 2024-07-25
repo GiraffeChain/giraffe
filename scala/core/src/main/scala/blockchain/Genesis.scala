@@ -1,7 +1,7 @@
 package blockchain
 
 import blockchain.codecs.{*, given}
-import blockchain.consensus.Eta
+import blockchain.consensus.{Eta, ProtocolSettings}
 import blockchain.crypto.{Blake2b256, CryptoResources}
 import blockchain.ledger.*
 import blockchain.models.*
@@ -78,7 +78,8 @@ object Genesis:
           eligibilityCertificate = vrfCertificate(eta),
           operationalCertificate = kesCertificate,
           metadata = "",
-          account = StakingAccount
+          account = StakingAccount,
+          settings = ProtocolSettings.Default.toMap
         ).withEmbeddedId
       FullBlock(header, FullBlockBody(transactions))
     }
