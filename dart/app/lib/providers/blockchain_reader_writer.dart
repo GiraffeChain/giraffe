@@ -14,10 +14,8 @@ class PodBlockchainReaderWriter extends _$PodBlockchainReaderWriter {
   @override
   BlockchainReaderWriter build() {
     final channel = ref.watch(podRpcChannelProvider);
-    final nodeClient = NodeRpcClientWithRetry(channel,
-        delegate: NodeRpcClient(channel), maxTries: 10);
-    final stakerSupportClient = StakerSupportRpcClientWithRetry(channel,
-        delegate: StakerSupportRpcClient(channel), maxTries: 10);
+    final nodeClient = NodeRpcClient(channel);
+    final stakerSupportClient = StakerSupportRpcClient(channel);
     final view = BlockchainViewFromRpc(nodeClient: nodeClient);
     final writer = BlockchainWriter(
         submitTransaction: (tx) => nodeClient

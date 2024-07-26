@@ -188,15 +188,12 @@ class BlockPackerForStakerSupportRpc extends BlockPacker {
     s() {
       final x = client.packBlock(
           PackBlockReq(parentBlockId: parentBlockId, untilSlot: slot));
-      return x.doOnCancel(() => x.cancel()).onErrorResume((e, st) {
-        Minting.log.warning(
-            "Error from remote block packer stream. Restarting.", e, st);
-        return Stream.fromFuture(Future.delayed(Duration(milliseconds: 200)))
-            .asyncExpand((_) => s());
-      });
+      return x.doOnCancel(() => x.cancel());
     }
 
-    return s()
+    return retryableStream(s,
+            onError: (e, s) => Minting.log
+                .warning("Remote BlockPacker error. Retrying.", e, s))
         .takeWhile((v) => v.hasBody())
         .map((v) => v.body.transactionIds.map(view.getTransactionOrRaise))
         .asyncMap(Future.wait)

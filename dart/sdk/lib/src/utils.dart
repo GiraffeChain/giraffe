@@ -222,3 +222,41 @@ DComputeImpl isolate = LocalCompute;
 void setComputeFunction(DComputeImpl i) {
   isolate = i;
 }
+
+Future<R> retryableFuture<R>(Future<R> Function() f,
+    {int retries = 60 * 60 * 24,
+    Duration delay = const Duration(seconds: 1),
+    Function(Object, StackTrace)? onError}) async {
+  var _retries = retries;
+  while (true) {
+    try {
+      return await f();
+    } catch (e, s) {
+      if (_retries == 0) rethrow;
+      _retries -= 1;
+      if (onError != null) {
+        onError(e, s);
+      }
+      await Future.delayed(delay);
+    }
+  }
+}
+
+Stream<R> retryableStream<R>(Stream<R> Function() f,
+    {int retries = 60 * 60 * 24,
+    Duration delay = const Duration(seconds: 1),
+    Function(Object, StackTrace)? onError}) async* {
+  var _retries = retries;
+  while (true) {
+    try {
+      await for (final x in f()) yield x;
+    } catch (e, s) {
+      if (_retries == 0) rethrow;
+      _retries -= 1;
+      if (onError != null) {
+        onError(e, s);
+      }
+      await Future.delayed(delay);
+    }
+  }
+}

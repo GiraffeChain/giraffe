@@ -223,7 +223,6 @@ class CreateWalletModalState extends State<CreateWalletModal> {
     setState(() {
       result = (mnemonic, keyPair);
     });
-    // TODO: Save KeyPair
     return mnemonic;
   }
 
@@ -294,7 +293,6 @@ class ImportWalletModalState extends State<ImportWalletModal> {
         result = (mnemonic, keyPair);
       });
     }
-    // TODO: Save KeyPair
   }
 
   List<Widget> requestInfo(BuildContext context) {
