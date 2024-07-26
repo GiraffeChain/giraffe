@@ -11,8 +11,17 @@ import 'package:fixnum/fixnum.dart';
 class PrivateTestnet {
   static final DefaultTotalStake = BigInt.from(10000000);
 
-  static Future<Ed25519KeyPair> get DefaultKeyPair =>
-      ed25519.generateKeyPairFromSeed(Uint8List(32));
+  static Ed25519KeyPair? _ed25519keyPairCached = null;
+
+  static Future<Ed25519KeyPair> get DefaultKeyPair async {
+    if (_ed25519keyPairCached == null) {
+      _ed25519keyPairCached =
+          await ed25519.generateKeyPairFromSeed(Uint8List(32));
+    }
+
+    return _ed25519keyPairCached!;
+  }
+
   static Future<LockAddress> get DefaultLockAddress => DefaultKeyPair.then(
       (kp) => Lock(ed25519: Lock_Ed25519(vk: kp.vk.base58)).address);
 

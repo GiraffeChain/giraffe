@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:blockchain/ledger/utils.dart';
 import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/providers/transact.dart';
+import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
@@ -12,38 +13,26 @@ import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 
-class StreamedTransactView extends StatefulWidget {
+class StreamedTransactView extends ConsumerWidget {
   final BlockchainView view;
   final BlockchainWriter writer;
 
   const StreamedTransactView(
       {super.key, required this.view, required this.writer});
-  @override
-  State<StatefulWidget> createState() => StreamedTransactViewState();
-}
 
-class StreamedTransactViewState extends State<StreamedTransactView>
-    with AutomaticKeepAliveClientMixin {
   @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return StreamBuilder(
-      stream: Stream.fromFuture(Wallet.genesis)
-          .asyncExpand((w) => w.streamed(widget.view)),
-      builder: (context, snapshot) => snapshot.hasData
-          ? TransactView(
-              wallet: snapshot.data!,
-              view: widget.view,
-              writer: widget.writer,
-            )
-          : snapshot.hasError
-              ? Center(child: Text("An error occurred: ${snapshot.error}"))
-              : const Center(child: CircularProgressIndicator()),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    return switch (ref.watch(podWalletProvider)) {
+      AsyncData(:final value) => TransactView(
+          wallet: value,
+          view: view,
+          writer: writer,
+        ),
+      AsyncError(:final error) =>
+        Center(child: Text("An error occurred: $error")),
+      _ => const Center(child: CircularProgressIndicator())
+    };
   }
-
-  @override
-  bool get wantKeepAlive => true;
 }
 
 class TransactView extends ConsumerWidget {

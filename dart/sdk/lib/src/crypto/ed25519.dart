@@ -21,6 +21,16 @@ class Ed25519KeyPair {
   final List<int> vk;
 
   Ed25519KeyPair(this.sk, this.vk);
+  @override
+  int get hashCode => Object.hash(sk, vk);
+
+  @override
+  bool operator ==(Object other) {
+    if (other is Ed25519KeyPair) {
+      return sk.sameElements(other.sk) && vk.sameElements(other.vk);
+    }
+    return false;
+  }
 }
 
 class Ed25519Impl extends Ed25519 {

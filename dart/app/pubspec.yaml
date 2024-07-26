@@ -42,6 +42,7 @@ dependencies:
   hooks_riverpod: ^2.5.1
   flutter_hooks: ^0.20.5
   riverpod_annotation: ^2.3.5
+  bip39: ^1.0.6
 
 dev_dependencies:
   flutter_test:

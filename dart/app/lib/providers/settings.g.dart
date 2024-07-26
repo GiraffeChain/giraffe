@@ -6,12 +6,12 @@ part of 'settings.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podSettingsHash() => r'26f6b843c179c4abd3e2f9a351d33d57dd32f6f8';
+String _$podSettingsHash() => r'4386d149e73870985635f9b50023e81881ae6ca6';
 
 /// See also [PodSettings].
 @ProviderFor(PodSettings)
 final podSettingsProvider =
-    AutoDisposeNotifierProvider<PodSettings, SettingsState>.internal(
+    NotifierProvider<PodSettings, SettingsState>.internal(
   PodSettings.new,
   name: r'podSettingsProvider',
   debugGetCreateSourceHash:
@@ -20,6 +20,6 @@ final podSettingsProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$PodSettings = AutoDisposeNotifier<SettingsState>;
+typedef _$PodSettings = Notifier<SettingsState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

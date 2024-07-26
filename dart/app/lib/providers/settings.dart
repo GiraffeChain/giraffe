@@ -4,7 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'settings.g.dart';
 part 'settings.freezed.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class PodSettings extends _$PodSettings {
   @override
   SettingsState build() => const SettingsState(

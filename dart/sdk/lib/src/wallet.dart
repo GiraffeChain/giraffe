@@ -112,7 +112,8 @@ class Wallet {
       return wasUpdated;
     }
 
-    if (await update()) yield this;
+    await update();
+    yield this;
     await for (final _ in client.traversal) {
       if (await update()) yield this;
     }

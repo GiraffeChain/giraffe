@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:async/async.dart';
 import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/widgets/pages/genesis_builder_page.dart';
+import 'package:blockchain_app/widgets/pages/receive_page.dart';
 import 'package:blockchain_app/widgets/pages/stake_page.dart';
 import 'package:blockchain_app/widgets/pages/transact_page.dart';
 import 'package:blockchain/codecs.dart';
@@ -20,7 +21,7 @@ class BlockchainPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final readerWriter = ref.watch(podBlockchainReaderWriterProvider);
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
           appBar: _appBar(context, readerWriter),
           body: Container(
@@ -33,6 +34,7 @@ class BlockchainPage extends ConsumerWidget {
     return const TabBar(tabs: [
       Tab(icon: Icon(Icons.square_outlined), child: Text("Chain")),
       Tab(icon: Icon(Icons.send), child: Text("Send")),
+      Tab(icon: Icon(Icons.wallet), child: Text("Receive")),
       Tab(icon: Icon(Icons.publish), child: Text("Stake")),
       Tab(
           icon: Icon(Icons.baby_changing_station),
@@ -45,6 +47,7 @@ class BlockchainPage extends ConsumerWidget {
       LiveBlocksView(view: readerWriter.view),
       StreamedTransactView(
           view: readerWriter.view, writer: readerWriter.writer),
+      const ReceiveView(),
       StakeView(view: readerWriter.view, writer: readerWriter.writer),
       const GenesisBuilderView(),
     ]);
