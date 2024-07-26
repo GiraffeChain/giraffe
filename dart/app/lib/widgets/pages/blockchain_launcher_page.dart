@@ -135,7 +135,7 @@ class WalletSelectionFormState extends State<WalletSelectionForm> {
           ),
           TextButton.icon(
             label: const Text("Import"),
-            onPressed: () {},
+            onPressed: () => _import(context),
             icon: const Icon(Icons.text_format),
           ),
         ],
@@ -143,7 +143,13 @@ class WalletSelectionFormState extends State<WalletSelectionForm> {
 
   void _create(BuildContext context) async {
     final Ed25519KeyPair? result = await showDialog(
-        context: context, builder: (context) => CreateWalletModal());
+        context: context, builder: (context) => const CreateWalletModal());
+    if (result != null) widget.onSelected(result);
+  }
+
+  void _import(BuildContext context) async {
+    final Ed25519KeyPair? result = await showDialog(
+        context: context, builder: (context) => const ImportWalletModal());
     if (result != null) widget.onSelected(result);
   }
 }
@@ -203,6 +209,89 @@ class CreateWalletModalState extends State<CreateWalletModal> {
             "Please record these words in a safe place. Once this dialog is closed, they can't be recovered.",
             style: TextStyle(
                 fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red)),
+        TextButton(
+          child: const Text("Close"),
+          onPressed: () => Navigator.pop(context, result!.$2),
+        ),
+      ]
+          .map(
+            (w) => Padding(padding: const EdgeInsets.all(8.0), child: w),
+          )
+          .toList();
+}
+
+class ImportWalletModal extends StatefulWidget {
+  const ImportWalletModal({super.key});
+
+  @override
+  State<StatefulWidget> createState() => ImportWalletModalState();
+}
+
+class ImportWalletModalState extends State<ImportWalletModal> {
+  String mnemonic = "";
+  String passphrase = "";
+  bool loading = false;
+  (String, Ed25519KeyPair)? result;
+  String? error;
+  @override
+  Widget build(BuildContext context) => SimpleDialog(
+        title: const Text("Import Wallet"),
+        children: result != null
+            ? done(context)
+            : loading
+                ? const [Center(child: CircularProgressIndicator())]
+                : requestInfo(context),
+      );
+
+  _generate(BuildContext context) async {
+    if (!bip39.validateMnemonic(mnemonic)) {
+      setState(() => error = "Invalid mnemonic");
+    } else {
+      final seed64 =
+          bip39.mnemonicToSeed(mnemonic, passphrase: passphrase ?? "");
+      final seed = seed64.hash256;
+      setState(() => loading = true);
+      final keyPair = await ed25519.generateKeyPairFromSeed(seed);
+      setState(() {
+        result = (mnemonic, keyPair);
+      });
+    }
+    // TODO: Save KeyPair
+  }
+
+  List<Widget> requestInfo(BuildContext context) {
+    final arr = <Widget>[
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextField(
+          onChanged: (v) => mnemonic = v,
+          decoration: const InputDecoration(hintText: "Mnemonic"),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextField(
+          onChanged: (v) => passphrase = v,
+          decoration: const InputDecoration(hintText: "Passphrase"),
+        ),
+      ),
+    ];
+    if (error != null) {
+      arr.add(Text(error!,
+          style: const TextStyle(
+              fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red)));
+    }
+
+    arr.add(TextButton(
+      child: const Text("Import"),
+      onPressed: () => _generate(context),
+    ));
+    return arr;
+  }
+
+  List<Widget> done(BuildContext context) => [
+        const Text("Your wallet was imported successfully.",
+            style: TextStyle(fontSize: 18)),
         TextButton(
           child: const Text("Close"),
           onPressed: () => Navigator.pop(context, result!.$2),
