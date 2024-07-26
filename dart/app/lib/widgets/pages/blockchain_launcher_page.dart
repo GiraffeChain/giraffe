@@ -1,5 +1,6 @@
 import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain_app/providers/settings.dart';
+import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_app/providers/wallet_key.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fluro/fluro.dart';
@@ -100,7 +101,7 @@ class LaunchSettings {
       {required this.rpcHost, required this.rpcPort, required this.rpcSecure});
 }
 
-class WalletSelectionForm extends StatefulWidget {
+class WalletSelectionForm extends ConsumerStatefulWidget {
   const WalletSelectionForm({
     super.key,
     required this.onSelected,
@@ -109,24 +110,21 @@ class WalletSelectionForm extends StatefulWidget {
   final Function(Ed25519KeyPair) onSelected;
 
   @override
-  State<StatefulWidget> createState() => WalletSelectionFormState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      WalletSelectionFormState();
 }
 
-class WalletSelectionFormState extends State<WalletSelectionForm> {
+class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
   @override
   Widget build(BuildContext context) => Column(
         children: [
-          const Text("Select a wallet"),
+          const Text("Select a wallet",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           TextButton.icon(
             label: const Text("Public"),
             onPressed: () async =>
                 widget.onSelected(await PrivateTestnet.DefaultKeyPair),
             icon: const Icon(Icons.people),
-          ),
-          TextButton.icon(
-            label: const Text("Load"),
-            onPressed: () {},
-            icon: const Icon(Icons.save),
           ),
           TextButton.icon(
             label: const Text("Create"),
@@ -138,19 +136,60 @@ class WalletSelectionFormState extends State<WalletSelectionForm> {
             onPressed: () => _import(context),
             icon: const Icon(Icons.text_format),
           ),
+          loadOrResetButtons(context),
         ],
+      );
+
+  Widget loadOrResetButtons(BuildContext context) => FutureBuilder(
+        future: ref.watch(podSecureStorageProvider.notifier).containsWalletSk,
+        builder: (context, snapshot) => !snapshot.hasData
+            ? const CircularProgressIndicator()
+            : snapshot.data!
+                ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    TextButton.icon(
+                      label: const Text("Load"),
+                      onPressed: () => _load(context),
+                      icon: const Icon(Icons.save),
+                    ),
+                    const VerticalDivider(),
+                    TextButton.icon(
+                      label: const Text("Delete"),
+                      onPressed: () async {
+                        await ref
+                            .read(podSecureStorageProvider.notifier)
+                            .deleteWalletSk();
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.delete),
+                    ),
+                  ])
+                : Container(),
       );
 
   void _create(BuildContext context) async {
     final Ed25519KeyPair? result = await showDialog(
         context: context, builder: (context) => const CreateWalletModal());
-    if (result != null) widget.onSelected(result);
+    if (result != null) {
+      ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
+      widget.onSelected(result);
+    }
   }
 
   void _import(BuildContext context) async {
     final Ed25519KeyPair? result = await showDialog(
         context: context, builder: (context) => const ImportWalletModal());
-    if (result != null) widget.onSelected(result);
+    if (result != null) {
+      ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
+      widget.onSelected(result);
+    }
+  }
+
+  void _load(BuildContext context) async {
+    final sk = (await ref.read(podSecureStorageProvider.notifier).getWalletSk)!;
+    final vk = await ed25519.getVerificationKey(sk);
+    final Ed25519KeyPair result = Ed25519KeyPair(sk, vk);
+    ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
+    widget.onSelected(result);
   }
 }
 
@@ -247,8 +286,7 @@ class ImportWalletModalState extends State<ImportWalletModal> {
     if (!bip39.validateMnemonic(mnemonic)) {
       setState(() => error = "Invalid mnemonic");
     } else {
-      final seed64 =
-          bip39.mnemonicToSeed(mnemonic, passphrase: passphrase ?? "");
+      final seed64 = bip39.mnemonicToSeed(mnemonic, passphrase: passphrase);
       final seed = seed64.hash256;
       setState(() => loading = true);
       final keyPair = await ed25519.generateKeyPairFromSeed(seed);
