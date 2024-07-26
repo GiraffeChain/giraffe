@@ -7,7 +7,7 @@ part of 'blockchain_reader_writer.dart';
 // **************************************************************************
 
 String _$podBlockchainReaderWriterHash() =>
-    r'0e69490920c6ae21b106a435ada2df86430202ff';
+    r'6cac6850d13fe3897bda1a998fec7b016305b09c';
 
 /// See also [PodBlockchainReaderWriter].
 @ProviderFor(PodBlockchainReaderWriter)

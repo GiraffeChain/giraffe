@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:blockchain/common/models/unsigned.dart';
+import 'package:blockchain/minting/models/staker_data.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/common.dart';
@@ -39,7 +38,7 @@ class Minting {
   static final log = Logger("Blockchain.Minting");
 
   static Resource<Minting> make(
-    Directory stakingDir,
+    StakerData stakerData,
     ProtocolSettings protocolSettings,
     Clock clock,
     BlockPacker blockPacker,
@@ -50,24 +49,18 @@ class Minting {
     StakerTracker stakerTracker,
     LockAddress? rewardAddress,
   ) =>
-      Resource.pure(File("${stakingDir.path}/kes"))
-          .map((kesFile) => DiskSecureStore(file: kesFile))
-          .evalFlatMap((secureStore) async {
-        final vrfSk = await File("${stakingDir.path}/vrf").readAsBytes();
-        final vrfVk = await ed25519Vrf.getVerificationKey(vrfSk);
-        final account = TransactionOutputReference.fromBuffer(
-            await File("${stakingDir.path}/account").readAsBytes());
-
-        final vrfCalculator =
-            VrfCalculatorImpl(vrfSk, clock, leaderElection, protocolSettings);
+      Resource.pure(VrfCalculatorImpl(
+              stakerData.vrfSk, clock, leaderElection, protocolSettings))
+          .evalFlatMap((vrfCalculator) async {
+        final vrfVk = await ed25519Vrf.getVerificationKey(stakerData.vrfSk);
 
         return StakingImpl.make(
           canonicalHead.slotId,
           protocolSettings.operationalPeriodLength,
-          Int64(0),
-          account,
+          stakerData.activationOperationalPeriod,
+          stakerData.account,
           vrfVk,
-          secureStore,
+          stakerData.secureStore,
           clock,
           vrfCalculator,
           etaCalculation,
@@ -85,7 +78,7 @@ class Minting {
 
           return Minting(
             blockProducer: blockProducer,
-            secureStore: secureStore,
+            secureStore: stakerData.secureStore,
             staking: staking,
             vrfCalculator: vrfCalculator,
           );
@@ -93,7 +86,7 @@ class Minting {
       });
 
   static Resource<Minting> makeForConsensus(
-    Directory stakingDir,
+    StakerData stakerData,
     ProtocolSettings protocolSettings,
     Clock clock,
     Consensus consensus,
@@ -103,7 +96,7 @@ class Minting {
     LockAddress? rewardAddress,
   ) =>
       make(
-        stakingDir,
+        stakerData,
         protocolSettings,
         clock,
         blockPacker,
@@ -116,7 +109,7 @@ class Minting {
       );
 
   static Resource<Minting> makeForRpc(
-    Directory stakingDir,
+    StakerData stakerData,
     ProtocolSettings protocolSettings,
     Clock clock,
     BlockHeader canonicalHead,
@@ -127,7 +120,7 @@ class Minting {
     LockAddress? rewardAddress,
   ) =>
       make(
-        stakingDir,
+        stakerData,
         protocolSettings,
         clock,
         BlockPackerForStakerSupportRpc(client: stakerSupportClient, view: view),

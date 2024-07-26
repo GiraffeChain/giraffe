@@ -1,48 +1,52 @@
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/clock.dart';
-import 'package:blockchain/common/resource.dart';
-import 'package:blockchain/consensus/leader_election_validation.dart';
-import 'package:blockchain/data_stores.dart';
-import 'package:blockchain/minting/minting.dart';
 import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain/staking_account.dart';
 import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
-import 'package:blockchain_app/widgets/resource_builder.dart';
+import 'package:blockchain_app/providers/staking.dart';
+import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:blockchain_protobuf/services/staker_support_rpc.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:ribs_effect/ribs_effect.dart';
 
-class StakeView extends StatefulWidget {
+class StakeView extends ConsumerStatefulWidget {
   final BlockchainView view;
   final BlockchainWriter writer;
 
   const StakeView({super.key, required this.view, required this.writer});
 
   @override
-  State<StatefulWidget> createState() => StakeViewState();
+  ConsumerState<ConsumerStatefulWidget> createState() => StakeViewState();
 }
 
-class StakeViewState extends State<StakeView>
-    with AutomaticKeepAliveClientMixin {
+class StakeViewState extends ConsumerState<StakeView> {
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-    return FutureBuilder(
-        future: stakingIsInitialized,
-        builder: (context, snapshot) => snapshot.hasData
-            ? (snapshot.data!
-                ? RunMinting(viewer: widget.view, writer: widget.writer)
-                : noStaker)
-            : snapshot.hasError
-                ? Center(child: Text("An error occurred: ${snapshot.error}"))
-                : loading);
+    final state = ref.watch(podStakingProvider);
+    if (state.minting != null) {
+      return RunMinting(viewer: widget.view, writer: widget.writer);
+    } else {
+      return FutureBuilder(
+          future: stakingIsInitialized(ref.watch(podSecureStorageProvider))
+              .then((v) {
+            if (v) {
+              ref.read(podStakingProvider.notifier).initMinting();
+            }
+            return v;
+          }),
+          builder: (context, snapshot) => snapshot.hasData
+              ? (snapshot.data!
+                  ? RunMinting(viewer: widget.view, writer: widget.writer)
+                  : noStaker)
+              : snapshot.hasError
+                  ? Center(child: Text("An error occurred: ${snapshot.error}"))
+                  : loading);
+    }
   }
 
   Widget get loading =>
@@ -61,14 +65,12 @@ class StakeViewState extends State<StakeView>
               "Alternatively, if this is a testnet, select the desired staker index (0, 1, 2, etc.)."),
           DropdownButton<int>(
               items: const [DropdownMenuItem(value: 0, child: Text("0"))],
-              onChanged: (index) =>
-                  _onTestnetStakerSelected(context, index ?? 0)),
+              onChanged: (index) => _onTestnetStakerSelected(index ?? 0)),
         ],
       ));
 
-  Future<void> _onTestnetStakerSelected(BuildContext context, int index) async {
+  Future<void> _onTestnetStakerSelected(int index) async {
     final genesis = await widget.view.genesisBlock;
-    final stakingDir = await (await stakingDirectory).create(recursive: true);
     final genesisTimestamp = genesis.header.timestamp;
     final seed = [...genesisTimestamp.immutableBytes, ...index.immutableBytes];
     final stakerInitializer = await StakingAccount.generate(
@@ -87,9 +89,16 @@ class StakeViewState extends State<StakeView>
         .isNotEmpty);
     final account =
         TransactionOutputReference(transactionId: accountTx.id, index: 0);
-    await stakerInitializer.save(stakingDir);
-    await File("${stakingDir.path}/account")
-        .writeAsBytes(account.writeToBuffer());
+    final secureStorage = ref.read(podSecureStorageProvider);
+    await secureStorage.write(
+        key: "blockchain-staker-vrf-sk",
+        value: base64.encode(stakerInitializer.vrfSk));
+    await secureStorage.write(
+        key: "blockchain-staker-account",
+        value: base64.encode(account.writeToBuffer()));
+    await secureStorage.write(
+        key: "blockchain-staker-kes",
+        value: base64.encode(stakerInitializer.kesSk.encode));
     setState(() {});
   }
 
@@ -97,21 +106,23 @@ class StakeViewState extends State<StakeView>
     final dir = Directory(path);
     final isStaking = await directoryContainsStakingFiles(dir);
     if (isStaking) {
-      final stakingDir = await (await stakingDirectory).create(recursive: true);
-      copy(String a) => File("${dir.path}/$a").copy("${stakingDir.path}/$a");
-      await copy("vrf");
-      await copy("operator");
-      await copy("account");
-      await copy("kes");
+      final secureStorage = ref.read(podSecureStorageProvider);
+      secureStorage.write(
+          key: "blockchain-staker-vrf-sk",
+          value: base64.encode(await File("${dir.path}/vrf").readAsBytes()));
+      secureStorage.write(
+          key: "blockchain-staker-account",
+          value:
+              base64.encode(await File("${dir.path}/account").readAsBytes()));
+      secureStorage.write(
+          key: "blockchain-staker-kes",
+          value: base64.encode(await File("${dir.path}/kes").readAsBytes()));
       setState(() {});
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Invalid staking directory selected")));
     }
   }
-
-  @override
-  final wantKeepAlive = true;
 }
 
 class DirectoryChooser extends StatefulWidget {
@@ -144,100 +155,43 @@ class DirectoryChooserState extends State<DirectoryChooser> {
   }
 }
 
-class RunMinting extends StatefulWidget {
+class RunMinting extends ConsumerWidget {
   final BlockchainView viewer;
   final BlockchainWriter writer;
 
   const RunMinting({super.key, required this.viewer, required this.writer});
 
   @override
-  State<StatefulWidget> createState() => RunMintingState();
-}
-
-class RunMintingState extends State<RunMinting> {
-  bool paused = true;
-
-  @override
-  Widget build(BuildContext context) => Card(
-          child: Center(
-        child: paused
-            ? launchButton
-            : ResourceBuilder(
-                resource: resource,
-                builder: (context, snapshot) => IconButton(
-                    onPressed: () => setState(() => paused = true),
-                    icon: const Icon(Icons.pause)),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stopFunction = ref.watch(podStakingProvider).stop;
+    return Card(
+      child: Column(children: [
+        TextButton.icon(
+          onPressed: () => ref.read(podStakingProvider.notifier).reset(),
+          label: const Text("Delete Staker"),
+          icon: const Icon(Icons.delete),
+        ),
+        stopFunction == null
+            ? TextButton.icon(
+                onPressed: () => ref.read(podStakingProvider.notifier).start(),
+                label: const Text("Start"),
+                icon: const Icon(Icons.play_arrow))
+            : TextButton.icon(
+                onPressed: () => stopFunction(),
+                label: const Text("Stop"),
+                icon: const Icon(Icons.stop),
               ),
-      ));
+      ]),
+    );
+  }
 
-  final log = Logger("MintingWidget");
-
-  Resource get resource => Resource.pure(()).evalFlatMap((_) async {
-        final viewer = widget.viewer;
-        final canonicalHeadId = await viewer.canonicalHeadId;
-        final canonicalHead =
-            await viewer.getBlockHeaderOrRaise(canonicalHeadId);
-        log.info(
-            "Canonical head id=${canonicalHeadId.show} height=${canonicalHead.height} slot=${canonicalHead.slot}");
-        final protocolSettings = await viewer.protocolSettings;
-
-        final genesisBlockId = await viewer.genesisBlockId;
-        final genesisHeader =
-            await viewer.getBlockHeaderOrRaise(genesisBlockId);
-        log.info(
-            "Genesis id=${genesisBlockId.show} height=${genesisHeader.height} slot=${genesisHeader.slot}");
-        final stakerSupportClient = widget.writer.stakerClient;
-        final clock = ClockImpl(
-          protocolSettings.slotDuration,
-          protocolSettings.epochLength,
-          protocolSettings.operationalPeriodLength,
-          genesisHeader.timestamp,
-        );
-        final leaderElection = LeaderElectionImpl(protocolSettings, isolate);
-        final stakingDir = await stakingDirectory;
-        return Minting.makeForRpc(
-          Directory(
-              DataStores.interpolateBlockId(stakingDir.path, genesisBlockId)),
-          protocolSettings,
-          clock,
-          canonicalHead,
-          viewer.adoptions.map((id) {
-            log.info("Remote peer adopted block id=${id.show}");
-            return id;
-          }).asyncMap(viewer.getBlockHeaderOrRaise),
-          leaderElection,
-          viewer,
-          stakerSupportClient,
-          null, // TODO
-        ).flatMap((minting) => ResourceUtils.forStreamSubscription(() => minting
-            .blockProducer.blocks
-            .asyncMap((block) => stakerSupportClient
-                .broadcastBlock(BroadcastBlockReq(
-                    block: Block(
-                        header: block.header,
-                        body: BlockBody(
-                            transactionIds:
-                                block.fullBody.transactions.map((t) => t.id)))))
-                .then((_) => block))
-            .listen(
-              (block) => log.info(
-                  "Successfully broadcasted block id=${block.header.id.show}"),
-              onError: (e, s) => log.severe("Production failed", e, s),
-              onDone: () => log.info("Block production finished unexpectedly"),
-            )));
-      });
-
-  Widget get launchButton => TextButton.icon(
-      onPressed: () => setState(() => paused = false),
-      icon: const Icon(Icons.play_arrow),
-      label: const Text("Launch"));
+  static final log = Logger("MintingWidget");
 }
 
-Future<Directory> get stakingDirectory async => Directory(
-    "${(await getApplicationDocumentsDirectory()).path}/blockchain/staking");
-
-Future<bool> get stakingIsInitialized async =>
-    directoryContainsStakingFiles(await stakingDirectory);
+Future<bool> stakingIsInitialized(FlutterSecureStorage storage) async =>
+    await storage.containsKey(key: "blockchain-staker-vrf-sk") &&
+    await storage.containsKey(key: "blockchain-staker-account") &&
+    await storage.containsKey(key: "blockchain-staker-kes");
 
 Future<bool> directoryContainsStakingFiles(Directory dir) async =>
     (await File("${dir.path}/vrf").exists()) &&
