@@ -1,14 +1,7 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:blockchain/private_testnet.dart';
-import 'package:blockchain/staking_account.dart';
 import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/providers/staking.dart';
 import 'package:blockchain_app/providers/storage.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -25,8 +18,12 @@ class StakeView extends ConsumerStatefulWidget {
 }
 
 class StakeViewState extends ConsumerState<StakeView> {
+  bool advancedMode = false;
   @override
   Widget build(BuildContext context) {
+    if (advancedMode) {
+      return advancedModeCard;
+    }
     final state = ref.watch(podStakingProvider);
     if (state.minting != null) {
       return RunMinting(viewer: widget.view, writer: widget.writer);
@@ -55,9 +52,22 @@ class StakeViewState extends ConsumerState<StakeView> {
   Widget get noStaker => Card(
           child: Column(
         children: [
-          const Text("No staker is available."),
           const Text(
-              "Please register a new account or import from a different directory."),
+              "Help improve the network by staking your tokens, and earn rewards in the process!"),
+          const Text("To begin, register a new account."),
+          registerButton(context),
+          IconButton(
+              icon: const Icon(Icons.warning),
+              onPressed: () => setState(() => advancedMode = true)),
+        ],
+      ));
+
+  Widget get advancedModeCard => Card(
+          child: Column(
+        children: [
+          const Text(
+              "This area is for developers/testers only. Please be careful!"),
+          const Text("Import your keys from a local directory"),
           DirectoryChooser(
               onDirectorySelected: (path) =>
                   _onDirectorySelected(context, path)),
@@ -70,59 +80,26 @@ class StakeViewState extends ConsumerState<StakeView> {
       ));
 
   Future<void> _onTestnetStakerSelected(int index) async {
-    final genesis = await widget.view.genesisBlock;
-    final genesisTimestamp = genesis.header.timestamp;
-    final seed = [...genesisTimestamp.immutableBytes, ...index.immutableBytes];
-    final stakerInitializer = await StakingAccount.generate(
-        ProtocolSettings.defaultSettings.kesTreeHeight,
-        Int64(10000000),
-        await PrivateTestnet.DefaultLockAddress,
-        seed);
-    final stakingAddress =
-        StakingAddress(value: stakerInitializer.operatorVk.base58);
-    final accountTx = genesis.fullBody.transactions.firstWhere((tx) => tx
-        .outputs
-        .where((o) =>
-            o.value.hasAccountRegistration() &&
-            o.value.accountRegistration.stakingRegistration.stakingAddress ==
-                stakingAddress)
-        .isNotEmpty);
-    final account =
-        TransactionOutputReference(transactionId: accountTx.id, index: 0);
-    final secureStorage = ref.read(podSecureStorageProvider);
-    await secureStorage.write(
-        key: "blockchain-staker-vrf-sk",
-        value: base64.encode(stakerInitializer.vrfSk));
-    await secureStorage.write(
-        key: "blockchain-staker-account",
-        value: base64.encode(account.writeToBuffer()));
-    await secureStorage.write(
-        key: "blockchain-staker-kes",
-        value: base64.encode(stakerInitializer.kesSk.encode));
+    await ref.read(podStakingProvider.notifier).initMintingTestnet(index);
     setState(() {});
   }
 
   Future<void> _onDirectorySelected(BuildContext context, String path) async {
-    final dir = Directory(path);
-    final isStaking = await directoryContainsStakingFiles(dir);
-    if (isStaking) {
-      final secureStorage = ref.read(podSecureStorageProvider);
-      secureStorage.write(
-          key: "blockchain-staker-vrf-sk",
-          value: base64.encode(await File("${dir.path}/vrf").readAsBytes()));
-      secureStorage.write(
-          key: "blockchain-staker-account",
-          value:
-              base64.encode(await File("${dir.path}/account").readAsBytes()));
-      secureStorage.write(
-          key: "blockchain-staker-kes",
-          value: base64.encode(await File("${dir.path}/kes").readAsBytes()));
-      setState(() {});
-    } else {
+    try {
+      await ref
+          .read(podStakingProvider.notifier)
+          .initMintingFromDirectory(path);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Invalid staking directory selected")));
+          const SnackBar(content: Text("Invalid staking directory selected.")));
+      setState(() {});
     }
   }
+
+  Widget registerButton(BuildContext context) => TextButton.icon(
+      onPressed: () {},
+      label: const Text("Register"),
+      icon: const Icon(Icons.app_registration_rounded));
 }
 
 class DirectoryChooser extends StatefulWidget {
@@ -192,9 +169,3 @@ Future<bool> stakingIsInitialized(FlutterSecureStorage storage) async =>
     await storage.containsKey(key: "blockchain-staker-vrf-sk") &&
     await storage.containsKey(key: "blockchain-staker-account") &&
     await storage.containsKey(key: "blockchain-staker-kes");
-
-Future<bool> directoryContainsStakingFiles(Directory dir) async =>
-    (await File("${dir.path}/vrf").exists()) &&
-    (await File("${dir.path}/operator").exists()) &&
-    (await File("${dir.path}/account").exists()) &&
-    (await File("${dir.path}/kes").exists());
