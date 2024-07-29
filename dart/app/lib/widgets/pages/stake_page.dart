@@ -1,5 +1,5 @@
 import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
-import 'package:blockchain_app/providers/staking.dart';
+import 'package:blockchain_app/providers/staking/staking.dart';
 import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:flutter/material.dart';
@@ -81,7 +81,6 @@ class StakeViewState extends ConsumerState<StakeView> {
 
   Future<void> _onTestnetStakerSelected(int index) async {
     await ref.read(podStakingProvider.notifier).initMintingTestnet(index);
-    setState(() {});
   }
 
   Future<void> _onDirectorySelected(BuildContext context, String path) async {
@@ -92,7 +91,6 @@ class StakeViewState extends ConsumerState<StakeView> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Invalid staking directory selected.")));
-      setState(() {});
     }
   }
 

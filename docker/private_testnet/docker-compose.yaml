@@ -1,0 +1,25 @@
+services:
+  node:
+    image: "seancheatham/blockchain-node:dev"
+    pull_policy: "always"
+    restart: "unless-stopped"
+    ports:
+      - "2023:2023"
+    command:
+      - "--data-dir"
+      - "/blockchain/data"
+    volumes:
+      - "blockchain:/blockchain"
+  envoy:
+    build:
+      context: envoy
+      dockerfile: envoy.Dockerfile
+    ports:
+      - "2024:2024"
+    links:
+      - node
+    volumes:
+      - ./envoy/config.yaml:/etc/envoy/config.yaml
+
+volumes:
+  blockchain:

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
@@ -19,6 +18,8 @@ import 'package:fixnum/fixnum.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'staking_io.dart' if (dart.library.html) 'staking_web.dart'
+    as staking_support;
 
 part 'staking.freezed.dart';
 part 'staking.g.dart';
@@ -83,7 +84,9 @@ class PodStaking extends _$PodStaking {
       stakingAddress,
     );
     final dispose = mintingResource
-        .map((m) => state = state.copyWith(minting: m))
+        .map(
+          (m) => state = state.copyWith(minting: m),
+        )
         .useForever()
         .unsafeRunCancelable();
     ref.onDispose(dispose);
@@ -123,20 +126,11 @@ class PodStaking extends _$PodStaking {
     await initMinting();
   }
 
-  Future<void> initMintingFromDirectory(String path) async {
-    final dir = Directory(path);
-    final isStaking = await directoryContainsStakingFiles(dir);
-    assert(isStaking, "Directory does not contain staking files");
-    final secureStorage = ref.read(podSecureStorageProvider);
-    secureStorage.write(
-        key: "blockchain-staker-vrf-sk",
-        value: base64.encode(await File("${dir.path}/vrf").readAsBytes()));
-    secureStorage.write(
-        key: "blockchain-staker-account",
-        value: base64.encode(await File("${dir.path}/account").readAsBytes()));
-    secureStorage.write(
-        key: "blockchain-staker-kes",
-        value: base64.encode(await File("${dir.path}/kes").readAsBytes()));
+  Future<void> initMintingFromDirectory(
+    String path,
+  ) async {
+    staking_support.initMintingFromDirectory(
+        path, ref.read(podSecureStorageProvider));
     await initMinting();
   }
 
@@ -187,9 +181,3 @@ class PodStakingState with _$PodStakingState {
       {required Minting? minting,
       required Future<void> Function()? stop}) = _PodStakingState;
 }
-
-Future<bool> directoryContainsStakingFiles(Directory dir) async =>
-    (await File("${dir.path}/vrf").exists()) &&
-    (await File("${dir.path}/operator").exists()) &&
-    (await File("${dir.path}/account").exists()) &&
-    (await File("${dir.path}/kes").exists());
