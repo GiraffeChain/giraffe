@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:blockchain/codecs.dart';
 import 'package:blockchain/common/clock.dart';
@@ -134,6 +135,68 @@ class PodStaking extends _$PodStaking {
     await initMinting();
   }
 
+  Future<void> register() async {
+    final wallet = await ref.read(podWalletProvider.future);
+    final random = Random.secure();
+    final seed = List.generate(32, (_) => random.nextInt(255));
+    final stakerInitializer = await StakingAccount.generate(
+      ProtocolSettings.defaultSettings.kesTreeHeight,
+      minimumStakeAccountQuantity,
+      wallet.defaultLockAddress,
+      seed,
+    );
+    final outputs = stakerInitializer.transaction.outputs;
+    final inputs = <TransactionInput>[];
+    var remaining = minimumStakeAccountQuantity;
+    final availableInputKeys = wallet.spendableOutputs.keys.toList();
+    while (remaining > Int64.ZERO) {
+      final key = availableInputKeys
+          .removeAt(random.nextInt(availableInputKeys.length));
+      final output = wallet.spendableOutputs[key]!;
+      final value = output.value.quantity;
+      if (value >= remaining) {
+        inputs.add(TransactionInput(
+          reference: key,
+          value: Value(quantity: remaining),
+        ));
+        if (value != remaining) {
+          outputs.add(TransactionOutput(
+            lockAddress: wallet.defaultLockAddress,
+            value: Value(quantity: value - remaining),
+          ));
+        }
+      } else {
+        inputs.add(TransactionInput(
+          reference: key,
+          value: output.value,
+        ));
+      }
+      remaining -= value;
+    }
+
+    final readerWriter = ref.read(podBlockchainReaderWriterProvider);
+    final transaction = await wallet.attest(
+        readerWriter.view,
+        Transaction(
+          inputs: inputs,
+          outputs: outputs,
+        ));
+    await readerWriter.writer.submitTransaction(transaction);
+    final account =
+        TransactionOutputReference(transactionId: transaction.id, index: 0);
+    final secureStorage = ref.read(podSecureStorageProvider);
+    await secureStorage.write(
+        key: "blockchain-staker-vrf-sk",
+        value: base64.encode(stakerInitializer.vrfSk));
+    await secureStorage.write(
+        key: "blockchain-staker-account",
+        value: base64.encode(account.writeToBuffer()));
+    await secureStorage.write(
+        key: "blockchain-staker-kes",
+        value: base64.encode(stakerInitializer.kesSk.encode));
+    await initMinting();
+  }
+
   void start() {
     final minting = state.minting!;
     final readerWriter = ref.read(podBlockchainReaderWriterProvider);
@@ -181,3 +244,5 @@ class PodStakingState with _$PodStakingState {
       {required Minting? minting,
       required Future<void> Function()? stop}) = _PodStakingState;
 }
+
+final minimumStakeAccountQuantity = Int64(1000);

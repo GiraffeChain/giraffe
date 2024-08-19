@@ -9,12 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       checks: write
-      # only needed unless run with comment_mode: off
       pull-requests: write
     if: always()
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -23,4 +22,3 @@ jobs:
         with:
           files: "artifacts/**/*.xml"
           check_name: "Test Results (${{ github.event.workflow_run.event || github.event_name }})"
-          check_run_annotations_branch: main

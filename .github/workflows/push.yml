@@ -8,12 +8,6 @@ on:
 jobs:
   sbt-build:
     uses: ./.github/workflows/_sbt_build.yml
-    with:
-      preserve-cache-between-runs: false
-  publish-test-results:
-    uses: ./.github/workflows/_publish_test_results.yml
-    needs: [sbt-build]
-    if: always()
   publish-docker-images:
     uses: ./.github/workflows/_docker_publish.yml
     needs: [sbt-build]

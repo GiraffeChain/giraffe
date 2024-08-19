@@ -2,12 +2,6 @@ name: Scala Build
 
 on:
   workflow_call:
-    inputs:
-      preserve-cache-between-runs:
-        description: 'Preserve project cache between new runs.'
-        default: false
-        required: false
-        type: boolean
 
 jobs:
   build:
@@ -18,7 +12,7 @@ jobs:
         working-directory: ./scala
     steps:
       - name: Checkout current branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Need full history to update last modified time.
 
@@ -53,10 +47,9 @@ jobs:
             **/target/**
             !**/test-results/**
           key: ${{ format('{0}-project-{1}-{2}', runner.os, github.base_ref, github.run_number) }}
-          restore-keys: ${{ inputs.preserve-cache-between-runs && format('{0}-project-{1}-', runner.os, github.base_ref) || format('{0}-project-{1}-{2}', runner.os, github.base_ref, github.run_number) }}
 
       - name: git-restore-mtime
-        uses: chetan/git-restore-mtime-action@v1
+        uses: chetan/git-restore-mtime-action@v2
 
       - name: Compile
         run: sbt Test/compile
@@ -66,7 +59,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Test Results
           path: "**/test-reports/*.xml"

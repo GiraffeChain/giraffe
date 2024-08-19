@@ -8,8 +8,6 @@ on:
 jobs:
   sbt-build:
     uses: ./.github/workflows/_sbt_build.yml
-    with:
-      preserve-cache-between-runs: true
 
 
   publish-test-results:

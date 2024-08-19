@@ -21,18 +21,17 @@ class StakeViewState extends ConsumerState<StakeView> {
   bool advancedMode = false;
   @override
   Widget build(BuildContext context) {
-    if (advancedMode) {
-      return advancedModeCard;
-    }
     final state = ref.watch(podStakingProvider);
     if (state.minting != null) {
       return RunMinting(viewer: widget.view, writer: widget.writer);
+    } else if (advancedMode) {
+      return advancedModeCard;
     } else {
       return FutureBuilder(
           future: stakingIsInitialized(ref.watch(podSecureStorageProvider))
-              .then((v) {
+              .then((v) async {
             if (v) {
-              ref.read(podStakingProvider.notifier).initMinting();
+              await ref.read(podStakingProvider.notifier).initMinting();
             }
             return v;
           }),

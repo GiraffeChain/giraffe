@@ -65,13 +65,13 @@ class BlockProducerImpl extends BlockProducer {
                             nextHit.slot)
                         .map((b) => bodyTmp = b))
                     .use((h) => clock.delayedUntilSlot(nextHit.slot))
-                    .as(bodyTmp)
+                    .map((_) => bodyTmp)
                     .flatMap((body) => IO.fromFutureF(() async {
+                          log.info(
+                              "Constructing block for slot=${nextHit.slot}");
                           final bodyWithoutReward = bodyTmp;
                           final body =
                               insertReward(bodyWithoutReward, parentHeader.id);
-                          log.info(
-                              "Constructing block for slot=${nextHit.slot}");
                           final now = DateTime.now().millisecondsSinceEpoch;
                           final (slotStart, slotEnd) =
                               clock.slotToTimestamps(nextHit.slot);
