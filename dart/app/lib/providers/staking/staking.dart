@@ -10,7 +10,6 @@ import 'package:blockchain/minting/secure_store.dart';
 import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain/staking_account.dart';
 import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
-import 'package:blockchain_app/providers/genesis_builder.dart';
 import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';

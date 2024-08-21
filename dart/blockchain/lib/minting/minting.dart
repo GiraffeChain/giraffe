@@ -4,7 +4,6 @@ import 'package:blockchain_sdk/sdk.dart';
 import 'package:blockchain/common/clock.dart';
 import 'package:blockchain/common/models/common.dart';
 import 'package:blockchain/common/resource.dart';
-import 'package:blockchain/consensus/consensus.dart';
 import 'package:blockchain/consensus/eta_calculation.dart';
 import 'package:blockchain/consensus/leader_election_validation.dart';
 import 'package:blockchain/consensus/staker_tracker.dart';
@@ -84,29 +83,6 @@ class Minting {
           );
         });
       });
-
-  static Resource<Minting> makeForConsensus(
-    StakerData stakerData,
-    ProtocolSettings protocolSettings,
-    Clock clock,
-    Consensus consensus,
-    BlockPacker blockPacker,
-    BlockHeader canonicalHead,
-    Stream<BlockHeader> adoptedHeaders,
-    LockAddress? rewardAddress,
-  ) =>
-      make(
-        stakerData,
-        protocolSettings,
-        clock,
-        blockPacker,
-        canonicalHead,
-        adoptedHeaders,
-        consensus.etaCalculation,
-        consensus.leaderElection,
-        consensus.stakerTracker,
-        rewardAddress,
-      );
 
   static Resource<Minting> makeForRpc(
     StakerData stakerData,

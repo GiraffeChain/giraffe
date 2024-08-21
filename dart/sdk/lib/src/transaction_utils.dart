@@ -26,16 +26,11 @@ extension TransactionOps on Transaction {
     return result;
   }
 
-  Int64 get reward {
-    Int64 balance = Int64.ZERO;
-    for (final input in inputs) {
-      balance += input.value.quantity;
-    }
-    for (final output in outputs) {
-      balance -= output.value.quantity;
-    }
-    return balance;
-  }
-
   Int64 get fee => Int64(100); // TODO
+
+  Int64 get inputSum =>
+      inputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
+  Int64 get outputSum =>
+      outputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
+  Int64 get reward => inputSum - outputSum;
 }

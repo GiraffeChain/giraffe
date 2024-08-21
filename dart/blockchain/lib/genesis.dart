@@ -8,7 +8,6 @@ import 'package:blockchain/ledger/block_header_to_body_validation.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:ribs_effect/ribs_effect.dart';
 
 class Genesis {
   static const _emptyBytes32 = "11111111111111111111111111111111";
@@ -59,16 +58,6 @@ class Genesis {
     await save("$blockIdStr.pbuf", block.writeToBuffer());
     await save("$blockIdStr.json", json.encode(block.toProto3Json()).utf8Bytes);
   }
-
-  static IO<FullBlock> loadFromDisk(Directory directory, BlockId blockId) =>
-      IO.fromFutureF(() async {
-        final blockIdStr = blockId.show;
-        final bytes =
-            await File("${directory.path}/$blockIdStr.pbuf").readAsBytes();
-        final block = FullBlock.fromBuffer(bytes);
-        assert(block.header.id == blockId);
-        return block;
-      });
 }
 
 class GenesisConfig {

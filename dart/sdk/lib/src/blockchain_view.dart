@@ -1,8 +1,6 @@
 import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_sdk/sdk.dart';
-import 'package:blockchain_sdk/src/traversal.dart';
 import 'package:logging/logging.dart';
-import 'protocol_settings.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rxdart/transformers.dart';
