@@ -10,6 +10,7 @@ import 'package:blockchain/minting/secure_store.dart';
 import 'package:blockchain/private_testnet.dart';
 import 'package:blockchain/staking_account.dart';
 import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
+import 'package:blockchain_app/providers/genesis_builder.dart';
 import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -84,12 +85,13 @@ class PodStaking extends _$PodStaking {
       stakerSupportClient,
       stakingAddress,
     );
-    final dispose = mintingResource
+    final (f, dispose) = mintingResource
         .map(
           (m) => state = state.copyWith(minting: m),
         )
         .useForever()
-        .unsafeRunCancelable();
+        .unsafeRunFutureCancelable();
+    f.ignore();
     ref.onDispose(dispose);
   }
 
@@ -139,8 +141,9 @@ class PodStaking extends _$PodStaking {
     final wallet = await ref.read(podWalletProvider.future);
     final random = Random.secure();
     final seed = List.generate(32, (_) => random.nextInt(255));
+    final readerWriter = ref.read(podBlockchainReaderWriterProvider);
     final stakerInitializer = await StakingAccount.generate(
-      ProtocolSettings.defaultSettings.kesTreeHeight,
+      (await readerWriter.view.protocolSettings).kesTreeHeight,
       minimumStakeAccountQuantity,
       wallet.defaultLockAddress,
       seed,
@@ -149,32 +152,41 @@ class PodStaking extends _$PodStaking {
     final inputs = <TransactionInput>[];
     var remaining = minimumStakeAccountQuantity;
     final availableInputKeys = wallet.spendableOutputs.keys.toList();
-    while (remaining > Int64.ZERO) {
+    final sortedInputs = wallet.spendableOutputs.entries
+        .where((e) =>
+            !e.value.value.hasGraphEntry() &&
+            !e.value.value.hasAccountRegistration())
+        .toList()
+      ..sort((e1, e2) =>
+          e1.value.value.quantity.compareTo(e2.value.value.quantity));
+
+    if (sortedInputs.isEmpty) {
+      throw Exception("No spendable funds");
+    }
+    var i = 0;
+    while (remaining > Int64.ZERO && i < sortedInputs.length) {
       final key = availableInputKeys
           .removeAt(random.nextInt(availableInputKeys.length));
       final output = wallet.spendableOutputs[key]!;
       final value = output.value.quantity;
-      if (value >= remaining) {
-        inputs.add(TransactionInput(
-          reference: key,
-          value: Value(quantity: remaining),
-        ));
-        if (value != remaining) {
-          outputs.add(TransactionOutput(
-            lockAddress: wallet.defaultLockAddress,
-            value: Value(quantity: value - remaining),
-          ));
-        }
-      } else {
-        inputs.add(TransactionInput(
-          reference: key,
-          value: output.value,
-        ));
-      }
+      inputs.add(TransactionInput(
+        reference: key,
+        value: output.value,
+      ));
       remaining -= value;
+      i++;
     }
 
-    final readerWriter = ref.read(podBlockchainReaderWriterProvider);
+    if (remaining > 0) {
+      throw Exception("Not enough funds to register staking account");
+    }
+
+    if (remaining < 0) {
+      outputs.add(TransactionOutput(
+        lockAddress: wallet.defaultLockAddress,
+        value: Value(quantity: -remaining),
+      ));
+    }
     final transaction = await wallet.attest(
         readerWriter.view,
         Transaction(

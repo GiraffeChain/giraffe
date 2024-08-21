@@ -94,7 +94,7 @@ class StakeViewState extends ConsumerState<StakeView> {
   }
 
   Widget registerButton(BuildContext context) => TextButton.icon(
-      onPressed: () {},
+      onPressed: () => ref.read(podStakingProvider.notifier).register(),
       label: const Text("Register"),
       icon: const Icon(Icons.app_registration_rounded));
 }
