@@ -1,14 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/common/clock.dart';
-import 'package:blockchain/consensus/leader_election_validation.dart';
-import 'package:blockchain/minting/minting.dart';
-import 'package:blockchain/minting/models/staker_data.dart';
-import 'package:blockchain/minting/secure_store.dart';
-import 'package:blockchain/private_testnet.dart';
-import 'package:blockchain/staking_account.dart';
 import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_app/providers/wallet.dart';
@@ -19,6 +11,14 @@ import 'package:fixnum/fixnum.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../blockchain/codecs.dart';
+import '../../blockchain/common/clock.dart';
+import '../../blockchain/consensus/leader_election_validation.dart';
+import '../../blockchain/minting/minting.dart';
+import '../../blockchain/minting/models/staker_data.dart';
+import '../../blockchain/minting/secure_store.dart';
+import '../../blockchain/private_testnet.dart';
+import '../../blockchain/staking_account.dart';
 import 'staking_io.dart' if (dart.library.html) 'staking_web.dart'
     as staking_support;
 

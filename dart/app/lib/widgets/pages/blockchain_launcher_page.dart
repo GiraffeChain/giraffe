@@ -1,4 +1,4 @@
-import 'package:blockchain/private_testnet.dart';
+import '../../blockchain/private_testnet.dart';
 import 'package:blockchain_app/providers/settings.dart';
 import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_app/providers/wallet_key.dart';
