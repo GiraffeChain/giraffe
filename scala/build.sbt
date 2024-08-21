@@ -62,8 +62,9 @@ lazy val core = project
         Dependencies.fs2 ++
         Dependencies.grpcServices ++
         Dependencies.caseApp ++
-        Dependencies.http4sClient ++
-        Dependencies.mUnitTest,
+        Dependencies.http4s ++
+        Dependencies.mUnitTest ++
+        Dependencies.circe,
     libraryDependencies += "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
     scalacOptions ++= Seq(
       "-source:3.4-migration",

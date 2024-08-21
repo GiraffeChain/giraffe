@@ -2,23 +2,25 @@ package blockchain
 
 import blockchain.crypto.CryptoResources
 import blockchain.p2p.P2PServer
-import blockchain.rpc.BlockchainRpc
+import blockchain.rpc.*
 import blockchain.codecs.given
 import cats.effect.std.{Random, SecureRandom}
-import cats.effect.{ExitCode, IO, IOApp, Resource}
+import cats.effect.{IO, Resource, ResourceApp}
 import cats.implicits.*
 import fs2.io.file.{Files, Path}
 import caseapp.*
 import cats.MonadThrow
 import com.comcast.ip4s.SocketAddress
-import org.typelevel.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.LoggerFactory
+import org.typelevel.log4cats.slf4j.{Slf4jFactory, Slf4jLogger}
 
-object Relay extends IOApp:
+object Relay extends ResourceApp.Forever:
+
+  private given LoggerFactory[IO] = Slf4jFactory.create[IO]
+
   type F[A] = IO[A]
-  override def run(args: List[String]): IO[ExitCode] =
-    resource(args).useForever
 
-  private def resource(args: List[String]): Resource[F, ExitCode] =
+  override def run(args: List[String]): Resource[F, Unit] =
     for {
       given CryptoResources[F] <- CryptoResources.make[F]
       given Files[F] = Files.forIO
@@ -36,6 +38,7 @@ object Relay extends IOApp:
       _ <- logger.info(show"Data dir=$dataDir").toResource
       core <- BlockchainCore.make[F](genesis, dataDir)
       _ <- BlockchainRpc.serve(core, args.rpcBindHost, args.rpcBindPort)
+      _ <- new JsonBlockchainRpc(core).serve(args.apiBindHost, args.apiBindPort)
       given Random[F] <- SecureRandom.javaSecuritySecureRandom[F].toResource
       magicBytes = Array.fill(32)(0: Byte)
       parsedPeers <- args.parsedPeers[F].toResource
@@ -50,7 +53,7 @@ object Relay extends IOApp:
       )
       r <- p2pOutcome.toResource
       _ <- r.embedError.toResource
-    } yield ExitCode.Success
+    } yield ()
 
 @AppName("Blockchain")
 case class RelayArgs(
@@ -58,6 +61,8 @@ case class RelayArgs(
     dataDir: String = Option(System.getenv("BLOCKCHAIN_DATA_DIR")).getOrElse("/tmp/blockchain/data"),
     rpcBindHost: String = "0.0.0.0",
     rpcBindPort: Int = 2024,
+    apiBindHost: String = "0.0.0.0",
+    apiBindPort: Int = 2025,
     p2pBindHost: String = "0.0.0.0",
     p2pBindPort: Int = 2023,
     p2pPublicHost: Option[String] = None,

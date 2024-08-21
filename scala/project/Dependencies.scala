@@ -38,12 +38,22 @@ object Dependencies {
     "io.grpc" % "grpc-services" % Versions.ioGrpc
   )
 
-  val http4sClient = Seq(
-    "org.http4s" %% "http4s-ember-client" % Versions.http4s
+  val http4s = Seq(
+    "org.http4s" %% "http4s-ember-client" % Versions.http4s,
+    "org.http4s" %% "http4s-ember-server" % Versions.http4s,
+    "org.http4s" %% "http4s-dsl" % Versions.http4s,
+    "org.http4s" %% "http4s-circe" % Versions.http4s
+  )
+
+  val circe = Seq(
+    "io.circe" %% "circe-core" % Versions.circe,
+    "io.circe" %% "circe-generic" % Versions.circe,
+    "io.circe" %% "circe-parser" % Versions.circe,
+    "io.github.scalapb-json" %% "scalapb-circe" % "0.16.0"
   )
 
   val caseApp = Seq(
-    "com.github.alexarchambault" %% "case-app" % "2.1.0-M26"
+    "com.github.alexarchambault" %% "case-app" % "2.1.0-M28"
   )
 
   val mUnitTest = Seq(
@@ -56,9 +66,10 @@ object Dependencies {
 
 object Versions {
   val cats = "2.12.0"
-  val catsEffect = "3.5.2"
+  val catsEffect = "3.5.4"
   val fs2 = "3.10.2"
+  val circe = "0.14.9"
   val logback = "1.5.6"
-  val ioGrpc = "1.64.0"
-  val http4s = "0.23.26"
+  val ioGrpc = "1.65.1"
+  val http4s = "0.23.27"
 }

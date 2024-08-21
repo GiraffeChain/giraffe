@@ -1,7 +1,7 @@
 package blockchain.rpc
 
-import blockchain.codecs.given
 import blockchain.BlockchainCore
+import blockchain.codecs.given
 import blockchain.consensus.TraversalStep
 import blockchain.ledger.TransactionValidationContext
 import blockchain.models.{BlockBody, FullBlockBody, SlotId}
@@ -9,19 +9,19 @@ import blockchain.services.*
 import cats.MonadThrow
 import cats.data.OptionT
 import cats.effect.Async
+import cats.effect.implicits.*
 import cats.effect.kernel.Resource
 import cats.implicits.*
-import cats.effect.implicits.*
-import io.grpc.{Metadata, Server}
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
-import io.grpc.protobuf.services.ProtoReflectionService
-
-import java.net.InetSocketAddress
 import fs2.Stream
 import fs2.grpc.syntax.all.*
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
+import io.grpc.protobuf.services.ProtoReflectionService
+import io.grpc.{Metadata, Server}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scodec.bits.ByteVector
+
+import java.net.InetSocketAddress
 
 object BlockchainRpc:
   def serve[F[_]: Async](core: BlockchainCore[F], bindHost: String, bindPort: Int): Resource[F, Server] =
@@ -110,45 +110,11 @@ class NodeServiceImpl[F[_]: Async](core: BlockchainCore[F]) extends NodeRpcFs2Gr
 class StakerSupportImpl[F[_]: Async](core: BlockchainCore[F]) extends StakerSupportRpcFs2Grpc[F, Metadata]:
   private given logger: Logger[F] = Slf4jLogger.getLoggerFromName("RPC")
 
-  override def broadcastBlock(request: BroadcastBlockReq, ctx: Metadata): F[BroadcastBlockRes] = (
-    for {
-      header <- request.block.header.withEmbeddedId.pure[F]
-      rewardTransaction = request.rewardTransaction.map(_.withEmbeddedId)
-      rewardTransactionId = rewardTransaction.map(_.id)
-      _ <- logger.info(show"Received block id=${header.id}")
-      canonicalHeadId <- core.consensus.localChain.currentHead
-      _ <- MonadThrow[F].raiseWhen(header.parentHeaderId != canonicalHeadId)(
-        new IllegalArgumentException("Block does not extend local tip")
-      )
-      _ <- core.consensus.headerValidation
-        .validate(header)
-        .leftSemiflatTap(errors => logger.warn(show"Block id=${header.id} contains errors=$errors"))
-        .leftMap(errors => new IllegalArgumentException(errors.head))
-        .rethrowT
-      _ <- core.blockIdTree.associate(header.id, header.parentHeaderId)
-      _ <- core.dataStores.headers.put(header.id, header)
-      _ <- core.dataStores.bodies.put(header.id, request.block.body)
-      transactions <- request.block.body.transactionIds.traverse(id =>
-        (rewardTransactionId.filter(_ == id) >> rewardTransaction)
-          .fold(core.dataStores.transactions.getOrRaise(id))(_.pure[F])
-      )
-      _ <- core.ledger.bodyValidation
-        .validate(
-          FullBlockBody(transactions),
-          TransactionValidationContext(header.parentHeaderId, header.height, header.slot)
-        )
-        .leftSemiflatTap(errors => logger.warn(show"Block id=${header.id} contains errors=$errors"))
-        .leftMap(errors => new IllegalArgumentException(errors.head))
-        .rethrowT
-      _ <- MonadThrow[F].raiseWhen(header.parentHeaderId != canonicalHeadId)(
-        new IllegalArgumentException("Block does not extend local tip")
-      )
-      _ <- core.consensus.localChain.adopt(header.id)
-      _ <- logger.info(
-        show"Adopted block id=${header.id} height=${header.height} slot=${header.slot} transactions=${request.block.body.transactionIds}"
-      )
-    } yield BroadcastBlockRes()
-  ).warnLogErrors.adaptErrorsToGrpc
+  override def broadcastBlock(request: BroadcastBlockReq, ctx: Metadata): F[BroadcastBlockRes] =
+    broadcastBlockImpl(core)(request.block, request.rewardTransaction)
+      .as(BroadcastBlockRes())
+      .warnLogErrors
+      .adaptErrorsToGrpc
 
   override def getStaker(request: GetStakerReq, ctx: Metadata): F[GetStakerRes] =
     core.consensus.stakerTracker
