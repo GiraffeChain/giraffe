@@ -12,8 +12,10 @@ abstract class BlockchainView {
   Future<TransactionOutput?> getTransactionOutput(
       TransactionOutputReference reference);
   Future<BlockId?> getBlockIdAtHeight(Int64 height);
-  Future<BlockId> get canonicalHeadId;
-  Future<BlockId> get genesisBlockId;
+  Future<BlockId> get canonicalHeadId =>
+      getBlockIdAtHeight(Int64.ZERO).then((v) => v!);
+  Future<BlockId> get genesisBlockId =>
+      getBlockIdAtHeight(Int64.ONE).then((v) => v!);
   Future<List<TransactionOutputReference>> getLockAddressState(
       LockAddress lock);
   Stream<TraversalStep> get traversal;
@@ -84,14 +86,6 @@ class BlockchainViewFromRpc extends BlockchainView {
   final NodeRpcClient nodeClient;
 
   BlockchainViewFromRpc({required this.nodeClient});
-
-  @override
-  Future<BlockId> get canonicalHeadId =>
-      getBlockIdAtHeight(Int64.ZERO).then((v) => v!);
-
-  @override
-  Future<BlockId> get genesisBlockId =>
-      getBlockIdAtHeight(Int64.ONE).then((v) => v!);
 
   @override
   Future<BlockBody?> getBlockBody(BlockId blockId) => retryableFuture(
