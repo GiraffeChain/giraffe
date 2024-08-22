@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'crypto/ed25519vrf.dart';
-import 'crypto/kes.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
@@ -12,8 +11,7 @@ class StakingAccount {
   final List<int> operatorVk;
   final List<int> vrfSk;
   final List<int> vrfVk;
-  final SecretKeyKesProduct kesSk;
-  final SignatureKesProduct registrationSignature;
+  final List<int> registrationSignature;
   final LockAddress lockAddress;
   final Int64 quantity;
 
@@ -22,14 +20,12 @@ class StakingAccount {
       required this.operatorVk,
       required this.vrfSk,
       required this.vrfVk,
-      required this.kesSk,
       required this.registrationSignature,
       required this.lockAddress,
       required this.quantity});
 
-  StakingAddress get stakingAddress => StakingAddress(value: operatorVk.base58);
   StakingRegistration get stakingRegistration => StakingRegistration(
-      signature: registrationSignature, stakingAddress: stakingAddress);
+      commitmentSignature: registrationSignature.base58, vk: operatorVk.base58);
 
   Transaction get transaction => Transaction(outputs: [
         TransactionOutput(
@@ -48,12 +44,11 @@ class StakingAccount {
     await directory.create(recursive: true);
     await File("${directory.path}/vrf").writeAsBytes(vrfSk);
     await File("${directory.path}/operator").writeAsBytes(operatorSk);
-    await File("${directory.path}/kes").writeAsBytes(kesSk.encode);
     await File("${directory.path}/account")
         .writeAsBytes(account.writeToBuffer());
   }
 
-  static Future<StakingAccount> generate(TreeHeight kesTreeHeight,
+  static Future<StakingAccount> generate(
       Int64 quantity, LockAddress lockAddress, List<int> seed) async {
     final operatorKeyPair =
         await ed25519.generateKeyPairFromSeed([...seed, 0].hash256);
@@ -61,18 +56,14 @@ class StakingAccount {
     final vrfKeyPair =
         await ed25519Vrf.generateKeyPairFromSeed([...seed, 1].hash256);
     final vrfVk = vrfKeyPair.vk;
-    final kesKeyPair = await kesProduct.generateKeyPair(
-        [...seed, 2].hash256, kesTreeHeight, Int64.ZERO);
-    final registrationMessageToSign =
-        blake2b256.convert(vrfVk + operatorVk).bytes;
+    final registrationMessageToSign = blake2b256.convert(vrfVk).bytes;
     final registrationSignature =
-        await kesProduct.sign(kesKeyPair.sk, registrationMessageToSign);
+        await ed25519.sign(operatorKeyPair.sk, registrationMessageToSign);
     return StakingAccount(
       operatorSk: operatorKeyPair.sk,
       operatorVk: operatorVk,
       vrfSk: vrfKeyPair.sk,
       vrfVk: vrfVk,
-      kesSk: kesKeyPair.sk,
       registrationSignature: registrationSignature,
       lockAddress: lockAddress,
       quantity: quantity,

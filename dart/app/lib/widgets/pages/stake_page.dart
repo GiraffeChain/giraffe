@@ -165,4 +165,4 @@ class RunMinting extends ConsumerWidget {
 Future<bool> stakingIsInitialized(FlutterSecureStorage storage) async =>
     await storage.containsKey(key: "blockchain-staker-vrf-sk") &&
     await storage.containsKey(key: "blockchain-staker-account") &&
-    await storage.containsKey(key: "blockchain-staker-kes");
+    await storage.containsKey(key: "blockchain-staker-operator-sk");

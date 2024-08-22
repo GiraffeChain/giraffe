@@ -1,10 +1,10 @@
+import 'package:blockchain_app/blockchain/common/models/unsigned.dart';
 import 'package:rational/rational.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 
 import 'package:fixnum/fixnum.dart';
 
 class VrfHit {
-  final EligibilityCertificate cert;
+  final PartialStakerCertificate cert;
   final Int64 slot;
   final Rational threshold;
 

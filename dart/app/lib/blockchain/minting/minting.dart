@@ -10,7 +10,6 @@ import '../consensus/staker_tracker.dart';
 import '../crypto/ed25519vrf.dart';
 import '../ledger/block_packer.dart';
 import 'block_producer.dart';
-import 'secure_store.dart';
 import 'staking.dart';
 import 'vrf_calculator.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -23,13 +22,11 @@ import 'package:rxdart/transformers.dart';
 
 class Minting {
   final BlockProducer blockProducer;
-  final SecureStore secureStore;
   final Staking staking;
   final VrfCalculator vrfCalculator;
 
   Minting({
     required this.blockProducer,
-    required this.secureStore,
     required this.staking,
     required this.vrfCalculator,
   });
@@ -55,11 +52,9 @@ class Minting {
 
         return StakingImpl.make(
           canonicalHead.slotId,
-          protocolSettings.operationalPeriodLength,
-          stakerData.activationOperationalPeriod,
           stakerData.account,
           vrfVk,
-          stakerData.secureStore,
+          stakerData.operatorSk,
           clock,
           vrfCalculator,
           etaCalculation,
@@ -77,7 +72,6 @@ class Minting {
 
           return Minting(
             blockProducer: blockProducer,
-            secureStore: stakerData.secureStore,
             staking: staking,
             vrfCalculator: vrfCalculator,
           );

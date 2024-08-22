@@ -77,9 +77,7 @@ class BlockHeader extends $pb.GeneratedMessage {
     $fixnum.Int64? timestamp,
     $fixnum.Int64? height,
     $fixnum.Int64? slot,
-    EligibilityCertificate? eligibilityCertificate,
-    OperationalCertificate? operationalCertificate,
-    $core.String? metadata,
+    StakerCertificate? stakerCertificate,
     TransactionOutputReference? account,
     $core.Map<$core.String, $core.String>? settings,
     BlockId? headerId,
@@ -103,14 +101,8 @@ class BlockHeader extends $pb.GeneratedMessage {
     if (slot != null) {
       $result.slot = slot;
     }
-    if (eligibilityCertificate != null) {
-      $result.eligibilityCertificate = eligibilityCertificate;
-    }
-    if (operationalCertificate != null) {
-      $result.operationalCertificate = operationalCertificate;
-    }
-    if (metadata != null) {
-      $result.metadata = metadata;
+    if (stakerCertificate != null) {
+      $result.stakerCertificate = stakerCertificate;
     }
     if (account != null) {
       $result.account = account;
@@ -134,11 +126,9 @@ class BlockHeader extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'timestamp', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'slot', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOM<EligibilityCertificate>(7, _omitFieldNames ? '' : 'eligibilityCertificate', protoName: 'eligibilityCertificate', subBuilder: EligibilityCertificate.create)
-    ..aOM<OperationalCertificate>(8, _omitFieldNames ? '' : 'operationalCertificate', protoName: 'operationalCertificate', subBuilder: OperationalCertificate.create)
-    ..aOS(9, _omitFieldNames ? '' : 'metadata')
-    ..aOM<TransactionOutputReference>(10, _omitFieldNames ? '' : 'account', subBuilder: TransactionOutputReference.create)
-    ..m<$core.String, $core.String>(11, _omitFieldNames ? '' : 'settings', entryClassName: 'BlockHeader.SettingsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('blockchain.models'))
+    ..aOM<StakerCertificate>(7, _omitFieldNames ? '' : 'stakerCertificate', protoName: 'stakerCertificate', subBuilder: StakerCertificate.create)
+    ..aOM<TransactionOutputReference>(8, _omitFieldNames ? '' : 'account', subBuilder: TransactionOutputReference.create)
+    ..m<$core.String, $core.String>(9, _omitFieldNames ? '' : 'settings', entryClassName: 'BlockHeader.SettingsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('blockchain.models'))
     ..aOM<BlockId>(12, _omitFieldNames ? '' : 'headerId', protoName: 'headerId', subBuilder: BlockId.create)
     ..hasRequiredFields = false
   ;
@@ -229,80 +219,61 @@ class BlockHeader extends $pb.GeneratedMessage {
 
   /// A certificate indicating that the block producer was eligible to make this block
   @$pb.TagNumber(7)
-  EligibilityCertificate get eligibilityCertificate => $_getN(6);
+  StakerCertificate get stakerCertificate => $_getN(6);
   @$pb.TagNumber(7)
-  set eligibilityCertificate(EligibilityCertificate v) { setField(7, v); }
+  set stakerCertificate(StakerCertificate v) { setField(7, v); }
   @$pb.TagNumber(7)
-  $core.bool hasEligibilityCertificate() => $_has(6);
+  $core.bool hasStakerCertificate() => $_has(6);
   @$pb.TagNumber(7)
-  void clearEligibilityCertificate() => clearField(7);
+  void clearStakerCertificate() => clearField(7);
   @$pb.TagNumber(7)
-  EligibilityCertificate ensureEligibilityCertificate() => $_ensure(6);
-
-  /// A certificate indicating the operator's commitment to this block
-  @$pb.TagNumber(8)
-  OperationalCertificate get operationalCertificate => $_getN(7);
-  @$pb.TagNumber(8)
-  set operationalCertificate(OperationalCertificate v) { setField(8, v); }
-  @$pb.TagNumber(8)
-  $core.bool hasOperationalCertificate() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearOperationalCertificate() => clearField(8);
-  @$pb.TagNumber(8)
-  OperationalCertificate ensureOperationalCertificate() => $_ensure(7);
-
-  /// Optional metadata stamped by the operator.
-  /// optional
-  @$pb.TagNumber(9)
-  $core.String get metadata => $_getSZ(8);
-  @$pb.TagNumber(9)
-  set metadata($core.String v) { $_setString(8, v); }
-  @$pb.TagNumber(9)
-  $core.bool hasMetadata() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearMetadata() => clearField(9);
+  StakerCertificate ensureStakerCertificate() => $_ensure(6);
 
   /// The operator's staking account location
-  @$pb.TagNumber(10)
-  TransactionOutputReference get account => $_getN(9);
-  @$pb.TagNumber(10)
-  set account(TransactionOutputReference v) { setField(10, v); }
-  @$pb.TagNumber(10)
-  $core.bool hasAccount() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearAccount() => clearField(10);
-  @$pb.TagNumber(10)
-  TransactionOutputReference ensureAccount() => $_ensure(9);
+  @$pb.TagNumber(8)
+  TransactionOutputReference get account => $_getN(7);
+  @$pb.TagNumber(8)
+  set account(TransactionOutputReference v) { setField(8, v); }
+  @$pb.TagNumber(8)
+  $core.bool hasAccount() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearAccount() => clearField(8);
+  @$pb.TagNumber(8)
+  TransactionOutputReference ensureAccount() => $_ensure(7);
 
   /// Configuration or protocol changes
-  @$pb.TagNumber(11)
-  $core.Map<$core.String, $core.String> get settings => $_getMap(10);
+  @$pb.TagNumber(9)
+  $core.Map<$core.String, $core.String> get settings => $_getMap(8);
 
   /// The ID of _this_ block header.  This value is optional and its contents are not included in the signable or identifiable data.  Clients which _can_ verify
   /// this value should verify this value, but some clients may not be able to or need to, in which case this field acts as a convenience.
   @$pb.TagNumber(12)
-  BlockId get headerId => $_getN(11);
+  BlockId get headerId => $_getN(9);
   @$pb.TagNumber(12)
   set headerId(BlockId v) { setField(12, v); }
   @$pb.TagNumber(12)
-  $core.bool hasHeaderId() => $_has(11);
+  $core.bool hasHeaderId() => $_has(9);
   @$pb.TagNumber(12)
   void clearHeaderId() => clearField(12);
   @$pb.TagNumber(12)
-  BlockId ensureHeaderId() => $_ensure(11);
+  BlockId ensureHeaderId() => $_ensure(9);
 }
 
 /// A certificate proving the operator's election
-class EligibilityCertificate extends $pb.GeneratedMessage {
-  factory EligibilityCertificate({
-    $core.String? vrfSig,
+class StakerCertificate extends $pb.GeneratedMessage {
+  factory StakerCertificate({
+    $core.String? blockSignature,
+    $core.String? vrfSignature,
     $core.String? vrfVK,
     $core.String? thresholdEvidence,
     $core.String? eta,
   }) {
     final $result = create();
-    if (vrfSig != null) {
-      $result.vrfSig = vrfSig;
+    if (blockSignature != null) {
+      $result.blockSignature = blockSignature;
+    }
+    if (vrfSignature != null) {
+      $result.vrfSignature = vrfSignature;
     }
     if (vrfVK != null) {
       $result.vrfVK = vrfVK;
@@ -315,15 +286,16 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  EligibilityCertificate._() : super();
-  factory EligibilityCertificate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory EligibilityCertificate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  StakerCertificate._() : super();
+  factory StakerCertificate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory StakerCertificate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EligibilityCertificate', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'vrfSig', protoName: 'vrfSig')
-    ..aOS(2, _omitFieldNames ? '' : 'vrfVK', protoName: 'vrfVK')
-    ..aOS(3, _omitFieldNames ? '' : 'thresholdEvidence', protoName: 'thresholdEvidence')
-    ..aOS(4, _omitFieldNames ? '' : 'eta')
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StakerCertificate', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'blockSignature', protoName: 'blockSignature')
+    ..aOS(2, _omitFieldNames ? '' : 'vrfSignature', protoName: 'vrfSignature')
+    ..aOS(3, _omitFieldNames ? '' : 'vrfVK', protoName: 'vrfVK')
+    ..aOS(4, _omitFieldNames ? '' : 'thresholdEvidence', protoName: 'thresholdEvidence')
+    ..aOS(5, _omitFieldNames ? '' : 'eta')
     ..hasRequiredFields = false
   ;
 
@@ -331,397 +303,83 @@ class EligibilityCertificate extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  EligibilityCertificate clone() => EligibilityCertificate()..mergeFromMessage(this);
+  StakerCertificate clone() => StakerCertificate()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  EligibilityCertificate copyWith(void Function(EligibilityCertificate) updates) => super.copyWith((message) => updates(message as EligibilityCertificate)) as EligibilityCertificate;
+  StakerCertificate copyWith(void Function(StakerCertificate) updates) => super.copyWith((message) => updates(message as StakerCertificate)) as StakerCertificate;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static EligibilityCertificate create() => EligibilityCertificate._();
-  EligibilityCertificate createEmptyInstance() => create();
-  static $pb.PbList<EligibilityCertificate> createRepeated() => $pb.PbList<EligibilityCertificate>();
+  static StakerCertificate create() => StakerCertificate._();
+  StakerCertificate createEmptyInstance() => create();
+  static $pb.PbList<StakerCertificate> createRepeated() => $pb.PbList<StakerCertificate>();
   @$core.pragma('dart2js:noInline')
-  static EligibilityCertificate getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EligibilityCertificate>(create);
-  static EligibilityCertificate? _defaultInstance;
+  static StakerCertificate getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StakerCertificate>(create);
+  static StakerCertificate? _defaultInstance;
+
+  /// Signs the block
+  /// Base58 encoded
+  /// length = 64
+  @$pb.TagNumber(1)
+  $core.String get blockSignature => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set blockSignature($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasBlockSignature() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBlockSignature() => clearField(1);
 
   /// Signs `eta ++ slot` using the `vrfSK`
   /// Base58 encoded
   /// length = 80
-  @$pb.TagNumber(1)
-  $core.String get vrfSig => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set vrfSig($core.String v) { $_setString(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasVrfSig() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearVrfSig() => clearField(1);
+  @$pb.TagNumber(2)
+  $core.String get vrfSignature => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set vrfSignature($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasVrfSignature() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearVrfSignature() => clearField(2);
 
   /// The VRF VK
   /// Base58 encoded
   /// length = 32
-  @$pb.TagNumber(2)
-  $core.String get vrfVK => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set vrfVK($core.String v) { $_setString(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasVrfVK() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearVrfVK() => clearField(2);
+  @$pb.TagNumber(3)
+  $core.String get vrfVK => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set vrfVK($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasVrfVK() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVrfVK() => clearField(3);
 
   /// Hash of the operator's `threshold`
   /// routine = blake2b256
   /// Base58 encoded
   /// length = 32
-  @$pb.TagNumber(3)
-  $core.String get thresholdEvidence => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set thresholdEvidence($core.String v) { $_setString(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasThresholdEvidence() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearThresholdEvidence() => clearField(3);
+  @$pb.TagNumber(4)
+  $core.String get thresholdEvidence => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set thresholdEvidence($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasThresholdEvidence() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearThresholdEvidence() => clearField(4);
 
   /// The epoch's randomness
   /// Base58 encoded
   /// length = 32
-  @$pb.TagNumber(4)
-  $core.String get eta => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set eta($core.String v) { $_setString(3, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasEta() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearEta() => clearField(4);
-}
-
-/// A certificate which commits an operator to a linear key, which is then used to sign the block
-class OperationalCertificate extends $pb.GeneratedMessage {
-  factory OperationalCertificate({
-    VerificationKeyKesProduct? parentVK,
-    SignatureKesProduct? parentSignature,
-    $core.String? childVK,
-    $core.String? childSignature,
-  }) {
-    final $result = create();
-    if (parentVK != null) {
-      $result.parentVK = parentVK;
-    }
-    if (parentSignature != null) {
-      $result.parentSignature = parentSignature;
-    }
-    if (childVK != null) {
-      $result.childVK = childVK;
-    }
-    if (childSignature != null) {
-      $result.childSignature = childSignature;
-    }
-    return $result;
-  }
-  OperationalCertificate._() : super();
-  factory OperationalCertificate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory OperationalCertificate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'OperationalCertificate', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..aOM<VerificationKeyKesProduct>(1, _omitFieldNames ? '' : 'parentVK', protoName: 'parentVK', subBuilder: VerificationKeyKesProduct.create)
-    ..aOM<SignatureKesProduct>(2, _omitFieldNames ? '' : 'parentSignature', protoName: 'parentSignature', subBuilder: SignatureKesProduct.create)
-    ..aOS(3, _omitFieldNames ? '' : 'childVK', protoName: 'childVK')
-    ..aOS(4, _omitFieldNames ? '' : 'childSignature', protoName: 'childSignature')
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  OperationalCertificate clone() => OperationalCertificate()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  OperationalCertificate copyWith(void Function(OperationalCertificate) updates) => super.copyWith((message) => updates(message as OperationalCertificate)) as OperationalCertificate;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static OperationalCertificate create() => OperationalCertificate._();
-  OperationalCertificate createEmptyInstance() => create();
-  static $pb.PbList<OperationalCertificate> createRepeated() => $pb.PbList<OperationalCertificate>();
-  @$core.pragma('dart2js:noInline')
-  static OperationalCertificate getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<OperationalCertificate>(create);
-  static OperationalCertificate? _defaultInstance;
-
-  /// The KES VK of the parent key (forward-secure) (hour+minute hands)
-  @$pb.TagNumber(1)
-  VerificationKeyKesProduct get parentVK => $_getN(0);
-  @$pb.TagNumber(1)
-  set parentVK(VerificationKeyKesProduct v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasParentVK() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearParentVK() => clearField(1);
-  @$pb.TagNumber(1)
-  VerificationKeyKesProduct ensureParentVK() => $_ensure(0);
-
-  /// Signs the `childVK` using the `parentSK`
-  @$pb.TagNumber(2)
-  SignatureKesProduct get parentSignature => $_getN(1);
-  @$pb.TagNumber(2)
-  set parentSignature(SignatureKesProduct v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasParentSignature() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearParentSignature() => clearField(2);
-  @$pb.TagNumber(2)
-  SignatureKesProduct ensureParentSignature() => $_ensure(1);
-
-  /// The linear VK
-  /// length = 32
-  @$pb.TagNumber(3)
-  $core.String get childVK => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set childVK($core.String v) { $_setString(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasChildVK() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearChildVK() => clearField(3);
-
-  /// The signature of the block
-  /// length = 64
-  @$pb.TagNumber(4)
-  $core.String get childSignature => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set childSignature($core.String v) { $_setString(3, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasChildSignature() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearChildSignature() => clearField(4);
-}
-
-class VerificationKeyKesProduct extends $pb.GeneratedMessage {
-  factory VerificationKeyKesProduct({
-    $core.String? value,
-    $core.int? step,
-  }) {
-    final $result = create();
-    if (value != null) {
-      $result.value = value;
-    }
-    if (step != null) {
-      $result.step = step;
-    }
-    return $result;
-  }
-  VerificationKeyKesProduct._() : super();
-  factory VerificationKeyKesProduct.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory VerificationKeyKesProduct.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'VerificationKeyKesProduct', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'value')
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'step', $pb.PbFieldType.OU3)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  VerificationKeyKesProduct clone() => VerificationKeyKesProduct()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  VerificationKeyKesProduct copyWith(void Function(VerificationKeyKesProduct) updates) => super.copyWith((message) => updates(message as VerificationKeyKesProduct)) as VerificationKeyKesProduct;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static VerificationKeyKesProduct create() => VerificationKeyKesProduct._();
-  VerificationKeyKesProduct createEmptyInstance() => create();
-  static $pb.PbList<VerificationKeyKesProduct> createRepeated() => $pb.PbList<VerificationKeyKesProduct>();
-  @$core.pragma('dart2js:noInline')
-  static VerificationKeyKesProduct getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<VerificationKeyKesProduct>(create);
-  static VerificationKeyKesProduct? _defaultInstance;
-
-  /// length = 32
-  @$pb.TagNumber(1)
-  $core.String get value => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set value($core.String v) { $_setString(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasValue() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearValue() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.int get step => $_getIZ(1);
-  @$pb.TagNumber(2)
-  set step($core.int v) { $_setUnsignedInt32(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasStep() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearStep() => clearField(2);
-}
-
-class SignatureKesSum extends $pb.GeneratedMessage {
-  factory SignatureKesSum({
-    $core.String? verificationKey,
-    $core.String? signature,
-    $core.Iterable<$core.String>? witness,
-  }) {
-    final $result = create();
-    if (verificationKey != null) {
-      $result.verificationKey = verificationKey;
-    }
-    if (signature != null) {
-      $result.signature = signature;
-    }
-    if (witness != null) {
-      $result.witness.addAll(witness);
-    }
-    return $result;
-  }
-  SignatureKesSum._() : super();
-  factory SignatureKesSum.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory SignatureKesSum.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignatureKesSum', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'verificationKey', protoName: 'verificationKey')
-    ..aOS(2, _omitFieldNames ? '' : 'signature')
-    ..pPS(3, _omitFieldNames ? '' : 'witness')
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  SignatureKesSum clone() => SignatureKesSum()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  SignatureKesSum copyWith(void Function(SignatureKesSum) updates) => super.copyWith((message) => updates(message as SignatureKesSum)) as SignatureKesSum;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static SignatureKesSum create() => SignatureKesSum._();
-  SignatureKesSum createEmptyInstance() => create();
-  static $pb.PbList<SignatureKesSum> createRepeated() => $pb.PbList<SignatureKesSum>();
-  @$core.pragma('dart2js:noInline')
-  static SignatureKesSum getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SignatureKesSum>(create);
-  static SignatureKesSum? _defaultInstance;
-
-  /// length = 32
-  @$pb.TagNumber(1)
-  $core.String get verificationKey => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set verificationKey($core.String v) { $_setString(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasVerificationKey() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearVerificationKey() => clearField(1);
-
-  /// length = 64
-  @$pb.TagNumber(2)
-  $core.String get signature => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set signature($core.String v) { $_setString(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasSignature() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSignature() => clearField(2);
-
-  /// item length = 32
-  @$pb.TagNumber(3)
-  $core.List<$core.String> get witness => $_getList(2);
-}
-
-class SignatureKesProduct extends $pb.GeneratedMessage {
-  factory SignatureKesProduct({
-    SignatureKesSum? superSignature,
-    SignatureKesSum? subSignature,
-    $core.String? subRoot,
-  }) {
-    final $result = create();
-    if (superSignature != null) {
-      $result.superSignature = superSignature;
-    }
-    if (subSignature != null) {
-      $result.subSignature = subSignature;
-    }
-    if (subRoot != null) {
-      $result.subRoot = subRoot;
-    }
-    return $result;
-  }
-  SignatureKesProduct._() : super();
-  factory SignatureKesProduct.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory SignatureKesProduct.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignatureKesProduct', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..aOM<SignatureKesSum>(1, _omitFieldNames ? '' : 'superSignature', protoName: 'superSignature', subBuilder: SignatureKesSum.create)
-    ..aOM<SignatureKesSum>(2, _omitFieldNames ? '' : 'subSignature', protoName: 'subSignature', subBuilder: SignatureKesSum.create)
-    ..aOS(3, _omitFieldNames ? '' : 'subRoot', protoName: 'subRoot')
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  SignatureKesProduct clone() => SignatureKesProduct()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  SignatureKesProduct copyWith(void Function(SignatureKesProduct) updates) => super.copyWith((message) => updates(message as SignatureKesProduct)) as SignatureKesProduct;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static SignatureKesProduct create() => SignatureKesProduct._();
-  SignatureKesProduct createEmptyInstance() => create();
-  static $pb.PbList<SignatureKesProduct> createRepeated() => $pb.PbList<SignatureKesProduct>();
-  @$core.pragma('dart2js:noInline')
-  static SignatureKesProduct getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SignatureKesProduct>(create);
-  static SignatureKesProduct? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  SignatureKesSum get superSignature => $_getN(0);
-  @$pb.TagNumber(1)
-  set superSignature(SignatureKesSum v) { setField(1, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasSuperSignature() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearSuperSignature() => clearField(1);
-  @$pb.TagNumber(1)
-  SignatureKesSum ensureSuperSignature() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  SignatureKesSum get subSignature => $_getN(1);
-  @$pb.TagNumber(2)
-  set subSignature(SignatureKesSum v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasSubSignature() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSubSignature() => clearField(2);
-  @$pb.TagNumber(2)
-  SignatureKesSum ensureSubSignature() => $_ensure(1);
-
-  /// length = 32
-  @$pb.TagNumber(3)
-  $core.String get subRoot => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set subRoot($core.String v) { $_setString(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasSubRoot() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearSubRoot() => clearField(3);
+  @$pb.TagNumber(5)
+  $core.String get eta => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set eta($core.String v) { $_setString(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasEta() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearEta() => clearField(5);
 }
 
 /// A glorified tuple
@@ -791,57 +449,6 @@ class SlotId extends $pb.GeneratedMessage {
   void clearBlockId() => clearField(2);
   @$pb.TagNumber(2)
   BlockId ensureBlockId() => $_ensure(1);
-}
-
-class StakingAddress extends $pb.GeneratedMessage {
-  factory StakingAddress({
-    $core.String? value,
-  }) {
-    final $result = create();
-    if (value != null) {
-      $result.value = value;
-    }
-    return $result;
-  }
-  StakingAddress._() : super();
-  factory StakingAddress.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory StakingAddress.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StakingAddress', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'value')
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  StakingAddress clone() => StakingAddress()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  StakingAddress copyWith(void Function(StakingAddress) updates) => super.copyWith((message) => updates(message as StakingAddress)) as StakingAddress;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static StakingAddress create() => StakingAddress._();
-  StakingAddress createEmptyInstance() => create();
-  static $pb.PbList<StakingAddress> createRepeated() => $pb.PbList<StakingAddress>();
-  @$core.pragma('dart2js:noInline')
-  static StakingAddress getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StakingAddress>(create);
-  static StakingAddress? _defaultInstance;
-
-  /// length = 32
-  @$pb.TagNumber(1)
-  $core.String get value => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set value($core.String v) { $_setString(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasValue() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearValue() => clearField(1);
 }
 
 /// Captures the ordering of transaction IDs within a block
@@ -1685,15 +1292,15 @@ class AccountRegistration extends $pb.GeneratedMessage {
 /// A proof-of-stake registration
 class StakingRegistration extends $pb.GeneratedMessage {
   factory StakingRegistration({
-    SignatureKesProduct? signature,
-    StakingAddress? stakingAddress,
+    $core.String? commitmentSignature,
+    $core.String? vk,
   }) {
     final $result = create();
-    if (signature != null) {
-      $result.signature = signature;
+    if (commitmentSignature != null) {
+      $result.commitmentSignature = commitmentSignature;
     }
-    if (stakingAddress != null) {
-      $result.stakingAddress = stakingAddress;
+    if (vk != null) {
+      $result.vk = vk;
     }
     return $result;
   }
@@ -1702,8 +1309,8 @@ class StakingRegistration extends $pb.GeneratedMessage {
   factory StakingRegistration.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'StakingRegistration', package: const $pb.PackageName(_omitMessageNames ? '' : 'blockchain.models'), createEmptyInstance: create)
-    ..aOM<SignatureKesProduct>(1, _omitFieldNames ? '' : 'signature', subBuilder: SignatureKesProduct.create)
-    ..aOM<StakingAddress>(2, _omitFieldNames ? '' : 'stakingAddress', protoName: 'stakingAddress', subBuilder: StakingAddress.create)
+    ..aOS(1, _omitFieldNames ? '' : 'commitmentSignature', protoName: 'commitmentSignature')
+    ..aOS(2, _omitFieldNames ? '' : 'vk')
     ..hasRequiredFields = false
   ;
 
@@ -1728,27 +1335,29 @@ class StakingRegistration extends $pb.GeneratedMessage {
   static StakingRegistration getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<StakingRegistration>(create);
   static StakingRegistration? _defaultInstance;
 
+  /// Ed25519 Signature of the VRF VK that is stamped on each header
+  /// Base58 encoded
+  /// length = 64
   @$pb.TagNumber(1)
-  SignatureKesProduct get signature => $_getN(0);
+  $core.String get commitmentSignature => $_getSZ(0);
   @$pb.TagNumber(1)
-  set signature(SignatureKesProduct v) { setField(1, v); }
+  set commitmentSignature($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasSignature() => $_has(0);
+  $core.bool hasCommitmentSignature() => $_has(0);
   @$pb.TagNumber(1)
-  void clearSignature() => clearField(1);
-  @$pb.TagNumber(1)
-  SignatureKesProduct ensureSignature() => $_ensure(0);
+  void clearCommitmentSignature() => clearField(1);
 
+  /// Ed25519
+  /// Base58 encoded
+  /// length = 32
   @$pb.TagNumber(2)
-  StakingAddress get stakingAddress => $_getN(1);
+  $core.String get vk => $_getSZ(1);
   @$pb.TagNumber(2)
-  set stakingAddress(StakingAddress v) { setField(2, v); }
+  set vk($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
-  $core.bool hasStakingAddress() => $_has(1);
+  $core.bool hasVk() => $_has(1);
   @$pb.TagNumber(2)
-  void clearStakingAddress() => clearField(2);
-  @$pb.TagNumber(2)
-  StakingAddress ensureStakingAddress() => $_ensure(1);
+  void clearVk() => clearField(2);
 }
 
 enum GraphEntry_Entry {

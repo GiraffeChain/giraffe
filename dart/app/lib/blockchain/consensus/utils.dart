@@ -25,5 +25,5 @@ extension RatioOps on Rational {
 
 extension BlockHeaderOps on BlockHeader {
   Future<Uint8List> get rho =>
-      ed25519Vrf.proofToHash(eligibilityCertificate.vrfSig.decodeBase58);
+      ed25519Vrf.proofToHash(stakerCertificate.vrfSignature.decodeBase58);
 }

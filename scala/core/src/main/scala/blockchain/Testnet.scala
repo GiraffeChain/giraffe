@@ -79,7 +79,7 @@ class TestnetAccount(
     val quantity: Long
 ):
   val stakingRegistration =
-    StakingRegistration(ByteVector(registrationSignature).toBase58, ByteVector(vrfVk).toBase58)
+    StakingRegistration(ByteVector(registrationSignature).toBase58, ByteVector(operatorVk).toBase58)
 
   val transaction =
     Transaction(

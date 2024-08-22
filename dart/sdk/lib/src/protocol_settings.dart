@@ -11,35 +11,32 @@ class ProtocolSettings {
   final int chainSelectionKLookback;
   final Duration slotDuration;
   final int operationalPeriodsPerEpoch;
-  final int kesKeyHours;
-  final int kesKeyMinutes;
 
-  ProtocolSettings(
-      {required this.fEffective,
-      required this.vrfLddCutoff,
-      required this.vrfPrecision,
-      required this.vrfBaselineDifficulty,
-      required this.vrfAmplitude,
-      required this.vrfSlotGap,
-      required this.chainSelectionKLookback,
-      required this.slotDuration,
-      required this.operationalPeriodsPerEpoch,
-      required this.kesKeyHours,
-      required this.kesKeyMinutes});
+  ProtocolSettings({
+    required this.fEffective,
+    required this.vrfLddCutoff,
+    required this.vrfPrecision,
+    required this.vrfBaselineDifficulty,
+    required this.vrfAmplitude,
+    required this.vrfSlotGap,
+    required this.chainSelectionKLookback,
+    required this.slotDuration,
+    required this.operationalPeriodsPerEpoch,
+  });
 
   factory ProtocolSettings.fromMap(Map<String, String> map) => ProtocolSettings(
-      fEffective: _parseRational(map["f-effective"]!),
-      vrfLddCutoff: int.parse(map["vrf-ldd-cutoff"]!),
-      vrfPrecision: int.parse(map["vrf-precision"]!),
-      vrfBaselineDifficulty: _parseRational(map["vrf-baseline-difficulty"]!),
-      vrfAmplitude: _parseRational(map["vrf-amplitude"]!),
-      vrfSlotGap: int.parse(map["vrf-slot-gap"]!),
-      chainSelectionKLookback: int.parse(map["chain-selection-k-lookback"]!),
-      slotDuration: Duration(milliseconds: int.parse(map["slot-duration-ms"]!)),
-      operationalPeriodsPerEpoch:
-          int.parse(map["operational-periods-per-epoch"]!),
-      kesKeyHours: int.parse(map["kes-key-hours"]!),
-      kesKeyMinutes: int.parse(map["kes-key-minutes"]!));
+        fEffective: _parseRational(map["f-effective"]!),
+        vrfLddCutoff: int.parse(map["vrf-ldd-cutoff"]!),
+        vrfPrecision: int.parse(map["vrf-precision"]!),
+        vrfBaselineDifficulty: _parseRational(map["vrf-baseline-difficulty"]!),
+        vrfAmplitude: _parseRational(map["vrf-amplitude"]!),
+        vrfSlotGap: int.parse(map["vrf-slot-gap"]!),
+        chainSelectionKLookback: int.parse(map["chain-selection-k-lookback"]!),
+        slotDuration:
+            Duration(milliseconds: int.parse(map["slot-duration-ms"]!)),
+        operationalPeriodsPerEpoch:
+            int.parse(map["operational-periods-per-epoch"]!),
+      );
 
   ProtocolSettings mergeFromMap(Map<String, String> map) => ProtocolSettings(
         fEffective: map.containsKey("f-effective")
@@ -70,12 +67,6 @@ class ProtocolSettings {
             map.containsKey("operational-periods-per-epoch")
                 ? int.parse(map["operational-periods-per-epoch"]!)
                 : operationalPeriodsPerEpoch,
-        kesKeyHours: map.containsKey("kes-key-hours")
-            ? int.parse(map["kes-key-hours"]!)
-            : kesKeyHours,
-        kesKeyMinutes: map.containsKey("kes-key-minutes")
-            ? int.parse(map["kes-key-minutes"]!)
-            : kesKeyMinutes,
       );
 
   static const defaultAsMap = {
@@ -88,13 +79,11 @@ class ProtocolSettings {
     "chain-selection-k-lookback": "576",
     "slot-duration-ms": "3000",
     "operational-periods-per-epoch": "12",
-    "kes-key-hours": "5",
-    "kes-key-minutes": "5"
   };
 
   @override
   String toString() =>
-      "ProtocolSettings(fEffective=$fEffective, vrfLddCutoff=$vrfLddCutoff, vrfPrecision=$vrfPrecision, vrfBaselineDifficulty=$vrfBaselineDifficulty, vrfAmplitude=$vrfAmplitude, vrfSlotGap=$vrfSlotGap, kLookback=$chainSelectionKLookback slotDuration=${slotDuration.inMilliseconds}ms, operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch, kesHeight=(${kesKeyHours}, ${kesKeyMinutes}), operationalPeriodLength=$operationalPeriodLength, epochLength=$epochLength)";
+      "ProtocolSettings(fEffective=$fEffective, vrfLddCutoff=$vrfLddCutoff, vrfPrecision=$vrfPrecision, vrfBaselineDifficulty=$vrfBaselineDifficulty, vrfAmplitude=$vrfAmplitude, vrfSlotGap=$vrfSlotGap, kLookback=$chainSelectionKLookback slotDuration=${slotDuration.inMilliseconds}ms, operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch, operationalPeriodLength=$operationalPeriodLength, epochLength=$epochLength)";
 
   static final ProtocolSettings defaultSettings =
       ProtocolSettings.fromMap(defaultAsMap);
@@ -114,8 +103,6 @@ class ProtocolSettings {
 
   Int64 get operationalPeriodLength =>
       epochLength ~/ operationalPeriodsPerEpoch;
-
-  TreeHeight get kesTreeHeight => TreeHeight(kesKeyHours, kesKeyMinutes);
 }
 
 _parseRational(String value) {
@@ -124,22 +111,4 @@ _parseRational(String value) {
     return Rational(BigInt.parse(split[0]));
   else
     return Rational(BigInt.parse(split[0]), BigInt.parse(split[1]));
-}
-
-class TreeHeight {
-  final int sup;
-  final int sub;
-
-  TreeHeight(this.sup, this.sub);
-
-  @override
-  int get hashCode => Object.hash(sup, sub);
-
-  @override
-  bool operator ==(Object other) {
-    if (other is TreeHeight) {
-      return sup == other.sup && sub == other.sub;
-    }
-    return false;
-  }
 }
