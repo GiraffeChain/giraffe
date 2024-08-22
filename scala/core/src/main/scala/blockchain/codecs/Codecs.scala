@@ -1,7 +1,6 @@
 package blockchain.codecs
 
 import blockchain.Bytes
-import blockchain.consensus.UnsignedBlockHeader.PartialOperationalCertificate
 import blockchain.consensus.{UnsignedBlockHeader, VrfArgument}
 import blockchain.crypto.Blake2b256
 import blockchain.models.*
@@ -80,9 +79,7 @@ trait Codecs {
           .concat(header.timestamp.immutableBytes)
           .concat(header.height.immutableBytes)
           .concat(header.slot.immutableBytes)
-          .concat(header.eligibilityCertificate.immutableBytes)
-          .concat(header.operationalCertificate.immutableBytes)
-          .concat(header.metadata.decodeBase58)
+          .concat(header.stakerCertificate.immutableBytes)
           .concat(header.account.immutableBytes)
 
   given SignableBytes[UnsignedBlockHeader] with
@@ -94,37 +91,25 @@ trait Codecs {
           .concat(header.timestamp.immutableBytes)
           .concat(header.height.immutableBytes)
           .concat(header.slot.immutableBytes)
-          .concat(header.eligibilityCertificate.immutableBytes)
-          .concat(header.partialOperationalCertificate.immutableBytes)
-          .concat(header.metadata.decodeBase58)
+          .concat(header.partialStakerCertificate.immutableBytes)
           .concat(header.account.immutableBytes)
 
-  given ImmutableBytes[EligibilityCertificate] with
-    extension (certificate: EligibilityCertificate)
+  given ImmutableBytes[StakerCertificate] with
+    extension (certificate: StakerCertificate)
       def immutableBytes: Bytes =
-        certificate.vrfSig.decodeBase58.immutableBytes
+        certificate.blockSignature.decodeBase58.immutableBytes
+          .concat(certificate.vrfSignature.decodeBase58.immutableBytes)
           .concat(certificate.vrfVK.decodeBase58.immutableBytes)
           .concat(certificate.thresholdEvidence.decodeBase58.immutableBytes)
           .concat(certificate.eta.decodeBase58.immutableBytes)
 
-  given ImmutableBytes[OperationalCertificate] with
-    extension (certificate: OperationalCertificate)
+  given ImmutableBytes[UnsignedBlockHeader.PartialStakerCertificate] with
+    extension (certificate: UnsignedBlockHeader.PartialStakerCertificate)
       def immutableBytes: Bytes =
-        certificate.parentVK.immutableBytes
-          .concat(certificate.parentSignature.immutableBytes)
-          .concat(certificate.childVK.decodeBase58.immutableBytes)
-          .concat(certificate.childSignature.decodeBase58.immutableBytes)
-
-  given ImmutableBytes[PartialOperationalCertificate] with
-    extension (certificate: PartialOperationalCertificate)
-      def immutableBytes: Bytes =
-        certificate.parentVK.immutableBytes
-          .concat(certificate.parentSignature.immutableBytes)
-          .concat(certificate.childVK.decodeBase58.immutableBytes)
-
-  given ImmutableBytes[VerificationKeyKesProduct] with
-    extension (vk: VerificationKeyKesProduct)
-      def immutableBytes: Bytes = vk.value.decodeBase58.immutableBytes.concat(vk.step.immutableBytes)
+        certificate.vrfSignature.decodeBase58.immutableBytes
+          .concat(certificate.vrfVK.decodeBase58.immutableBytes)
+          .concat(certificate.thresholdEvidence.decodeBase58.immutableBytes)
+          .concat(certificate.eta.decodeBase58.immutableBytes)
 
   given [T: ImmutableBytes]: ImmutableBytes[Seq[T]] with
     extension (iterable: Seq[T])
@@ -135,20 +120,6 @@ trait Codecs {
     extension (o: Option[T])
       def immutableBytes: Bytes =
         o.fold(ZeroBS)(v => OneBS.concat(v.immutableBytes))
-
-  given ImmutableBytes[SignatureKesSum] with
-    extension (signature: SignatureKesSum)
-      def immutableBytes: Bytes =
-        signature.verificationKey.decodeBase58
-          .concat(signature.signature.decodeBase58)
-          .concat(signature.witness.map(_.decodeBase58).immutableBytes)
-
-  given ImmutableBytes[SignatureKesProduct] with
-    extension (signature: SignatureKesProduct)
-      def immutableBytes: Bytes =
-        signature.superSignature.immutableBytes
-          .concat(signature.subSignature.immutableBytes)
-          .concat(signature.subRoot.decodeBase58.immutableBytes)
 
   given ImmutableBytes[TransactionOutputReference] with
     extension (reference: TransactionOutputReference)
@@ -207,15 +178,11 @@ trait Codecs {
     def address: LockAddress =
       LockAddress(ByteVector(new Blake2b256().hash(lock.immutableBytes.toByteArray)).toBase58)
 
-  given ImmutableBytes[StakingAddress] with
-    extension (stakingAddress: StakingAddress) def immutableBytes: Bytes = stakingAddress.value.decodeBase58
-
   given ImmutableBytes[StakingRegistration] with
     extension (registration: StakingRegistration)
       def immutableBytes: Bytes =
-        registration.signature.immutableBytes.concat(
-          registration.stakingAddress.immutableBytes
-        )
+        registration.commitmentSignature.decodeBase58.immutableBytes
+          .concat(registration.vk.decodeBase58.immutableBytes)
 
   given ImmutableBytes[LockAddress] with
     extension (lockAddress: LockAddress) def immutableBytes: Bytes = lockAddress.value.decodeBase58

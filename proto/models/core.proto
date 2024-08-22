@@ -30,73 +30,36 @@ message BlockHeader {
   // The time-slot in which the block producer created the block
   uint64 slot = 6;
   // A certificate indicating that the block producer was eligible to make this block
-  EligibilityCertificate eligibilityCertificate = 7 [(validate.rules).message.required = true];
-  // A certificate indicating the operator's commitment to this block
-  OperationalCertificate operationalCertificate = 8 [(validate.rules).message.required = true];
-  // Optional metadata stamped by the operator.
-  // optional
-  string metadata = 9;
+  StakerCertificate stakerCertificate = 7 [(validate.rules).message.required = true];
   // The operator's staking account location
-  TransactionOutputReference account = 10 [(validate.rules).message.required = true];
+  TransactionOutputReference account = 8 [(validate.rules).message.required = true];
   // Configuration or protocol changes
-  map<string, string> settings = 11;
+  map<string, string> settings = 9;
 }
 
 // A certificate proving the operator's election
-message EligibilityCertificate {
+message StakerCertificate {
+    // Signs the block
+    // Base58 encoded
+    // length = 64
+    string blockSignature = 1;
     // Signs `eta ++ slot` using the `vrfSK`
     // Base58 encoded
     // length = 80
-    string vrfSig = 1;
+    string vrfSignature = 2;
     // The VRF VK
     // Base58 encoded
     // length = 32
-    string vrfVK = 2;
+    string vrfVK = 3;
     // Hash of the operator's `threshold`
     // routine = blake2b256
     // Base58 encoded
     // length = 32
-    string thresholdEvidence = 3;
+    string thresholdEvidence = 4;
     // The epoch's randomness
     // Base58 encoded
     // length = 32
-    string eta = 4;
-  }
-
-// A certificate which commits an operator to a linear key, which is then used to sign the block
-message OperationalCertificate {
-    // The KES VK of the parent key (forward-secure) (hour+minute hands)
-    VerificationKeyKesProduct parentVK = 1 [(validate.rules).message.required = true];
-    // Signs the `childVK` using the `parentSK`
-    SignatureKesProduct parentSignature = 2 [(validate.rules).message.required = true];
-    // The linear VK
-    // length = 32
-    string childVK = 3;
-    // The signature of the block
-    // length = 64
-    string childSignature = 4;
-}
-
-message VerificationKeyKesProduct {
-    // length = 32
-    string value = 1;
-    uint32 step = 2;
-}
-
-message SignatureKesSum {
-    // length = 32
-    string verificationKey = 1;
-    // length = 64
-    string signature = 2;
-    // item length = 32
-    repeated string witness = 3;
-}
-
-message SignatureKesProduct {
-    SignatureKesSum superSignature = 1 [(validate.rules).message.required = true];
-    SignatureKesSum subSignature = 2 [(validate.rules).message.required = true];
-    // length = 32
-    string subRoot = 3;
+    string eta = 5;
 }
 
 // A glorified tuple
@@ -105,11 +68,6 @@ message SlotId {
     uint64 slot = 1;
     // The ID of the block
     BlockId blockId = 2 [(validate.rules).message.required = true];
-}
-
-message StakingAddress {
-    // length = 32
-    string value = 1;
 }
 
 // Captures the ordering of transaction IDs within a block
@@ -198,8 +156,14 @@ message AccountRegistration {
 
 // A proof-of-stake registration
 message StakingRegistration {
-    SignatureKesProduct signature = 1 [(validate.rules).message.required = true];
-    StakingAddress stakingAddress = 2 [(validate.rules).message.required = true];
+    // Ed25519 Signature of the VRF VK that is stamped on each header
+    // Base58 encoded
+    // length = 64
+    string commitmentSignature = 1;
+    // Ed25519
+    // Base58 encoded
+    // length = 32
+    string vk = 2;
 }
 
 message GraphEntry {

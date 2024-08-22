@@ -32,7 +32,7 @@ object Consensus:
       logger <- Slf4jLogger.fromName("Consensus").toResource
       protocolSettings <- Resource.pure[F, ProtocolSettings](ProtocolSettings.Default.merge(genesis.header.settings))
       etaCalculation <- EtaCalculation
-        .make[F](dataStores.headers.getOrRaise, clock, genesis.header.eligibilityCertificate.eta.decodeBase58)
+        .make[F](dataStores.headers.getOrRaise, clock, genesis.header.stakerCertificate.eta.decodeBase58)
       epochBoundariesBSS <- EpochBoundaries.make[F](
         dataStores.epochBoundaries.pure[F],
         eventIdGetterSetters.epochBoundaries.get(),

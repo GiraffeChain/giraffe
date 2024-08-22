@@ -10,7 +10,6 @@ case class CryptoResources[F[_]](
     blake2b256: Resource[F, Blake2b256],
     blake2b512: Resource[F, Blake2b512],
     ed25519VRF: Resource[F, Ed25519VRF],
-    kesProduct: Resource[F, KesProduct],
     ed25519: Resource[F, Ed25519]
 )
 
@@ -29,7 +28,6 @@ object CryptoResources:
           c(new Blake2b256),
           c(new Blake2b512),
           c(new Ed25519VRF),
-          c(new KesProduct),
           c(new Ed25519)
         ).mapN(CryptoResources.apply)
       }

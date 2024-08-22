@@ -29,35 +29,16 @@ object Genesis:
     TransactionId(byteStringZero32)
   )
 
-  def vrfCertificate(eta: Eta): EligibilityCertificate = EligibilityCertificate(
+  def stakerCertificate(eta: Eta): StakerCertificate = StakerCertificate(
+    byteStringZero64,
     byteStringZero80,
     byteStringZero32,
     byteStringZero32,
     eta = ByteVector(eta.toByteArray).toBase58
   )
 
-  val kesCertificate: OperationalCertificate = OperationalCertificate(
-    VerificationKeyKesProduct(byteStringZero32, 0),
-    SignatureKesProduct(
-      SignatureKesSum(
-        byteStringZero32,
-        byteStringZero64,
-        Vector.empty
-      ),
-      SignatureKesSum(
-        byteStringZero32,
-        byteStringZero64,
-        Vector.empty
-      ),
-      byteStringZero32
-    ),
-    byteStringZero32,
-    byteStringZero64
-  )
-
   def init[F[_]: Sync](timestamp: Timestamp, transactions: List[Transaction]): F[FullBlock] =
     Sync[F].delay {
-
       val eta: Eta =
         ByteString.copyFrom(
           new Blake2b256().hash(
@@ -75,9 +56,7 @@ object Genesis:
           timestamp = timestamp,
           height = Height,
           slot = Slot,
-          eligibilityCertificate = vrfCertificate(eta),
-          operationalCertificate = kesCertificate,
-          metadata = "",
+          stakerCertificate = stakerCertificate(eta),
           account = StakingAccount,
           settings = ProtocolSettings.Default.toMap
         ).withEmbeddedId

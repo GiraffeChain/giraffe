@@ -1,9 +1,8 @@
 package blockchain
 
 import blockchain.codecs.{*, given}
-import blockchain.consensus.ProtocolSettings
-import blockchain.crypto.{*, given}
-import blockchain.models.{SignatureKesProduct as _, *}
+import blockchain.crypto.*
+import blockchain.models.*
 import blockchain.utility.*
 import cats.data.OptionT
 import cats.effect.std.Random
@@ -39,7 +38,6 @@ object Testnet:
       stakesValue = stakes.getOrElse(List(10000000L))
       accounts <- stakesValue.traverseWithIndexM((quantity, index) =>
         TestnetAccount.generate(
-          ProtocolSettings.Default.kesTreeHeight.asTuple,
           quantity,
           Longs.toByteArray(timestampValue) ++ Ints.toByteArray(index)
         )
@@ -77,14 +75,12 @@ class TestnetAccount(
     val operatorVk: Array[Byte],
     val vrfSk: Array[Byte],
     val vrfVk: Array[Byte],
-    val kesSk: SecretKeyKesProduct,
-    val registrationSignature: SignatureKesProduct,
+    val registrationSignature: Array[Byte],
     val quantity: Long
 ):
-  val stakingAddress =
-    StakingAddress(ByteVector(operatorVk).toBase58)
   val stakingRegistration =
-    StakingRegistration(registrationSignature, stakingAddress)
+    StakingRegistration(ByteVector(registrationSignature).toBase58, ByteVector(vrfVk).toBase58)
+
   val transaction =
     Transaction(
       outputs = List(
@@ -94,20 +90,20 @@ class TestnetAccount(
         )
       )
     )
+
   val account =
     TransactionOutputReference(transaction.id)
+
   def save[F[_]: Async: Files](dir: Path): F[Unit] =
     for {
       _ <- Files[F].createDirectories(dir)
       _ <- Stream.chunk(Chunk.array(vrfSk)).through(Files[F].writeAll(dir / "vrf")).compile.drain
       _ <- Stream.chunk(Chunk.array(operatorSk)).through(Files[F].writeAll(dir / "operator")).compile.drain
       _ <- Stream.chunk(Chunk.array(account.toByteArray)).through(Files[F].writeAll(dir / "account")).compile.drain
-      _ <- Stream.chunk(Chunk.array(kesSk.toByteArray)).through(Files[F].writeAll(dir / "kes")).compile.drain
     } yield ()
 
 object TestnetAccount:
   def generate[F[_]: Sync: Random: CryptoResources](
-      kesTreeHeight: (Int, Int),
       quantity: Long,
       seed: Array[Byte]
   ): F[TestnetAccount] =
@@ -116,13 +112,6 @@ object TestnetAccount:
       operatorVk <- CryptoResources[F].ed25519.useSync(_.getVerificationKey(operatorSk))
       vrfSk <- CryptoResources[F].blake2b256.useSync(_.hash(seed, Array(1)))
       vrfVk <- CryptoResources[F].ed25519VRF.useSync(_.getVerificationKey(vrfSk))
-      (kesSk, kesVk) <- CryptoResources[F].blake2b256
-        .useSync(_.hash(seed, Array(2)))
-        .flatMap(seed => CryptoResources[F].kesProduct.useSync(_.createKeyPair(seed, kesTreeHeight, 0)))
-      registrationMessageToSign <- CryptoResources[F].blake2b256.useSync(_.hash(vrfVk, operatorVk))
-      registrationSignature <- CryptoResources[F].kesProduct.useSync(_.sign(kesSk, registrationMessageToSign))
-      signatureIsValid <- CryptoResources[F].kesProduct.useSync(
-        _.verify(registrationSignature, registrationMessageToSign, kesVk)
-      )
-      _ <- Sync[F].raiseWhen(!signatureIsValid)(new IllegalStateException("Signature invalid"))
-    } yield new TestnetAccount(operatorSk, operatorVk, vrfSk, vrfVk, kesSk, registrationSignature, quantity)
+      registrationMessageToSign <- CryptoResources[F].blake2b256.useSync(_.hash(vrfVk))
+      registrationSignature <- CryptoResources[F].ed25519.useSync(_.sign(operatorSk, registrationMessageToSign))
+    } yield new TestnetAccount(operatorSk, operatorVk, vrfSk, vrfVk, registrationSignature, quantity)

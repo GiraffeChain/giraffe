@@ -48,7 +48,7 @@ package object consensus:
     def rho: Ed25519VRF ?=> Rho =
       ByteString.copyFrom(
         summon[Ed25519VRF].proofToHash(
-          header.eligibilityCertificate.vrfSig.decodeBase58.toByteArray
+          header.stakerCertificate.vrfSignature.decodeBase58.toByteArray
         )
       )
     def unsigned: UnsignedBlockHeader =
@@ -59,13 +59,7 @@ package object consensus:
         header.timestamp,
         header.height,
         header.slot,
-        header.eligibilityCertificate,
-        UnsignedBlockHeader.PartialOperationalCertificate(
-          header.operationalCertificate.parentVK,
-          header.operationalCertificate.parentSignature,
-          header.operationalCertificate.childVK
-        ),
-        header.metadata,
+        UnsignedBlockHeader.PartialStakerCertificate(header.stakerCertificate),
         header.account
       )
 
@@ -76,15 +70,21 @@ package object consensus:
       timestamp: Timestamp,
       height: Height,
       slot: Slot,
-      eligibilityCertificate: EligibilityCertificate,
-      partialOperationalCertificate: UnsignedBlockHeader.PartialOperationalCertificate,
-      metadata: String,
+      partialStakerCertificate: UnsignedBlockHeader.PartialStakerCertificate,
       account: TransactionOutputReference
   )
 
   object UnsignedBlockHeader:
-    case class PartialOperationalCertificate(
-        parentVK: VerificationKeyKesProduct,
-        parentSignature: SignatureKesProduct,
-        childVK: String
+    case class PartialStakerCertificate(
+        vrfSignature: String,
+        vrfVK: String,
+        thresholdEvidence: String,
+        eta: String
     )
+    object PartialStakerCertificate:
+      def apply(stakerCertificate: StakerCertificate): PartialStakerCertificate = PartialStakerCertificate(
+        stakerCertificate.vrfSignature,
+        stakerCertificate.vrfVK,
+        stakerCertificate.thresholdEvidence,
+        stakerCertificate.eta
+      )
