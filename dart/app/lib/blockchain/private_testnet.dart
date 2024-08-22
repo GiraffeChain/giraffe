@@ -25,11 +25,10 @@ class PrivateTestnet {
   static Future<LockAddress> get DefaultLockAddress => DefaultKeyPair.then(
       (kp) => Lock(ed25519: Lock_Ed25519(vk: kp.vk.base58)).address);
 
-  static Future<BlockId> initTo(Directory baseDir, Int64 timestamp,
-      List<Int64> stakes, TreeHeight kesTreeHeight) async {
+  static Future<BlockId> initTo(
+      Directory baseDir, Int64 timestamp, List<Int64> stakes) async {
     assert(stakes.isNotEmpty);
-    final initializers =
-        await stakerInitializers(timestamp, stakes.length, kesTreeHeight);
+    final initializers = await stakerInitializers(timestamp, stakes.length);
     final c = await config(timestamp, initializers, stakes);
 
     final genesis = c.block;
@@ -51,13 +50,13 @@ class PrivateTestnet {
   }
 
   static Future<List<StakingAccount>> stakerInitializers(
-      Int64 timestamp, int stakerCount, TreeHeight kesTreeHeight) async {
+      Int64 timestamp, int stakerCount) async {
     assert(stakerCount >= 0);
     final out = <StakingAccount>[];
     for (int i = 0; i < stakerCount; i++) {
       final seed = await (timestamp.immutableBytes + i.immutableBytes).hash256;
       out.add(await StakingAccount.generate(
-          kesTreeHeight, Int64(10000000), await DefaultLockAddress, seed));
+          Int64(10000000), await DefaultLockAddress, seed));
     }
     return out;
   }

@@ -16,7 +16,6 @@ import '../../blockchain/common/clock.dart';
 import '../../blockchain/consensus/leader_election_validation.dart';
 import '../../blockchain/minting/minting.dart';
 import '../../blockchain/minting/models/staker_data.dart';
-import '../../blockchain/minting/secure_store.dart';
 import '../../blockchain/private_testnet.dart';
 import '../../blockchain/staking_account.dart';
 import 'staking_io.dart' if (dart.library.html) 'staking_web.dart'
@@ -51,21 +50,14 @@ class PodStaking extends _$PodStaking {
       genesisHeader.timestamp,
     );
     final flutterSecureStorage = ref.read(podSecureStorageProvider);
-    final secureStore = SecureStoreFromFunctions(
-      writeKey: (value) => flutterSecureStorage.write(
-          key: "blockchain-staker-kes", value: base64Encode(value)),
-      readKey: () async => base64Decode(
-          (await flutterSecureStorage.read(key: "blockchain-staker-kes"))!),
-      eraseKey: () => flutterSecureStorage.delete(key: "blockchain-staker-kes"),
-    );
     final stakerData = StakerData(
       vrfSk: base64Decode(
           (await flutterSecureStorage.read(key: "blockchain-staker-vrf-sk"))!),
+      operatorSk: base64Decode((await flutterSecureStorage.read(
+          key: "blockchain-staker-operator-sk"))!),
       account: TransactionOutputReference.fromBuffer(base64Decode(
           (await flutterSecureStorage.read(
               key: "blockchain-staker-account"))!)),
-      secureStore: secureStore,
-      activationOperationalPeriod: Int64(0), // TODO
     );
     final leaderElection = LeaderElectionImpl(protocolSettings, isolate);
     final stakingAddress =
@@ -100,18 +92,13 @@ class PodStaking extends _$PodStaking {
     final genesisTimestamp = genesis.header.timestamp;
     final seed = [...genesisTimestamp.immutableBytes, ...index.immutableBytes];
     final stakerInitializer = await StakingAccount.generate(
-        ProtocolSettings.defaultSettings.kesTreeHeight,
-        Int64(10000000),
-        await PrivateTestnet.DefaultLockAddress,
-        seed);
-    final stakingAddress =
-        StakingAddress(value: stakerInitializer.operatorVk.base58);
+        Int64(10000000), await PrivateTestnet.DefaultLockAddress, seed);
+    final operatorVkStr = stakerInitializer.operatorVk.base58;
     final accountTx = genesis.fullBody.transactions.firstWhere((tx) => tx
         .outputs
         .where((o) =>
             o.value.hasAccountRegistration() &&
-            o.value.accountRegistration.stakingRegistration.stakingAddress ==
-                stakingAddress)
+            o.value.accountRegistration.stakingRegistration.vk == operatorVkStr)
         .isNotEmpty);
     final account =
         TransactionOutputReference(transactionId: accountTx.id, index: 0);
@@ -120,11 +107,11 @@ class PodStaking extends _$PodStaking {
         key: "blockchain-staker-vrf-sk",
         value: base64.encode(stakerInitializer.vrfSk));
     await secureStorage.write(
+        key: "blockchain-staker-operator-sk",
+        value: base64.encode(stakerInitializer.operatorSk));
+    await secureStorage.write(
         key: "blockchain-staker-account",
         value: base64.encode(account.writeToBuffer()));
-    await secureStorage.write(
-        key: "blockchain-staker-kes",
-        value: base64.encode(stakerInitializer.kesSk.encode));
     await initMinting();
   }
 
@@ -142,7 +129,6 @@ class PodStaking extends _$PodStaking {
     final seed = List.generate(32, (_) => random.nextInt(255));
     final readerWriter = ref.read(podBlockchainReaderWriterProvider);
     final stakerInitializer = await StakingAccount.generate(
-      (await readerWriter.view.protocolSettings).kesTreeHeight,
       minimumStakeAccountQuantity,
       wallet.defaultLockAddress,
       seed,
@@ -203,8 +189,8 @@ class PodStaking extends _$PodStaking {
         key: "blockchain-staker-account",
         value: base64.encode(account.writeToBuffer()));
     await secureStorage.write(
-        key: "blockchain-staker-kes",
-        value: base64.encode(stakerInitializer.kesSk.encode));
+        key: "blockchain-staker-operator-sk",
+        value: base64.encode(stakerInitializer.operatorSk));
     await initMinting();
   }
 
@@ -242,7 +228,7 @@ class PodStaking extends _$PodStaking {
     await f;
     final flutterSecureStorage = ref.read(podSecureStorageProvider);
     await flutterSecureStorage.delete(key: "blockchain-staker-vrf-sk");
-    await flutterSecureStorage.delete(key: "blockchain-staker-kes");
+    await flutterSecureStorage.delete(key: "blockchain-staker-operator-sk");
     await flutterSecureStorage.delete(key: "blockchain-staker-account");
   }
 

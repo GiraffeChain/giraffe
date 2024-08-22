@@ -59,7 +59,7 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel: CryptoResourc
             parentSlotData <- fetchHeader(parentSlotId.blockId)
             eta <-
               if (parentEpoch === childEpoch)
-                Async[F].delay(parentSlotData.eligibilityCertificate.eta.decodeBase58)
+                Async[F].delay(parentSlotData.stakerCertificate.eta.decodeBase58)
               else if (childEpoch - parentEpoch > 1)
                 MonadThrow[F].raiseError(
                   new IllegalStateException(
@@ -102,7 +102,7 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel: CryptoResourc
           )(items => items.head.parentSlot < epochRange.start)
           rhoValues <- epochData.parTraverse(header => CryptoResources[F].ed25519VRF.useSync(e => header.rho(using e)))
           nextEta <- calculate(
-            previousEta = twoThirdsBest.eligibilityCertificate.eta.decodeBase58,
+            previousEta = twoThirdsBest.stakerCertificate.eta.decodeBase58,
             epoch = epoch + 1,
             rhoValues = rhoValues
           )

@@ -9,9 +9,7 @@ class UnsignedBlockHeader {
   final Int64 timestamp;
   final Int64 height;
   final Int64 slot;
-  final EligibilityCertificate eligibilityCertificate;
-  final PartialOperationalCertificate partialOperationalCertificate;
-  final String metadata;
+  final PartialStakerCertificate partialStakerCertificate;
   final TransactionOutputReference account;
 
   UnsignedBlockHeader(
@@ -21,20 +19,22 @@ class UnsignedBlockHeader {
     this.timestamp,
     this.height,
     this.slot,
-    this.eligibilityCertificate,
-    this.partialOperationalCertificate,
-    this.metadata,
+    this.partialStakerCertificate,
     this.account,
   );
 }
 
-class PartialOperationalCertificate {
-  final VerificationKeyKesProduct parentVK;
-  final SignatureKesProduct parentSignature;
-  final String childVK;
+class PartialStakerCertificate {
+  final String vrfSignature;
+  final String vrfVK;
+  final String thresholdEvidence;
+  final String eta;
 
-  PartialOperationalCertificate(
-      this.parentVK, this.parentSignature, this.childVK);
+  PartialStakerCertificate(
+      {required this.vrfSignature,
+      required this.vrfVK,
+      required this.thresholdEvidence,
+      required this.eta});
 }
 
 extension BlockHeaderOps on BlockHeader {
@@ -45,12 +45,12 @@ extension BlockHeaderOps on BlockHeader {
         timestamp,
         height,
         slot,
-        eligibilityCertificate,
-        PartialOperationalCertificate(
-            operationalCertificate.parentVK,
-            operationalCertificate.parentSignature,
-            operationalCertificate.childVK),
-        metadata,
+        PartialStakerCertificate(
+          vrfSignature: stakerCertificate.vrfSignature,
+          vrfVK: stakerCertificate.vrfVK,
+          thresholdEvidence: stakerCertificate.thresholdEvidence,
+          eta: stakerCertificate.eta,
+        ),
         account,
       );
 

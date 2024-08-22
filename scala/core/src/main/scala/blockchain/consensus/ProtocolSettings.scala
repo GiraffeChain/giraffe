@@ -15,9 +15,7 @@ case class ProtocolSettings(
     vrfSlotGap: Int,
     chainSelectionKLookback: Int,
     slotDuration: FiniteDuration,
-    operationalPeriodsPerEpoch: Int,
-    kesKeyHours: Int,
-    kesKeyMinutes: Int
+    operationalPeriodsPerEpoch: Int
 ):
 
   val chainSelectionSWindow: Int =
@@ -28,9 +26,6 @@ case class ProtocolSettings(
 
   val operationalPeriodLength: Int =
     epochLength / operationalPeriodsPerEpoch
-
-  val kesTreeHeight: TreeHeight =
-    TreeHeight(kesKeyHours, kesKeyMinutes)
 
   require(epochLength % 3L == 0, s"Epoch length=$epochLength must be divisible by 3")
   require(
@@ -49,7 +44,6 @@ case class ProtocolSettings(
       show" kLookback=$chainSelectionKLookback," +
       show" slotDuration=$slotDuration," +
       show" operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch," +
-      show" kesHeight=($kesKeyHours, $kesKeyMinutes)," +
       show" operationalPeriodLength=$operationalPeriodLength slots," +
       show" epochLength=$epochLength slots" +
       show")"
@@ -68,8 +62,6 @@ case class ProtocolSettings(
       case "chain-selection-k-lookback"    => copy(chainSelectionKLookback = value.toInt)
       case "slot-duration-ms"              => copy(slotDuration = value.toLong.milli)
       case "operational-periods-per-epoch" => copy(operationalPeriodsPerEpoch = value.toInt)
-      case "kes-key-hours"                 => copy(kesKeyHours = value.toInt)
-      case "kes-key-minutes"               => copy(kesKeyMinutes = value.toInt)
       case _                               => throw IllegalArgumentException(name)
     }
   private def parseRational(value: String): Ratio =
@@ -88,9 +80,7 @@ case class ProtocolSettings(
       "vrf-slot-gap" -> vrfSlotGap.toString,
       "chain-selection-k-lookback" -> chainSelectionKLookback.toString,
       "slot-duration-ms" -> slotDuration.toMillis.toString,
-      "operational-periods-per-epoch" -> operationalPeriodsPerEpoch.toString,
-      "kes-key-hours" -> kesKeyHours.toString,
-      "kes-key-minutes" -> kesKeyMinutes.toString
+      "operational-periods-per-epoch" -> operationalPeriodsPerEpoch.toString
     )
 
 object ProtocolSettings:
@@ -104,13 +94,7 @@ object ProtocolSettings:
     vrfSlotGap = 1,
     chainSelectionKLookback = 576,
     slotDuration = 3000.milli,
-    operationalPeriodsPerEpoch = 12,
-    kesKeyHours = 5,
-    kesKeyMinutes = 5
+    operationalPeriodsPerEpoch = 12
   )
 
   given Show[ProtocolSettings] = Show.fromToString
-
-case class TreeHeight(hours: Int, minutes: Int) {
-  def asTuple: (Int, Int) = (hours, minutes)
-}

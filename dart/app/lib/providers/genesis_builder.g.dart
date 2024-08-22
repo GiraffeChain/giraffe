@@ -6,7 +6,7 @@ part of 'genesis_builder.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podGenesisBuilderHash() => r'1d0f66980ca130334eaceb572f47d1f8be56a31c';
+String _$podGenesisBuilderHash() => r'7dc5262d886f06021330fde6c6d49f85d81ca632';
 
 /// See also [PodGenesisBuilder].
 @ProviderFor(PodGenesisBuilder)

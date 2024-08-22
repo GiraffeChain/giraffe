@@ -20,16 +20,6 @@ class Genesis {
   static final parentSlot = Int64(-1);
 
   static final parentId = BlockId()..value = Int8List(32).base58;
-  static final operationalCertificate = OperationalCertificate()
-    ..parentVK = (VerificationKeyKesProduct()
-      ..value = _emptyBytes32
-      ..step = 0)
-    ..parentSignature = (SignatureKesProduct()
-      ..superSignature = (SignatureKesSum()..verificationKey = _emptyBytes32)
-      ..subSignature = (SignatureKesSum()..verificationKey = _emptyBytes32)
-      ..subRoot = _emptyBytes32)
-    ..childVK = _emptyBytes32
-    ..childSignature = _emptyBytes64;
 
   static final stakingAccount = TransactionOutputReference(
       transactionId: TransactionId(value: _emptyBytes32));
@@ -40,12 +30,12 @@ class Genesis {
     return bytes.hash256;
   }
 
-  static EligibilityCertificate eligibilityCertificate(Eta eta) =>
-      EligibilityCertificate()
-        ..vrfSig = _emptyBytes80
-        ..vrfVK = _emptyBytes32
-        ..thresholdEvidence = _emptyBytes32
-        ..eta = eta.base58;
+  static StakerCertificate stakerCertificate(Eta eta) => StakerCertificate()
+    ..blockSignature = _emptyBytes64
+    ..vrfSignature = _emptyBytes80
+    ..vrfVK = _emptyBytes32
+    ..thresholdEvidence = _emptyBytes32
+    ..eta = eta.base58;
 
   static Future<void> save(Directory directory, FullBlock block) async {
     await directory.create(recursive: true);
@@ -82,9 +72,8 @@ class GenesisConfig {
       ..timestamp = timestamp
       ..height = Genesis.height
       ..slot = Genesis.slot
-      ..eligibilityCertificate =
-          Genesis.eligibilityCertificate(Genesis.eta(etaPrefix, transactionIds))
-      ..operationalCertificate = Genesis.operationalCertificate
+      ..stakerCertificate =
+          Genesis.stakerCertificate(Genesis.eta(etaPrefix, transactionIds))
       ..account = Genesis.stakingAccount;
 
     header.settings.addAll(settings);

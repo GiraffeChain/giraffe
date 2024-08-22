@@ -133,24 +133,20 @@ class BlockProducerImpl extends BlockProducer {
         return go(fromSlot);
       });
 
-  UnsignedBlockHeader Function(PartialOperationalCertificate)
-      _prepareUnsignedBlock(BlockHeader parentHeader, FullBlockBody fullBody,
-              Int64 timestamp, VrfHit nextHit) =>
-          (PartialOperationalCertificate partialOperationalCertificate) =>
-              UnsignedBlockHeader(
-                parentHeader.id,
-                parentHeader.slot,
-                TxRoot.calculateFromTransactions(
-                        parentHeader.txRoot.decodeBase58, fullBody.transactions)
-                    .base58,
-                timestamp,
-                parentHeader.height + 1,
-                nextHit.slot,
-                nextHit.cert,
-                partialOperationalCertificate,
-                "",
-                staker.account,
-              );
+  UnsignedBlockHeader _prepareUnsignedBlock(BlockHeader parentHeader,
+          FullBlockBody fullBody, Int64 timestamp, VrfHit nextHit) =>
+      UnsignedBlockHeader(
+        parentHeader.id,
+        parentHeader.slot,
+        TxRoot.calculateFromTransactions(
+                parentHeader.txRoot.decodeBase58, fullBody.transactions)
+            .base58,
+        timestamp,
+        parentHeader.height + 1,
+        nextHit.slot,
+        nextHit.cert,
+        staker.account,
+      );
 
   FullBlockBody insertReward(FullBlockBody base, BlockId parentId) {
     if (rewardAddress != null) {

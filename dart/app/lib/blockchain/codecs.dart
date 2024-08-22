@@ -11,9 +11,7 @@ extension BlockHeaderCodecs on BlockHeader {
     ..addAll(timestamp.immutableBytes)
     ..addAll(height.immutableBytes)
     ..addAll(slot.immutableBytes)
-    ..addAll(eligibilityCertificate.immutableBytes)
-    ..addAll(operationalCertificate.immutableBytes)
-    ..addAll(metadata.utf8Bytes)
+    ..addAll(stakerCertificate.immutableBytes)
     ..addAll(account.immutableBytes);
 
   BlockId get id => hasHeaderId() ? headerId : computeId;
@@ -33,37 +31,23 @@ extension UnsignedBlockHeaderCodecs on UnsignedBlockHeader {
     ..addAll(timestamp.immutableBytes)
     ..addAll(height.immutableBytes)
     ..addAll(slot.immutableBytes)
-    ..addAll(eligibilityCertificate.immutableBytes)
-    ..addAll(partialOperationalCertificate.immutableBytes)
-    ..addAll(metadata.utf8Bytes)
+    ..addAll(partialStakerCertificate.immutableBytes)
     ..addAll(account.immutableBytes);
 }
 
-extension EligibilityCertificateCodecs on EligibilityCertificate {
+extension StakerCertificateCodecs on StakerCertificate {
   List<int> get immutableBytes => <int>[]
-    ..addAll(vrfSig.decodeBase58)
+    ..addAll(blockSignature.decodeBase58)
+    ..addAll(vrfSignature.decodeBase58)
     ..addAll(vrfVK.decodeBase58)
     ..addAll(thresholdEvidence.decodeBase58)
     ..addAll(eta.decodeBase58);
 }
 
-extension PartialOperationalCertificateCodecs on PartialOperationalCertificate {
+extension PartialStakerCertificateCodecs on PartialStakerCertificate {
   List<int> get immutableBytes => <int>[]
-    ..addAll(parentVK.immutableBytes)
-    ..addAll(parentSignature.immutableBytes)
-    ..addAll(childVK.decodeBase58);
-}
-
-extension OperationalCertificateCodecs on OperationalCertificate {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(parentVK.immutableBytes)
-    ..addAll(parentSignature.immutableBytes)
-    ..addAll(childVK.decodeBase58)
-    ..addAll(childSignature.decodeBase58);
-}
-
-extension VerificationKeyKesProductCodecs on VerificationKeyKesProduct {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(value.decodeBase58)
-    ..addAll(step.immutableBytes);
+    ..addAll(vrfSignature.decodeBase58)
+    ..addAll(vrfVK.decodeBase58)
+    ..addAll(thresholdEvidence.decodeBase58)
+    ..addAll(eta.decodeBase58);
 }

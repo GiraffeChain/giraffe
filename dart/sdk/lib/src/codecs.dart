@@ -33,20 +33,6 @@ extension IterableCodecs<T> on Iterable<T> {
   }
 }
 
-extension SignatureKesSumCodecs on SignatureKesSum {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(verificationKey.decodeBase58)
-    ..addAll(signature.decodeBase58)
-    ..addAll(witness.immutableBytes((t) => t.decodeBase58));
-}
-
-extension SignatureKesProductCodecs on SignatureKesProduct {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(superSignature.immutableBytes)
-    ..addAll(subSignature.immutableBytes)
-    ..addAll(subRoot.decodeBase58);
-}
-
 extension IntCodecs on int {
   List<int> get immutableBytes => Int32(this).toBytesBigEndian();
 }
@@ -125,15 +111,10 @@ extension KeyCodecs on Key {
   }
 }
 
-extension StakingAddressCodecs on StakingAddress {
-  List<int> get immutableBytes => <int>[]..addAll(value.decodeBase58);
-  String get show => "s_$value";
-}
-
 extension StakingRegistrationCodecs on StakingRegistration {
   List<int> get immutableBytes => <int>[]
-    ..addAll(signature.immutableBytes)
-    ..addAll(stakingAddress.immutableBytes);
+    ..addAll(commitmentSignature.decodeBase58)
+    ..addAll(vk.decodeBase58);
 }
 
 List<int> optCodec<T>(T? t, List<int> Function(T) encode) =>

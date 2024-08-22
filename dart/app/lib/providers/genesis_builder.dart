@@ -84,12 +84,9 @@ class PodGenesisBuilder extends _$PodGenesisBuilder {
   Future<void> save() async {
     final genesisInitDirectory = Directory(
         "${(await getApplicationDocumentsDirectory()).path}/blockchain/genesis-init");
-    final kesTreeHeight = TreeHeight(
-        ProtocolSettings.defaultSettings.kesKeyHours,
-        ProtocolSettings.defaultSettings.kesKeyMinutes);
     final stakers = await Future.wait(state.stakers.mapWithIndex((e, index) {
       final seed = utf8.encode(state.seed + index.toString());
-      return StakingAccount.generate(kesTreeHeight, e.$2, e.$1, seed);
+      return StakingAccount.generate(e.$2, e.$1, seed);
     }).toList());
     final unstakedTransaction = Transaction(
         outputs: state.unstaked.map((t) => TransactionOutput(
