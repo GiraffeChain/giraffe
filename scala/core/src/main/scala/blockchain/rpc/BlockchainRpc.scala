@@ -3,10 +3,8 @@ package blockchain.rpc
 import blockchain.BlockchainCore
 import blockchain.codecs.given
 import blockchain.consensus.TraversalStep
-import blockchain.ledger.TransactionValidationContext
-import blockchain.models.{BlockBody, FullBlockBody, SlotId}
+import blockchain.models.{BlockBody, SlotId}
 import blockchain.services.*
-import cats.MonadThrow
 import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.implicits.*
