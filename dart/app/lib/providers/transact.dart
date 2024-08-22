@@ -2,7 +2,7 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:blockchain/private_testnet.dart';
+import '../blockchain/private_testnet.dart';
 
 part 'transact.freezed.dart';
 part 'transact.g.dart';

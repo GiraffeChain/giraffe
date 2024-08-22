@@ -1,6 +1,6 @@
 import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
-import 'package:blockchain/codecs.dart';
+import '../../blockchain/codecs.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fluro/fluro.dart';

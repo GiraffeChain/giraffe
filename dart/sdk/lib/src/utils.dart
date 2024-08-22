@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:ribs_core/ribs_core.dart';
@@ -105,14 +104,6 @@ extension ListIntOps on List<int> {
     }
     return _bigInt;
   }
-}
-
-extension TransactionOps on Transaction {
-  Int64 get inputSum =>
-      inputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
-  Int64 get outputSum =>
-      outputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
-  Int64 get reward => inputSum - outputSum;
 }
 
 extension LogOps on Logger {

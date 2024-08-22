@@ -1,10 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:blockchain/codecs.dart';
-import 'package:blockchain/genesis.dart';
-import 'package:blockchain/private_testnet.dart';
-import 'package:blockchain/staking_account.dart';
+import 'package:blockchain_app/blockchain/private_testnet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
@@ -12,6 +9,10 @@ import 'package:fpdart/fpdart.dart' hide State;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../blockchain/codecs.dart';
+import '../blockchain/genesis.dart';
+import '../blockchain/staking_account.dart';
 
 part 'genesis_builder.freezed.dart';
 part 'genesis_builder.g.dart';
