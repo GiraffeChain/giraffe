@@ -26,6 +26,7 @@ dependencies:
   path: ^1.9.0
   hive: ^2.2.3
   quiver: ^3.2.1
+  fetch_client: ^1.0.2
   blockchain_protobuf:
     path: ../protobuf_dart
 dev_dependencies:    

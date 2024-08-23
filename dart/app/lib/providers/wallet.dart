@@ -1,4 +1,4 @@
-import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
+import 'package:blockchain_app/providers/blockchain_client.dart';
 import 'package:blockchain_app/providers/wallet_key.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -9,12 +9,12 @@ part 'wallet.g.dart';
 class PodWallet extends _$PodWallet {
   @override
   Stream<Wallet> build() {
-    final view = ref.watch(podBlockchainReaderWriterProvider).view;
+    final client = ref.watch(podBlockchainClientProvider);
     final keyOpt = ref.watch(podWalletKeyProvider);
     if (keyOpt == null) {
       return const Stream.empty();
     } else {
-      return Wallet.withDefaultKeyPair(keyOpt).streamed(view);
+      return Wallet.withDefaultKeyPair(keyOpt).streamed(client);
     }
   }
 }

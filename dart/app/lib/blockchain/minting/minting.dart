@@ -13,12 +13,10 @@ import 'block_producer.dart';
 import 'staking.dart';
 import 'vrf_calculator.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:ribs_effect/ribs_effect.dart';
 import 'package:rxdart/streams.dart';
-import 'package:rxdart/transformers.dart';
 
 class Minting {
   final BlockProducer blockProducer;
@@ -85,81 +83,60 @@ class Minting {
     BlockHeader canonicalHead,
     Stream<BlockHeader> adoptedHeaders,
     LeaderElection leaderElection,
-    BlockchainView view,
-    StakerSupportRpcClient stakerSupportClient,
+    BlockchainClient client,
     LockAddress? rewardAddress,
   ) =>
       make(
         stakerData,
         protocolSettings,
         clock,
-        BlockPackerForStakerSupportRpc(client: stakerSupportClient, view: view),
+        BlockPackerForStakerSupportRpc(client: client),
         canonicalHead,
         adoptedHeaders,
-        EtaCalculationForStakerSupportRpc(client: stakerSupportClient),
+        EtaCalculationForStakerSupportRpc(client: client),
         leaderElection,
-        StakerTrackerForStakerSupportRpc(client: stakerSupportClient),
+        StakerTrackerForStakerSupportRpc(client: client),
         rewardAddress,
       );
 }
 
 class EtaCalculationForStakerSupportRpc extends EtaCalculation {
-  final StakerSupportRpcClient client;
+  final BlockchainClient client;
 
   EtaCalculationForStakerSupportRpc({required this.client});
 
   @override
-  Future<Eta> etaToBe(SlotId parentSlotId, Int64 childSlot) async =>
-      (await client.calculateEta(CalculateEtaReq(
-        parentBlockId: parentSlotId.blockId,
-        slot: childSlot,
-      )))
-          .eta
-          .decodeBase58;
+  Future<Eta> etaToBe(SlotId parentSlotId, Int64 childSlot) =>
+      client.calculateEta(
+        parentSlotId.blockId,
+        childSlot,
+      );
 }
 
 class StakerTrackerForStakerSupportRpc extends StakerTracker {
-  final StakerSupportRpcClient client;
+  final BlockchainClient client;
 
   StakerTrackerForStakerSupportRpc({required this.client});
 
   @override
   Future<ActiveStaker?> staker(BlockId currentBlockId, Int64 slot,
-      TransactionOutputReference account) async {
-    final rpcResult = await client.getStaker(GetStakerReq(
-        stakingAccount: account, parentBlockId: currentBlockId, slot: slot));
-    if (rpcResult.hasStaker()) return rpcResult.staker;
-    return null;
-  }
+          TransactionOutputReference account) =>
+      client.getStaker(currentBlockId, slot, account);
 
   @override
-  Future<Int64> totalActiveStake(BlockId currentBlockId, Slot slot) async {
-    final rpcResult = await client.getTotalActivestake(
-        GetTotalActiveStakeReq(parentBlockId: currentBlockId, slot: slot));
-    return rpcResult.totalActiveStake;
-  }
+  Future<Int64> totalActiveStake(BlockId currentBlockId, Slot slot) =>
+      client.getTotalActivestake(currentBlockId, slot);
 }
 
 class BlockPackerForStakerSupportRpc extends BlockPacker {
-  final StakerSupportRpcClient client;
-  final BlockchainView view;
-  BlockPackerForStakerSupportRpc({required this.client, required this.view});
+  final BlockchainClient client;
+  BlockPackerForStakerSupportRpc({required this.client});
 
   @override
   Stream<FullBlockBody> streamed(
       BlockId parentBlockId, Int64 height, Int64 slot) {
-    s() {
-      final x = client.packBlock(
-          PackBlockReq(parentBlockId: parentBlockId, untilSlot: slot));
-      return x.doOnCancel(() => x.cancel());
-    }
-
-    // return retryableStream(s,
-    //         onError: (e, s) => Minting.log
-    //             .warning("Remote BlockPacker error. Retrying.", e, s))
-    return s()
-        .takeWhile((v) => v.hasBody())
-        .map((v) => v.body.transactionIds.map(view.getTransactionOrRaise))
+    return client.packBlock
+        .map((v) => v.transactionIds.map(client.getTransactionOrRaise))
         .asyncMap(Future.wait)
         .map((transactions) => FullBlockBody(transactions: transactions));
   }

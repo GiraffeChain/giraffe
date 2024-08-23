@@ -1,4 +1,4 @@
-import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
+import 'package:blockchain_app/providers/blockchain_client.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
@@ -13,10 +13,7 @@ class UnloadedTransactionPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder(
-        future: ref
-            .watch(podBlockchainReaderWriterProvider)
-            .view
-            .getTransaction(id),
+        future: ref.watch(podBlockchainClientProvider).getTransaction(id),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data != null) {

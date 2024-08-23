@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/providers/transact.dart';
 import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -13,19 +12,16 @@ import 'package:logging/logging.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 
 class StreamedTransactView extends ConsumerWidget {
-  final BlockchainView view;
-  final BlockchainWriter writer;
+  final BlockchainClient client;
 
-  const StreamedTransactView(
-      {super.key, required this.view, required this.writer});
+  const StreamedTransactView({super.key, required this.client});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (ref.watch(podWalletProvider)) {
       AsyncData(:final value) => TransactView(
           wallet: value,
-          view: view,
-          writer: writer,
+          client: client,
         ),
       AsyncError(:final error) =>
         Center(child: Text("An error occurred: $error")),
@@ -38,13 +34,11 @@ class TransactView extends ConsumerWidget {
   TransactView({
     super.key,
     required this.wallet,
-    required this.view,
-    required this.writer,
+    required this.client,
   });
 
   final Wallet wallet;
-  final BlockchainView view;
-  final BlockchainWriter writer;
+  final BlockchainClient client;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -107,13 +101,13 @@ class TransactView extends ConsumerWidget {
         ..value = value;
       tx.outputs.add(output);
     }
-    final head = await view.canonicalHead;
+    final head = await client.canonicalHead;
     final witnessContext = WitnessContext(
       height: head.height + 1,
       messageToSign: tx.signableBytes,
     );
     for (final lockAddress
-        in await tx.requiredWitnesses(view.getTransactionOrRaise)) {
+        in await tx.requiredWitnesses(client.getTransactionOrRaise)) {
       final signer = wallet.signers[lockAddress]!;
       final witness = await signer(witnessContext);
       tx.attestation.add(witness);
@@ -127,7 +121,7 @@ class TransactView extends ConsumerWidget {
   _transact(WidgetRef ref, TransactState state) async {
     final tx = await _createTransaction(ref, state);
     log.info("Broadcasting transaction id=${tx.id.show}");
-    await writer.submitTransaction(tx);
+    await client.broadcastTransaction(tx);
     ref.read(podTransactProvider.notifier).reset();
   }
 
