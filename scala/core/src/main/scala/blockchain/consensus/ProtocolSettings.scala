@@ -14,8 +14,7 @@ case class ProtocolSettings(
     vrfAmplitude: Ratio,
     vrfSlotGap: Int,
     chainSelectionKLookback: Int,
-    slotDuration: FiniteDuration,
-    operationalPeriodsPerEpoch: Int
+    slotDuration: FiniteDuration
 ):
 
   val chainSelectionSWindow: Int =
@@ -24,14 +23,7 @@ case class ProtocolSettings(
   val epochLength: Int =
     (Ratio(chainSelectionKLookback * 3) * fEffective.inverse).round.toInt
 
-  val operationalPeriodLength: Int =
-    epochLength / operationalPeriodsPerEpoch
-
   require(epochLength % 3L == 0, s"Epoch length=$epochLength must be divisible by 3")
-  require(
-    epochLength % operationalPeriodsPerEpoch == 0,
-    s"Epoch length=$epochLength must be divisible by $operationalPeriodsPerEpoch"
-  )
 
   override def toString: String =
     show"ProtocolSettings(" +
@@ -43,8 +35,6 @@ case class ProtocolSettings(
       show" vrfSlotGap=$vrfSlotGap," +
       show" kLookback=$chainSelectionKLookback," +
       show" slotDuration=$slotDuration," +
-      show" operationalPeriodsPerEpoch=$operationalPeriodsPerEpoch," +
-      show" operationalPeriodLength=$operationalPeriodLength slots," +
       show" epochLength=$epochLength slots" +
       show")"
 
@@ -53,16 +43,15 @@ case class ProtocolSettings(
 
   def withSetting(name: String, value: String): ProtocolSettings =
     name match {
-      case "f-effective"                   => copy(fEffective = parseRational(value))
-      case "vrf-ldd-cutoff"                => copy(vrfLddCutoff = value.toInt)
-      case "vrf-precision"                 => copy(vrfPrecision = value.toInt)
-      case "vrf-baseline-difficulty"       => copy(vrfBaselineDifficulty = parseRational(value))
-      case "vrf-amplitude"                 => copy(vrfAmplitude = parseRational(value))
-      case "vrf-slot-gap"                  => copy(vrfSlotGap = value.toInt)
-      case "chain-selection-k-lookback"    => copy(chainSelectionKLookback = value.toInt)
-      case "slot-duration-ms"              => copy(slotDuration = value.toLong.milli)
-      case "operational-periods-per-epoch" => copy(operationalPeriodsPerEpoch = value.toInt)
-      case _                               => throw IllegalArgumentException(name)
+      case "f-effective"                => copy(fEffective = parseRational(value))
+      case "vrf-ldd-cutoff"             => copy(vrfLddCutoff = value.toInt)
+      case "vrf-precision"              => copy(vrfPrecision = value.toInt)
+      case "vrf-baseline-difficulty"    => copy(vrfBaselineDifficulty = parseRational(value))
+      case "vrf-amplitude"              => copy(vrfAmplitude = parseRational(value))
+      case "vrf-slot-gap"               => copy(vrfSlotGap = value.toInt)
+      case "chain-selection-k-lookback" => copy(chainSelectionKLookback = value.toInt)
+      case "slot-duration-ms"           => copy(slotDuration = value.toLong.milli)
+      case _                            => throw IllegalArgumentException(name)
     }
   private def parseRational(value: String): Ratio =
     value.split('/') match {
@@ -79,8 +68,7 @@ case class ProtocolSettings(
       "vrf-amplitude" -> vrfAmplitude.toString,
       "vrf-slot-gap" -> vrfSlotGap.toString,
       "chain-selection-k-lookback" -> chainSelectionKLookback.toString,
-      "slot-duration-ms" -> slotDuration.toMillis.toString,
-      "operational-periods-per-epoch" -> operationalPeriodsPerEpoch.toString
+      "slot-duration-ms" -> slotDuration.toMillis.toString
     )
 
 object ProtocolSettings:
@@ -93,8 +81,7 @@ object ProtocolSettings:
     vrfAmplitude = Ratio(1, 2),
     vrfSlotGap = 1,
     chainSelectionKLookback = 576,
-    slotDuration = 3000.milli,
-    operationalPeriodsPerEpoch = 12
+    slotDuration = 3000.milli
   )
 
   given Show[ProtocolSettings] = Show.fromToString

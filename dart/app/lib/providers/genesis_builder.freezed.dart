@@ -21,7 +21,9 @@ mixin _$GenesisBuilderState {
   List<(LockAddress, Int64)> get unstaked => throw _privateConstructorUsedError;
   Directory? get savedDir => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of GenesisBuilderState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $GenesisBuilderStateCopyWith<GenesisBuilderState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -49,6 +51,8 @@ class _$GenesisBuilderStateCopyWithImpl<$Res, $Val extends GenesisBuilderState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of GenesisBuilderState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -101,6 +105,8 @@ class __$$GenesisBuilderStateImplCopyWithImpl<$Res>
       $Res Function(_$GenesisBuilderStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of GenesisBuilderState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -173,7 +179,9 @@ class _$GenesisBuilderStateImpl implements _GenesisBuilderState {
       const DeepCollectionEquality().hash(unstaked),
       savedDir);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of GenesisBuilderState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$GenesisBuilderStateImplCopyWith<_$GenesisBuilderStateImpl> get copyWith =>
@@ -196,8 +204,11 @@ abstract class _GenesisBuilderState implements GenesisBuilderState {
   List<(LockAddress, Int64)> get unstaked;
   @override
   Directory? get savedDir;
+
+  /// Create a copy of GenesisBuilderState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$GenesisBuilderStateImplCopyWith<_$GenesisBuilderStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

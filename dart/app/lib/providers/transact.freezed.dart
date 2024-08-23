@@ -21,7 +21,9 @@ mixin _$TransactState {
   List<(String, String)> get newOutputEntries =>
       throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of TransactState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $TransactStateCopyWith<TransactState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -47,6 +49,8 @@ class _$TransactStateCopyWithImpl<$Res, $Val extends TransactState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of TransactState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -87,6 +91,8 @@ class __$$TransactStateImplCopyWithImpl<$Res>
       _$TransactStateImpl _value, $Res Function(_$TransactStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of TransactState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -154,7 +160,9 @@ class _$TransactStateImpl implements _TransactState {
       const DeepCollectionEquality().hash(_selectedInputs),
       const DeepCollectionEquality().hash(_newOutputEntries));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of TransactState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$TransactStateImplCopyWith<_$TransactStateImpl> get copyWith =>
@@ -171,8 +179,11 @@ abstract class _TransactState implements TransactState {
   Set<TransactionOutputReference> get selectedInputs;
   @override
   List<(String, String)> get newOutputEntries;
+
+  /// Create a copy of TransactState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$TransactStateImplCopyWith<_$TransactStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

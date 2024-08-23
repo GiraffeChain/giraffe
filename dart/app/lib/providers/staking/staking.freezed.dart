@@ -19,7 +19,9 @@ mixin _$PodStakingState {
   Minting? get minting => throw _privateConstructorUsedError;
   Future<void> Function()? get stop => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PodStakingState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $PodStakingStateCopyWith<PodStakingState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -43,6 +45,8 @@ class _$PodStakingStateCopyWithImpl<$Res, $Val extends PodStakingState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of PodStakingState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -81,6 +85,8 @@ class __$$PodStakingStateImplCopyWithImpl<$Res>
       _$PodStakingStateImpl _value, $Res Function(_$PodStakingStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of PodStakingState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -127,7 +133,9 @@ class _$PodStakingStateImpl implements _PodStakingState {
   @override
   int get hashCode => Object.hash(runtimeType, minting, stop);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PodStakingState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PodStakingStateImplCopyWith<_$PodStakingStateImpl> get copyWith =>
@@ -144,8 +152,11 @@ abstract class _PodStakingState implements PodStakingState {
   Minting? get minting;
   @override
   Future<void> Function()? get stop;
+
+  /// Create a copy of PodStakingState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PodStakingStateImplCopyWith<_$PodStakingStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

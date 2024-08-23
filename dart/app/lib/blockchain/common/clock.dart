@@ -8,7 +8,6 @@ import 'package:ribs_effect/ribs_effect.dart';
 abstract class Clock {
   Duration get slotLength;
   Int64 get slotsPerEpoch;
-  Int64 get slotsPerOperationalPeriod;
   Int64 get globalSlot;
   Int64 get localTimestamp;
   Int64 timestampToSlot(Int64 timestamp);
@@ -49,16 +48,6 @@ abstract class Clock {
       return ((epoch * slotsPerEpoch + 1), (epoch + 1) * slotsPerEpoch);
   }
 
-  Int64 operationalPeriodOfSlot(Int64 slot) =>
-      (slot - 1) ~/ slotsPerOperationalPeriod;
-
-  Int64 get globalOperationalPeriod => operationalPeriodOfSlot(globalSlot);
-
-  (Int64, Int64) operationalPeriodRange(Int64 operationalPeriod) {
-    final spor = slotsPerOperationalPeriod;
-    return (operationalPeriod * spor + 1, (operationalPeriod + 1) * spor);
-  }
-
   Stream<Slot> get slots async* {
     var s = globalSlot;
     while (true) {
@@ -72,13 +61,11 @@ abstract class Clock {
 class ClockImpl extends Clock {
   final Duration slotLength;
   final Int64 slotsPerEpoch;
-  final Int64 slotsPerOperationalPeriod;
   final Int64 _genesisTimestamp;
 
   ClockImpl(
     this.slotLength,
     this.slotsPerEpoch,
-    this.slotsPerOperationalPeriod,
     this._genesisTimestamp,
   );
 

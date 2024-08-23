@@ -43,7 +43,6 @@ class PodStaking extends _$PodStaking {
     final clock = ClockImpl(
       protocolSettings.slotDuration,
       protocolSettings.epochLength,
-      protocolSettings.operationalPeriodLength,
       genesisHeader.timestamp,
     );
     final flutterSecureStorage = ref.read(podSecureStorageProvider);

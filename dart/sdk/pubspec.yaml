@@ -22,7 +22,7 @@ dependencies:
   hashlib: ^1.19.2
   logging: ^1.2.0
   mockito: ^5.4.4
-  grpc: ^3.2.4
+  grpc: ^4.0.0
   path: ^1.9.0
   hive: ^2.2.3
   quiver: ^3.2.1

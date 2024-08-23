@@ -17,7 +17,7 @@ import 'package:ribs_effect/ribs_effect.dart';
 abstract class Staking {
   TransactionOutputReference get account;
   Future<VrfHit?> elect(SlotId parentSlotId, Int64 slot);
-  Future<BlockHeader?> certifyBlock(
+  Future<BlockHeader> certifyBlock(
       SlotId parentSlotId, Int64 slot, UnsignedBlockHeader unsignedHeader);
 }
 
@@ -64,7 +64,7 @@ class StakingImpl extends Staking {
       ));
 
   @override
-  Future<BlockHeader?> certifyBlock(SlotId parentSlotId, Int64 slot,
+  Future<BlockHeader> certifyBlock(SlotId parentSlotId, Int64 slot,
       UnsignedBlockHeader unsignedHeader) async {
     final List<int> messageToSign = unsignedHeader.signableBytes;
     final signature = await ed25519.sign(messageToSign, skOperator);

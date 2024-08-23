@@ -87,34 +87,18 @@ class BlockProducerImpl extends BlockProducer {
                                 nextHit,
                               ));
                         }).flatMap((maybeHeader) {
-                          if (maybeHeader != null) {
-                            return IO.delay(() {
-                              maybeHeader.embedId();
-                              final headerId = maybeHeader.id;
-                              final transactionIds =
-                                  body.transactions.map((tx) => tx.id);
-                              log.info(
-                                  "Produced block id=${headerId.show} height=${maybeHeader.height} slot=${maybeHeader.slot} parentId=${maybeHeader.parentHeaderId.show} transactionIds=[${transactionIds.map((i) => i.show).join(",")}]");
-                              _nextSlotMinimum = maybeHeader.slot + 1;
-                              return FullBlock()
-                                ..header = maybeHeader
-                                ..fullBody = bodyTmp;
-                            });
-                          } else {
-                            return IO
-                                .delay(() => log.warning(
-                                    "Failed to certify block at next slot=${nextHit.slot}.  Skipping eligibilities within current operational period."))
-                                .flatMap((_) => IO.delay(() {
-                                      final (nextOperationalPeriodStart, _) =
-                                          clock.operationalPeriodRange(
-                                              clock.operationalPeriodOfSlot(
-                                                      nextHit.slot) +
-                                                  1);
-                                      _nextSlotMinimum =
-                                          nextOperationalPeriodStart;
-                                    }))
-                                .flatMap((_) => _makeChild(parentHeader));
-                          }
+                          return IO.delay(() {
+                            maybeHeader.embedId();
+                            final headerId = maybeHeader.id;
+                            final transactionIds =
+                                body.transactions.map((tx) => tx.id);
+                            log.info(
+                                "Produced block id=${headerId.show} height=${maybeHeader.height} slot=${maybeHeader.slot} parentId=${maybeHeader.parentHeaderId.show} transactionIds=[${transactionIds.map((i) => i.show).join(",")}]");
+                            _nextSlotMinimum = maybeHeader.slot + 1;
+                            return FullBlock()
+                              ..header = maybeHeader
+                              ..fullBody = bodyTmp;
+                          });
                         }));
               }))
         .onCancel(

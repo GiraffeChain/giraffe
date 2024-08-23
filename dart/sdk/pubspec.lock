@@ -22,14 +22,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.8.0"
-  archive:
-    dependency: transitive
-    description:
-      name: archive
-      sha256: cb6a278ef2dbb298455e1a713bda08524a175630ec643a242c399c932a0a1f7d
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.6.1"
   args:
     dependency: transitive
     description:
@@ -177,10 +169,10 @@ packages:
     dependency: transitive
     description:
       name: crypto
-      sha256: "1dceb0cf05cb63a7852c11560060e53ec2f182079a16ced6f4395c5b0875baf8"
+      sha256: ec30d999af904f33454ba22ed9a86162b35e52b44ac4807d1d93c288041d7d27
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.4"
+    version: "3.0.5"
   cryptography:
     dependency: "direct main"
     description:
@@ -297,10 +289,10 @@ packages:
     dependency: "direct main"
     description:
       name: grpc
-      sha256: e93ee3bce45c134bf44e9728119102358c7cd69de7832d9a874e2e74eb8cab40
+      sha256: "7b2bee509ea2750028fe15f5a530bdc8664e7e62e97abf0bb7b0fc65b6d7d2b3"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.4"
+    version: "4.0.0"
   hashlib:
     dependency: "direct main"
     description:
@@ -313,10 +305,10 @@ packages:
     dependency: transitive
     description:
       name: hashlib_codecs
-      sha256: "2b570061f5a4b378425be28a576c1e11783450355ad4345a19f606ff3d96db0f"
+      sha256: "8cea9ccafcfeaa7324d2ae52c61c69f7ff71f4237507a018caab31b9e416e3b1"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.0"
+    version: "2.6.0"
   hive:
     dependency: "direct main"
     description:
@@ -577,10 +569,10 @@ packages:
     dependency: transitive
     description:
       name: source_map_stack_trace
-      sha256: "84cf769ad83aa6bb61e0aa5a18e53aea683395f196a6f39c4c881fb90ed4f7ae"
+      sha256: c0713a43e323c3302c2abe2a1cc89aa057a387101ebd280371d6a6c9fa68516b
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.1"
+    version: "2.1.2"
   source_maps:
     dependency: transitive
     description:
@@ -681,10 +673,10 @@ packages:
     dependency: transitive
     description:
       name: vm_service
-      sha256: f652077d0bdf60abe4c1f6377448e8655008eef28f128bc023f7b5e8dfeb48fc
+      sha256: "5c5f338a667b4c644744b661f309fb8080bb94b18a7e91ef1dbd343bed00ed6d"
       url: "https://pub.dev"
     source: hosted
-    version: "14.2.4"
+    version: "14.2.5"
   watcher:
     dependency: transitive
     description:
