@@ -86,7 +86,7 @@ class Wallet {
     addLockAddress(lockAddress, lock, signer, isDefault: isDefault);
   }
 
-  Stream<Wallet> streamed(BlockchainView client) async* {
+  Stream<Wallet> streamed(BlockchainClient client) async* {
     Future<bool> update() async {
       var wasUpdated = false;
       for (final address in locks.keys) {
@@ -120,7 +120,7 @@ class Wallet {
   }
 
   Future<Transaction> attest(
-      BlockchainView view, Transaction transaction) async {
+      BlockchainClient view, Transaction transaction) async {
     final messageToSign = transaction.signableBytes;
     final height = (await view.canonicalHead).height;
     for (final input in transaction.inputs) {

@@ -1,11 +1,10 @@
-import 'package:blockchain_protobuf/services/node_rpc.pbgrpc.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:logging/logging.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rxdart/transformers.dart';
 
-abstract class BlockchainView {
+abstract class BlockchainClient {
   Future<BlockHeader?> getBlockHeader(BlockId blockId);
   Future<BlockBody?> getBlockBody(BlockId blockId);
   Future<Transaction?> getTransaction(TransactionId transactionId);
@@ -19,6 +18,19 @@ abstract class BlockchainView {
   Future<List<TransactionOutputReference>> getLockAddressState(
       LockAddress lock);
   Stream<TraversalStep> get traversal;
+
+  Future<void> broadcastTransaction(Transaction transaction);
+
+  Future<void> broadcastBlock(Block block, Transaction? reward);
+
+  Future<ActiveStaker?> getStaker(
+      BlockId parentBlockId, Int64 slot, TransactionOutputReference account);
+
+  Future<Int64> getTotalActivestake(BlockId parentBlockId, Int64 slot);
+
+  Future<List<int>> calculateEta(BlockId parentBlockId, Int64 slot);
+
+  Stream<BlockBody> get packBlock;
 
   Stream<BlockId> get adoptions =>
       traversal.whereType<TraversalStep_Applied>().map((t) => t.blockId);
@@ -82,59 +94,67 @@ abstract class BlockchainView {
       getBlockHeaderOrRaise(await canonicalHeadId);
 }
 
-class BlockchainViewFromRpc extends BlockchainView {
-  final NodeRpcClient nodeClient;
+class BlockchainClientFromJsonRpc extends BlockchainClient {
+  final JsonRpcClient client;
 
-  BlockchainViewFromRpc({required this.nodeClient});
-
-  @override
-  Future<BlockBody?> getBlockBody(BlockId blockId) => retryableFuture(
-          () => nodeClient.getBlockBody(GetBlockBodyReq(blockId: blockId)))
-      .then((v) => v.hasBody() ? v.body : null);
+  BlockchainClientFromJsonRpc({required this.client});
 
   @override
-  Future<BlockHeader?> getBlockHeader(BlockId blockId) => retryableFuture(
-          () => nodeClient.getBlockHeader(GetBlockHeaderReq(blockId: blockId)))
-      .then((v) => v.hasHeader() ? v.header : null);
+  Future<BlockBody?> getBlockBody(BlockId blockId) =>
+      client.getBlockBody(blockId);
 
   @override
-  Future<BlockId?> getBlockIdAtHeight(Int64 height) => retryableFuture(() =>
-          nodeClient.getBlockIdAtHeight(GetBlockIdAtHeightReq(height: height)))
-      .then((v) => v.hasBlockId() ? v.blockId : null);
+  Future<BlockHeader?> getBlockHeader(BlockId blockId) =>
+      client.getBlockHeader(blockId);
 
   @override
-  Future<Transaction?> getTransaction(TransactionId transactionId) =>
-      retryableFuture(() => nodeClient
-              .getTransaction(GetTransactionReq(transactionId: transactionId)))
-          .then((v) => v.hasTransaction() ? v.transaction : null);
+  Future<FullBlock?> getFullBlock(BlockId blockId) =>
+      client.getFullBlock(blockId);
 
-  Future<TransactionOutput?> getTransactionOutput(
-          TransactionOutputReference reference) =>
-      retryableFuture(() => nodeClient.getTransactionOutput(
-              GetTransactionOutputReq(reference: reference)))
-          .then((v) => v.hasTransactionOutput() ? v.transactionOutput : null);
+  @override
+  Future<BlockId?> getBlockIdAtHeight(Int64 height) =>
+      client.getBlockIdAtHeight(height);
 
   @override
   Future<List<TransactionOutputReference>> getLockAddressState(
           LockAddress lock) =>
-      retryableFuture(() => nodeClient
-              .getLockAddressState(GetLockAddressStateReq(address: lock)))
-          .then((v) => v.transactionOutputs);
+      client.getLockAddressState(lock);
 
   @override
-  Stream<TraversalStep> get traversal {
-    _follow() {
-      final x = nodeClient.follow(FollowReq());
-      return x.doOnCancel(x.cancel);
-    }
+  Future<Transaction?> getTransaction(TransactionId transactionId) =>
+      client.getTransaction(transactionId);
 
-    return retryableStream(_follow,
-        onError: (e, s) =>
-            _log.warning("Remote traversal error. Retrying.", e, s)).map(
-        (followR) => followR.hasAdopted()
-            ? TraversalStep_Applied(followR.adopted)
-            : TraversalStep_Unapplied(followR.unadopted));
-  }
+  @override
+  Future<TransactionOutput?> getTransactionOutput(
+          TransactionOutputReference reference) =>
+      client.getTransactionOutput(reference);
+
+  @override
+  Stream<TraversalStep> get traversal => client.traversal;
+
+  @override
+  Future<void> broadcastTransaction(Transaction transaction) =>
+      client.broadcastTransaction(transaction);
+
+  @override
+  Future<void> broadcastBlock(Block block, Transaction? reward) =>
+      client.broadcastBlock(block, reward);
+
+  @override
+  Future<List<int>> calculateEta(BlockId parentBlockId, Int64 slot) =>
+      client.getEta(parentBlockId, slot);
+
+  @override
+  Future<ActiveStaker?> getStaker(BlockId parentBlockId, Int64 slot,
+          TransactionOutputReference account) =>
+      client.getStaker(parentBlockId, slot, account);
+
+  @override
+  Future<Int64> getTotalActivestake(BlockId parentBlockId, Int64 slot) =>
+      client.totalActiveStake(parentBlockId, slot);
+
+  @override
+  Stream<BlockBody> get packBlock => client.blockPacker;
 }
 
-final Logger _log = Logger("Blockchain.View");
+final Logger _log = Logger("Blockchain.Client");

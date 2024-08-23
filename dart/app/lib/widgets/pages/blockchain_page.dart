@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:async/async.dart';
-import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
+import 'package:blockchain_app/providers/blockchain_client.dart';
 import 'package:blockchain_app/widgets/pages/genesis_builder_page.dart';
 import 'package:blockchain_app/widgets/pages/receive_page.dart';
 import 'package:blockchain_app/widgets/pages/stake_page.dart';
@@ -19,14 +19,14 @@ class BlockchainPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final readerWriter = ref.watch(podBlockchainReaderWriterProvider);
+    final client = ref.watch(podBlockchainClientProvider);
     return DefaultTabController(
       length: 5,
       child: Scaffold(
-          appBar: _appBar(context, readerWriter),
+          appBar: _appBar(context, client),
           body: Container(
               constraints: const BoxConstraints.expand(),
-              child: _tabBarView(context, readerWriter))),
+              child: _tabBarView(context, client))),
     );
   }
 
@@ -42,13 +42,12 @@ class BlockchainPage extends ConsumerWidget {
     ]);
   }
 
-  _tabBarView(BuildContext context, BlockchainReaderWriter readerWriter) {
+  _tabBarView(BuildContext context, BlockchainClient client) {
     return TabBarView(children: [
-      LiveBlocksView(view: readerWriter.view),
-      StreamedTransactView(
-          view: readerWriter.view, writer: readerWriter.writer),
+      LiveBlocksView(client: client),
+      StreamedTransactView(client: client),
       const ReceiveView(),
-      StakeView(view: readerWriter.view, writer: readerWriter.writer),
+      StakeView(client: client),
       const GenesisBuilderView(),
     ]);
   }
@@ -56,11 +55,11 @@ class BlockchainPage extends ConsumerWidget {
   static const _metadataTextStyle =
       TextStyle(fontSize: 12, fontWeight: FontWeight.bold);
 
-  AppBar _appBar(BuildContext context, BlockchainReaderWriter readerWriter) {
-    final slotTicker = _slotText(context, readerWriter);
+  AppBar _appBar(BuildContext context, BlockchainClient client) {
+    final slotTicker = _slotText(context, client);
     return AppBar(
       title: StreamBuilder(
-        stream: readerWriter.view.adoptedBlocks
+        stream: client.adoptedBlocks
             .map((b) => b.header)
             .asyncMap((header) async => [
                   const VerticalDivider(),
@@ -77,9 +76,9 @@ class BlockchainPage extends ConsumerWidget {
     );
   }
 
-  _slotText(BuildContext context, BlockchainReaderWriter readerWriter) =>
+  _slotText(BuildContext context, BlockchainClient client) =>
       StreamBuilder<Int64>(
-          stream: Stream.fromFuture(readerWriter.view.genesisBlock)
+          stream: Stream.fromFuture(client.genesisBlock)
               .map((b) => (
                     b.header.timestamp,
                     Int64(ProtocolSettings.defaultSettings
@@ -99,9 +98,9 @@ class BlockchainPage extends ConsumerWidget {
 }
 
 class LiveBlocksView extends StatelessWidget {
-  final BlockchainView view;
+  final BlockchainClient client;
 
-  const LiveBlocksView({super.key, required this.view});
+  const LiveBlocksView({super.key, required this.client});
 
   @override
   Widget build(BuildContext context) {
@@ -133,8 +132,8 @@ class LiveBlocksView extends StatelessWidget {
       );
 
   Stream<FullBlock> get _fullBlocks => StreamGroup.merge(
-          [Stream.fromFuture(view.canonicalHeadId), view.adoptions])
-      .asyncMap(view.getFullBlockOrRaise);
+          [Stream.fromFuture(client.canonicalHeadId), client.adoptions])
+      .asyncMap(client.getFullBlockOrRaise);
 }
 
 class BlockCard extends StatelessWidget {

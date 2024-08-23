@@ -115,8 +115,8 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
                 case TraversalStep.Unapplied(id) => Json.obj("unadopted" -> id.show.asJson)
               }
               .map(_.noSpaces)
-              .intersperse("\n")
               .mergeHaltL(Stream.fixedRate[F](2.seconds).as(""))
+              .intersperse("\n")
               .through(fs2.text.utf8.encode)
               .onError { case e =>
                 Stream.exec(Logger[F].warn(e)("Follow failure"))
@@ -158,6 +158,13 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
                   .fold(Response().withStatus(Status.NotFound))(Response().withEntity)
               )
           )
+          .logError
+      case request @ POST -> Root / "transactions" =>
+        request
+          .as[Json]
+          .flatMap(json => IO.fromEither(json.as[Transaction]))
+          .flatMap(core.ledger.mempool.add)
+          .as(Response())
           .logError
       case request @ POST -> Root / "blocks" =>
         request
@@ -216,9 +223,10 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
         IO(
           Response(body =
             core.ledger.blockPacker.streamed
+              .map(full => BlockBody(full.transactions.map(_.id)))
               .map(_.asJson.noSpaces)
-              .intersperse("\n")
               .mergeHaltL(Stream.fixedRate[F](2.seconds).as(""))
+              .intersperse("\n")
               .through(fs2.text.utf8.encode)
               .onError { case e =>
                 Stream.exec(Logger[F].warn(e)("Block packer failure"))

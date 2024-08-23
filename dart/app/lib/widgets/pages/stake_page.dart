@@ -1,4 +1,3 @@
-import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
 import 'package:blockchain_app/providers/staking/staking.dart';
 import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_sdk/sdk.dart';
@@ -8,10 +7,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
 
 class StakeView extends ConsumerStatefulWidget {
-  final BlockchainView view;
-  final BlockchainWriter writer;
+  final BlockchainClient client;
 
-  const StakeView({super.key, required this.view, required this.writer});
+  const StakeView({super.key, required this.client});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => StakeViewState();
@@ -23,7 +21,7 @@ class StakeViewState extends ConsumerState<StakeView> {
   Widget build(BuildContext context) {
     final state = ref.watch(podStakingProvider);
     if (state.minting != null) {
-      return RunMinting(viewer: widget.view, writer: widget.writer);
+      return RunMinting(client: widget.client);
     } else if (advancedMode) {
       return advancedModeCard;
     } else {
@@ -36,9 +34,7 @@ class StakeViewState extends ConsumerState<StakeView> {
             return v;
           }),
           builder: (context, snapshot) => snapshot.hasData
-              ? (snapshot.data!
-                  ? RunMinting(viewer: widget.view, writer: widget.writer)
-                  : noStaker)
+              ? (snapshot.data! ? RunMinting(client: widget.client) : noStaker)
               : snapshot.hasError
                   ? Center(child: Text("An error occurred: ${snapshot.error}"))
                   : loading);
@@ -130,10 +126,9 @@ class DirectoryChooserState extends State<DirectoryChooser> {
 }
 
 class RunMinting extends ConsumerWidget {
-  final BlockchainView viewer;
-  final BlockchainWriter writer;
+  final BlockchainClient client;
 
-  const RunMinting({super.key, required this.viewer, required this.writer});
+  const RunMinting({super.key, required this.client});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

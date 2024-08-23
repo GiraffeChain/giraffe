@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:blockchain_app/providers/blockchain_reader_writer.dart';
+import 'package:blockchain_app/providers/blockchain_client.dart';
 import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
-import 'package:blockchain_protobuf/services/staker_support_rpc.pbgrpc.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -30,19 +29,17 @@ class PodStaking extends _$PodStaking {
   PodStakingState build() => const PodStakingState(minting: null, stop: null);
 
   Future<void> initMinting() async {
-    final readerWriter = ref.read(podBlockchainReaderWriterProvider);
-    final viewer = readerWriter.view;
-    final canonicalHeadId = await viewer.canonicalHeadId;
-    final canonicalHead = await viewer.getBlockHeaderOrRaise(canonicalHeadId);
+    final client = ref.read(podBlockchainClientProvider);
+    final canonicalHeadId = await client.canonicalHeadId;
+    final canonicalHead = await client.getBlockHeaderOrRaise(canonicalHeadId);
     log.info(
         "Canonical head id=${canonicalHeadId.show} height=${canonicalHead.height} slot=${canonicalHead.slot}");
-    final protocolSettings = await viewer.protocolSettings;
+    final protocolSettings = await client.protocolSettings;
 
-    final genesisBlockId = await viewer.genesisBlockId;
-    final genesisHeader = await viewer.getBlockHeaderOrRaise(genesisBlockId);
+    final genesisBlockId = await client.genesisBlockId;
+    final genesisHeader = await client.getBlockHeaderOrRaise(genesisBlockId);
     log.info(
         "Genesis id=${genesisBlockId.show} height=${genesisHeader.height} slot=${genesisHeader.slot}");
-    final stakerSupportClient = readerWriter.writer.stakerClient;
     final clock = ClockImpl(
       protocolSettings.slotDuration,
       protocolSettings.epochLength,
@@ -67,13 +64,12 @@ class PodStaking extends _$PodStaking {
       protocolSettings,
       clock,
       canonicalHead,
-      viewer.adoptions.map((id) {
+      client.adoptions.map((id) {
         log.info("Remote peer adopted block id=${id.show}");
         return id;
-      }).asyncMap(viewer.getBlockHeaderOrRaise),
+      }).asyncMap(client.getBlockHeaderOrRaise),
       leaderElection,
-      viewer,
-      stakerSupportClient,
+      client,
       stakingAddress,
     );
     final (f, dispose) = mintingResource
@@ -87,8 +83,7 @@ class PodStaking extends _$PodStaking {
   }
 
   Future<void> initMintingTestnet(int index) async {
-    final genesis =
-        await ref.read(podBlockchainReaderWriterProvider).view.genesisBlock;
+    final genesis = await ref.read(podBlockchainClientProvider).genesisBlock;
     final genesisTimestamp = genesis.header.timestamp;
     final seed = [...genesisTimestamp.immutableBytes, ...index.immutableBytes];
     final stakerInitializer = await StakingAccount.generate(
@@ -127,7 +122,7 @@ class PodStaking extends _$PodStaking {
     final wallet = await ref.read(podWalletProvider.future);
     final random = Random.secure();
     final seed = List.generate(32, (_) => random.nextInt(255));
-    final readerWriter = ref.read(podBlockchainReaderWriterProvider);
+    final client = ref.read(podBlockchainClientProvider);
     final stakerInitializer = await StakingAccount.generate(
       minimumStakeAccountQuantity,
       wallet.defaultLockAddress,
@@ -173,12 +168,12 @@ class PodStaking extends _$PodStaking {
       ));
     }
     final transaction = await wallet.attest(
-        readerWriter.view,
+        client,
         Transaction(
           inputs: inputs,
           outputs: outputs,
         ));
-    await readerWriter.writer.submitTransaction(transaction);
+    await client.broadcastTransaction(transaction);
     final account =
         TransactionOutputReference(transactionId: transaction.id, index: 0);
     final secureStorage = ref.read(podSecureStorageProvider);
@@ -196,15 +191,17 @@ class PodStaking extends _$PodStaking {
 
   void start() {
     final minting = state.minting!;
-    final readerWriter = ref.read(podBlockchainReaderWriterProvider);
+    final client = ref.read(podBlockchainClientProvider);
+    // TODO: Reward?
     final subscription = minting.blockProducer.blocks
-        .asyncMap((block) => readerWriter.writer.stakerClient
-            .broadcastBlock(BroadcastBlockReq(
-                block: Block(
+        .asyncMap((block) => client
+            .broadcastBlock(
+                Block(
                     header: block.header,
                     body: BlockBody(
                         transactionIds:
-                            block.fullBody.transactions.map((t) => t.id)))))
+                            block.fullBody.transactions.map((t) => t.id))),
+                null)
             .then((_) => block))
         .listen(
           (block) => log.info(
