@@ -58,7 +58,7 @@ class StakingAccount {
     final vrfVk = vrfKeyPair.vk;
     final registrationMessageToSign = blake2b256.convert(vrfVk).bytes;
     final registrationSignature =
-        await ed25519.sign(operatorKeyPair.sk, registrationMessageToSign);
+        await ed25519.sign(registrationMessageToSign, operatorKeyPair.sk);
     return StakingAccount(
       operatorSk: operatorKeyPair.sk,
       operatorVk: operatorVk,

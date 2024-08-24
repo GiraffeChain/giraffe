@@ -127,7 +127,7 @@ class PodStaking extends _$PodStaking {
       wallet.defaultLockAddress,
       seed,
     );
-    final outputs = stakerInitializer.transaction.outputs;
+    final outputs = List.of(stakerInitializer.transaction.outputs);
     final inputs = <TransactionInput>[];
     var remaining = minimumStakeAccountQuantity;
     final availableInputKeys = wallet.spendableOutputs.keys.toList();
@@ -238,4 +238,4 @@ class PodStakingState with _$PodStakingState {
       required Future<void> Function()? stop}) = _PodStakingState;
 }
 
-final minimumStakeAccountQuantity = Int64(1000);
+final minimumStakeAccountQuantity = Int64.parseInt("10000000");
