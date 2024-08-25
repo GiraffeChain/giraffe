@@ -49,7 +49,7 @@ class TransactionSyntaxValidationImpl extends TransactionSyntaxValidation {
   }
 
   static List<String> maximumOutputsCountValidation(Transaction transaction) {
-    if (transaction.outputs.length > MaxOutputsCount) {
+    if (transaction.outputs.length > maxOutputsCount) {
       return ["ExcessiveOutputsCount"];
     }
     return [];
@@ -57,7 +57,7 @@ class TransactionSyntaxValidationImpl extends TransactionSyntaxValidation {
 
   static List<String> dataLengthValidation(Transaction transaction) {
     final immutableBytes = transaction.immutableBytes;
-    if (immutableBytes.length > MaxDataLength) {
+    if (immutableBytes.length > maxDataLength) {
       return ["ExcessiveDataLength"];
     }
     return [];
@@ -98,6 +98,6 @@ class TransactionSyntaxValidationImpl extends TransactionSyntaxValidation {
     return [];
   }
 
-  static const MaxDataLength = 15360;
-  static const MaxOutputsCount = 32767;
+  static const maxDataLength = 15360;
+  static const maxOutputsCount = 32767;
 }

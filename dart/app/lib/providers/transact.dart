@@ -25,7 +25,7 @@ class PodTransact extends _$PodTransact {
   void addOutput() async {
     state = state.copyWith(newOutputEntries: [
       ...state.newOutputEntries,
-      ("0", (await PrivateTestnet.DefaultLockAddress).show)
+      ("0", (await PrivateTestnet.defaultLockAddress).show)
     ]);
   }
 

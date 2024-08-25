@@ -22,6 +22,7 @@ abstract class Staking {
 }
 
 class StakingImpl extends Staking {
+  @override
   final TransactionOutputReference account;
   final List<int> vkVrf;
   final List<int> skOperator;

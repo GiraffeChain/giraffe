@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:fixnum/fixnum.dart';
 
-import 'models/common.dart';
 import 'package:ribs_effect/ribs_effect.dart';
 
 abstract class Clock {
@@ -29,37 +28,32 @@ abstract class Clock {
       timerUntilTimestamp(slotToTimestamps(slot).$1, onComplete);
 
   Int64 epochOfSlot(Int64 slot) {
-    if (slot == Int64.ZERO)
+    if (slot == Int64.ZERO) {
       return Int64(-1);
-    else if (slot < Int64.ZERO)
+    } else if (slot < Int64.ZERO) {
       return Int64(-2);
-    else
+    } else {
       return (slot - 1) ~/ slotsPerEpoch;
+    }
   }
 
   Int64 get globalEpoch => epochOfSlot(globalSlot);
 
   (Int64, Int64) epochRange(Int64 epoch) {
-    if (epoch == Int64(-1))
+    if (epoch == Int64(-1)) {
       return const (Int64.ZERO, Int64.ZERO);
-    else if (epoch < Int64(-1))
+    } else if (epoch < Int64(-1)) {
       return (Int64(-1), Int64(-1));
-    else
+    } else {
       return ((epoch * slotsPerEpoch + 1), (epoch + 1) * slotsPerEpoch);
-  }
-
-  Stream<Slot> get slots async* {
-    var s = globalSlot;
-    while (true) {
-      await delayedUntilSlot(s);
-      yield s;
-      s++;
     }
   }
 }
 
 class ClockImpl extends Clock {
+  @override
   final Duration slotLength;
+  @override
   final Int64 slotsPerEpoch;
   final Int64 _genesisTimestamp;
 

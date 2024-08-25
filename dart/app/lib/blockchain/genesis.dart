@@ -25,8 +25,10 @@ class Genesis {
       transactionId: TransactionId(value: _emptyBytes32));
 
   static Eta eta(List<int> prefix, Iterable<TransactionId> transactionIds) {
-    final bytes = <int>[]..addAll(prefix);
-    for (final id in transactionIds) bytes.addAll(id.value.decodeBase58);
+    final bytes = <int>[...prefix];
+    for (final id in transactionIds) {
+      bytes.addAll(id.value.decodeBase58);
+    }
     return bytes.hash256;
   }
 
@@ -59,7 +61,7 @@ class GenesisConfig {
   GenesisConfig(
       this.timestamp, this.transactions, this.etaPrefix, this.settings);
 
-  static final DefaultEtaPrefix = utf8.encode("genesis");
+  static final defaultEtaPrefix = utf8.encode("genesis");
 
   FullBlock get block {
     final transactionIds = transactions.map((tx) => tx.id);

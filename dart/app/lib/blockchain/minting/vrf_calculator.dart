@@ -23,8 +23,8 @@ class VrfCalculatorImpl extends VrfCalculator {
 
   final log = Logger("VrfCalculator");
 
-  Map<VrfArgument, List<int>> _vrfProofsCache = {};
-  Map<VrfArgument, List<int>> _rhosCache = {};
+  final Map<VrfArgument, List<int>> _vrfProofsCache = {};
+  final Map<VrfArgument, List<int>> _rhosCache = {};
 
   VrfCalculatorImpl(this.skVrf, this.clock, this.leaderElectionValidation,
       this.protocolSettings);
@@ -35,9 +35,7 @@ class VrfCalculatorImpl extends VrfCalculator {
     final (minSlot, maxSlot) = slotRange;
 
     log.info(
-      "Computing ineligible slots for" +
-          " eta=${eta.show}" +
-          " range=$minSlot..$maxSlot",
+      "Computing ineligible slots for eta=${eta.show} range=$minSlot..$maxSlot",
     );
     final threshold = await leaderElectionValidation.getThreshold(
         relativeStake, Int64(protocolSettings.vrfLddCutoff));

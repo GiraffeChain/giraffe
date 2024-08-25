@@ -33,7 +33,7 @@ class PodGenesisBuilder extends _$PodGenesisBuilder {
     final stakers = state.stakers;
     state = state.copyWith(stakers: [
       ...stakers,
-      (await PrivateTestnet.DefaultLockAddress, Int64(10000))
+      (await PrivateTestnet.defaultLockAddress, Int64(10000))
     ]);
   }
 
@@ -59,7 +59,7 @@ class PodGenesisBuilder extends _$PodGenesisBuilder {
     final unstaked = state.unstaked;
     state = state.copyWith(unstaked: [
       ...unstaked,
-      (await PrivateTestnet.DefaultLockAddress, Int64(10000))
+      (await PrivateTestnet.defaultLockAddress, Int64(10000))
     ]);
   }
 

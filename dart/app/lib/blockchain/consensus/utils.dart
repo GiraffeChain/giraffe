@@ -7,13 +7,14 @@ import 'package:hashlib/hashlib.dart';
 import 'package:rational/rational.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
-final TestStringArray = utf8.encode("TEST");
-final NonceStringArray = utf8.encode("NONCE");
+final _testStringArray = utf8.encode("TEST");
+final _nonceStringArray = utf8.encode("NONCE");
 
 extension RhoOps on Rho {
-  Uint8List get rhoTestHash => blake2b512.convert(this + TestStringArray).bytes;
+  Uint8List get rhoTestHash =>
+      blake2b512.convert(this + _testStringArray).bytes;
   Uint8List get rhoNonceHash =>
-      blake2b512.convert(this + NonceStringArray).bytes;
+      blake2b512.convert(this + _nonceStringArray).bytes;
 }
 
 extension RatioOps on Rational {

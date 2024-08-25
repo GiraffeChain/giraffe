@@ -48,9 +48,8 @@ class BlockProducerImpl extends BlockProducer {
     Int64 fromSlot = parentHeader.slot + 1;
     if (fromSlot < _nextSlotMinimum) fromSlot = _nextSlotMinimum;
     return IO
-        .delay(() => log.info("Calculating eligibility for" +
-            " parentId=${parentHeader.id.show}" +
-            " parentSlot=${parentHeader.slot}"))
+        .delay(() => log.info(
+            "Calculating eligibility for parentId=${parentHeader.id.show} parentSlot=${parentHeader.slot}"))
         .flatMap((_) => _nextEligibility(parentSlotId, fromSlot))
         .flatMap<FullBlock?>((nextHit) => (nextHit == null)
             ? IO
@@ -134,18 +133,19 @@ class BlockProducerImpl extends BlockProducer {
 
   FullBlockBody insertReward(FullBlockBody base, BlockId parentId) {
     if (rewardAddress != null) {
-      assert(
-          base.transactions.where((t) => t.hasRewardParentBlockId()).length ==
-              0,
+      assert(base.transactions.where((t) => t.hasRewardParentBlockId()).isEmpty,
           "Block already contains reward");
       Int64 maximumQuantity = Int64.ZERO;
-      for (final tx in base.transactions) maximumQuantity += tx.reward;
+      for (final tx in base.transactions) {
+        maximumQuantity += tx.reward;
+      }
       final output = TransactionOutput(
           lockAddress: rewardAddress, value: Value(quantity: maximumQuantity));
       final rewardTx =
           Transaction(outputs: [output], rewardParentBlockId: parentId);
       return FullBlockBody(transactions: [...base.transactions, rewardTx]);
-    } else
+    } else {
       return base;
+    }
   }
 }

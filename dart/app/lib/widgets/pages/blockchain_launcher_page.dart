@@ -123,7 +123,7 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
           TextButton.icon(
             label: const Text("Public"),
             onPressed: () async =>
-                widget.onSelected(await PrivateTestnet.DefaultKeyPair),
+                widget.onSelected(await PrivateTestnet.defaultKeyPair),
             icon: const Icon(Icons.people),
           ),
           TextButton.icon(

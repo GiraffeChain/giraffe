@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import '../../../lib/blockchain/common/clock.dart';
-import '../../../lib/blockchain/consensus/leader_election_validation.dart';
-import '../../../lib/blockchain/minting/vrf_calculator.dart';
+import 'package:blockchain_app/blockchain/common/clock.dart';
+import 'package:blockchain_app/blockchain/consensus/leader_election_validation.dart';
+import 'package:blockchain_app/blockchain/minting/vrf_calculator.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:convert/convert.dart';
 import 'package:test/test.dart';
