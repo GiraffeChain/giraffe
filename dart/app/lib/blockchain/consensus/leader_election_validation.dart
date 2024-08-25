@@ -16,7 +16,7 @@ abstract class LeaderElection {
 
 class LeaderElectionImpl extends LeaderElection {
   final ProtocolSettings protocolSettings;
-  DComputeImpl _compute;
+  final DComputeImpl _compute;
 
   LeaderElectionImpl(this.protocolSettings, this._compute);
 
@@ -30,7 +30,7 @@ class LeaderElectionImpl extends LeaderElection {
       _compute((t) => _isSlotLeaderForThreshold(t.$1, t.$2), (threshold, rho));
 }
 
-final NormalizationConstant = BigInt.from(2).pow(512);
+final _normalizationConstant = BigInt.from(2).pow(512);
 
 final _thresholdCache =
     MapCache<(Rational, Int64), Rational>.lru(maximumSize: 1024);
@@ -69,6 +69,6 @@ Future<bool> _isSlotLeaderForThreshold(Rational threshold, Rho rho) async {
     ..[0] = 0x00
     ..setRange(1, testRhoHashBytes.length + 1, testRhoHashBytes);
   final numerator = numeratorBytes.toBigInt;
-  final test = Rational(numerator, NormalizationConstant);
+  final test = Rational(numerator, _normalizationConstant);
   return threshold > test;
 }

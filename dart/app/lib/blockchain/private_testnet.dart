@@ -9,21 +9,19 @@ import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 
 class PrivateTestnet {
-  static final DefaultTotalStake = BigInt.from(10000000);
+  static final defaultTotalStake = BigInt.from(10000000);
 
-  static Ed25519KeyPair? _ed25519keyPairCached = null;
+  static Ed25519KeyPair? _ed25519keyPairCached;
 
-  static Future<Ed25519KeyPair> get DefaultKeyPair async {
-    if (_ed25519keyPairCached == null) {
-      _ed25519keyPairCached =
-          await ed25519.generateKeyPairFromSeed(Uint8List(32));
-    }
+  static Future<Ed25519KeyPair> get defaultKeyPair async {
+    _ed25519keyPairCached ??=
+        await ed25519.generateKeyPairFromSeed(Uint8List(32));
 
     return _ed25519keyPairCached!;
   }
 
-  static Future<LockAddress> get DefaultLockAddress => DefaultKeyPair.then(
-      (kp) => Lock(ed25519: Lock_Ed25519(vk: kp.vk.base58)).address);
+  static Future<LockAddress> get defaultLockAddress => defaultKeyPair
+      .then((kp) => Lock(ed25519: Lock_Ed25519(vk: kp.vk.base58)).address);
 
   static Future<BlockId> initTo(
       Directory baseDir, Int64 timestamp, List<Int64> stakes) async {
@@ -54,9 +52,9 @@ class PrivateTestnet {
     assert(stakerCount >= 0);
     final out = <StakingAccount>[];
     for (int i = 0; i < stakerCount; i++) {
-      final seed = await (timestamp.immutableBytes + i.immutableBytes).hash256;
+      final seed = (timestamp.immutableBytes + i.immutableBytes).hash256;
       out.add(await StakingAccount.generate(
-          Int64(10000000), await DefaultLockAddress, seed));
+          Int64(10000000), await defaultLockAddress, seed));
     }
     return out;
   }
@@ -81,6 +79,6 @@ class PrivateTestnet {
     }
 
     return GenesisConfig(timestamp, transactions,
-        GenesisConfig.DefaultEtaPrefix, ProtocolSettings.defaultAsMap);
+        GenesisConfig.defaultEtaPrefix, ProtocolSettings.defaultAsMap);
   }
 }

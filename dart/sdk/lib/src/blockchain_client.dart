@@ -1,5 +1,4 @@
 import 'package:blockchain_sdk/sdk.dart';
-import 'package:logging/logging.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rxdart/transformers.dart';
@@ -156,5 +155,3 @@ class BlockchainClientFromJsonRpc extends BlockchainClient {
   @override
   Stream<BlockBody> get packBlock => client.blockPacker;
 }
-
-final Logger _log = Logger("Blockchain.Client");

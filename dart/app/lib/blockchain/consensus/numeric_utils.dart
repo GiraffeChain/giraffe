@@ -63,10 +63,11 @@ _modifiedLenz(int maxIterations, int precision, Rational Function(int) a,
     dj = Rational(dj.denominator, dj.numerator);
     deltaj = cj * dj;
     fj = fj * deltaj;
-    if (j > 1)
+    if (j > 1) {
       error = (deltaj - Rational.one).abs() > truncationError;
-    else
+    } else {
       error = true;
+    }
   }
 
   var j = 1;
@@ -74,7 +75,8 @@ _modifiedLenz(int maxIterations, int precision, Rational Function(int) a,
     loop(j);
     j = j + 1;
   }
-  if (fj.denominator < BigInt.from(0))
+  if (fj.denominator < BigInt.from(0)) {
     fj = Rational(-fj.numerator, -fj.denominator);
+  }
   return fj;
 }

@@ -4,15 +4,16 @@ import 'package:blockchain_sdk/sdk.dart';
 import 'common/models/unsigned.dart';
 
 extension BlockHeaderCodecs on BlockHeader {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(parentHeaderId.immutableBytes)
-    ..addAll(parentSlot.immutableBytes)
-    ..addAll(txRoot.decodeBase58)
-    ..addAll(timestamp.immutableBytes)
-    ..addAll(height.immutableBytes)
-    ..addAll(slot.immutableBytes)
-    ..addAll(stakerCertificate.immutableBytes)
-    ..addAll(account.immutableBytes);
+  List<int> get immutableBytes => <int>[
+        ...parentHeaderId.immutableBytes,
+        ...parentSlot.immutableBytes,
+        ...txRoot.decodeBase58,
+        ...timestamp.immutableBytes,
+        ...height.immutableBytes,
+        ...slot.immutableBytes,
+        ...stakerCertificate.immutableBytes,
+        ...account.immutableBytes
+      ];
 
   BlockId get id => hasHeaderId() ? headerId : computeId;
 
@@ -24,30 +25,33 @@ extension BlockHeaderCodecs on BlockHeader {
 }
 
 extension UnsignedBlockHeaderCodecs on UnsignedBlockHeader {
-  List<int> get signableBytes => <int>[]
-    ..addAll(parentHeaderId.immutableBytes)
-    ..addAll(parentSlot.immutableBytes)
-    ..addAll(txRoot.decodeBase58)
-    ..addAll(timestamp.immutableBytes)
-    ..addAll(height.immutableBytes)
-    ..addAll(slot.immutableBytes)
-    ..addAll(partialStakerCertificate.immutableBytes)
-    ..addAll(account.immutableBytes);
+  List<int> get signableBytes => <int>[
+        ...parentHeaderId.immutableBytes,
+        ...parentSlot.immutableBytes,
+        ...txRoot.decodeBase58,
+        ...timestamp.immutableBytes,
+        ...height.immutableBytes,
+        ...slot.immutableBytes,
+        ...partialStakerCertificate.immutableBytes,
+        ...account.immutableBytes
+      ];
 }
 
 extension StakerCertificateCodecs on StakerCertificate {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(blockSignature.decodeBase58)
-    ..addAll(vrfSignature.decodeBase58)
-    ..addAll(vrfVK.decodeBase58)
-    ..addAll(thresholdEvidence.decodeBase58)
-    ..addAll(eta.decodeBase58);
+  List<int> get immutableBytes => <int>[
+        ...blockSignature.decodeBase58,
+        ...vrfSignature.decodeBase58,
+        ...vrfVK.decodeBase58,
+        ...thresholdEvidence.decodeBase58,
+        ...eta.decodeBase58
+      ];
 }
 
 extension PartialStakerCertificateCodecs on PartialStakerCertificate {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(vrfSignature.decodeBase58)
-    ..addAll(vrfVK.decodeBase58)
-    ..addAll(thresholdEvidence.decodeBase58)
-    ..addAll(eta.decodeBase58);
+  List<int> get immutableBytes => <int>[
+        ...vrfSignature.decodeBase58,
+        ...vrfVK.decodeBase58,
+        ...thresholdEvidence.decodeBase58,
+        ...eta.decodeBase58
+      ];
 }

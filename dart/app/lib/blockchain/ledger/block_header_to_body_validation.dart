@@ -15,8 +15,9 @@ class BlockHeaderToBodyValidationImpl extends BlockHeaderToBodyValidation {
     final parentHeader = await fetchHeader(block.header.parentHeaderId);
     final expectedTxRoot = TxRoot.calculateFromTransactionIds(
         parentHeader.txRoot.decodeBase58, block.body.transactionIds);
-    if (expectedTxRoot.sameElements(block.header.txRoot.decodeBase58))
+    if (expectedTxRoot.sameElements(block.header.txRoot.decodeBase58)) {
       return [];
+    }
     return ["TxRoot Mismatch"];
   }
 }
@@ -26,7 +27,9 @@ class TxRoot {
       List<int> parentRoot, Iterable<TransactionId> transactionIds) {
     final sink = blake2b256.createSink();
     sink.add(parentRoot);
-    for (final id in transactionIds) sink.add(id.value.decodeBase58);
+    for (final id in transactionIds) {
+      sink.add(id.value.decodeBase58);
+    }
     return sink.digest().bytes;
   }
 

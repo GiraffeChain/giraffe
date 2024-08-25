@@ -42,6 +42,10 @@ dependencies:
   riverpod_annotation: ^2.3.5
   bip39: ^1.0.6
   flutter_secure_storage: ^9.2.2
+  quiver: ^3.2.1
+  rational: ^2.2.3
+  hashlib: ^1.19.2
+  collection: ^1.18.0
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +57,8 @@ dev_dependencies:
   custom_lint:
   analyzer: ^6.7.0
   mockito: ^5.4.4
+  convert: ^3.1.1
+  test: ^1.25.7
 
 flutter:
   uses-material-design: true

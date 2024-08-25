@@ -56,7 +56,7 @@ class PodStaking extends _$PodStaking {
               key: "blockchain-staker-account"))!)),
     );
     final leaderElection = LeaderElectionImpl(protocolSettings, isolate);
-    final stakingAddress =
+    final rewardAddress =
         (await ref.read(podWalletProvider.future)).defaultLockAddress;
     final mintingResource = Minting.makeForRpc(
       stakerData,
@@ -69,7 +69,7 @@ class PodStaking extends _$PodStaking {
       }).asyncMap(client.getBlockHeaderOrRaise),
       leaderElection,
       client,
-      stakingAddress,
+      rewardAddress,
     );
     final (f, dispose) = mintingResource
         .map(
@@ -86,7 +86,7 @@ class PodStaking extends _$PodStaking {
     final genesisTimestamp = genesis.header.timestamp;
     final seed = [...genesisTimestamp.immutableBytes, ...index.immutableBytes];
     final stakerInitializer = await StakingAccount.generate(
-        Int64(10000000), await PrivateTestnet.DefaultLockAddress, seed);
+        Int64(10000000), await PrivateTestnet.defaultLockAddress, seed);
     final operatorVkStr = stakerInitializer.operatorVk.base58;
     final accountTx = genesis.fullBody.transactions.firstWhere((tx) => tx
         .outputs
@@ -191,7 +191,6 @@ class PodStaking extends _$PodStaking {
   void start() {
     final minting = state.minting!;
     final client = ref.read(podBlockchainClientProvider);
-    // TODO: Reward?
     final subscription = minting.blockProducer.blocks
         .asyncMap((block) => client
             .broadcastBlock(

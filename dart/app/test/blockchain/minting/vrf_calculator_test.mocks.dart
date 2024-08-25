@@ -137,13 +137,6 @@ class MockClock extends _i1.Mock implements _i5.Clock {
       ) as _i2.Int64);
 
   @override
-  _i3.Stream<_i2.Int64> get slots => (super.noSuchMethod(
-        Invocation.getter(#slots),
-        returnValue: _i3.Stream<_i2.Int64>.empty(),
-        returnValueForMissingStub: _i3.Stream<_i2.Int64>.empty(),
-      ) as _i3.Stream<_i2.Int64>);
-
-  @override
   _i2.Int64 timestampToSlot(_i2.Int64? timestamp) => (super.noSuchMethod(
         Invocation.method(
           #timestampToSlot,
