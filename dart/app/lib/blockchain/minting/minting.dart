@@ -1,9 +1,7 @@
-import '../common/models/unsigned.dart';
 import 'models/staker_data.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import '../common/clock.dart';
 import '../common/models/common.dart';
-import '../common/resource.dart';
 import '../consensus/eta_calculation.dart';
 import '../consensus/leader_election_validation.dart';
 import '../consensus/staker_tracker.dart';
@@ -15,7 +13,6 @@ import 'vrf_calculator.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
-import 'package:ribs_effect/ribs_effect.dart';
 import 'package:rxdart/streams.dart';
 
 class Minting {
@@ -31,7 +28,7 @@ class Minting {
 
   static final log = Logger("Blockchain.Minting");
 
-  static Resource<Minting> make(
+  static Future<Minting> make(
     StakerData stakerData,
     ProtocolSettings protocolSettings,
     Clock clock,
@@ -42,41 +39,37 @@ class Minting {
     LeaderElection leaderElection,
     StakerTracker stakerTracker,
     LockAddress? rewardAddress,
-  ) =>
-      Resource.pure(VrfCalculatorImpl(
-              stakerData.vrfSk, clock, leaderElection, protocolSettings))
-          .evalFlatMap((vrfCalculator) async {
-        final vrfVk = await ed25519Vrf.getVerificationKey(stakerData.vrfSk);
+  ) async {
+    if (rewardAddress == null) log.warning("Reward Address not set.");
+    final vrfCalculator = VrfCalculatorImpl(
+        stakerData.vrfSk, clock, leaderElection, protocolSettings);
+    final vrfVk = await ed25519Vrf.getVerificationKey(stakerData.vrfSk);
 
-        return StakingImpl.make(
-          canonicalHead.slotId,
-          stakerData.account,
-          vrfVk,
-          stakerData.operatorSk,
-          clock,
-          vrfCalculator,
-          etaCalculation,
-          stakerTracker,
-          leaderElection,
-        ).map((staking) {
-          if (rewardAddress == null) log.warning("Reward Address not set.");
-          final blockProducer = BlockProducerImpl(
-            ConcatEagerStream([Stream.value(canonicalHead), adoptedHeaders]),
-            staking,
-            clock,
-            blockPacker,
-            rewardAddress,
-          );
+    final staking = StakingImpl(
+      stakerData.account,
+      vrfVk,
+      stakerData.operatorSk,
+      stakerTracker,
+      etaCalculation,
+      vrfCalculator,
+      leaderElection,
+    );
+    final blockProducer = BlockProducerImpl(
+      ConcatEagerStream([Stream.value(canonicalHead), adoptedHeaders]),
+      staking,
+      clock,
+      blockPacker,
+      rewardAddress,
+    );
 
-          return Minting(
-            blockProducer: blockProducer,
-            staking: staking,
-            vrfCalculator: vrfCalculator,
-          );
-        });
-      });
+    return Minting(
+      blockProducer: blockProducer,
+      staking: staking,
+      vrfCalculator: vrfCalculator,
+    );
+  }
 
-  static Resource<Minting> makeForRpc(
+  static Future<Minting> makeForRpc(
     StakerData stakerData,
     ProtocolSettings protocolSettings,
     Clock clock,

@@ -58,7 +58,7 @@ class PodStaking extends _$PodStaking {
     final leaderElection = LeaderElectionImpl(protocolSettings, isolate);
     final rewardAddress =
         (await ref.read(podWalletProvider.future)).defaultLockAddress;
-    final mintingResource = Minting.makeForRpc(
+    final minting = await Minting.makeForRpc(
       stakerData,
       protocolSettings,
       clock,
@@ -71,14 +71,7 @@ class PodStaking extends _$PodStaking {
       client,
       rewardAddress,
     );
-    final (f, dispose) = mintingResource
-        .map(
-          (m) => state = state.copyWith(minting: m),
-        )
-        .useForever()
-        .unsafeRunFutureCancelable();
-    f.ignore();
-    ref.onDispose(dispose);
+    state = state.copyWith(minting: minting);
   }
 
   Future<void> initMintingTestnet(int index) async {

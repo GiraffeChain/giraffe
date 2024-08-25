@@ -6,7 +6,7 @@ part of 'staking.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podStakingHash() => r'04890168c88e67b191546601451cf9421af2a4d7';
+String _$podStakingHash() => r'0d5c207db90611b53f14eeee164382e099a92544';
 
 /// See also [PodStaking].
 @ProviderFor(PodStaking)
