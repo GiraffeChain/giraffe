@@ -7,44 +7,22 @@ import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../blockchain/codecs.dart';
-import '../../blockchain/common/clock.dart';
-import '../../blockchain/consensus/leader_election_validation.dart';
-import '../../blockchain/minting/minting.dart';
 import '../../blockchain/minting/models/staker_data.dart';
 import '../../blockchain/private_testnet.dart';
 import '../../blockchain/staking_account.dart';
 import 'staking_io.dart' if (dart.library.html) 'staking_web.dart'
     as staking_support;
 
-part 'staking.freezed.dart';
 part 'staking.g.dart';
 
 @Riverpod(keepAlive: true)
 class PodStaking extends _$PodStaking {
   @override
-  PodStakingState build() => const PodStakingState(minting: null, stop: null);
+  StakerData? build() => null;
 
   Future<void> initMinting() async {
-    final client = ref.read(podBlockchainClientProvider);
-    final canonicalHeadId = await client.canonicalHeadId;
-    final canonicalHead = await client.getBlockHeaderOrRaise(canonicalHeadId);
-    log.info(
-        "Canonical head id=${canonicalHeadId.show} height=${canonicalHead.height} slot=${canonicalHead.slot}");
-    final protocolSettings = await client.protocolSettings;
-
-    final genesisBlockId = await client.genesisBlockId;
-    final genesisHeader = await client.getBlockHeaderOrRaise(genesisBlockId);
-    log.info(
-        "Genesis id=${genesisBlockId.show} height=${genesisHeader.height} slot=${genesisHeader.slot}");
-    final clock = ClockImpl(
-      protocolSettings.slotDuration,
-      protocolSettings.epochLength,
-      genesisHeader.timestamp,
-    );
     final flutterSecureStorage = ref.read(podSecureStorageProvider);
     final stakerData = StakerData(
       vrfSk: base64Decode(
@@ -55,23 +33,7 @@ class PodStaking extends _$PodStaking {
           (await flutterSecureStorage.read(
               key: "blockchain-staker-account"))!)),
     );
-    final leaderElection = LeaderElectionImpl(protocolSettings, isolate);
-    final rewardAddress =
-        (await ref.read(podWalletProvider.future)).defaultLockAddress;
-    final minting = await Minting.makeForRpc(
-      stakerData,
-      protocolSettings,
-      clock,
-      canonicalHead,
-      client.adoptions.map((id) {
-        log.info("Remote peer adopted block id=${id.show}");
-        return id;
-      }).asyncMap(client.getBlockHeaderOrRaise),
-      leaderElection,
-      client,
-      rewardAddress,
-    );
-    state = state.copyWith(minting: minting);
+    state = stakerData;
   }
 
   Future<void> initMintingTestnet(int index) async {
@@ -181,53 +143,15 @@ class PodStaking extends _$PodStaking {
     await initMinting();
   }
 
-  void start() {
-    final minting = state.minting!;
-    final client = ref.read(podBlockchainClientProvider);
-    final subscription = minting.blockProducer.blocks
-        .asyncMap((block) => client
-            .broadcastBlock(
-                Block(
-                    header: block.header,
-                    body: BlockBody(
-                        transactionIds:
-                            block.fullBody.transactions.map((t) => t.id))),
-                null)
-            .then((_) => block))
-        .listen(
-          (block) => log.info(
-              "Successfully broadcasted block id=${block.header.id.show}"),
-          onError: (e, s) => log.severe("Production failed", e, s),
-          onDone: () => log.info("Block production finished unexpectedly"),
-        );
-    ref.onDispose(subscription.cancel);
-    state = state.copyWith(stop: () => subscription.cancel());
-  }
-
-  void stop() async {
-    final f = state.stop?.call();
-    state = state.copyWith(stop: null);
-    await f;
-  }
-
   void reset() async {
-    final f = state.stop?.call();
-    state = state.copyWith(minting: null, stop: null);
-    await f;
     final flutterSecureStorage = ref.read(podSecureStorageProvider);
     await flutterSecureStorage.delete(key: "blockchain-staker-vrf-sk");
     await flutterSecureStorage.delete(key: "blockchain-staker-operator-sk");
     await flutterSecureStorage.delete(key: "blockchain-staker-account");
+    state = null;
   }
 
   static final log = Logger("Blockchain.Staking");
-}
-
-@freezed
-class PodStakingState with _$PodStakingState {
-  const factory PodStakingState(
-      {required Minting? minting,
-      required Future<void> Function()? stop}) = _PodStakingState;
 }
 
 final minimumStakeAccountQuantity = Int64.parseInt("10000000");

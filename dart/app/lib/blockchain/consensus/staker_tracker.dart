@@ -20,3 +20,18 @@ abstract class StakerTracker {
     return null;
   }
 }
+
+class StakerTrackerForStakerSupportRpc extends StakerTracker {
+  final BlockchainClient client;
+
+  StakerTrackerForStakerSupportRpc({required this.client});
+
+  @override
+  Future<ActiveStaker?> staker(BlockId currentBlockId, Int64 slot,
+          TransactionOutputReference account) =>
+      client.getStaker(currentBlockId, slot, account);
+
+  @override
+  Future<Int64> totalActiveStake(BlockId currentBlockId, Slot slot) =>
+      client.getTotalActivestake(currentBlockId, slot);
+}

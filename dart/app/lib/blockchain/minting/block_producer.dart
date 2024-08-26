@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:rxdart/rxdart.dart';
+
 import '../codecs.dart';
 import '../common/clock.dart';
 import '../common/models/unsigned.dart';
@@ -14,7 +16,7 @@ import 'package:logging/logging.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 
 abstract class BlockProducer {
-  Future<FullBlock?> makeChild(BlockHeader parentHeader);
+  Stream<FullBlock> makeChild(BlockHeader parentHeader);
 }
 
 class BlockProducerImpl extends BlockProducer {
@@ -33,12 +35,15 @@ class BlockProducerImpl extends BlockProducer {
 
   final log = Logger("BlockProducer");
 
-  int _i = 0;
-
   @override
-  Future<FullBlock?> makeChild(BlockHeader parentHeader) async {
-    final i = _i + 1;
-    _i = i;
+  Stream<FullBlock> makeChild(BlockHeader parentHeader) {
+    var canceled = false;
+    return _makeChildImpl(parentHeader, () => canceled)
+        .doOnCancel(() => canceled = true);
+  }
+
+  Stream<FullBlock> _makeChildImpl(
+      BlockHeader parentHeader, bool Function() cancelCheck) async* {
     final parentSlotId =
         SlotId(slot: parentHeader.slot, blockId: parentHeader.id);
     Int64 fromSlot = parentHeader.slot + 1;
@@ -46,40 +51,47 @@ class BlockProducerImpl extends BlockProducer {
     log.info(
         "Calculating eligibility for parentId=${parentHeader.id.show} parentSlot=${parentHeader.slot}");
     final nextHit = await _nextEligibility(parentSlotId, fromSlot);
+    if (cancelCheck()) return;
     if (nextHit == null) {
       log.warning("No eligibilities found");
-      return null;
+      return;
     }
-    log.info("Packing block for slot=${nextHit.slot}");
     await clock.delayedUntilSlot(nextHit.slot);
-    if (i != _i) {
-      log.fine("Abandoning block attempt");
-      return null;
-    }
+    if (cancelCheck()) return;
+    log.info("Packing block for slot=${nextHit.slot}");
     final bodyWithoutReward = await blockPacker
         .streamed(parentSlotId.blockId, parentHeader.height + 1, nextHit.slot)
         .first;
+    if (cancelCheck()) return;
     log.info("Constructing block for slot=${nextHit.slot}");
     final body = insertReward(bodyWithoutReward, parentHeader.id);
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = clock.localTimestamp;
     final (slotStart, slotEnd) = clock.slotToTimestamps(nextHit.slot);
-    final timestamp = Int64(min(slotEnd.toInt(), max(now, slotStart.toInt())));
-    final header = await staker.certifyBlock(
-        parentSlotId,
-        nextHit.slot,
-        _prepareUnsignedBlock(
-          parentHeader,
-          body,
-          timestamp,
-          nextHit,
-        ));
+    final timestamp =
+        Int64(min(slotEnd.toInt(), max(now.toInt(), slotStart.toInt())));
+    final txRoot = TxRoot.calculateFromTransactions(
+            parentHeader.txRoot.decodeBase58, body.transactions)
+        .base58;
+    final unsignedHeader = UnsignedBlockHeader(
+      parentHeader.id,
+      parentHeader.slot,
+      txRoot,
+      timestamp,
+      parentHeader.height + 1,
+      nextHit.slot,
+      nextHit.cert,
+      staker.account,
+    );
+    final header =
+        await staker.certifyBlock(parentSlotId, nextHit.slot, unsignedHeader);
+    if (cancelCheck()) return;
     header.embedId();
     final headerId = header.id;
     final transactionIds = body.transactions.map((tx) => tx.id);
     log.info(
         "Produced block id=${headerId.show} height=${header.height} slot=${header.slot} parentId=${header.parentHeaderId.show} transactionIds=[${transactionIds.map((i) => i.show).join(",")}]");
     _nextSlotMinimum = header.slot + 1;
-    return FullBlock()
+    yield FullBlock()
       ..header = header
       ..fullBody = body;
   }
@@ -97,21 +109,6 @@ class BlockProducerImpl extends BlockProducer {
     }
     return null;
   }
-
-  UnsignedBlockHeader _prepareUnsignedBlock(BlockHeader parentHeader,
-          FullBlockBody fullBody, Int64 timestamp, VrfHit nextHit) =>
-      UnsignedBlockHeader(
-        parentHeader.id,
-        parentHeader.slot,
-        TxRoot.calculateFromTransactions(
-                parentHeader.txRoot.decodeBase58, fullBody.transactions)
-            .base58,
-        timestamp,
-        parentHeader.height + 1,
-        nextHit.slot,
-        nextHit.cert,
-        staker.account,
-      );
 
   FullBlockBody insertReward(FullBlockBody base, BlockId parentId) {
     if (rewardAddress != null) {

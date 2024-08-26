@@ -1,3 +1,4 @@
+import 'package:blockchain_app/providers/staking/block_production.dart';
 import 'package:blockchain_app/providers/staking/staking.dart';
 import 'package:blockchain_app/providers/storage.dart';
 import 'package:blockchain_sdk/sdk.dart';
@@ -20,7 +21,7 @@ class StakeViewState extends ConsumerState<StakeView> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(podStakingProvider);
-    if (state.minting != null) {
+    if (state != null) {
       return RunMinting(client: widget.client);
     } else if (advancedMode) {
       return advancedModeCard;
@@ -132,7 +133,11 @@ class RunMinting extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stopFunction = ref.watch(podStakingProvider).stop;
+    final production = ref.watch(podBlockProductionProvider);
+    Future<void> Function()? stopFunction;
+    if (production is ActivePodBlockProductionState) {
+      stopFunction = production.stop;
+    }
     return Card(
       child: Column(children: [
         TextButton.icon(
@@ -140,16 +145,17 @@ class RunMinting extends ConsumerWidget {
           label: const Text("Delete Staker"),
           icon: const Icon(Icons.delete),
         ),
-        stopFunction == null
+        stopFunction != null
             ? TextButton.icon(
-                onPressed: () => ref.read(podStakingProvider.notifier).start(),
-                label: const Text("Start"),
-                icon: const Icon(Icons.play_arrow))
-            : TextButton.icon(
-                onPressed: () => stopFunction(),
+                onPressed: () => stopFunction!(),
                 label: const Text("Stop"),
                 icon: const Icon(Icons.stop),
-              ),
+              )
+            : TextButton.icon(
+                onPressed: () =>
+                    ref.read(podBlockProductionProvider.notifier).start(),
+                label: const Text("Start"),
+                icon: const Icon(Icons.play_arrow)),
       ]),
     );
   }
