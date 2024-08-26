@@ -60,9 +60,10 @@ package object rpc:
       _ <- core.blockIdTree.associate(header.id, header.parentHeaderId)
       _ <- core.dataStores.headers.put(header.id, header)
       _ <- core.dataStores.bodies.put(header.id, block.body)
+      _ <- rewardTransaction.traverse(t => core.dataStores.transactions.put(t.id, t))
       transactions <- block.body.transactionIds.traverse(id =>
-        (rewardTransactionId.filter(_ == id) >> rewardTransaction)
-          .fold(core.dataStores.transactions.getOrRaise(id))(_.pure[F])
+        if (rewardTransactionId.contains(id)) rewardTransaction.get.pure[F]
+        else core.dataStores.transactions.getOrRaise(id)
       )
       _ <- core.ledger.bodyValidation
         .validate(

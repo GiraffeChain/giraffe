@@ -59,10 +59,21 @@ class BlockProducerImpl extends BlockProducer {
     await clock.delayedUntilSlot(nextHit.slot);
     if (cancelCheck()) return;
     log.info("Packing block for slot=${nextHit.slot}");
-    final bodyWithoutReward = await blockPacker
-        .streamed(parentSlotId.blockId, parentHeader.height + 1, nextHit.slot)
-        .first;
-    if (cancelCheck()) return;
+    final FullBlockBody bodyWithoutReward;
+    try {
+      bodyWithoutReward = await RaceStream([
+        blockPacker.streamed(
+            parentSlotId.blockId, parentHeader.height + 1, nextHit.slot),
+        Stream.periodic(const Duration(milliseconds: 250))
+            .map<FullBlockBody?>((_) {
+          if (cancelCheck()) throw _CanceledException();
+          return null;
+        }).whereNotNull(),
+      ]).first;
+      if (cancelCheck()) return;
+    } on _CanceledException {
+      return;
+    }
     log.info("Constructing block for slot=${nextHit.slot}");
     final body = insertReward(bodyWithoutReward, parentHeader.id);
     final now = clock.localTimestamp;
@@ -118,13 +129,20 @@ class BlockProducerImpl extends BlockProducer {
       for (final tx in base.transactions) {
         maximumQuantity += tx.reward;
       }
-      final output = TransactionOutput(
-          lockAddress: rewardAddress, value: Value(quantity: maximumQuantity));
-      final rewardTx =
-          Transaction(outputs: [output], rewardParentBlockId: parentId);
-      return FullBlockBody(transactions: [...base.transactions, rewardTx]);
+      if (maximumQuantity > Int64.ZERO) {
+        final output = TransactionOutput(
+            lockAddress: rewardAddress,
+            value: Value(quantity: maximumQuantity));
+        final rewardTx =
+            Transaction(outputs: [output], rewardParentBlockId: parentId);
+        return FullBlockBody(transactions: [...base.transactions, rewardTx]);
+      } else {
+        return base;
+      }
     } else {
       return base;
     }
   }
 }
+
+class _CanceledException implements Exception {}

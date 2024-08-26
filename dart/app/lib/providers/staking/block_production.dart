@@ -70,11 +70,10 @@ class PodBlockProduction extends _$PodBlockProduction {
       staking,
       clock,
       BlockPackerForStakerSupportRpc(client: client),
-      null, // TODO
+      rewardAddress,
     );
 
     Future<void> Function() cancel = () => Future.value();
-    // TODO reward
     final mainSub = ConcatEagerStream([
       Stream.value(canonicalHead),
       client.adoptedBlocks.map((b) => b.header)
@@ -83,12 +82,13 @@ class PodBlockProduction extends _$PodBlockProduction {
       final sub = blockProducer
           .makeChild(h)
           .asyncMap((b) => client.broadcastBlock(
-              Block(
+                Block(
                   header: b.header,
                   body: BlockBody(
-                      transactionIds:
-                          b.fullBody.transactions.map((t) => t.id))),
-              null))
+                      transactionIds: b.fullBody.transactions.map((t) => t.id)),
+                ),
+                b.fullBody.rewardTransaction,
+              ))
           .listen(null);
       cancel = () => sub.cancel();
     }).listen(null);
