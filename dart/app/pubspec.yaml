@@ -14,8 +14,6 @@ dependencies:
   fixnum: ^1.1.0
   async: ^2.11.0
   fpdart: ^1.1.0
-  ribs_core: ^1.0.0-dev.11
-  ribs_effect: ^1.0.0-dev.1
   rxdart: ^0.28.0
   fast_base58: ^0.2.1
   integral_isolates: ^0.5.1

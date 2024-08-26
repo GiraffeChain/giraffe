@@ -501,22 +501,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.3"
-  ribs_core:
-    dependency: "direct main"
-    description:
-      name: ribs_core
-      sha256: e70624aa6c2b76fd9cc0590fc3be11af587a0a92555dff2db9b9f8fc77bf9b90
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0-dev.11"
-  ribs_effect:
-    dependency: "direct main"
-    description:
-      name: ribs_effect
-      sha256: "587fc5c98d342b2ba231f1f5ddfdd5ac52963e592e8d75f8fdd15caf5d145a23"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0-dev.1"
   rxdart:
     dependency: "direct main"
     description:

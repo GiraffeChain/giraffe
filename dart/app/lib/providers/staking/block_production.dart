@@ -21,7 +21,7 @@ import '../blockchain_client.dart';
 part 'block_production.freezed.dart';
 part 'block_production.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class PodBlockProduction extends _$PodBlockProduction {
   @override
   PodBlockProductionState build() => InactivePodBlockProductionState();
@@ -93,10 +93,16 @@ class PodBlockProduction extends _$PodBlockProduction {
       cancel = () => sub.cancel();
     }).listen(null);
 
-    state = ActivePodBlockProductionState(stop: () async {
+    Future<void> c() async {
       await mainSub.cancel();
       await cancel();
+    }
+
+    ref.onDispose(() async {
+      await c();
     });
+
+    state = ActivePodBlockProductionState(stop: c);
   }
 
   void stop() async {
