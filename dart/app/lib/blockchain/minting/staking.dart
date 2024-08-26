@@ -1,5 +1,4 @@
 import '../codecs.dart';
-import '../common/clock.dart';
 import '../common/models/unsigned.dart';
 import '../consensus/staker_tracker.dart';
 import '../consensus/eta_calculation.dart';
@@ -12,7 +11,6 @@ import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'dart:async';
-import 'package:ribs_effect/ribs_effect.dart';
 
 abstract class Staking {
   TransactionOutputReference get account;
@@ -42,27 +40,6 @@ class StakingImpl extends Staking {
     this.vrfCalculator,
     this.leaderElection,
   );
-
-  static Resource<StakingImpl> make(
-    SlotId parentSlotId,
-    TransactionOutputReference account,
-    List<int> vkVrf,
-    List<int> skOperator,
-    Clock clock,
-    VrfCalculator vrfCalculator,
-    EtaCalculation etaCalculation,
-    StakerTracker stakerTracker,
-    LeaderElection leaderElection,
-  ) =>
-      Resource.pure(StakingImpl(
-        account,
-        vkVrf,
-        skOperator,
-        stakerTracker,
-        etaCalculation,
-        vrfCalculator,
-        leaderElection,
-      ));
 
   @override
   Future<BlockHeader> certifyBlock(SlotId parentSlotId, Int64 slot,

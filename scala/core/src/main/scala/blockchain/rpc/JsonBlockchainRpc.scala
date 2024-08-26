@@ -115,7 +115,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
                 case TraversalStep.Unapplied(id) => Json.obj("unadopted" -> id.show.asJson)
               }
               .map(_.noSpaces)
-              .mergeHaltL(Stream.fixedRate[F](2.seconds).as(""))
+              .mergeHaltL(JsonBlockchainRpc.keepAliveTickStream)
               .intersperse("\n")
               .through(fs2.text.utf8.encode)
               .onError { case e =>
@@ -225,7 +225,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
             core.ledger.blockPacker.streamed
               .map(full => BlockBody(full.transactions.map(_.id)))
               .map(_.asJson.noSpaces)
-              .mergeHaltL(Stream.fixedRate[F](2.seconds).as(""))
+              .mergeHaltL(JsonBlockchainRpc.keepAliveTickStream)
               .intersperse("\n")
               .through(fs2.text.utf8.encode)
               .onError { case e =>
@@ -236,3 +236,6 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
     }
 
 }
+
+object JsonBlockchainRpc:
+  val keepAliveTickStream: Stream[IO, String] = Stream.fixedRate[IO](500.milli).as("")

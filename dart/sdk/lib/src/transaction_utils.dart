@@ -34,3 +34,10 @@ extension TransactionOps on Transaction {
       outputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
   Int64 get reward => inputSum - outputSum;
 }
+
+extension FullBodyOps on FullBlockBody {
+  Transaction? get rewardTransaction => transactions
+      .map<Transaction?>((t) => t)
+      .firstWhere((t) => t?.hasRewardParentBlockId() ?? false,
+          orElse: () => null);
+}

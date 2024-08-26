@@ -8,7 +8,6 @@ import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fast_base58/fast_base58.dart';
 
 import 'package:fixnum/fixnum.dart';
-import 'package:ribs_core/ribs_core.dart';
 
 const arr0 = [0x00];
 const arr1 = [0x01];
@@ -171,7 +170,7 @@ extension StructCodecs on struct.Struct {
               ...e.key.decodeBase58,
               ...e.value.immutableBytes,
             ])
-        .immutableBytes(identity);
+        .immutableBytes((i) => i);
   }
 }
 

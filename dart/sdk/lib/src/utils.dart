@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
-import 'package:ribs_core/ribs_core.dart';
-import 'package:ribs_effect/ribs_effect.dart';
 
 final _bigIntByteMask = new BigInt.from(0xff);
 
@@ -139,11 +137,6 @@ extension FutureOps<T> on Future<T> {
         log.warning(message, e, stackTrace);
         throw e;
       });
-
-  Future<Either<T, O>> race<O>(Future<O> f) => Future.any([
-        then((res) => Either.left<T, O>(res)),
-        f.then((res) => Either.right<T, O>(res))
-      ]);
 }
 
 initRootLogger() {
@@ -156,46 +149,6 @@ initRootLogger() {
         '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}${_errorSuffix}${_stackTraceSuffix}');
   });
 }
-
-final unit = Unit();
-
-StreamTransformer<In, Out> AbandoningTransformer<In, Out>(
-        IO<Out> Function(In) f) =>
-    StreamTransformer((Stream<In> stream, cancelOnError) {
-      final controller = StreamController<Out>(sync: true);
-      controller.onListen = () {
-        Future<Unit> Function()? cancel;
-        final subscription = stream.listen((data) {
-          final baseIo = f(data).flatTap((out) => IO.delay(() {
-                cancel = null;
-                if (out != null) controller.add(out);
-              }));
-          final io = (cancel != null)
-              ? IO
-                  .fromFutureF(() => cancel!())
-                  .flatTap((_) => IO.delay(() => cancel = null))
-                  .flatMap((_) => baseIo)
-              : baseIo;
-          final (future, c) = io.unsafeRunFutureCancelable();
-          cancel = c;
-          future.catchError((e, s) {
-            controller.addError(e!, s);
-            throw e;
-          });
-        },
-            onError: controller.addError,
-            onDone: controller.close,
-            cancelOnError: cancelOnError);
-        controller
-          ..onPause = subscription.pause
-          ..onResume = subscription.resume
-          ..onCancel = () async {
-            if (cancel != null) await cancel!();
-            await subscription.cancel;
-          };
-      };
-      return controller.stream.listen(null);
-    });
 
 // Alias's Flutter's "compute()" function signature
 typedef DComputeCallback<Q, R> = FutureOr<R> Function(Q message);

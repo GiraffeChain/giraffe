@@ -72,15 +72,25 @@ case class ProtocolSettings(
     )
 
 object ProtocolSettings:
-
   val Default: ProtocolSettings = ProtocolSettings(
+    fEffective = Ratio(3, 25),
+    vrfLddCutoff = 18,
+    vrfPrecision = 40,
+    vrfBaselineDifficulty = Ratio(1, 20),
+    vrfAmplitude = Ratio(1, 2),
+    vrfSlotGap = 1,
+    chainSelectionKLookback = 576,
+    slotDuration = 3000.milli
+  )
+
+  val ShortEpochs: ProtocolSettings = ProtocolSettings(
     fEffective = Ratio(1),
     vrfLddCutoff = 12,
     vrfPrecision = 40,
     vrfBaselineDifficulty = Ratio(1, 2),
     vrfAmplitude = Ratio(9, 10),
     vrfSlotGap = 1,
-    chainSelectionKLookback = 9, // 576
+    chainSelectionKLookback = 9,
     slotDuration = 3000.milli
   )
 

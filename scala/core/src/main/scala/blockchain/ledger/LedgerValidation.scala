@@ -192,6 +192,7 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
 class BodyValidationImpl[F[_]: Sync](transactionValidation: TransactionValidation[F]) extends BodyValidation[F]:
   override def validate(body: FullBlockBody, context: TransactionValidationContext): ValidationResult[F] =
     body.transactions
+      .filter(_.rewardParentBlockId.isEmpty)
       .foldLeftM(Set.empty[TransactionOutputReference]) { (spentUtxos, transaction) =>
         val dependencies = transaction.dependencies
         EitherT.cond[F](
@@ -221,7 +222,7 @@ class BodyValidationImpl[F[_]: Sync](transactionValidation: TransactionValidatio
               NonEmptyChain("RewardHeaderMismatch")
             ) >>
               Either.cond(reward.inputs.isEmpty, (), NonEmptyChain("RewardContainsInputs")) >>
-              Either.cond(reward.outputs.length != 1, (), NonEmptyChain("RewardContainsMultipleOutputs")) >>
+              Either.cond(reward.outputs.length == 1, (), NonEmptyChain("RewardContainsMultipleOutputs")) >>
               Either.cond(
                 reward.outputs.head.value.accountRegistration.isEmpty,
                 (),
