@@ -76,19 +76,6 @@ abstract class BlockchainClient {
   Stream<FullBlock> get adoptedBlocks =>
       adoptions.asyncMap(getFullBlock).whereNotNull();
 
-  Stream<BlockId> get replay async* {
-    Int64 h = Int64(1);
-    while (true) {
-      final next = await getBlockIdAtHeight(h);
-      if (next == null) break;
-      yield next;
-      h += 1;
-    }
-  }
-
-  Stream<FullBlock> get replayBlocks =>
-      replay.asyncMap(getFullBlock).whereNotNull();
-
   Future<BlockHeader> get canonicalHead async =>
       getBlockHeaderOrRaise(await canonicalHeadId);
 }

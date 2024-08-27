@@ -1,5 +1,5 @@
 # "Blockchain"
-A generic, unbranded blockchain protocol. It leverages Taktikos for its consensus layer and an extended UTxO model for its application layer.
+A generic, unbranded blockchain protocol. It leverages proof-of-stake for its consensus layer and an extended UTxO model for its application layer.
 
 Similar to other protocols, the network is made up of relay nodes which verify correctness of the chain and distribute information to other peers. Unlike other protocols, block production is performed client-side within user wallets.
 
@@ -11,31 +11,33 @@ Similar to other application layers, tokens are distributed and spent using an "
 - The backend/relay node is defined in Scala, and you can find it in the `scala/` directory.
   - Most of the code is defined in the `core` module
   - Compiled protobuf files are defined in the `protobuf` module
-- The frontend/wallet is defined in Dart/Flutter, and you can find it in the `dart/` directory.
+- The wallet is defined in Dart/Flutter, and you can find it in the `dart/` directory.
   - The code is split between the `sdk` and `app` packages
   - Compiled protobuf files are defined in the `protobuf_dart` package
+- The SDK is defined in Typescript, and you can find it in the `typescript/sdk/` directory.
 
 ## Development & Testing
 ### Dependencies
 - JDK 17+
 - SBT/Scala
 - Flutter
+- NodeJS 20+
 
 ### Launch
 1. Start the relay node.
     - `cd scala`
     - `sbt core/run`
-1. Start the frontend.
+1. Start the wallet.
     - `cd ../dart/app`
     - `flutter run`
 
-## Platform Support
+## Wallet Platform Support
 - While the intention is to support staking-based wallets on web and mobile, Linux desktop is currently the most stable.
   - Android support should generally work. iOS will probably work, but I have no means of testing.
   - Web support currently suffers an base-52 limitation somewhere in the VRF code. As such, it currently produces invalid blocks.
+  - Web doesn't easily support multithreading, so some aspects of the wallet are slow
 
 ## Upcoming Goals
-- SDK support for JS/TS
 - Stability, resiliency, and error handling of wallet-staking
 - Testing
 - Documentation

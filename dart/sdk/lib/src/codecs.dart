@@ -40,7 +40,7 @@ extension Int64Codecs on Int64 {
   List<int> get immutableBytes => toBytesBigEndian();
 }
 
-extension Int128Codecs on List<int> {
+extension IntListCodecs on List<int> {
   String get base58 => Base58Encode(Uint8List.fromList(this));
   String get show => base58;
 }
@@ -146,14 +146,14 @@ extension GraphEntryCodecs on GraphEntry {
 
 extension VertexCodecs on Vertex {
   List<int> get immutableBytes => [
-        ...label.decodeBase58,
+        ...label.utf8Bytes,
         ...condOptCodec(hasData(), data, (v) => v.immutableBytes),
       ];
 }
 
 extension EdgeCodecs on Edge {
   List<int> get immutableBytes => [
-        ...label.decodeBase58,
+        ...label.utf8Bytes,
         ...condOptCodec(hasData(), data, (v) => v.immutableBytes),
         ...a.immutableBytes,
         ...b.immutableBytes,
@@ -167,7 +167,7 @@ extension StructCodecs on struct.Struct {
 
     return sorted
         .map((e) => [
-              ...e.key.decodeBase58,
+              ...e.key.utf8Bytes,
               ...e.value.immutableBytes,
             ])
         .immutableBytes((i) => i);
@@ -177,9 +177,9 @@ extension StructCodecs on struct.Struct {
 extension StructValueCodecs on struct.Value {
   List<int> get immutableBytes {
     if (hasNumberValue())
-      return numberValue.toString().decodeBase58;
+      return numberValue.toString().utf8Bytes;
     else if (hasStringValue())
-      return stringValue.decodeBase58;
+      return stringValue.utf8Bytes;
     else if (hasBoolValue())
       return boolValue.immutableBytes;
     else if (hasStructValue())
@@ -215,10 +215,6 @@ extension LockCodecs on Lock {
 
 extension Lock_Ed25519Codecs on Lock_Ed25519 {
   List<int> get immutableBytes => vk.decodeBase58;
-}
-
-extension PeerIdCodecs on PeerId {
-  String get show => "p_${value.substring(0, 8)}";
 }
 
 extension StringCodecs on String {
