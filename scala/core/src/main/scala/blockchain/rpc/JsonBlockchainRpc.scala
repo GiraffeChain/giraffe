@@ -159,6 +159,45 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
               )
           )
           .logError
+      case GET -> Root / "graph" / transactionId / index / "edges" =>
+        OptionT(IO(index.toIntOption))
+          .foldF(Response().withStatus(Status.BadRequest).pure[F])(index =>
+            IO(transactionId.decodeTransactionId)
+              .map(TransactionOutputReference(_, index))
+              .flatMap(reference =>
+                core.consensus.localChain.currentHead
+                  .flatMap(core.ledger.graphState.edges(_, reference))
+                  .map(_.asJson)
+                  .map(Response().withEntity)
+              )
+          )
+          .logError
+      case GET -> Root / "graph" / transactionId / index / "in-edges" =>
+        OptionT(IO(index.toIntOption))
+          .foldF(Response().withStatus(Status.BadRequest).pure[F])(index =>
+            IO(transactionId.decodeTransactionId)
+              .map(TransactionOutputReference(_, index))
+              .flatMap(reference =>
+                core.consensus.localChain.currentHead
+                  .flatMap(core.ledger.graphState.inEdges(_, reference))
+                  .map(_.asJson)
+                  .map(Response().withEntity)
+              )
+          )
+          .logError
+      case GET -> Root / "graph" / transactionId / index / "out-edges" =>
+        OptionT(IO(index.toIntOption))
+          .foldF(Response().withStatus(Status.BadRequest).pure[F])(index =>
+            IO(transactionId.decodeTransactionId)
+              .map(TransactionOutputReference(_, index))
+              .flatMap(reference =>
+                core.consensus.localChain.currentHead
+                  .flatMap(core.ledger.graphState.outEdges(_, reference))
+                  .map(_.asJson)
+                  .map(Response().withEntity)
+              )
+          )
+          .logError
       case request @ POST -> Root / "transactions" =>
         request
           .as[Json]

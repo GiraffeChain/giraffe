@@ -2,11 +2,11 @@ package blockchain
 
 import blockchain.codecs.{*, given}
 import blockchain.models.*
-import cats.{Applicative, Monad, MonadThrow, Show}
 import cats.data.OptionT
-import cats.effect.{Async, Resource, Sync}
 import cats.effect.implicits.*
+import cats.effect.{Async, Resource, Sync}
 import cats.implicits.*
+import cats.{Applicative, Monad, MonadThrow, Show}
 import com.github.benmanes.caffeine.cache.Caffeine
 import fs2.io.file.{Files, Path}
 import org.fusesource.leveldbjni.JniDBFactory
@@ -17,6 +17,8 @@ import org.typelevel.log4cats.slf4j.*
 import scalacache.Entry
 import scalacache.caffeine.CaffeineCache
 import scodec.bits.BitVector
+
+import java.sql.Connection
 
 trait Store[F[_], Key, T]:
   def get(key: Key): F[Option[T]]
@@ -41,7 +43,8 @@ case class DataStores[F[_]](
     stakers: Store[F, TransactionOutputReference, ActiveStaker],
     blockHeightIndex: Store[F, Long, BlockId],
     metadata: Store[F, String, Array[Byte]],
-    transactionOutputs: Store[F, TransactionOutputReference, TransactionOutput]
+    transactionOutputs: Store[F, TransactionOutputReference, TransactionOutput],
+    sqlite: Connection
 ):
 
   def fetchFullBlock(blockId: BlockId)(using Monad[F]): F[Option[FullBlock]] =
@@ -75,7 +78,8 @@ case class DataStores[F[_]](
         EventIdGetterSetters.Indices.BlockHeightTree,
         EventIdGetterSetters.Indices.TransactionOutputState,
         EventIdGetterSetters.Indices.Mempool,
-        EventIdGetterSetters.Indices.AccountState
+        EventIdGetterSetters.Indices.AccountState,
+        EventIdGetterSetters.Indices.Graph
       ).traverseTap(currentEventIds.put(_, genesis.header.parentHeaderId))
       _ <- headers.put(genesis.header.id, genesis.header)
       _ <- bodies.put(
@@ -163,7 +167,8 @@ object DataStores:
             factory,
             basePath / "metadata",
             12
-          )
+          ),
+          Sqlite.connection[F]((basePath / "sqlite.db").toString)
         ).mapN(
           (
               parentChildTree,
@@ -179,7 +184,8 @@ object DataStores:
               inactiveStake,
               stakers,
               blockHeightIndex,
-              metaData
+              metaData,
+              sqlite
           ) =>
             DataStores(
               parentChildTree,
@@ -196,7 +202,8 @@ object DataStores:
               stakers,
               blockHeightIndex,
               metaData,
-              new TransactionOutputStore(transactions)
+              new TransactionOutputStore(transactions),
+              sqlite
             )
         )
       )
@@ -274,6 +281,9 @@ class EventIdGetterSetters[F[_]: MonadThrow](
   val mempool: EventIdGetterSetters.GetterSetter[F] =
     EventIdGetterSetters.GetterSetter.forByte(store)(Indices.Mempool)
 
+  val graphState: EventIdGetterSetters.GetterSetter[F] =
+    EventIdGetterSetters.GetterSetter.forByte(store)(Indices.Graph)
+
 object EventIdGetterSetters:
 
   /** Captures a getter function and a setter function for a particular "Current Event ID"
@@ -302,6 +312,7 @@ object EventIdGetterSetters:
     val TransactionOutputState: Byte = 4
     val AccountState: Byte = 5
     val Mempool: Byte = 6
+    val Graph: Byte = 7
 
 class LevelDbStore[F[
     _
@@ -341,12 +352,10 @@ class LevelDbStore[F[
     Sync[F].blocking(f(instance))
 
 object LevelDbStore:
-  def makeFactory[F[_]: Sync] =
+  def makeFactory[F[_]: Sync]: Resource[F, JniDBFactory] =
     Sync[F].delay(JniDBFactory.factory).toResource
 
-  def make[F[
-      _
-  ]: Sync: Files, Key: ArrayEncodable, Value: ArrayEncodable: ArrayDecodable](
+  def make[F[_]: Sync: Files, Key: ArrayEncodable, Value: ArrayEncodable: ArrayDecodable](
       path: Path,
       factory: JniDBFactory
   ): Resource[F, LevelDbStore[F, Key, Value]] =
@@ -381,3 +390,15 @@ object CacheStore:
     ).pure[F]
       .toResource
       .map(new CacheStore(underlying, _))
+
+object Sqlite {
+
+  def connection[F[_]: Async](name: String): Resource[F, Connection] =
+    Resource.fromAutoCloseable(
+      Async[F].delay {
+        Class.forName("org.sqlite.JDBC")
+        java.sql.DriverManager.getConnection(s"jdbc:sqlite:$name")
+      }
+    )
+
+}

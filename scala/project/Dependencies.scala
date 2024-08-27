@@ -1,4 +1,4 @@
-import sbt._
+import sbt.*
 
 object Dependencies {
   val logging: Seq[ModuleID] = Seq(
@@ -54,6 +54,10 @@ object Dependencies {
 
   val caseApp = Seq(
     "com.github.alexarchambault" %% "case-app" % "2.1.0-M28"
+  )
+
+  val sqlite = Seq(
+    "org.xerial" % "sqlite-jdbc" % "3.46.0.0"
   )
 
   val mUnitTest = Seq(

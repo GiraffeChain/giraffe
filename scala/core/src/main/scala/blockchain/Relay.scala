@@ -1,16 +1,16 @@
 package blockchain
 
+import blockchain.codecs.given
 import blockchain.crypto.CryptoResources
 import blockchain.p2p.P2PServer
 import blockchain.rpc.*
-import blockchain.codecs.given
+import caseapp.*
+import cats.MonadThrow
 import cats.effect.std.{Random, SecureRandom}
 import cats.effect.{IO, Resource, ResourceApp}
 import cats.implicits.*
-import fs2.io.file.{Files, Path}
-import caseapp.*
-import cats.MonadThrow
 import com.comcast.ip4s.SocketAddress
+import fs2.io.file.{Files, Path}
 import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.slf4j.{Slf4jFactory, Slf4jLogger}
 
@@ -37,7 +37,6 @@ object Relay extends ResourceApp.Forever:
       dataDir = Path(show"${args.dataDir}/${genesis.header.id}")
       _ <- logger.info(show"Data dir=$dataDir").toResource
       core <- BlockchainCore.make[F](genesis, dataDir)
-      _ <- BlockchainRpc.serve(core, args.rpcBindHost, args.rpcBindPort)
       _ <- new JsonBlockchainRpc(core).serve(args.apiBindHost, args.apiBindPort)
       given Random[F] <- SecureRandom.javaSecuritySecureRandom[F].toResource
       magicBytes = Array.fill(32)(0: Byte)
@@ -59,8 +58,6 @@ object Relay extends ResourceApp.Forever:
 case class RelayArgs(
     @HelpMessage("Path to data storage (will be suffixed with the block ID)")
     dataDir: String = Option(System.getenv("BLOCKCHAIN_DATA_DIR")).getOrElse("/tmp/blockchain/data"),
-    rpcBindHost: String = "0.0.0.0",
-    rpcBindPort: Int = 2024,
     apiBindHost: String = "0.0.0.0",
     apiBindPort: Int = 2025,
     p2pBindHost: String = "0.0.0.0",

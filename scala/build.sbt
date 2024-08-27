@@ -64,7 +64,8 @@ lazy val core = project
         Dependencies.caseApp ++
         Dependencies.http4s ++
         Dependencies.mUnitTest ++
-        Dependencies.circe,
+        Dependencies.circe ++
+        Dependencies.sqlite,
     libraryDependencies += "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
     scalacOptions ++= Seq(
       "-source:3.4-migration",
@@ -195,11 +196,9 @@ def modifyProtoContents(contents: String): String = {
   s"""${contents.substring(0, index)}$syntaxStr
      |import "scalapb/scalapb.proto";
      |import "scalapb/validate.proto";
-     |${
-      if (!contents.contains("validate/validate.proto"))
-        "import \"validate/validate.proto\";"
-      else ""
-    }
+     |${if (!contents.contains("validate/validate.proto"))
+      "import \"validate/validate.proto\";"
+    else ""}
      |${contents.substring(index + syntaxStr.length)}
      |option (scalapb.options) = {
      |  [scalapb.validate.file] {
@@ -221,8 +220,8 @@ def modifyProtoContents(contents: String): String = {
 
 def directoryMd5(a: java.nio.file.Path): Array[Byte] = {
   import java.nio.file.*
-  import scala.jdk.CollectionConverters.*
   import java.security.*
+  import scala.jdk.CollectionConverters.*
   val md = MessageDigest.getInstance("MD5")
   md.reset()
   Files
