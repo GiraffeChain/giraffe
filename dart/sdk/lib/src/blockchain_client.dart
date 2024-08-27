@@ -20,6 +20,20 @@ abstract class BlockchainClient {
       getBlockIdAtHeight(Int64.ONE).then((v) => v!);
   Future<List<TransactionOutputReference>> getLockAddressState(
       LockAddress lock);
+  Future<List<TransactionOutputReference>> queryVertices(
+      String label, List<WhereClause> where);
+  Future<List<TransactionOutputReference>> queryEdges(
+      String label,
+      TransactionOutputReference? a,
+      TransactionOutputReference? b,
+      List<WhereClause> where);
+  Future<List<TransactionOutputReference>> inEdges(
+      TransactionOutputReference vertex);
+  Future<List<TransactionOutputReference>> outEdges(
+      TransactionOutputReference vertex);
+  Future<List<TransactionOutputReference>> edges(
+      TransactionOutputReference vertex);
+
   Stream<TraversalStep> get traversal;
 
   Future<void> broadcastTransaction(Transaction transaction);
@@ -306,4 +320,102 @@ class BlockchainClientFromJsonRpc extends BlockchainClient {
         .doOnDone(() => client.close())
         .doOnError((_, __) => client.close());
   }
+
+  @override
+  Future<List<TransactionOutputReference>> edges(
+      TransactionOutputReference vertex) async {
+    final response = await httpClient.get(
+      Uri.parse(
+          "$baseAddress/graph/${vertex.transactionId.show}/${vertex.index}/edges"),
+      headers: headers,
+    );
+    assert(response.statusCode == 200, "HTTP Error: ${response.body}");
+    final items = json.decode(utf8.decode(response.bodyBytes)) as List<dynamic>;
+    return items
+        .map((e) => TransactionOutputReference()..mergeFromProto3Json(e))
+        .toList();
+  }
+
+  @override
+  Future<List<TransactionOutputReference>> inEdges(
+      TransactionOutputReference vertex) async {
+    final response = await httpClient.get(
+      Uri.parse(
+          "$baseAddress/graph/${vertex.transactionId.show}/${vertex.index}/in-edges"),
+      headers: headers,
+    );
+    assert(response.statusCode == 200, "HTTP Error: ${response.body}");
+    final items = json.decode(utf8.decode(response.bodyBytes)) as List<dynamic>;
+    return items
+        .map((e) => TransactionOutputReference()..mergeFromProto3Json(e))
+        .toList();
+  }
+
+  @override
+  Future<List<TransactionOutputReference>> outEdges(
+      TransactionOutputReference vertex) async {
+    final response = await httpClient.get(
+      Uri.parse(
+          "$baseAddress/graph/${vertex.transactionId.show}/${vertex.index}/out-edges"),
+      headers: headers,
+    );
+    assert(response.statusCode == 200, "HTTP Error: ${response.body}");
+    final items = json.decode(utf8.decode(response.bodyBytes)) as List<dynamic>;
+    return items
+        .map((e) => TransactionOutputReference()..mergeFromProto3Json(e))
+        .toList();
+  }
+
+  @override
+  Future<List<TransactionOutputReference>> queryEdges(
+      String label,
+      TransactionOutputReference? a,
+      TransactionOutputReference? b,
+      List<WhereClause> where) async {
+    final bodyJson = {
+      "label": label,
+      "a": a?.show,
+      "b": b?.show,
+      "where": where.map((e) => e.toJson()).toList(),
+    };
+    final response = await httpClient.post(
+      Uri.parse("$baseAddress/graph/query-edges"),
+      headers: headers,
+      body: utf8.encode(json.encode(bodyJson)),
+    );
+    assert(response.statusCode == 200, "HTTP Error: ${response.body}");
+    final items = json.decode(utf8.decode(response.bodyBytes)) as List<dynamic>;
+    return items
+        .map((e) => TransactionOutputReference()..mergeFromProto3Json(e))
+        .toList();
+  }
+
+  @override
+  Future<List<TransactionOutputReference>> queryVertices(
+      String label, List<WhereClause> where) async {
+    final bodyJson = {
+      "label": label,
+      "where": where.map((e) => e.toJson()).toList(),
+    };
+    final response = await httpClient.post(
+      Uri.parse("$baseAddress/graph/query-vertices"),
+      headers: headers,
+      body: utf8.encode(json.encode(bodyJson)),
+    );
+    assert(response.statusCode == 200, "HTTP Error: ${response.body}");
+    final items = json.decode(utf8.decode(response.bodyBytes)) as List<dynamic>;
+    return items
+        .map((e) => TransactionOutputReference()..mergeFromProto3Json(e))
+        .toList();
+  }
+}
+
+class WhereClause {
+  final String key;
+  final String operand;
+  final dynamic value;
+
+  WhereClause(this.key, this.operand, this.value);
+
+  List<dynamic> toJson() => [key, operand, value];
 }
