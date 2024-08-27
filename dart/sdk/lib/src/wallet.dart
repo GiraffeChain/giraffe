@@ -139,4 +139,45 @@ class Wallet {
 
     return transaction;
   }
+
+  /// First, establishes that all outputs of the given transaction have the required minimum quantity. If not, they will be updated to the correct minimum.
+  /// Next, if the current transaction tip/reward exceeds the default minimum, the change is sent back to the local wallet as a new output.
+  /// Otherwise, payment tokens will be spent from the wallet to cover the remaining tip/reward.
+  ///
+  Future<Transaction> pay(
+      BlockchainClient view, Transaction transaction) async {
+    for (final output in transaction.outputs) {
+      final minQuantity = output.requiredMinimumQuantity;
+      if (output.value.quantity < minQuantity) {
+        output.value.quantity = minQuantity;
+      }
+    }
+    var currentReward = transaction.reward;
+    final remainingSpendableOutputs = QueueList.from(Map.of(spendableOutputs)
+        .entries
+        .where((e) => e.value.isPaymentToken)
+        .sortedByCompare(
+            (e) => e.value.value.quantity, (a, b) => a.compareTo(b)));
+    while (currentReward != defaultTransactionTip) {
+      if (currentReward > defaultTransactionTip) {
+        final output = TransactionOutput(
+            lockAddress: defaultLockAddress,
+            value: Value(quantity: currentReward - defaultTransactionTip));
+        transaction.outputs.add(output);
+      } else if (remainingSpendableOutputs.isEmpty) {
+        throw Exception('Insufficient funds');
+      } else {
+        final out = remainingSpendableOutputs.removeFirst();
+        final input =
+            TransactionInput(reference: out.key, value: out.value.value);
+        transaction.inputs.add(input);
+        currentReward += out.value.value.quantity;
+      }
+    }
+    return transaction;
+  }
+
+  Future<Transaction> payAndAttest(
+          BlockchainClient view, Transaction transaction) async =>
+      attest(view, await pay(view, transaction));
 }

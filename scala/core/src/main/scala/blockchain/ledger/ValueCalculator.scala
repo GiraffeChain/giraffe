@@ -37,7 +37,7 @@ class ValueCalculatorImpl[F[_]: Sync] extends ValueCalculator[F] {
     }
 
   def protoStructMinimumQuantity(value: struct.Struct): Long =
-    value.fields.toList.map(f => f._1.length + protoValueMinimumQuantity(f._2)).sum
+    value.fields.toList.map(f => f._1.length * 10 + protoValueMinimumQuantity(f._2)).sum
 }
 
 object ValueCalculatorImpl:
