@@ -3,6 +3,7 @@ package blockchain.rpc
 import blockchain.BlockchainCore
 import blockchain.codecs.{*, given}
 import blockchain.consensus.TraversalStep
+import blockchain.ledger.WhereClause
 import blockchain.models.*
 import cats.data.OptionT
 import cats.effect.implicits.*
@@ -10,8 +11,8 @@ import cats.effect.{IO, Resource}
 import cats.implicits.*
 import com.comcast.ip4s.{Host, Port}
 import fs2.Stream
-import io.circe.Json
 import io.circe.syntax.*
+import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 import org.http4s.*
 import org.http4s.circe.*
 import org.http4s.circe.CirceEntityCodec.*
@@ -28,6 +29,8 @@ import scala.concurrent.duration.*
 
 class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
   type F[A] = IO[A]
+
+  import JsonBlockchainRpc.{*, given}
 
   private given Logger[F] = Slf4jLogger.getLoggerFromName("ApiServer")
 
@@ -166,10 +169,30 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
               .map(TransactionOutputReference(_, index))
               .flatMap(reference =>
                 core.consensus.localChain.currentHead
-                  .flatMap(core.ledger.graphState.edges(_, reference))
+                  .flatMap(core.ledger.graphState.edges(_)(reference))
                   .map(_.asJson)
                   .map(Response().withEntity)
               )
+          )
+          .logError
+      case request @ POST -> Root / "graph" / "query-vertices" =>
+        request
+          .as[VertexQuery]
+          .flatMap(query =>
+            core.consensus.localChain.currentHead
+              .flatMap(core.ledger.graphState.queryVertices(_)(query.label, query.where))
+              .map(_.asJson)
+              .map(Response().withEntity)
+          )
+          .logError
+      case request @ POST -> Root / "graph" / "query-edges" =>
+        request
+          .as[EdgeQuery]
+          .flatMap(query =>
+            core.consensus.localChain.currentHead
+              .flatMap(core.ledger.graphState.queryEdges(_)(query.label, query.a, query.b, query.where))
+              .map(_.asJson)
+              .map(Response().withEntity)
           )
           .logError
       case GET -> Root / "graph" / transactionId / index / "in-edges" =>
@@ -179,7 +202,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
               .map(TransactionOutputReference(_, index))
               .flatMap(reference =>
                 core.consensus.localChain.currentHead
-                  .flatMap(core.ledger.graphState.inEdges(_, reference))
+                  .flatMap(core.ledger.graphState.inEdges(_)(reference))
                   .map(_.asJson)
                   .map(Response().withEntity)
               )
@@ -192,7 +215,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
               .map(TransactionOutputReference(_, index))
               .flatMap(reference =>
                 core.consensus.localChain.currentHead
-                  .flatMap(core.ledger.graphState.outEdges(_, reference))
+                  .flatMap(core.ledger.graphState.outEdges(_)(reference))
                   .map(_.asJson)
                   .map(Response().withEntity)
               )
@@ -278,3 +301,34 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
 
 object JsonBlockchainRpc:
   val keepAliveTickStream: Stream[IO, String] = Stream.fixedRate[IO](500.milli).as("")
+
+  case class VertexQuery(label: String, where: Seq[WhereClause])
+  case class EdgeQuery(label: String, a: Option[String], b: Option[String], where: Seq[WhereClause])
+
+  given Decoder[WhereClause] = c =>
+    c.as[List[Json]].flatMap {
+      case List(key, operand, value) =>
+        for {
+          keyStr <- key.as[String]
+          operandStr <- operand.as[String]
+          operand <- operandStr match {
+            case "==" => WhereClause.OperandEq.asRight
+            case _    => DecodingFailure(s"Invalid operand: $operandStr", c.history).asLeft
+          }
+        } yield WhereClause(keyStr, operand, value)
+      case _ => DecodingFailure("Invalid where clause", c.history).asLeft
+    }
+
+  given Decoder[VertexQuery] = c =>
+    for {
+      label <- c.downField("label").as[String]
+      where <- c.getOrElse[Seq[WhereClause]]("where")(Nil)
+    } yield VertexQuery(label, where)
+
+  given Decoder[EdgeQuery] = c =>
+    for {
+      label <- c.downField("label").as[String]
+      a <- c.downField("a").as[Option[String]]
+      b <- c.downField("b").as[Option[String]]
+      where <- c.getOrElse[Seq[WhereClause]]("where")(Nil)
+    } yield EdgeQuery(label, a, b, where)

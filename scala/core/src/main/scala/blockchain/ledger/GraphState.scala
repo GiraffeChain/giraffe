@@ -9,23 +9,31 @@ import cats.implicits.*
 import com.google.protobuf.struct
 import io.circe.Json
 
-import java.sql.Connection
+import java.sql.{Connection, PreparedStatement}
 
 trait GraphState[F[_]] {
 
   def inEdges(
-      parentBlockId: BlockId,
-      vertex: TransactionOutputReference
-  ): F[List[TransactionOutputReference]]
+      parentBlockId: BlockId
+  )(vertex: TransactionOutputReference): F[List[TransactionOutputReference]]
 
   def outEdges(
-      parentBlockId: BlockId,
-      vertex: TransactionOutputReference
-  ): F[List[TransactionOutputReference]]
+      parentBlockId: BlockId
+  )(vertex: TransactionOutputReference): F[List[TransactionOutputReference]]
 
   def edges(
-      parentBlockId: BlockId,
-      vertex: TransactionOutputReference
+      parentBlockId: BlockId
+  )(vertex: TransactionOutputReference): F[List[TransactionOutputReference]]
+
+  def queryVertices(
+      parentBlockId: BlockId
+  )(label: String, whereClauses: Seq[WhereClause]): F[List[TransactionOutputReference]]
+
+  def queryEdges(parentBlockId: BlockId)(
+      label: String,
+      a: Option[String],
+      b: Option[String],
+      whereClauses: Seq[WhereClause]
   ): F[List[TransactionOutputReference]]
 
 }
@@ -51,8 +59,7 @@ object GraphState:
 class GraphStateImpl[F[_]: Async](bss: GraphState.BSS[F]) extends GraphState[F]:
   import GraphStateImpl.*
 
-  override def inEdges(
-      parentBlockId: BlockId,
+  override def inEdges(parentBlockId: BlockId)(
       vertex: TransactionOutputReference
   ): F[List[TransactionOutputReference]] =
     bss
@@ -70,8 +77,7 @@ class GraphStateImpl[F[_]: Async](bss: GraphState.BSS[F]) extends GraphState[F]:
         }
       )
 
-  override def outEdges(
-      parentBlockId: BlockId,
+  override def outEdges(parentBlockId: BlockId)(
       vertex: TransactionOutputReference
   ): F[List[TransactionOutputReference]] =
     bss
@@ -89,8 +95,7 @@ class GraphStateImpl[F[_]: Async](bss: GraphState.BSS[F]) extends GraphState[F]:
         }
       )
 
-  override def edges(
-      parentBlockId: BlockId,
+  override def edges(parentBlockId: BlockId)(
       vertex: TransactionOutputReference
   ): F[List[TransactionOutputReference]] =
     bss
@@ -107,6 +112,128 @@ class GraphStateImpl[F[_]: Async](bss: GraphState.BSS[F]) extends GraphState[F]:
               (resultSet.getString("id").decodeReference, resultSet)
             )
           )
+        }
+      )
+
+  override def queryVertices(
+      parentBlockId: BlockId
+  )(label: String, whereClauses: Seq[WhereClause]): F[List[TransactionOutputReference]] =
+    bss
+      .stateAt(parentBlockId)
+      .use(connection =>
+        Async[F].blocking {
+          if (whereClauses.isEmpty) {
+            val statement = connection.prepareStatement("SELECT id FROM vertices WHERE label = ?")
+            List.unfold(statement.executeQuery())(resultSet =>
+              Option.when(resultSet.next())(
+                (resultSet.getString("id").decodeReference, resultSet)
+              )
+            )
+          } else {
+            val statement = connection.prepareStatement("SELECT id, data FROM vertices WHERE label = ?")
+            Iterator
+              .unfold(statement.executeQuery())(resultSet =>
+                Option.when(resultSet.next())(
+                  ((resultSet.getString("id").decodeReference, resultSet.getString("data")), resultSet)
+                )
+              )
+              .flatMap((id, dataStr) =>
+                io.circe.parser
+                  .parse(dataStr)
+                  .toOption
+                  .flatMap(data =>
+                    Option.when(
+                      whereClauses.forall(whereClause =>
+                        data.hcursor
+                          .downField(whereClause.key)
+                          .focus
+                          .exists(value =>
+                            whereClause.operand match {
+                              case WhereClause.OperandEq => value == whereClause.value
+                            }
+                          )
+                      )
+                    )(id)
+                  )
+              )
+              .toList
+          }
+        }
+      )
+
+  override def queryEdges(parentBlockId: BlockId)(
+      label: String,
+      a: Option[String],
+      b: Option[String],
+      whereClauses: Seq[WhereClause]
+  ): F[List[TransactionOutputReference]] =
+    bss
+      .stateAt(parentBlockId)
+      .use(connection =>
+        Async[F].blocking {
+          val abAndClauses = (a, b) match {
+            case (Some(_), Some(_)) =>
+              "AND a = ? AND b = ?"
+            case (Some(_), None) =>
+              "AND a = ?"
+            case (None, Some(_)) =>
+              "AND b = ?"
+            case (None, None) =>
+              ""
+          }
+          def applyABStatements(statement: PreparedStatement): Unit = {
+            (a, b) match {
+              case (Some(a), Some(b)) =>
+                statement.setString(2, a)
+                statement.setString(3, b)
+              case (Some(a), None) =>
+                statement.setString(2, a)
+              case (None, Some(b)) =>
+                statement.setString(2, b)
+              case (None, None) =>
+            }
+          }
+          if (whereClauses.isEmpty) {
+            val statement = connection.prepareStatement(s"SELECT id FROM edges WHERE label = ?$abAndClauses")
+            statement.setString(1, label)
+            applyABStatements(statement)
+            List.unfold(statement.executeQuery())(resultSet =>
+              Option.when(resultSet.next())(
+                (resultSet.getString("id").decodeReference, resultSet)
+              )
+            )
+          } else {
+            val statement = connection.prepareStatement(s"SELECT id FROM edges WHERE label = ?$abAndClauses")
+            statement.setString(1, label)
+            applyABStatements(statement)
+            Iterator
+              .unfold(statement.executeQuery())(resultSet =>
+                Option.when(resultSet.next())(
+                  ((resultSet.getString("id").decodeReference, resultSet.getString("data")), resultSet)
+                )
+              )
+              .flatMap((id, dataStr) =>
+                io.circe.parser
+                  .parse(dataStr)
+                  .toOption
+                  .tupleLeft(id)
+              )
+              .flatMap((id, data) =>
+                Option.when(
+                  whereClauses.forall(whereClause =>
+                    data.hcursor
+                      .downField(whereClause.key)
+                      .focus
+                      .exists(value =>
+                        whereClause.operand match {
+                          case WhereClause.OperandEq => value == whereClause.value
+                        }
+                      )
+                  )
+                )(id)
+              )
+              .toList
+          }
         }
       )
 
@@ -316,3 +443,8 @@ case class RemoveVertex(id: String) extends GraphStateChange
 case class RemoveEdge(id: String) extends GraphStateChange
 case class AddVertex(id: String, label: String, data: Option[String]) extends GraphStateChange
 case class AddEdge(id: String, label: String, data: Option[String], a: String, b: String) extends GraphStateChange
+
+case class WhereClause(key: String, operand: WhereClause.Operand, value: Json)
+object WhereClause:
+  sealed abstract class Operand
+  case object OperandEq extends Operand
