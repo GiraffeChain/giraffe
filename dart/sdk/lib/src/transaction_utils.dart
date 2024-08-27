@@ -3,24 +3,25 @@ import 'package:fixnum/fixnum.dart';
 
 extension TransactionOps on Transaction {
   Future<Set<LockAddress>> requiredWitnesses(
-      Future<Transaction> Function(TransactionId) fetchTransaction) async {
+      Future<TransactionOutput> Function(TransactionOutputReference)
+          fetchTransactionOutput) async {
     final result = <LockAddress>{};
     for (final input in inputs) {
-      final tx = await fetchTransaction(input.reference.transactionId);
-      final out = tx.outputs[input.reference.index];
+      final out = await fetchTransactionOutput(input.reference);
       result.add(out.lockAddress);
     }
     for (final output in outputs) {
-      // TODO: Account lock address
       if (output.value.hasGraphEntry() && output.value.graphEntry.hasEdge()) {
         final edge = output.value.graphEntry.edge;
-        final aTx = await fetchTransaction(edge.a.transactionId);
-        final aTxO = aTx.outputs[edge.a.index];
+        final aTxO = await fetchTransactionOutput(edge.a);
 
         result.add(aTxO.value.ensureGraphEntry().vertex.edgeLockAddress);
-        final bTx = await fetchTransaction(edge.b.transactionId);
-        final bTxO = bTx.outputs[edge.b.index];
+        final bTxO = await fetchTransactionOutput(edge.b);
         result.add(bTxO.value.ensureGraphEntry().vertex.edgeLockAddress);
+      }
+      if (output.hasAccount()) {
+        final accountTxO = await fetchTransactionOutput(output.account);
+        result.add(accountTxO.lockAddress);
       }
     }
     return result;

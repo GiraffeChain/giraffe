@@ -43,6 +43,10 @@ abstract class BlockchainClient {
   Future<Transaction> getTransactionOrRaise(TransactionId transactionId) =>
       getTransaction(transactionId).then((v) => v!);
 
+  Future<TransactionOutput> getTransactionOutputOrRaise(
+          TransactionOutputReference ref) =>
+      getTransactionOutput(ref).then((v) => v!);
+
   Future<FullBlock?> getFullBlock(BlockId blockId) async {
     final header = await getBlockHeader(blockId);
     if (header == null) return null;

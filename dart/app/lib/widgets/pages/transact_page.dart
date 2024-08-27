@@ -107,7 +107,7 @@ class TransactView extends ConsumerWidget {
       messageToSign: tx.signableBytes,
     );
     for (final lockAddress
-        in await tx.requiredWitnesses(client.getTransactionOrRaise)) {
+        in await tx.requiredWitnesses(client.getTransactionOutputOrRaise)) {
       final signer = wallet.signers[lockAddress]!;
       final witness = await signer(witnessContext);
       tx.attestation.add(witness);
