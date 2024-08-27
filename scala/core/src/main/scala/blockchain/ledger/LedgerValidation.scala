@@ -1,9 +1,9 @@
 package blockchain.ledger
 
 import blockchain.*
-import blockchain.models.*
 import blockchain.codecs.{*, given}
 import blockchain.crypto.CryptoResources
+import blockchain.models.*
 import blockchain.utility.*
 import cats.data.{EitherT, NonEmptyChain}
 import cats.effect.{Resource, Sync}
@@ -17,10 +17,17 @@ object TransactionValidation:
       fetchTransaction: FetchTransaction[F],
       fetchTransactionOutput: FetchTransactionOutput[F],
       transactionOutputState: TransactionOutputState[F],
-      accountState: AccountState[F]
+      accountState: AccountState[F],
+      valueCalculator: ValueCalculator[F]
   ): Resource[F, TransactionValidation[F]] =
     Resource.pure(
-      new TransactionValidationImpl[F](fetchTransaction, fetchTransactionOutput, transactionOutputState, accountState)
+      new TransactionValidationImpl[F](
+        fetchTransaction,
+        fetchTransactionOutput,
+        transactionOutputState,
+        accountState,
+        valueCalculator
+      )
     )
 
 trait BodyValidation[F[_]]:
@@ -67,11 +74,13 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
     fetchTransaction: FetchTransaction[F],
     fetchTransactionOutput: FetchTransactionOutput[F],
     transactionOutputState: TransactionOutputState[F],
-    accountState: AccountState[F]
+    accountState: AccountState[F],
+    valueCalculator: ValueCalculator[F]
 ) extends TransactionValidation[F]:
 
   override def validate(transaction: Transaction, context: TransactionValidationContext): ValidationResult[F] =
     EitherT.fromEither[F](syntaxValidation(transaction)) >>
+      valueCheck(transaction) >>
       attestationValidation(transaction) >>
       dataCheck(transaction) >>
       spendableUtxoCheck(context.parentBlockId, transaction)
@@ -94,6 +103,23 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
         NonEmptyChain("InsufficientFunds")
       ) >>
       transaction.attestation.traverse(witnessTypeValidation).void
+
+  private def valueCheck(transaction: Transaction): ValidationResult[F] =
+    transaction.outputs
+      .traverse(output =>
+        EitherT(
+          valueCalculator
+            .requiredMinimumQuantity(output)
+            .map(required =>
+              Either.cond(
+                output.value.quantity >= required,
+                (),
+                NonEmptyChain(s"InsufficientValue(${output.value.quantity} < $required)")
+              )
+            )
+        )
+      )
+      .void
 
   private def witnessTypeValidation(witness: Witness): Either[NonEmptyChain[String], Unit] =
     (witness.lock.value, witness.key.value) match {
