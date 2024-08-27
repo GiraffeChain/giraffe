@@ -9,4 +9,3 @@ export 'src/wallet.dart';
 export 'src/blockchain_client.dart';
 export 'src/traversal.dart';
 export 'src/transaction_validation_context.dart';
-export 'src/http/api_client.dart';
