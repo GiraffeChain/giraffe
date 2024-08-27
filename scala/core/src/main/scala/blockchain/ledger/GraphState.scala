@@ -3,8 +3,11 @@ package blockchain.ledger
 import blockchain.*
 import blockchain.codecs.{*, given}
 import blockchain.models.*
+import cats.effect.implicits.*
 import cats.effect.{Async, Resource}
 import cats.implicits.*
+import com.google.protobuf.struct
+import io.circe.Json
 
 import java.sql.Connection
 
@@ -115,6 +118,27 @@ object GraphStateImpl:
       TransactionOutputReference(s(0).decodeTransactionId, s(1).toInt)
     }
 
+  extension (s: struct.Struct)
+    def encoded: String = json.noSpaces
+    def json: Json =
+      Json.obj(
+        s.fields.map { case (k, v) =>
+          k -> v.json
+        }.toSeq*
+      )
+
+  extension (value: struct.Value)
+    def json: Json =
+      value.kind match {
+        case struct.Value.Kind.NullValue(_)   => Json.Null
+        case struct.Value.Kind.NumberValue(v) => Json.fromBigDecimal(v)
+        case struct.Value.Kind.StringValue(v) => Json.fromString(v)
+        case struct.Value.Kind.BoolValue(v)   => Json.fromBoolean(v)
+        case struct.Value.Kind.StructValue(v) => v.json
+        case struct.Value.Kind.ListValue(v) =>
+          Json.arr(v.values.map(_.json)*)
+      }
+
 class GraphStateBSSImpl[F[_]: Async](
     fetchBody: FetchBody[F],
     fetchTransaction: FetchTransaction[F],
@@ -127,7 +151,7 @@ class GraphStateBSSImpl[F[_]: Async](
       blockIdTree: BlockIdTree[F],
       onBlockChanged: BlockId => F[Unit]
   ): Resource[F, GraphState.BSS[F]] =
-    BlockSourcedState.make[F, Connection](
+    initDb(connection).toResource >> BlockSourcedState.make[F, Connection](
       connection.pure[F],
       initialBlockId,
       applyBlock,
@@ -136,11 +160,39 @@ class GraphStateBSSImpl[F[_]: Async](
       onBlockChanged
     )
 
+  def initDb(connection: Connection): F[Unit] = Async[F].blocking {
+    val statement = connection.createStatement()
+    statement.execute(
+      """
+        |CREATE TABLE IF NOT EXISTS vertices (
+        |  id VARCHAR(64) PRIMARY KEY,
+        |  label VARCHAR(128) NOT NULL,
+        |  data TEXT
+        |)
+        |""".stripMargin
+    )
+    statement.execute(
+      """
+        |CREATE TABLE IF NOT EXISTS edges (
+        |  id VARCHAR(64) PRIMARY KEY,
+        |  label VARCHAR(128) NOT NULL,
+        |  data TEXT,
+        |  a VARCHAR(64) NOT NULL,
+        |  b VARCHAR(64) NOT NULL
+        |)
+        |""".stripMargin
+    )
+    statement.execute("CREATE INDEX IF NOT EXISTS vertices_label ON vertices (label)")
+    statement.execute("CREATE INDEX IF NOT EXISTS edges_label ON edges (label)")
+    statement.execute("CREATE INDEX IF NOT EXISTS edges_a ON edges (a)")
+    statement.execute("CREATE INDEX IF NOT EXISTS edges_b ON edges (b)")
+  }
+
   def applyBlock(
       connection: Connection,
       blockId: BlockId
   ): F[Connection] =
-    applyBlockSteps(blockId).flatMap(executeSteps(connection))
+    applyBlockSteps(blockId).flatMap(executeSteps(connection)).as(connection)
 
   private def applyBlockSteps(blockId: BlockId) =
     fetchBody(blockId)
@@ -153,16 +205,21 @@ class GraphStateBSSImpl[F[_]: Async](
                 .traverse(input =>
                   fetchTransactionOutput(input.reference).map(output =>
                     output.value.graphEntry.map(_.entry).collect {
-                      case GraphEntry.Entry.Vertex(_) => RemoveNode(input.reference.encoded)
-                      case GraphEntry.Entry.Edge(_)   => RemoveEdge(input.reference.encoded)
+                      case GraphEntry.Entry.Vertex(_) =>
+                        RemoveVertex(input.reference.encoded)
+                      case GraphEntry.Entry.Edge(_) =>
+                        RemoveEdge(input.reference.encoded)
                     }
                   )
                 )
                 .map(_.flatten),
               Async[F].delay(
                 transaction.referencedOutputs.flatMap((ref, output) =>
-                  output.value.graphEntry.map(_.entry).collect { case GraphEntry.Entry.Edge(e) =>
-                    AddEdge(ref.encoded, e.a.encoded, e.b.encoded)
+                  output.value.graphEntry.map(_.entry).collect {
+                    case GraphEntry.Entry.Vertex(v) =>
+                      AddVertex(ref.encoded, v.label, v.data.map(_.encoded))
+                    case GraphEntry.Entry.Edge(e) =>
+                      AddEdge(ref.encoded, e.label, e.data.map(_.encoded), e.a.encoded, e.b.encoded)
                   }
                 )
               )
@@ -176,7 +233,7 @@ class GraphStateBSSImpl[F[_]: Async](
       connection: Connection,
       blockId: BlockId
   ): F[Connection] =
-    unapplyBlockSteps(blockId).flatMap(executeSteps(connection))
+    unapplyBlockSteps(blockId).flatMap(executeSteps(connection)).as(connection)
 
   private def unapplyBlockSteps(blockId: BlockId) =
     fetchBody(blockId)
@@ -188,17 +245,21 @@ class GraphStateBSSImpl[F[_]: Async](
               Async[F].delay(
                 transaction.referencedOutputs.reverse.flatMap((ref, output) =>
                   output.value.graphEntry.map(_.entry).collect {
-                    case GraphEntry.Entry.Edge(e) =>
+                    case GraphEntry.Entry.Edge(_) =>
                       RemoveEdge(ref.encoded)
-                    case GraphEntry.Entry.Vertex(_) => RemoveNode(ref.encoded)
+                    case GraphEntry.Entry.Vertex(_) =>
+                      RemoveVertex(ref.encoded)
                   }
                 )
               ),
               transaction.inputs.reverse
                 .traverse(input =>
                   fetchTransactionOutput(input.reference).map(output =>
-                    output.value.graphEntry.map(_.entry).collect { case GraphEntry.Entry.Edge(e) =>
-                      AddEdge(input.reference.encoded, e.a.encoded, e.b.encoded)
+                    output.value.graphEntry.map(_.entry).collect {
+                      case GraphEntry.Entry.Vertex(v) =>
+                        AddVertex(input.reference.encoded, v.label, v.data.map(_.encoded))
+                      case GraphEntry.Entry.Edge(e) =>
+                        AddEdge(input.reference.encoded, e.label, e.data.map(_.encoded), e.a.encoded, e.b.encoded)
                     }
                   )
                 )
@@ -210,18 +271,48 @@ class GraphStateBSSImpl[F[_]: Async](
       )
 
   private def executeSteps(connection: Connection)(steps: Iterable[GraphStateChange]) =
-    Async[F].blocking {
-      val statement = connection.createStatement()
-      steps.foreach {
-        case RemoveNode(id)    => statement.addBatch(s"DELETE FROM edges WHERE a = '$id' OR b = '$id'")
-        case RemoveEdge(id)    => statement.addBatch(s"DELETE FROM edges WHERE id = '$id'")
-        case AddEdge(id, a, b) => statement.addBatch(s"INSERT INTO edges (id, a, b) VALUES ('$id', '$a', '$b')")
-      }
-      statement.executeBatch()
-      connection
-    }
+    if (steps.isEmpty) Async[F].unit
+    else
+      Async[F]
+        .blocking {
+          connection.setAutoCommit(false)
+          steps.foreach {
+            case RemoveVertex(id) =>
+              val statement = connection.prepareStatement("DELETE FROM vertices WHERE id = ?")
+              statement.setString(1, id)
+              statement.execute()
+              val statement2 = connection.prepareStatement("DELETE FROM edges WHERE a = ? OR b = ?")
+              statement2.setString(1, id)
+              statement2.setString(2, id)
+              statement2.execute()
+            case RemoveEdge(id) =>
+              val statement = connection.prepareStatement("DELETE FROM edges WHERE id = ?")
+              statement.setString(1, id)
+              statement.execute()
+            case AddVertex(id, label, data) =>
+              val statement =
+                connection.prepareStatement("INSERT INTO vertices (id, label, data) VALUES (?, ?, ?)")
+              statement.setString(1, id)
+              statement.setString(2, label)
+              data.fold(statement.setNull(3, java.sql.Types.VARCHAR))(statement.setString(3, _))
+              statement.execute()
+            case AddEdge(id, label, data, a, b) =>
+              val statement =
+                connection.prepareStatement("INSERT INTO edges (id, label, data, a, b) VALUES (?, ?, ?, ?, ?)")
+              statement.setString(1, id)
+              statement.setString(2, label)
+              data.fold(statement.setNull(3, java.sql.Types.VARCHAR))(statement.setString(3, _))
+              statement.setString(4, a)
+              statement.setString(5, b)
+              statement.execute()
+          }
+          connection.commit()
+          connection.setAutoCommit(true)
+        }
+        .onError { case _ => Async[F].blocking(connection.rollback()) }
 
 sealed abstract class GraphStateChange
-case class RemoveNode(id: String) extends GraphStateChange
+case class RemoveVertex(id: String) extends GraphStateChange
 case class RemoveEdge(id: String) extends GraphStateChange
-case class AddEdge(id: String, a: String, b: String) extends GraphStateChange
+case class AddVertex(id: String, label: String, data: Option[String]) extends GraphStateChange
+case class AddEdge(id: String, label: String, data: Option[String], a: String, b: String) extends GraphStateChange
