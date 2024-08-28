@@ -86,7 +86,7 @@ extension TransactionOutputReferenceCodecs on TransactionOutputReference {
         hasTransactionId(), transactionId, (t) => t.immutableBytes))
     ..addAll(index.immutableBytes);
 
-  String get show => "a_${transactionId.show}:$index";
+  String get show => "${transactionId.show}:$index";
 }
 
 extension TransactionInputCodecs on TransactionInput {
