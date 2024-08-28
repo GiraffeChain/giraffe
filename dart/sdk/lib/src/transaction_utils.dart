@@ -15,14 +15,35 @@ extension TransactionOps on Transaction {
     for (final output in outputs) {
       if (output.value.hasGraphEntry() && output.value.graphEntry.hasEdge()) {
         final edge = output.value.graphEntry.edge;
-        final aTxO = await fetchTransactionOutput(edge.a);
+        final TransactionOutput aTxO;
+        if (edge.a.hasTransactionId()) {
+          aTxO = await fetchTransactionOutput(edge.a);
+        } else {
+          aTxO = outputs[edge.a.index];
+        }
+        final aVertex = aTxO.value.ensureGraphEntry().vertex;
+        if (aVertex.hasEdgeLockAddress()) {
+          result.add(aVertex.edgeLockAddress);
+        }
 
-        result.add(aTxO.value.ensureGraphEntry().vertex.edgeLockAddress);
-        final bTxO = await fetchTransactionOutput(edge.b);
-        result.add(bTxO.value.ensureGraphEntry().vertex.edgeLockAddress);
+        final TransactionOutput bTxO;
+        if (edge.b.hasTransactionId()) {
+          bTxO = await fetchTransactionOutput(edge.b);
+        } else {
+          bTxO = outputs[edge.b.index];
+        }
+        final bVertex = bTxO.value.ensureGraphEntry().vertex;
+        if (bVertex.hasEdgeLockAddress()) {
+          result.add(bVertex.edgeLockAddress);
+        }
       }
       if (output.hasAccount()) {
-        final accountTxO = await fetchTransactionOutput(output.account);
+        final TransactionOutput accountTxO;
+        if (output.account.hasTransactionId()) {
+          accountTxO = await fetchTransactionOutput(output.account);
+        } else {
+          accountTxO = outputs[output.account.index];
+        }
         result.add(accountTxO.lockAddress);
       }
     }

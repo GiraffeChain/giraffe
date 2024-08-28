@@ -11,13 +11,17 @@ class Graph {
 
   Graph({required this.wallet, required this.client});
 
+  TransactionOutput createVertexOutput(
+          {required String label, GraphData? data}) =>
+      TransactionOutput(
+          lockAddress: wallet.defaultLockAddress,
+          value: Value(
+              graphEntry: GraphEntry(
+                  vertex: Vertex(label: label, data: _convertData(data)))));
+
   Future<TransactionOutputReference> createVertex(
       {required String label, GraphData? data}) async {
-    final output = TransactionOutput(
-        lockAddress: wallet.defaultLockAddress,
-        value: Value(
-            graphEntry: GraphEntry(
-                vertex: Vertex(label: label, data: _convertData(data)))));
+    final output = createVertexOutput(label: label, data: data);
     final tx =
         await wallet.payAndAttest(client, Transaction(outputs: [output]));
     tx.embedId();
@@ -27,17 +31,24 @@ class Graph {
     return reference;
   }
 
+  TransactionOutput createEdgeOutput(
+          {required String label,
+          required TransactionOutputReference a,
+          required TransactionOutputReference b,
+          GraphData? data}) =>
+      TransactionOutput(
+          lockAddress: wallet.defaultLockAddress,
+          value: Value(
+              graphEntry: GraphEntry(
+                  edge: Edge(
+                      a: a, b: b, label: label, data: _convertData(data)))));
+
   Future<TransactionOutputReference> createEdge(
       {required String label,
       required TransactionOutputReference a,
       required TransactionOutputReference b,
       GraphData? data}) async {
-    final output = TransactionOutput(
-        lockAddress: wallet.defaultLockAddress,
-        value: Value(
-            graphEntry: GraphEntry(
-                edge:
-                    Edge(a: a, b: b, label: label, data: _convertData(data)))));
+    final output = createEdgeOutput(label: label, a: a, b: b, data: data);
     final tx =
         await wallet.payAndAttest(client, Transaction(outputs: [output]));
     tx.embedId();

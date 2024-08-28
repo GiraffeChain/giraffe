@@ -38,8 +38,8 @@ class SocialView extends ConsumerWidget {
     final state = ref.watch(podSocialProvider);
     return switch (state) {
       AsyncData(:final value) => _loaded(ref, value),
-      AsyncError(:final error) =>
-        Center(child: Text("An error occurred: $error")),
+      AsyncError(:final error, :final stackTrace) =>
+        Center(child: Text("An error occurred: $error\n$stackTrace")),
       _ => const Center(child: CircularProgressIndicator())
     };
   }
@@ -67,10 +67,13 @@ class SocialView extends ConsumerWidget {
             .createUser(firstName: "Alice"));
   }
 
-  Widget _social(WidgetRef ref, SocialState state) {
-    return TextButton.icon(
-        label: const Text("Add Friend"),
-        icon: const Icon(Icons.person_add),
-        onPressed: () {});
+  Widget _social(WidgetRef ref, Social state) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text("Hello, ${state.firstName ?? "Stranger"} ${state.lastName ?? ""}!",
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+      ],
+    );
   }
 }

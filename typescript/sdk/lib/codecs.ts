@@ -77,7 +77,7 @@ function encodeTransactionInput(input: TransactionInput): Uint8Array {
 }
 
 function encodeTransactionOutputReference(value: TransactionOutputReference): Uint8Array {
-    return mergeArrays([encodeTransactionId(requireDefined(value.transactionId)), encodeInt32(requireDefined(value.index))]);
+    return mergeArrays([optCodec(value.transactionId, encodeTransactionId), encodeInt32(requireDefined(value.index))]);
 }
 
 function encodeTransactionOutput(value: TransactionOutput): Uint8Array {

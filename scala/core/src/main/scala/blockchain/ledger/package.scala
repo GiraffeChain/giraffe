@@ -1,11 +1,11 @@
 package blockchain
 
-import blockchain.models.*
 import blockchain.codecs.{*, given}
 import blockchain.crypto.Blake2b256
-import cats.Monad
+import blockchain.models.*
 import cats.data.OptionT
 import cats.implicits.*
+import cats.{Applicative, Monad}
 import com.google.protobuf.ByteString
 
 package object ledger {
@@ -16,10 +16,12 @@ package object ledger {
         transaction.outputs.flatMap(_.account) ++
         transaction.outputs
           .flatMap(_.value.graphEntry.flatMap(_.entry.edge))
-          .flatMap(edge => List(edge.a, edge.b))).toSet
+          .flatMap(edge => List(edge.a, edge.b))).filter(_.transactionId.nonEmpty).toSet
 
-    def referencedOutputs: Seq[(TransactionOutputReference, TransactionOutput)] =
-      transaction.outputs.zipWithIndex.map((out, index) => TransactionOutputReference(transaction.id, index) -> out)
+    def referencedOutputs: Seq[(TransactionOutputReference, TransactionOutput)] = {
+      val someTransactionId = transaction.id.some
+      transaction.outputs.zipWithIndex.map((out, index) => TransactionOutputReference(someTransactionId, index) -> out)
+    }
 
     def requiredWitnesses[F[_]: Monad](fetchTransactionOutput: FetchTransactionOutput[F]): F[Set[LockAddress]] =
       for {
@@ -32,10 +34,10 @@ package object ledger {
               .flatMap(_.entry.edge)
               .fold(Set.empty[TransactionOutputReference])(edge => Set(edge.a, edge.b))
               .toList
-              .traverse(fetchTransactionOutput)
+              .traverse(fetchTransactionOutputOrLocal(fetchTransactionOutput, transaction))
               .map(_.flatMap(_.value.graphEntry).flatMap(_.entry.vertex).flatMap(_.edgeLockAddress))
               .flatMap(graphLockAddresses =>
-                OptionT(output.account.traverse(fetchTransactionOutput))
+                OptionT(output.account.traverse(fetchTransactionOutputOrLocal(fetchTransactionOutput, transaction)))
                   .subflatMap(_.value.accountRegistration.map(_.associationLock))
                   .fold(graphLockAddresses)(graphLockAddresses :+ _)
               )
@@ -56,4 +58,10 @@ package object ledger {
           (parentTxRoot +: transactionIds.map(_.value.decodeBase58.toByteArray))*
         )
       )
+
+  def fetchTransactionOutputOrLocal[F[_]: Applicative](
+      fetchTransactionOutput: FetchTransactionOutput[F],
+      local: Transaction
+  )(reference: TransactionOutputReference): F[TransactionOutput] =
+    reference.transactionId.fold(local.outputs(reference.index).pure[F])(_ => fetchTransactionOutput(reference))
 }

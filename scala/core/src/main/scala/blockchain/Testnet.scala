@@ -92,7 +92,7 @@ class TestnetAccount(
     )
 
   val account =
-    TransactionOutputReference(transaction.id)
+    TransactionOutputReference(transaction.id.some)
 
   def save[F[_]: Async: Files](dir: Path): F[Unit] =
     for {

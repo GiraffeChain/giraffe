@@ -2,6 +2,7 @@ import 'package:blockchain_app/providers/blockchain_client.dart';
 import 'package:blockchain_app/providers/graph_client.dart';
 import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_sdk/sdk.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -55,16 +56,24 @@ class PodSocial extends _$PodSocial {
     state = const AsyncLoading();
     try {
       final graph = await ref.watch(podGraphClientProvider.future);
-      final userRef = await graph.createVertex(label: "user");
-      final profileRef = await graph.createVertex(label: "profile", data: {
+      final userOutput = graph.createVertexOutput(label: "user");
+      final profileOutput = graph.createVertexOutput(label: "profile", data: {
         "firstName": firstName,
         "lastName": lastName,
       });
-      await graph.createEdge(
-        label: "userProfile",
-        a: profileRef,
-        b: userRef,
-      );
+      final edgeOutput = graph.createEdgeOutput(
+          label: "userProfile",
+          a: TransactionOutputReference(index: 1),
+          b: TransactionOutputReference(index: 0));
+      final wallet = await ref.watch(podWalletProvider.future);
+      final client = ref.read(podBlockchainClientProvider);
+      final tx = await wallet.payAndAttest(client,
+          Transaction(outputs: [userOutput, profileOutput, edgeOutput]));
+      await client.broadcastTransaction(tx);
+      final userRef =
+          TransactionOutputReference(transactionId: tx.id, index: 0);
+      final profileRef =
+          TransactionOutputReference(transactionId: tx.id, index: 1);
       state = AsyncData(Social(
           user: userRef,
           profile: profileRef,

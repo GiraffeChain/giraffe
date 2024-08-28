@@ -228,13 +228,23 @@ class TransactionOutputStore[F[_]: MonadThrow](
   override def get(
       key: TransactionOutputReference
   ): F[Option[TransactionOutput]] =
-    OptionT(transactionStore.get(key.transactionId))
-      .subflatMap(_.outputs.lift(key.index))
-      .value
+    OptionT
+      .fromOption[F](key.transactionId)
+      .getOrRaise(new IllegalArgumentException("transactionId required"))
+      .flatMap(transactionId =>
+        OptionT(transactionStore.get(transactionId))
+          .subflatMap(_.outputs.lift(key.index))
+          .value
+      )
 
   override def contains(key: TransactionOutputReference): F[Boolean] =
-    OptionT(transactionStore.get(key.transactionId))
-      .exists(_.outputs.length < key.index)
+    OptionT
+      .fromOption[F](key.transactionId)
+      .getOrRaise(new IllegalArgumentException("transactionId required"))
+      .flatMap(transactionId =>
+        OptionT(transactionStore.get(transactionId))
+          .exists(_.outputs.length < key.index)
+      )
 
   override def put(
       key: TransactionOutputReference,

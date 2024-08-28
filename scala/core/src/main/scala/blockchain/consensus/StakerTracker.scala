@@ -2,6 +2,7 @@ package blockchain.consensus
 
 import blockchain.*
 import blockchain.codecs.given
+import blockchain.ledger.*
 import blockchain.models.*
 import blockchain.utility.Ratio
 import cats.data.OptionT
@@ -127,17 +128,12 @@ object StakerData:
       for {
         transaction <- fetchTransaction(transactionId)
         _ <- transaction.inputs.traverseTap(applyInput(state))
-        _ <- transaction.outputs.zipWithIndex.traverseTap((output, index) =>
-          applyOutput(state)(
-            TransactionOutputReference(transactionId, index),
-            output
-          )
-        )
+        _ <- transaction.referencedOutputs.traverseTap(applyOutput(state))
       } yield state
 
     private def applyInput(state: State[F])(input: TransactionInput) =
       OptionT(
-        fetchTransaction(input.reference.transactionId)
+        fetchTransaction(input.reference.transactionId.get)
           .map(_.outputs(input.reference.index).account)
       ).flatMapF(state.stakers.get)
         .foldF(
@@ -196,12 +192,7 @@ object StakerData:
     ): F[State[F]] =
       for {
         transaction <- fetchTransaction(transactionId)
-        _ <- transaction.outputs.zipWithIndex.reverse.traverseTap((output, index) =>
-          unapplyOutput(state)(
-            TransactionOutputReference(transactionId, index),
-            output
-          )
-        )
+        _ <- transaction.referencedOutputs.reverse.traverseTap(unapplyOutput(state))
         _ <- transaction.inputs.reverse.traverseTap(unapplyInput(state))
       } yield state
 
@@ -253,7 +244,7 @@ object StakerData:
         .void
         .orElse(
           OptionT
-            .liftF(fetchTransaction(input.reference.transactionId))
+            .liftF(fetchTransaction(input.reference.transactionId.get))
             .map(_.outputs(input.reference.index))
             .subflatMap(_.account)
             .semiflatMap(account =>
@@ -280,7 +271,7 @@ object EpochBoundaries:
       currentEventChanged: BlockId => F[Unit],
       clock: Clock[F],
       fetchHeader: FetchHeader[F]
-  ) =
+  ): Resource[F, BSS[F]] =
     BlockSourcedState.make[F, State[F]](
       initialState = initialState,
       initialEventId = currentBlockId,
