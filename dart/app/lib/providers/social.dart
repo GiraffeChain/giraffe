@@ -41,25 +41,29 @@ class PodSocial extends _$PodSocial {
     outgoingFriends.removeWhere(friends.contains);
     incomingFriends.removeWhere(friends.contains);
 
+    final profileData = ProfileData(
+      firstName: profile.profileVertex.data.fields["firstName"]?.stringValue,
+      lastName: profile.profileVertex.data.fields["lastName"]?.stringValue,
+    );
+
     return Social(
       user: user.userRef,
       profile: profile.profileRef,
-      firstName: profile.profileVertex.data.fields["firstName"]?.stringValue,
-      lastName: profile.profileVertex.data.fields["lastName"]?.stringValue,
+      profileData: profileData,
       outgoingFriendRequests: outgoingFriends,
       incomingFriendRequests: incomingFriends,
       friends: friends,
     );
   }
 
-  createUser({String? firstName, String? lastName}) async {
+  createUser(ProfileData data) async {
     state = const AsyncLoading();
     try {
       final graph = await ref.watch(podGraphClientProvider.future);
       final userOutput = graph.createVertexOutput(label: "user");
       final profileOutput = graph.createVertexOutput(label: "profile", data: {
-        "firstName": firstName,
-        "lastName": lastName,
+        "firstName": data.firstName,
+        "lastName": data.lastName,
       });
       final edgeOutput = graph.createEdgeOutput(
           label: "userProfile",
@@ -77,8 +81,7 @@ class PodSocial extends _$PodSocial {
       state = AsyncData(Social(
           user: userRef,
           profile: profileRef,
-          firstName: firstName,
-          lastName: lastName,
+          profileData: data,
           outgoingFriendRequests: [],
           incomingFriendRequests: [],
           friends: []));
@@ -101,10 +104,17 @@ class Social extends SocialState with _$Social {
   const factory Social({
     required TransactionOutputReference user,
     required TransactionOutputReference profile,
-    required String? firstName,
-    required String? lastName,
+    required ProfileData profileData,
     required List<TransactionOutputReference> outgoingFriendRequests,
     required List<TransactionOutputReference> incomingFriendRequests,
     required List<TransactionOutputReference> friends,
   }) = _Social;
+}
+
+@freezed
+class ProfileData with _$ProfileData {
+  const factory ProfileData({
+    String? firstName,
+    String? lastName,
+  }) = _ProfileData;
 }

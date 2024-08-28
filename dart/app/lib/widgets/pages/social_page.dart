@@ -59,21 +59,54 @@ class SocialView extends ConsumerWidget {
   }
 
   Widget _antiSocial(WidgetRef ref, AntiSocial state) {
-    return TextButton.icon(
-        label: const Text("Create User"),
-        icon: const Icon(Icons.person_add),
-        onPressed: () => ref
-            .read(podSocialProvider.notifier)
-            .createUser(firstName: "Alice"));
+    return ProfileEditor(
+        onSave: (data) =>
+            ref.read(podSocialProvider.notifier).createUser(data));
   }
 
   Widget _social(WidgetRef ref, Social state) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Hello, ${state.firstName ?? "Stranger"} ${state.lastName ?? ""}!",
+        Text(
+            "Hello, ${state.profileData.firstName ?? "Stranger"} ${state.profileData.lastName ?? ""}!",
             style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
       ],
     );
   }
+}
+
+class ProfileEditor extends StatefulWidget {
+  final Function(ProfileData) onSave;
+
+  const ProfileEditor({super.key, required this.onSave});
+
+  @override
+  State<StatefulWidget> createState() => ProfileEditorState();
+}
+
+class ProfileEditorState extends State<ProfileEditor> {
+  String firstName = "";
+  String lastName = "";
+
+  // TODO: Use Forms
+  @override
+  Widget build(BuildContext context) => Column(
+        children: [
+          TextField(
+            decoration: const InputDecoration(labelText: "First Name"),
+            onChanged: (value) => setState(() => firstName = value),
+          ),
+          TextField(
+            decoration: const InputDecoration(labelText: "Last Name"),
+            onChanged: (value) => setState(() => lastName = value),
+          ),
+          ElevatedButton(
+            onPressed: () => widget.onSave(ProfileData(
+                firstName: firstName.isEmpty ? null : firstName,
+                lastName: lastName.isEmpty ? null : lastName)),
+            child: const Text("Save"),
+          ),
+        ],
+      );
 }

@@ -18,8 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$Social {
   TransactionOutputReference get user => throw _privateConstructorUsedError;
   TransactionOutputReference get profile => throw _privateConstructorUsedError;
-  String? get firstName => throw _privateConstructorUsedError;
-  String? get lastName => throw _privateConstructorUsedError;
+  ProfileData get profileData => throw _privateConstructorUsedError;
   List<TransactionOutputReference> get outgoingFriendRequests =>
       throw _privateConstructorUsedError;
   List<TransactionOutputReference> get incomingFriendRequests =>
@@ -41,11 +40,12 @@ abstract class $SocialCopyWith<$Res> {
   $Res call(
       {TransactionOutputReference user,
       TransactionOutputReference profile,
-      String? firstName,
-      String? lastName,
+      ProfileData profileData,
       List<TransactionOutputReference> outgoingFriendRequests,
       List<TransactionOutputReference> incomingFriendRequests,
       List<TransactionOutputReference> friends});
+
+  $ProfileDataCopyWith<$Res> get profileData;
 }
 
 /// @nodoc
@@ -65,8 +65,7 @@ class _$SocialCopyWithImpl<$Res, $Val extends Social>
   $Res call({
     Object? user = null,
     Object? profile = null,
-    Object? firstName = freezed,
-    Object? lastName = freezed,
+    Object? profileData = null,
     Object? outgoingFriendRequests = null,
     Object? incomingFriendRequests = null,
     Object? friends = null,
@@ -80,14 +79,10 @@ class _$SocialCopyWithImpl<$Res, $Val extends Social>
           ? _value.profile
           : profile // ignore: cast_nullable_to_non_nullable
               as TransactionOutputReference,
-      firstName: freezed == firstName
-          ? _value.firstName
-          : firstName // ignore: cast_nullable_to_non_nullable
-              as String?,
-      lastName: freezed == lastName
-          ? _value.lastName
-          : lastName // ignore: cast_nullable_to_non_nullable
-              as String?,
+      profileData: null == profileData
+          ? _value.profileData
+          : profileData // ignore: cast_nullable_to_non_nullable
+              as ProfileData,
       outgoingFriendRequests: null == outgoingFriendRequests
           ? _value.outgoingFriendRequests
           : outgoingFriendRequests // ignore: cast_nullable_to_non_nullable
@@ -102,6 +97,16 @@ class _$SocialCopyWithImpl<$Res, $Val extends Social>
               as List<TransactionOutputReference>,
     ) as $Val);
   }
+
+  /// Create a copy of Social
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ProfileDataCopyWith<$Res> get profileData {
+    return $ProfileDataCopyWith<$Res>(_value.profileData, (value) {
+      return _then(_value.copyWith(profileData: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -114,11 +119,13 @@ abstract class _$$SocialImplCopyWith<$Res> implements $SocialCopyWith<$Res> {
   $Res call(
       {TransactionOutputReference user,
       TransactionOutputReference profile,
-      String? firstName,
-      String? lastName,
+      ProfileData profileData,
       List<TransactionOutputReference> outgoingFriendRequests,
       List<TransactionOutputReference> incomingFriendRequests,
       List<TransactionOutputReference> friends});
+
+  @override
+  $ProfileDataCopyWith<$Res> get profileData;
 }
 
 /// @nodoc
@@ -136,8 +143,7 @@ class __$$SocialImplCopyWithImpl<$Res>
   $Res call({
     Object? user = null,
     Object? profile = null,
-    Object? firstName = freezed,
-    Object? lastName = freezed,
+    Object? profileData = null,
     Object? outgoingFriendRequests = null,
     Object? incomingFriendRequests = null,
     Object? friends = null,
@@ -151,14 +157,10 @@ class __$$SocialImplCopyWithImpl<$Res>
           ? _value.profile
           : profile // ignore: cast_nullable_to_non_nullable
               as TransactionOutputReference,
-      firstName: freezed == firstName
-          ? _value.firstName
-          : firstName // ignore: cast_nullable_to_non_nullable
-              as String?,
-      lastName: freezed == lastName
-          ? _value.lastName
-          : lastName // ignore: cast_nullable_to_non_nullable
-              as String?,
+      profileData: null == profileData
+          ? _value.profileData
+          : profileData // ignore: cast_nullable_to_non_nullable
+              as ProfileData,
       outgoingFriendRequests: null == outgoingFriendRequests
           ? _value._outgoingFriendRequests
           : outgoingFriendRequests // ignore: cast_nullable_to_non_nullable
@@ -181,8 +183,7 @@ class _$SocialImpl implements _Social {
   const _$SocialImpl(
       {required this.user,
       required this.profile,
-      required this.firstName,
-      required this.lastName,
+      required this.profileData,
       required final List<TransactionOutputReference> outgoingFriendRequests,
       required final List<TransactionOutputReference> incomingFriendRequests,
       required final List<TransactionOutputReference> friends})
@@ -195,9 +196,7 @@ class _$SocialImpl implements _Social {
   @override
   final TransactionOutputReference profile;
   @override
-  final String? firstName;
-  @override
-  final String? lastName;
+  final ProfileData profileData;
   final List<TransactionOutputReference> _outgoingFriendRequests;
   @override
   List<TransactionOutputReference> get outgoingFriendRequests {
@@ -226,7 +225,7 @@ class _$SocialImpl implements _Social {
 
   @override
   String toString() {
-    return 'Social(user: $user, profile: $profile, firstName: $firstName, lastName: $lastName, outgoingFriendRequests: $outgoingFriendRequests, incomingFriendRequests: $incomingFriendRequests, friends: $friends)';
+    return 'Social(user: $user, profile: $profile, profileData: $profileData, outgoingFriendRequests: $outgoingFriendRequests, incomingFriendRequests: $incomingFriendRequests, friends: $friends)';
   }
 
   @override
@@ -236,10 +235,8 @@ class _$SocialImpl implements _Social {
             other is _$SocialImpl &&
             (identical(other.user, user) || other.user == user) &&
             (identical(other.profile, profile) || other.profile == profile) &&
-            (identical(other.firstName, firstName) ||
-                other.firstName == firstName) &&
-            (identical(other.lastName, lastName) ||
-                other.lastName == lastName) &&
+            (identical(other.profileData, profileData) ||
+                other.profileData == profileData) &&
             const DeepCollectionEquality().equals(
                 other._outgoingFriendRequests, _outgoingFriendRequests) &&
             const DeepCollectionEquality().equals(
@@ -252,8 +249,7 @@ class _$SocialImpl implements _Social {
       runtimeType,
       user,
       profile,
-      firstName,
-      lastName,
+      profileData,
       const DeepCollectionEquality().hash(_outgoingFriendRequests),
       const DeepCollectionEquality().hash(_incomingFriendRequests),
       const DeepCollectionEquality().hash(_friends));
@@ -271,8 +267,7 @@ abstract class _Social implements Social {
   const factory _Social(
       {required final TransactionOutputReference user,
       required final TransactionOutputReference profile,
-      required final String? firstName,
-      required final String? lastName,
+      required final ProfileData profileData,
       required final List<TransactionOutputReference> outgoingFriendRequests,
       required final List<TransactionOutputReference> incomingFriendRequests,
       required final List<TransactionOutputReference> friends}) = _$SocialImpl;
@@ -282,9 +277,7 @@ abstract class _Social implements Social {
   @override
   TransactionOutputReference get profile;
   @override
-  String? get firstName;
-  @override
-  String? get lastName;
+  ProfileData get profileData;
   @override
   List<TransactionOutputReference> get outgoingFriendRequests;
   @override
@@ -297,5 +290,152 @@ abstract class _Social implements Social {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SocialImplCopyWith<_$SocialImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$ProfileData {
+  String? get firstName => throw _privateConstructorUsedError;
+  String? get lastName => throw _privateConstructorUsedError;
+
+  /// Create a copy of ProfileData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $ProfileDataCopyWith<ProfileData> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ProfileDataCopyWith<$Res> {
+  factory $ProfileDataCopyWith(
+          ProfileData value, $Res Function(ProfileData) then) =
+      _$ProfileDataCopyWithImpl<$Res, ProfileData>;
+  @useResult
+  $Res call({String? firstName, String? lastName});
+}
+
+/// @nodoc
+class _$ProfileDataCopyWithImpl<$Res, $Val extends ProfileData>
+    implements $ProfileDataCopyWith<$Res> {
+  _$ProfileDataCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of ProfileData
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? firstName = freezed,
+    Object? lastName = freezed,
+  }) {
+    return _then(_value.copyWith(
+      firstName: freezed == firstName
+          ? _value.firstName
+          : firstName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastName: freezed == lastName
+          ? _value.lastName
+          : lastName // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$ProfileDataImplCopyWith<$Res>
+    implements $ProfileDataCopyWith<$Res> {
+  factory _$$ProfileDataImplCopyWith(
+          _$ProfileDataImpl value, $Res Function(_$ProfileDataImpl) then) =
+      __$$ProfileDataImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String? firstName, String? lastName});
+}
+
+/// @nodoc
+class __$$ProfileDataImplCopyWithImpl<$Res>
+    extends _$ProfileDataCopyWithImpl<$Res, _$ProfileDataImpl>
+    implements _$$ProfileDataImplCopyWith<$Res> {
+  __$$ProfileDataImplCopyWithImpl(
+      _$ProfileDataImpl _value, $Res Function(_$ProfileDataImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of ProfileData
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? firstName = freezed,
+    Object? lastName = freezed,
+  }) {
+    return _then(_$ProfileDataImpl(
+      firstName: freezed == firstName
+          ? _value.firstName
+          : firstName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      lastName: freezed == lastName
+          ? _value.lastName
+          : lastName // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ProfileDataImpl implements _ProfileData {
+  const _$ProfileDataImpl({this.firstName, this.lastName});
+
+  @override
+  final String? firstName;
+  @override
+  final String? lastName;
+
+  @override
+  String toString() {
+    return 'ProfileData(firstName: $firstName, lastName: $lastName)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ProfileDataImpl &&
+            (identical(other.firstName, firstName) ||
+                other.firstName == firstName) &&
+            (identical(other.lastName, lastName) ||
+                other.lastName == lastName));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, firstName, lastName);
+
+  /// Create a copy of ProfileData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ProfileDataImplCopyWith<_$ProfileDataImpl> get copyWith =>
+      __$$ProfileDataImplCopyWithImpl<_$ProfileDataImpl>(this, _$identity);
+}
+
+abstract class _ProfileData implements ProfileData {
+  const factory _ProfileData(
+      {final String? firstName, final String? lastName}) = _$ProfileDataImpl;
+
+  @override
+  String? get firstName;
+  @override
+  String? get lastName;
+
+  /// Create a copy of ProfileData
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ProfileDataImplCopyWith<_$ProfileDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
