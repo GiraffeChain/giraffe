@@ -62,7 +62,9 @@ class SocialView extends ConsumerWidget {
     return TextButton.icon(
         label: const Text("Create User"),
         icon: const Icon(Icons.person_add),
-        onPressed: () {});
+        onPressed: () => ref
+            .read(podSocialProvider.notifier)
+            .createUser(firstName: "Alice"));
   }
 
   Widget _social(WidgetRef ref, SocialState state) {

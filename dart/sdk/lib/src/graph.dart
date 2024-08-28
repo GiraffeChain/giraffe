@@ -64,6 +64,7 @@ class Graph {
       return null;
     }
     final fields = Map.fromEntries(data.entries
+        .where((e) => e.value != null)
         .map((entry) => MapEntry(entry.key, _convertValue(entry.value))));
     return struct.Struct(fields: fields);
   }

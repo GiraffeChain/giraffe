@@ -10,12 +10,14 @@ const _mapEq = MapEquality();
 
 class Wallet {
   final Map<TransactionOutputReference, TransactionOutput> spendableOutputs;
+  final Map<TransactionOutputReference, TransactionOutput> pendingOutputs;
   final Map<LockAddress, Lock> locks;
   final Map<LockAddress, Signer> signers;
   LockAddress defaultLockAddress;
 
   Wallet({
     required this.spendableOutputs,
+    required this.pendingOutputs,
     required this.locks,
     required this.signers,
     required this.defaultLockAddress,
@@ -37,6 +39,7 @@ class Wallet {
     };
     return Wallet(
       spendableOutputs: {},
+      pendingOutputs: {},
       locks: {lockAddress: lock},
       signers: {lockAddress: signer},
       defaultLockAddress: lockAddress,
@@ -88,6 +91,7 @@ class Wallet {
 
   Stream<Wallet> streamed(BlockchainClient client) async* {
     Future<bool> update() async {
+      pendingOutputs.clear();
       var wasUpdated = false;
       for (final address in locks.keys) {
         final utxos = await client.getLockAddressState(address);
@@ -123,20 +127,18 @@ class Wallet {
       BlockchainClient view, Transaction transaction) async {
     final messageToSign = transaction.signableBytes;
     final height = (await view.canonicalHead).height;
-    for (final input in transaction.inputs) {
-      final output = spendableOutputs[input.reference];
-      if (output != null &&
-          transaction.attestation
-              .where((w) => w.lockAddress == output.lockAddress)
-              .isEmpty) {
-        final signer = signers[output.lockAddress]!;
-        final context =
-            WitnessContext(height: height, messageToSign: messageToSign);
+    final context =
+        WitnessContext(height: height, messageToSign: messageToSign);
+    final requiredWitnesses =
+        await transaction.requiredWitnesses(view.getTransactionOutputOrRaise);
+    for (final address in requiredWitnesses) {
+      if (transaction.attestation.indexWhere((w) => w.lockAddress == address) ==
+          -1) {
+        final signer = signers[address]!;
         final witness = await signer(context);
         transaction.attestation.add(witness);
       }
     }
-
     return transaction;
   }
 
@@ -164,6 +166,7 @@ class Wallet {
             lockAddress: defaultLockAddress,
             value: Value(quantity: currentReward - defaultTransactionTip));
         transaction.outputs.add(output);
+        currentReward = defaultTransactionTip;
       } else if (remainingSpendableOutputs.isEmpty) {
         throw Exception('Insufficient funds');
       } else {
@@ -172,6 +175,21 @@ class Wallet {
             TransactionInput(reference: out.key, value: out.value.value);
         transaction.inputs.add(input);
         currentReward += out.value.value.quantity;
+      }
+    }
+    transaction.embedId();
+    for (final input in transaction.inputs) {
+      if (spendableOutputs.containsKey(input.reference)) {
+        pendingOutputs[input.reference] = spendableOutputs[input.reference]!;
+        spendableOutputs.remove(input.reference);
+      }
+    }
+    for (int i = 0; i < transaction.outputs.length; i++) {
+      final output = transaction.outputs[i];
+      if (locks.containsKey(output.lockAddress)) {
+        final reference =
+            TransactionOutputReference(transactionId: transaction.id, index: i);
+        spendableOutputs[reference] = output;
       }
     }
     return transaction;

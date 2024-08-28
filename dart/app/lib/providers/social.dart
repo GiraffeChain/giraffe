@@ -1,4 +1,5 @@
 import 'package:blockchain_app/providers/blockchain_client.dart';
+import 'package:blockchain_app/providers/graph_client.dart';
 import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -11,7 +12,7 @@ part 'social.g.dart';
 class PodSocial extends _$PodSocial {
   @override
   Future<SocialState> build() async {
-    final wallet = await ref.read(podWalletProvider.future);
+    final wallet = await ref.watch(podWalletProvider.future);
     ({TransactionOutputReference userRef, Vertex userVertex})? user;
     ({TransactionOutputReference profileRef, Vertex profileVertex})? profile;
     for (final entry in wallet.spendableOutputs.entries) {
@@ -48,6 +49,33 @@ class PodSocial extends _$PodSocial {
       incomingFriendRequests: incomingFriends,
       friends: friends,
     );
+  }
+
+  createUser({String? firstName, String? lastName}) async {
+    state = const AsyncLoading();
+    try {
+      final graph = await ref.watch(podGraphClientProvider.future);
+      final userRef = await graph.createVertex(label: "user");
+      final profileRef = await graph.createVertex(label: "profile", data: {
+        "firstName": firstName,
+        "lastName": lastName,
+      });
+      await graph.createEdge(
+        label: "userProfile",
+        a: profileRef,
+        b: userRef,
+      );
+      state = AsyncData(Social(
+          user: userRef,
+          profile: profileRef,
+          firstName: firstName,
+          lastName: lastName,
+          outgoingFriendRequests: [],
+          incomingFriendRequests: [],
+          friends: []));
+    } catch (e, s) {
+      state = AsyncError(e, s);
+    }
   }
 }
 
