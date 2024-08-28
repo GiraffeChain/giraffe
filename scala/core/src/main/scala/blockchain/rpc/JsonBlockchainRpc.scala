@@ -129,7 +129,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
       case GET -> Root / "account-states" / transactionId / index =>
         OptionT(IO(index.toIntOption))
           .foldF(Response().withStatus(Status.BadRequest).pure[F])(index =>
-            IO(transactionId.decodeTransactionId)
+            IO(transactionId.decodeTransactionId.some)
               .map(TransactionOutputReference(_, index))
               .flatMap(account =>
                 OptionT(
@@ -165,7 +165,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
       case GET -> Root / "graph" / transactionId / index / "edges" =>
         OptionT(IO(index.toIntOption))
           .foldF(Response().withStatus(Status.BadRequest).pure[F])(index =>
-            IO(transactionId.decodeTransactionId)
+            IO(transactionId.decodeTransactionId.some)
               .map(TransactionOutputReference(_, index))
               .flatMap(reference =>
                 core.consensus.localChain.currentHead
@@ -198,7 +198,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
       case GET -> Root / "graph" / transactionId / index / "in-edges" =>
         OptionT(IO(index.toIntOption))
           .foldF(Response().withStatus(Status.BadRequest).pure[F])(index =>
-            IO(transactionId.decodeTransactionId)
+            IO(transactionId.decodeTransactionId.some)
               .map(TransactionOutputReference(_, index))
               .flatMap(reference =>
                 core.consensus.localChain.currentHead
@@ -211,7 +211,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
       case GET -> Root / "graph" / transactionId / index / "out-edges" =>
         OptionT(IO(index.toIntOption))
           .foldF(Response().withStatus(Status.BadRequest).pure[F])(index =>
-            IO(transactionId.decodeTransactionId)
+            IO(transactionId.decodeTransactionId.some)
               .map(TransactionOutputReference(_, index))
               .flatMap(reference =>
                 core.consensus.localChain.currentHead
@@ -243,7 +243,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
         (
           IO(parentBlockId.decodeBlockId),
           IO.fromOption(slot.toLongOption)(new IllegalArgumentException("Invalid slot")),
-          IO(accountTransactionId.decodeTransactionId),
+          IO(accountTransactionId.decodeTransactionId.some),
           IO.fromOption(accountTransactionIndex.toIntOption)(
             new IllegalArgumentException("Invalid accountTransactionIndex")
           )

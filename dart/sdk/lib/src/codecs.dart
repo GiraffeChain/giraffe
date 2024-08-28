@@ -82,8 +82,11 @@ extension TransactionCodecs on Transaction {
 
 extension TransactionOutputReferenceCodecs on TransactionOutputReference {
   List<int> get immutableBytes => <int>[]
-    ..addAll(transactionId.immutableBytes)
+    ..addAll(condOptCodec(
+        hasTransactionId(), transactionId, (t) => t.immutableBytes))
     ..addAll(index.immutableBytes);
+
+  String get show => "${transactionId.show}:$index";
 }
 
 extension TransactionInputCodecs on TransactionInput {

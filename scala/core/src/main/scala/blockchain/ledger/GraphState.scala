@@ -124,6 +124,7 @@ class GraphStateImpl[F[_]: Async](bss: GraphState.BSS[F]) extends GraphState[F]:
         Async[F].blocking {
           if (whereClauses.isEmpty) {
             val statement = connection.prepareStatement("SELECT id FROM vertices WHERE label = ?")
+            statement.setString(1, label)
             List.unfold(statement.executeQuery())(resultSet =>
               Option.when(resultSet.next())(
                 (resultSet.getString("id").decodeReference, resultSet)
@@ -131,6 +132,7 @@ class GraphStateImpl[F[_]: Async](bss: GraphState.BSS[F]) extends GraphState[F]:
             )
           } else {
             val statement = connection.prepareStatement("SELECT id, data FROM vertices WHERE label = ?")
+            statement.setString(1, label)
             Iterator
               .unfold(statement.executeQuery())(resultSet =>
                 Option.when(resultSet.next())(
@@ -238,11 +240,11 @@ class GraphStateImpl[F[_]: Async](bss: GraphState.BSS[F]) extends GraphState[F]:
       )
 
 object GraphStateImpl:
-  extension (ref: TransactionOutputReference) def encoded: String = show"${ref.transactionId}:${ref.index}"
+  extension (ref: TransactionOutputReference) def encoded: String = show"${ref.transactionId.get}:${ref.index}"
   extension (encoded: String)
     def decodeReference: TransactionOutputReference = {
       val s = encoded.split(':')
-      TransactionOutputReference(s(0).decodeTransactionId, s(1).toInt)
+      TransactionOutputReference(s(0).decodeTransactionId.some, s(1).toInt)
     }
 
   extension (s: struct.Struct)
@@ -257,13 +259,12 @@ object GraphStateImpl:
   extension (value: struct.Value)
     def json: Json =
       value.kind match {
-        case struct.Value.Kind.NullValue(_)   => Json.Null
         case struct.Value.Kind.NumberValue(v) => Json.fromBigDecimal(v)
         case struct.Value.Kind.StringValue(v) => Json.fromString(v)
         case struct.Value.Kind.BoolValue(v)   => Json.fromBoolean(v)
         case struct.Value.Kind.StructValue(v) => v.json
-        case struct.Value.Kind.ListValue(v) =>
-          Json.arr(v.values.map(_.json)*)
+        case struct.Value.Kind.ListValue(v)   => Json.arr(v.values.map(_.json)*)
+        case _                                => Json.Null
       }
 
 class GraphStateBSSImpl[F[_]: Async](
@@ -346,7 +347,9 @@ class GraphStateBSSImpl[F[_]: Async](
                     case GraphEntry.Entry.Vertex(v) =>
                       AddVertex(ref.encoded, v.label, v.data.map(_.encoded))
                     case GraphEntry.Entry.Edge(e) =>
-                      AddEdge(ref.encoded, e.label, e.data.map(_.encoded), e.a.encoded, e.b.encoded)
+                      val a = e.a.transactionId.fold(e.a.copy(transactionId = ref.transactionId))(_ => e.a)
+                      val b = e.b.transactionId.fold(e.b.copy(transactionId = ref.transactionId))(_ => e.b)
+                      AddEdge(ref.encoded, e.label, e.data.map(_.encoded), a.encoded, b.encoded)
                   }
                 )
               )
@@ -421,20 +424,19 @@ class GraphStateBSSImpl[F[_]: Async](
                 connection.prepareStatement("INSERT INTO vertices (id, label, data) VALUES (?, ?, ?)")
               statement.setString(1, id)
               statement.setString(2, label)
-              data.fold(statement.setNull(3, java.sql.Types.VARCHAR))(statement.setString(3, _))
+              data.fold(statement.setNull(3, java.sql.Types.LONGVARCHAR))(statement.setString(3, _))
               statement.execute()
             case AddEdge(id, label, data, a, b) =>
               val statement =
                 connection.prepareStatement("INSERT INTO edges (id, label, data, a, b) VALUES (?, ?, ?, ?, ?)")
               statement.setString(1, id)
               statement.setString(2, label)
-              data.fold(statement.setNull(3, java.sql.Types.VARCHAR))(statement.setString(3, _))
+              data.fold(statement.setNull(3, java.sql.Types.LONGVARCHAR))(statement.setString(3, _))
               statement.setString(4, a)
               statement.setString(5, b)
               statement.execute()
           }
           connection.commit()
-          connection.setAutoCommit(true)
         }
         .onError { case _ => Async[F].blocking(connection.rollback()) }
 

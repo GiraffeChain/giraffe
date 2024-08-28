@@ -4,6 +4,7 @@ import 'package:async/async.dart';
 import 'package:blockchain_app/providers/blockchain_client.dart';
 import 'package:blockchain_app/widgets/pages/genesis_builder_page.dart';
 import 'package:blockchain_app/widgets/pages/receive_page.dart';
+import 'package:blockchain_app/widgets/pages/social_page.dart';
 import 'package:blockchain_app/widgets/pages/stake_page.dart';
 import 'package:blockchain_app/widgets/pages/transact_page.dart';
 import '../../blockchain/codecs.dart';
@@ -21,7 +22,7 @@ class BlockchainPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final client = ref.watch(podBlockchainClientProvider);
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
           appBar: _appBar(context, client),
           body: Container(
@@ -39,6 +40,7 @@ class BlockchainPage extends ConsumerWidget {
       Tab(
           icon: Icon(Icons.baby_changing_station),
           child: Text("Genesis Builder")),
+      Tab(icon: Icon(Icons.person), child: Text("Social")),
     ]);
   }
 
@@ -49,6 +51,7 @@ class BlockchainPage extends ConsumerWidget {
       const ReceiveView(),
       StakeView(client: client),
       const GenesisBuilderView(),
+      StreamedSocialView(client: client),
     ]);
   }
 

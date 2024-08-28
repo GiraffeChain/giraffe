@@ -404,16 +404,20 @@ trait ArrayCodecs {
 
   given ArrayEncodable[TransactionOutputReference] with
     extension (v: TransactionOutputReference)
-      def encodeArray: Array[Byte] =
-        v.transactionId.encodeArray ++ Ints.toByteArray(v.index)
+      def encodeArray: Array[Byte] = {
+        require(v.transactionId.nonEmpty)
+        v.transactionId.get.encodeArray ++ Ints.toByteArray(v.index)
+      }
 
   given ArrayDecodable[TransactionOutputReference] with
     extension (array: Array[Byte])
-      def decodeFromArray: TransactionOutputReference =
+      def decodeFromArray: TransactionOutputReference = {
+        require(array.length == 36)
         TransactionOutputReference(
-          summon[ArrayDecodable[TransactionId]].decodeFromArray(array.slice(0, 32)),
+          summon[ArrayDecodable[TransactionId]].decodeFromArray(array.slice(0, 32)).some,
           Ints.fromByteArray(array.slice(32, 36))
         )
+      }
 
   given ArrayEncodable[LockAddress] with
     extension (v: LockAddress)

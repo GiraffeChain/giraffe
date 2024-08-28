@@ -130,17 +130,21 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
   private def dataCheck(transaction: Transaction): ValidationResult[F] =
     transaction.inputs
       .traverse(input =>
-        EitherT(
-          fetchTransaction(input.reference.transactionId)
-            .map(_.outputs(input.reference.index))
-            .map(output =>
-              Either.cond(
-                output.value.immutableBytes == input.value.immutableBytes,
-                (),
-                NonEmptyChain("InputOutputDataMismatch")
-              )
+        EitherT
+          .fromEither[F](input.reference.transactionId.toRight(NonEmptyChain("SelfSpend")))
+          .flatMap(transactionId =>
+            EitherT(
+              fetchTransaction(transactionId)
+                .map(_.outputs(input.reference.index))
+                .map(output =>
+                  Either.cond(
+                    output.value.immutableBytes == input.value.immutableBytes,
+                    (),
+                    NonEmptyChain("InputOutputDataMismatch")
+                  )
+                )
             )
-        )
+          )
       )
       .void
 

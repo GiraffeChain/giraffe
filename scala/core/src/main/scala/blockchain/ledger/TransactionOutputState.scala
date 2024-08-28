@@ -1,10 +1,10 @@
 package blockchain.ledger
 
 import blockchain.*
-import blockchain.models.*
 import blockchain.codecs.given
+import blockchain.models.*
 import cats.data.OptionT
-import cats.effect.{Async, Resource, MonadCancelThrow}
+import cats.effect.{Async, MonadCancelThrow, Resource}
 import cats.implicits.*
 import scodec.bits.BitVector
 
@@ -39,9 +39,14 @@ class TransactionOutputStateImpl[F[_]: MonadCancelThrow](bss: TransactionOutputS
       blockId: BlockId,
       outputReference: TransactionOutputReference
   ): F[Boolean] =
-    OptionT(bss.stateAt(blockId).use(_.get(outputReference.transactionId)))
-      .subflatMap(_.lift(outputReference.index))
-      .exists(identity)
+    OptionT
+      .fromOption(outputReference.transactionId)
+      .getOrRaise(new IllegalArgumentException("Illegal SelfSpend"))
+      .flatMap(transactionId =>
+        OptionT(bss.stateAt(blockId).use(_.get(transactionId)))
+          .subflatMap(_.lift(outputReference.index))
+          .exists(identity)
+      )
 
 class TransactionOutputStateBSSImpl[F[_]: Async](fetchBody: FetchBody[F], fetchTransaction: FetchTransaction[F]):
   def makeBss(
@@ -70,13 +75,18 @@ class TransactionOutputStateBSSImpl[F[_]: Async](fetchBody: FetchBody[F], fetchT
           fetchTransaction(transactionId)
             .flatMap(transaction =>
               transaction.inputs.foldLeftM(state)((state, input) =>
-                state
-                  .getOrRaise(input.reference.transactionId)
-                  .map(v => v.clear(input.reference.index))
-                  .flatMap(updated =>
-                    if (updated.populationCount > 1)
-                      state.put(input.reference.transactionId, updated)
-                    else state.remove(input.reference.transactionId)
+                OptionT
+                  .fromOption[F](input.reference.transactionId)
+                  .getOrRaise(new IllegalArgumentException("Illegal SelfSpend"))
+                  .flatMap(transactionId =>
+                    state
+                      .getOrRaise(transactionId)
+                      .map(v => v.clear(input.reference.index))
+                      .flatMap(updated =>
+                        if (updated.populationCount > 1)
+                          state.put(transactionId, updated)
+                        else state.remove(transactionId)
+                      )
                   )
                   .as(state)
               ) *>
@@ -98,15 +108,20 @@ class TransactionOutputStateBSSImpl[F[_]: Async](fetchBody: FetchBody[F], fetchT
             .flatMap(transaction =>
               state.remove(transactionId) *>
                 transaction.inputs.reverse.foldLeftM(state)((state, input) =>
-                  OptionT(state.get(input.reference.transactionId))
-                    .getOrElseF(
-                      fetchTransaction(input.reference.transactionId)
-                        .map(_.outputs.length)
-                        .map(BitVector.low(_))
+                  OptionT
+                    .fromOption[F](input.reference.transactionId)
+                    .getOrRaise(new IllegalArgumentException("Illegal SelfSpend"))
+                    .flatMap(transactionId =>
+                      OptionT(state.get(transactionId))
+                        .getOrElseF(
+                          fetchTransaction(transactionId)
+                            .map(_.outputs.length)
+                            .map(BitVector.low(_))
+                        )
+                        .map(_.set(input.reference.index))
+                        .flatMap(state.put(transactionId, _))
+                        .as(state)
                     )
-                    .map(_.set(input.reference.index))
-                    .flatMap(state.put(input.reference.transactionId, _))
-                    .as(state)
                 )
             )
             .as(state)

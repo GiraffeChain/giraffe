@@ -130,7 +130,8 @@ message TransactionInput {
 }
 
 message TransactionOutputReference {
-    TransactionId transactionId = 1 [(validate.rules).message.required = true];
+    // Required in _most_ cases. When not provided, acts as a reference to the "current" transaction.
+    TransactionId transactionId = 1;
     uint32 index = 2;
 }
 

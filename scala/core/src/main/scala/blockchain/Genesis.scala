@@ -8,6 +8,7 @@ import blockchain.models.*
 import blockchain.utility.BlockLoading
 import cats.effect.std.Random
 import cats.effect.{Async, Sync}
+import cats.implicits.*
 import com.google.common.primitives.Longs
 import com.google.protobuf.ByteString
 import fs2.io.file.{Files, Path}
@@ -26,7 +27,7 @@ object Genesis:
   val ParentSlot: Slot = -1L
   val ParentTxRoot: String = byteStringZero32
   val StakingAccount: TransactionOutputReference = TransactionOutputReference(
-    TransactionId(byteStringZero32)
+    TransactionId(byteStringZero32).some
   )
 
   def stakerCertificate(eta: Eta): StakerCertificate = StakerCertificate(
