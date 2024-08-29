@@ -115,20 +115,94 @@ class ActiveSocialView extends ConsumerWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-            "Hello, ${state.profileData.firstName ?? "Stranger"} ${state.profileData.lastName ?? ""}!",
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-        Text("You have ${state.friends.length} friends.",
-            style: const TextStyle(fontSize: 16)),
-        Text(
-            "You have ${state.outgoingFriendRequests.length} outgoing friend requests.",
-            style: const TextStyle(fontSize: 16)),
-        Text(
-            "You have ${state.incomingFriendRequests.length} incoming friend requests.",
-            style: const TextStyle(fontSize: 16)),
-        const Divider(),
-        const UserSearch(),
+        welcomeMessage(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [leftColumn(ref), rightColumn()],
+        )
       ],
+    );
+  }
+
+  Text welcomeMessage() {
+    return Text(
+        "Hello, ${state.profileData.firstName ?? "Stranger"} ${state.profileData.lastName ?? ""}!",
+        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold));
+  }
+
+  ConstrainedBox leftColumn(WidgetRef ref) {
+    final curFriends = currentFriends(ref);
+    final outFriends = outgoingRequests(ref);
+    final inFriends = incomingFriendRequests(ref);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 300),
+      child: Column(
+        children: [
+          if (curFriends != null) curFriends,
+          if (outFriends != null) outFriends,
+          if (inFriends != null) inFriends,
+        ],
+      ),
+    );
+  }
+
+  Widget? currentFriends(WidgetRef ref) {
+    if (state.friendData.friends.isEmpty) {
+      return null;
+    }
+    return userList(ref, "Friends", state.friendData.friends);
+  }
+
+  Widget? outgoingRequests(WidgetRef ref) {
+    if (state.friendData.outgoingFriendRequests.isEmpty) {
+      return null;
+    }
+    return userList(ref, "Outgoing Friend Requests",
+        state.friendData.outgoingFriendRequests);
+  }
+
+  Widget? incomingFriendRequests(WidgetRef ref) {
+    if (state.friendData.incomingFriendRequests.isEmpty) {
+      return null;
+    }
+    return userList(ref, "Incoming Friend Requests",
+        state.friendData.incomingFriendRequests);
+  }
+
+  Widget userList(
+      WidgetRef ref, String title, List<TransactionOutputReference> users) {
+    final social = ref.read(podSocialProvider.notifier);
+    return Card(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 300, minWidth: 300),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              for (final friend in users)
+                FutureBuilder(
+                    future: social.fetchProfileByUserId(friend),
+                    builder: (context, snapshot) => snapshot.hasData
+                        ? Text(
+                            "${snapshot.data?.firstName ?? ""} ${snapshot.data?.lastName ?? ""}")
+                        : snapshot.hasError
+                            ? Text(
+                                "Error: ${snapshot.error}\n${snapshot.stackTrace}")
+                            : const CircularProgressIndicator()),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Expanded rightColumn() {
+    return const Expanded(
+      child: Column(children: [
+        UserSearch(),
+      ]),
     );
   }
 }
@@ -146,52 +220,65 @@ class UserSearchState extends ConsumerState<UserSearch> {
   String lastName = "";
   @override
   Widget build(BuildContext context) => SizedBox(
-        height: 600,
-        child: Column(
-          children: [
-            Row(
-              children: [
-                SizedBox(
-                  width: 200,
-                  height: 80,
-                  child: TextField(
-                    decoration: const InputDecoration(labelText: "First Name"),
-                    onChanged: (value) => firstName = value,
-                  ),
-                ),
-                SizedBox(
-                  width: 200,
-                  height: 80,
-                  child: TextField(
-                    decoration: const InputDecoration(labelText: "Last Name"),
-                    onChanged: (value) => lastName = value,
-                  ),
-                ),
-                IconButton(
-                    onPressed: () async {
-                      final social = ref.read(podSocialProvider.notifier);
-                      final users = await social.findUsers(
-                          firstName: firstName.isEmpty ? null : firstName,
-                          lastName: lastName.isEmpty ? null : lastName);
-                      setState(() => results = users);
-                    },
-                    icon: const Icon(Icons.search))
-              ],
-            ),
-            Expanded(
-              child: ListView(
+        height: 450,
+        child: Card(
+          child: Column(
+            children: [
+              Row(
                 children: [
-                  for (final (userRef, profile) in results)
-                    ListTile(
-                      title: Text("${profile.firstName} ${profile.lastName}"),
-                      onTap: () => ref
-                          .read(podSocialProvider.notifier)
-                          .addFriend(userRef),
-                    )
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      width: 200,
+                      height: 80,
+                      child: TextField(
+                        decoration:
+                            const InputDecoration(labelText: "First Name"),
+                        onChanged: (value) => firstName = value,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      width: 200,
+                      height: 80,
+                      child: TextField(
+                        decoration:
+                            const InputDecoration(labelText: "Last Name"),
+                        onChanged: (value) => lastName = value,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: IconButton(
+                        onPressed: () async {
+                          final social = ref.read(podSocialProvider.notifier);
+                          final users = await social.findUsers(
+                              firstName: firstName.isEmpty ? null : firstName,
+                              lastName: lastName.isEmpty ? null : lastName);
+                          setState(() => results = users);
+                        },
+                        icon: const Icon(Icons.search)),
+                  )
                 ],
               ),
-            ),
-          ],
+              Expanded(
+                child: ListView(
+                  children: [
+                    for (final (userRef, profile) in results)
+                      ListTile(
+                        title: Text("${profile.firstName} ${profile.lastName}"),
+                        onTap: () => ref
+                            .read(podSocialProvider.notifier)
+                            .addFriend(userRef),
+                      )
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
 }

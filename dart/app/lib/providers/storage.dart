@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:fast_base58/fast_base58.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -13,14 +15,15 @@ class PodSecureStorage extends _$PodSecureStorage {
         encryptedSharedPreferences: true,
       ));
 
-  void setWalletSk(List<int> sk) {
-    state.write(key: _walletSkKey, value: base64Encode(sk));
+  Future<void> setWalletSk(List<int> sk) async {
+    await deleteWalletSk();
+    await state.write(key: _walletSkKey, value: Base58Encode(sk));
   }
 
-  Future<List<int>?> get getWalletSk async {
+  Future<Uint8List?> get getWalletSk async {
     final str = await state.read(key: _walletSkKey);
     if (str != null) {
-      return base64Decode(str);
+      return Uint8List.fromList(Base58Decode(str));
     } else {
       return null;
     }

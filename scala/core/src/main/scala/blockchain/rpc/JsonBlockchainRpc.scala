@@ -3,7 +3,7 @@ package blockchain.rpc
 import blockchain.BlockchainCore
 import blockchain.codecs.{*, given}
 import blockchain.consensus.TraversalStep
-import blockchain.ledger.WhereClause
+import blockchain.ledger.*
 import blockchain.models.*
 import cats.data.OptionT
 import cats.effect.implicits.*
@@ -218,6 +218,28 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
                   .flatMap(core.ledger.graphState.outEdges(_)(reference))
                   .map(_.asJson)
                   .map(Response().withEntity)
+              )
+          )
+          .logError
+      case GET -> Root / "graph" / transactionId / index / "in-vertex" =>
+        OptionT(IO(index.toIntOption))
+          .foldF(Response().withStatus(Status.BadRequest).pure[F])(index =>
+            IO(transactionId.decodeTransactionId)
+              .flatMap(transactionId =>
+                OptionT(core.dataStores.transactionOutputs.get(TransactionOutputReference(transactionId.some, index)))
+                  .subflatMap(_.value.graphEntry.flatMap(_.entry.edge).map(_.a.withoutSelfReference(transactionId)))
+                  .fold(Response().withStatus(Status.NotFound))(Response().withEntity)
+              )
+          )
+          .logError
+      case GET -> Root / "graph" / transactionId / index / "out-vertex" =>
+        OptionT(IO(index.toIntOption))
+          .foldF(Response().withStatus(Status.BadRequest).pure[F])(index =>
+            IO(transactionId.decodeTransactionId)
+              .flatMap(transactionId =>
+                OptionT(core.dataStores.transactionOutputs.get(TransactionOutputReference(transactionId.some, index)))
+                  .subflatMap(_.value.graphEntry.flatMap(_.entry.edge).map(_.b.withoutSelfReference(transactionId)))
+                  .fold(Response().withStatus(Status.NotFound))(Response().withEntity)
               )
           )
           .logError

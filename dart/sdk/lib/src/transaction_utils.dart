@@ -137,3 +137,12 @@ extension FullBodyOps on FullBlockBody {
       .firstWhere((t) => t?.hasRewardParentBlockId() ?? false,
           orElse: () => null);
 }
+
+extension TransactionOutputReferenceOps on TransactionOutputReference {
+  TransactionOutputReference withoutSelfReference(
+          TransactionId selfTransactionId) =>
+      hasTransactionId()
+          ? this
+          : TransactionOutputReference(
+              transactionId: selfTransactionId, index: index);
+}

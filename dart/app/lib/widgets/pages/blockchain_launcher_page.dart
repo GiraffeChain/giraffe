@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:flutter/services.dart';
+
 import '../../blockchain/private_testnet.dart';
 import 'package:blockchain_app/providers/settings.dart';
 import 'package:blockchain_app/providers/storage.dart';
@@ -170,7 +174,7 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
     final Ed25519KeyPair? result = await showDialog(
         context: context, builder: (context) => const CreateWalletModal());
     if (result != null) {
-      ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
+      await ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
       widget.onSelected(result);
     }
   }
@@ -179,16 +183,15 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
     final Ed25519KeyPair? result = await showDialog(
         context: context, builder: (context) => const ImportWalletModal());
     if (result != null) {
-      ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
+      await ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
       widget.onSelected(result);
     }
   }
 
   void _load(BuildContext context) async {
     final sk = (await ref.read(podSecureStorageProvider.notifier).getWalletSk)!;
-    final vk = await ed25519.getVerificationKey(sk);
+    final vk = Uint8List.fromList(await ed25519.getVerificationKey(sk));
     final Ed25519KeyPair result = Ed25519KeyPair(sk, vk);
-    ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
     widget.onSelected(result);
   }
 }
@@ -242,7 +245,11 @@ class CreateWalletModalState extends State<CreateWalletModal> {
 
   List<Widget> done(BuildContext context) => [
         const Text("Your mnemonic is:", style: TextStyle(fontSize: 18)),
-        Text(result!.$1),
+        TextButton.icon(
+          icon: const Icon(Icons.copy),
+          label: Text(result!.$1),
+          onPressed: () => Clipboard.setData(ClipboardData(text: result!.$1)),
+        ),
         const Text(
             "Please record these words in a safe place. Once this dialog is closed, they can't be recovered.",
             style: TextStyle(

@@ -6,7 +6,7 @@ part of 'social.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podSocialHash() => r'4c345cd9555282274c3cb9060aedb21de06c69ec';
+String _$podSocialHash() => r'2db7e4e9aeeb681fb37713c81cd3f181d2ba4b5f';
 
 /// See also [PodSocial].
 @ProviderFor(PodSocial)

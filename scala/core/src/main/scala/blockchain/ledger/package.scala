@@ -59,6 +59,13 @@ package object ledger {
         )
       )
 
+  extension (reference: TransactionOutputReference)
+    def withoutSelfReference(id: TransactionId): TransactionOutputReference =
+      reference.transactionId match {
+        case Some(_) => reference
+        case _       => reference.copy(transactionId = id.some)
+      }
+
   def fetchTransactionOutputOrLocal[F[_]: Applicative](
       fetchTransactionOutput: FetchTransactionOutput[F],
       local: Transaction

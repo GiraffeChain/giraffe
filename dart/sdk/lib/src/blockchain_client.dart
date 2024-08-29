@@ -34,6 +34,10 @@ abstract class BlockchainClient {
   Future<List<TransactionOutputReference>> edges(
       TransactionOutputReference vertex);
 
+  Future<TransactionOutputReference> inVertex(TransactionOutputReference edge);
+
+  Future<TransactionOutputReference> outVertex(TransactionOutputReference edge);
+
   Stream<TraversalStep> get traversal;
 
   Future<void> broadcastTransaction(Transaction transaction);
@@ -407,6 +411,32 @@ class BlockchainClientFromJsonRpc extends BlockchainClient {
     return items
         .map((e) => TransactionOutputReference()..mergeFromProto3Json(e))
         .toList();
+  }
+
+  @override
+  Future<TransactionOutputReference> inVertex(
+      TransactionOutputReference edge) async {
+    final response = await httpClient.get(
+      Uri.parse(
+          "$baseAddress/graph/${edge.transactionId.show}/${edge.index}/in-vertex"),
+      headers: headers,
+    );
+    assert(response.statusCode == 200, "HTTP Error: ${response.body}");
+    return TransactionOutputReference()
+      ..mergeFromProto3Json(json.decode(utf8.decode(response.bodyBytes)));
+  }
+
+  @override
+  Future<TransactionOutputReference> outVertex(
+      TransactionOutputReference edge) async {
+    final response = await httpClient.get(
+      Uri.parse(
+          "$baseAddress/graph/${edge.transactionId.show}/${edge.index}/out-vertex"),
+      headers: headers,
+    );
+    assert(response.statusCode == 200, "HTTP Error: ${response.body}");
+    return TransactionOutputReference()
+      ..mergeFromProto3Json(json.decode(utf8.decode(response.bodyBytes)));
   }
 }
 

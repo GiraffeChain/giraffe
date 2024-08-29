@@ -19,12 +19,7 @@ mixin _$Social {
   TransactionOutputReference get user => throw _privateConstructorUsedError;
   TransactionOutputReference get profile => throw _privateConstructorUsedError;
   ProfileData get profileData => throw _privateConstructorUsedError;
-  List<TransactionOutputReference> get outgoingFriendRequests =>
-      throw _privateConstructorUsedError;
-  List<TransactionOutputReference> get incomingFriendRequests =>
-      throw _privateConstructorUsedError;
-  List<TransactionOutputReference> get friends =>
-      throw _privateConstructorUsedError;
+  FriendData get friendData => throw _privateConstructorUsedError;
 
   /// Create a copy of Social
   /// with the given fields replaced by the non-null parameter values.
@@ -41,11 +36,10 @@ abstract class $SocialCopyWith<$Res> {
       {TransactionOutputReference user,
       TransactionOutputReference profile,
       ProfileData profileData,
-      List<TransactionOutputReference> outgoingFriendRequests,
-      List<TransactionOutputReference> incomingFriendRequests,
-      List<TransactionOutputReference> friends});
+      FriendData friendData});
 
   $ProfileDataCopyWith<$Res> get profileData;
+  $FriendDataCopyWith<$Res> get friendData;
 }
 
 /// @nodoc
@@ -66,9 +60,7 @@ class _$SocialCopyWithImpl<$Res, $Val extends Social>
     Object? user = null,
     Object? profile = null,
     Object? profileData = null,
-    Object? outgoingFriendRequests = null,
-    Object? incomingFriendRequests = null,
-    Object? friends = null,
+    Object? friendData = null,
   }) {
     return _then(_value.copyWith(
       user: null == user
@@ -83,18 +75,10 @@ class _$SocialCopyWithImpl<$Res, $Val extends Social>
           ? _value.profileData
           : profileData // ignore: cast_nullable_to_non_nullable
               as ProfileData,
-      outgoingFriendRequests: null == outgoingFriendRequests
-          ? _value.outgoingFriendRequests
-          : outgoingFriendRequests // ignore: cast_nullable_to_non_nullable
-              as List<TransactionOutputReference>,
-      incomingFriendRequests: null == incomingFriendRequests
-          ? _value.incomingFriendRequests
-          : incomingFriendRequests // ignore: cast_nullable_to_non_nullable
-              as List<TransactionOutputReference>,
-      friends: null == friends
-          ? _value.friends
-          : friends // ignore: cast_nullable_to_non_nullable
-              as List<TransactionOutputReference>,
+      friendData: null == friendData
+          ? _value.friendData
+          : friendData // ignore: cast_nullable_to_non_nullable
+              as FriendData,
     ) as $Val);
   }
 
@@ -105,6 +89,16 @@ class _$SocialCopyWithImpl<$Res, $Val extends Social>
   $ProfileDataCopyWith<$Res> get profileData {
     return $ProfileDataCopyWith<$Res>(_value.profileData, (value) {
       return _then(_value.copyWith(profileData: value) as $Val);
+    });
+  }
+
+  /// Create a copy of Social
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $FriendDataCopyWith<$Res> get friendData {
+    return $FriendDataCopyWith<$Res>(_value.friendData, (value) {
+      return _then(_value.copyWith(friendData: value) as $Val);
     });
   }
 }
@@ -120,12 +114,12 @@ abstract class _$$SocialImplCopyWith<$Res> implements $SocialCopyWith<$Res> {
       {TransactionOutputReference user,
       TransactionOutputReference profile,
       ProfileData profileData,
-      List<TransactionOutputReference> outgoingFriendRequests,
-      List<TransactionOutputReference> incomingFriendRequests,
-      List<TransactionOutputReference> friends});
+      FriendData friendData});
 
   @override
   $ProfileDataCopyWith<$Res> get profileData;
+  @override
+  $FriendDataCopyWith<$Res> get friendData;
 }
 
 /// @nodoc
@@ -144,9 +138,7 @@ class __$$SocialImplCopyWithImpl<$Res>
     Object? user = null,
     Object? profile = null,
     Object? profileData = null,
-    Object? outgoingFriendRequests = null,
-    Object? incomingFriendRequests = null,
-    Object? friends = null,
+    Object? friendData = null,
   }) {
     return _then(_$SocialImpl(
       user: null == user
@@ -161,18 +153,10 @@ class __$$SocialImplCopyWithImpl<$Res>
           ? _value.profileData
           : profileData // ignore: cast_nullable_to_non_nullable
               as ProfileData,
-      outgoingFriendRequests: null == outgoingFriendRequests
-          ? _value._outgoingFriendRequests
-          : outgoingFriendRequests // ignore: cast_nullable_to_non_nullable
-              as List<TransactionOutputReference>,
-      incomingFriendRequests: null == incomingFriendRequests
-          ? _value._incomingFriendRequests
-          : incomingFriendRequests // ignore: cast_nullable_to_non_nullable
-              as List<TransactionOutputReference>,
-      friends: null == friends
-          ? _value._friends
-          : friends // ignore: cast_nullable_to_non_nullable
-              as List<TransactionOutputReference>,
+      friendData: null == friendData
+          ? _value.friendData
+          : friendData // ignore: cast_nullable_to_non_nullable
+              as FriendData,
     ));
   }
 }
@@ -184,12 +168,7 @@ class _$SocialImpl implements _Social {
       {required this.user,
       required this.profile,
       required this.profileData,
-      required final List<TransactionOutputReference> outgoingFriendRequests,
-      required final List<TransactionOutputReference> incomingFriendRequests,
-      required final List<TransactionOutputReference> friends})
-      : _outgoingFriendRequests = outgoingFriendRequests,
-        _incomingFriendRequests = incomingFriendRequests,
-        _friends = friends;
+      required this.friendData});
 
   @override
   final TransactionOutputReference user;
@@ -197,35 +176,12 @@ class _$SocialImpl implements _Social {
   final TransactionOutputReference profile;
   @override
   final ProfileData profileData;
-  final List<TransactionOutputReference> _outgoingFriendRequests;
   @override
-  List<TransactionOutputReference> get outgoingFriendRequests {
-    if (_outgoingFriendRequests is EqualUnmodifiableListView)
-      return _outgoingFriendRequests;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_outgoingFriendRequests);
-  }
-
-  final List<TransactionOutputReference> _incomingFriendRequests;
-  @override
-  List<TransactionOutputReference> get incomingFriendRequests {
-    if (_incomingFriendRequests is EqualUnmodifiableListView)
-      return _incomingFriendRequests;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_incomingFriendRequests);
-  }
-
-  final List<TransactionOutputReference> _friends;
-  @override
-  List<TransactionOutputReference> get friends {
-    if (_friends is EqualUnmodifiableListView) return _friends;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_friends);
-  }
+  final FriendData friendData;
 
   @override
   String toString() {
-    return 'Social(user: $user, profile: $profile, profileData: $profileData, outgoingFriendRequests: $outgoingFriendRequests, incomingFriendRequests: $incomingFriendRequests, friends: $friends)';
+    return 'Social(user: $user, profile: $profile, profileData: $profileData, friendData: $friendData)';
   }
 
   @override
@@ -237,22 +193,13 @@ class _$SocialImpl implements _Social {
             (identical(other.profile, profile) || other.profile == profile) &&
             (identical(other.profileData, profileData) ||
                 other.profileData == profileData) &&
-            const DeepCollectionEquality().equals(
-                other._outgoingFriendRequests, _outgoingFriendRequests) &&
-            const DeepCollectionEquality().equals(
-                other._incomingFriendRequests, _incomingFriendRequests) &&
-            const DeepCollectionEquality().equals(other._friends, _friends));
+            (identical(other.friendData, friendData) ||
+                other.friendData == friendData));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      user,
-      profile,
-      profileData,
-      const DeepCollectionEquality().hash(_outgoingFriendRequests),
-      const DeepCollectionEquality().hash(_incomingFriendRequests),
-      const DeepCollectionEquality().hash(_friends));
+  int get hashCode =>
+      Object.hash(runtimeType, user, profile, profileData, friendData);
 
   /// Create a copy of Social
   /// with the given fields replaced by the non-null parameter values.
@@ -268,9 +215,7 @@ abstract class _Social implements Social {
       {required final TransactionOutputReference user,
       required final TransactionOutputReference profile,
       required final ProfileData profileData,
-      required final List<TransactionOutputReference> outgoingFriendRequests,
-      required final List<TransactionOutputReference> incomingFriendRequests,
-      required final List<TransactionOutputReference> friends}) = _$SocialImpl;
+      required final FriendData friendData}) = _$SocialImpl;
 
   @override
   TransactionOutputReference get user;
@@ -279,11 +224,7 @@ abstract class _Social implements Social {
   @override
   ProfileData get profileData;
   @override
-  List<TransactionOutputReference> get outgoingFriendRequests;
-  @override
-  List<TransactionOutputReference> get incomingFriendRequests;
-  @override
-  List<TransactionOutputReference> get friends;
+  FriendData get friendData;
 
   /// Create a copy of Social
   /// with the given fields replaced by the non-null parameter values.
@@ -437,5 +378,209 @@ abstract class _ProfileData implements ProfileData {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ProfileDataImplCopyWith<_$ProfileDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$FriendData {
+  List<TransactionOutputReference> get outgoingFriendRequests =>
+      throw _privateConstructorUsedError;
+  List<TransactionOutputReference> get incomingFriendRequests =>
+      throw _privateConstructorUsedError;
+  List<TransactionOutputReference> get friends =>
+      throw _privateConstructorUsedError;
+
+  /// Create a copy of FriendData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $FriendDataCopyWith<FriendData> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $FriendDataCopyWith<$Res> {
+  factory $FriendDataCopyWith(
+          FriendData value, $Res Function(FriendData) then) =
+      _$FriendDataCopyWithImpl<$Res, FriendData>;
+  @useResult
+  $Res call(
+      {List<TransactionOutputReference> outgoingFriendRequests,
+      List<TransactionOutputReference> incomingFriendRequests,
+      List<TransactionOutputReference> friends});
+}
+
+/// @nodoc
+class _$FriendDataCopyWithImpl<$Res, $Val extends FriendData>
+    implements $FriendDataCopyWith<$Res> {
+  _$FriendDataCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of FriendData
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? outgoingFriendRequests = null,
+    Object? incomingFriendRequests = null,
+    Object? friends = null,
+  }) {
+    return _then(_value.copyWith(
+      outgoingFriendRequests: null == outgoingFriendRequests
+          ? _value.outgoingFriendRequests
+          : outgoingFriendRequests // ignore: cast_nullable_to_non_nullable
+              as List<TransactionOutputReference>,
+      incomingFriendRequests: null == incomingFriendRequests
+          ? _value.incomingFriendRequests
+          : incomingFriendRequests // ignore: cast_nullable_to_non_nullable
+              as List<TransactionOutputReference>,
+      friends: null == friends
+          ? _value.friends
+          : friends // ignore: cast_nullable_to_non_nullable
+              as List<TransactionOutputReference>,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$FriendDataImplCopyWith<$Res>
+    implements $FriendDataCopyWith<$Res> {
+  factory _$$FriendDataImplCopyWith(
+          _$FriendDataImpl value, $Res Function(_$FriendDataImpl) then) =
+      __$$FriendDataImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {List<TransactionOutputReference> outgoingFriendRequests,
+      List<TransactionOutputReference> incomingFriendRequests,
+      List<TransactionOutputReference> friends});
+}
+
+/// @nodoc
+class __$$FriendDataImplCopyWithImpl<$Res>
+    extends _$FriendDataCopyWithImpl<$Res, _$FriendDataImpl>
+    implements _$$FriendDataImplCopyWith<$Res> {
+  __$$FriendDataImplCopyWithImpl(
+      _$FriendDataImpl _value, $Res Function(_$FriendDataImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of FriendData
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? outgoingFriendRequests = null,
+    Object? incomingFriendRequests = null,
+    Object? friends = null,
+  }) {
+    return _then(_$FriendDataImpl(
+      outgoingFriendRequests: null == outgoingFriendRequests
+          ? _value._outgoingFriendRequests
+          : outgoingFriendRequests // ignore: cast_nullable_to_non_nullable
+              as List<TransactionOutputReference>,
+      incomingFriendRequests: null == incomingFriendRequests
+          ? _value._incomingFriendRequests
+          : incomingFriendRequests // ignore: cast_nullable_to_non_nullable
+              as List<TransactionOutputReference>,
+      friends: null == friends
+          ? _value._friends
+          : friends // ignore: cast_nullable_to_non_nullable
+              as List<TransactionOutputReference>,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$FriendDataImpl implements _FriendData {
+  const _$FriendDataImpl(
+      {required final List<TransactionOutputReference> outgoingFriendRequests,
+      required final List<TransactionOutputReference> incomingFriendRequests,
+      required final List<TransactionOutputReference> friends})
+      : _outgoingFriendRequests = outgoingFriendRequests,
+        _incomingFriendRequests = incomingFriendRequests,
+        _friends = friends;
+
+  final List<TransactionOutputReference> _outgoingFriendRequests;
+  @override
+  List<TransactionOutputReference> get outgoingFriendRequests {
+    if (_outgoingFriendRequests is EqualUnmodifiableListView)
+      return _outgoingFriendRequests;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_outgoingFriendRequests);
+  }
+
+  final List<TransactionOutputReference> _incomingFriendRequests;
+  @override
+  List<TransactionOutputReference> get incomingFriendRequests {
+    if (_incomingFriendRequests is EqualUnmodifiableListView)
+      return _incomingFriendRequests;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_incomingFriendRequests);
+  }
+
+  final List<TransactionOutputReference> _friends;
+  @override
+  List<TransactionOutputReference> get friends {
+    if (_friends is EqualUnmodifiableListView) return _friends;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_friends);
+  }
+
+  @override
+  String toString() {
+    return 'FriendData(outgoingFriendRequests: $outgoingFriendRequests, incomingFriendRequests: $incomingFriendRequests, friends: $friends)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$FriendDataImpl &&
+            const DeepCollectionEquality().equals(
+                other._outgoingFriendRequests, _outgoingFriendRequests) &&
+            const DeepCollectionEquality().equals(
+                other._incomingFriendRequests, _incomingFriendRequests) &&
+            const DeepCollectionEquality().equals(other._friends, _friends));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(_outgoingFriendRequests),
+      const DeepCollectionEquality().hash(_incomingFriendRequests),
+      const DeepCollectionEquality().hash(_friends));
+
+  /// Create a copy of FriendData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$FriendDataImplCopyWith<_$FriendDataImpl> get copyWith =>
+      __$$FriendDataImplCopyWithImpl<_$FriendDataImpl>(this, _$identity);
+}
+
+abstract class _FriendData implements FriendData {
+  const factory _FriendData(
+      {required final List<TransactionOutputReference> outgoingFriendRequests,
+      required final List<TransactionOutputReference> incomingFriendRequests,
+      required final List<TransactionOutputReference>
+          friends}) = _$FriendDataImpl;
+
+  @override
+  List<TransactionOutputReference> get outgoingFriendRequests;
+  @override
+  List<TransactionOutputReference> get incomingFriendRequests;
+  @override
+  List<TransactionOutputReference> get friends;
+
+  /// Create a copy of FriendData
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$FriendDataImplCopyWith<_$FriendDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

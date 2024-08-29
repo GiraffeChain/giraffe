@@ -1,4 +1,5 @@
 import 'package:blockchain_app/providers/blockchain_client.dart';
+import 'package:blockchain_app/providers/canonical_head.dart';
 import 'package:blockchain_app/providers/graph_client.dart';
 import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
@@ -14,6 +15,7 @@ class PodSocial extends _$PodSocial {
   @override
   Future<SocialState> build() async {
     final wallet = await ref.watch(podWalletProvider.future);
+    ref.watch(podCanonicalHeadProvider);
     ({TransactionOutputReference userRef, Vertex userVertex})? user;
     ({TransactionOutputReference profileRef, Vertex profileVertex})? profile;
     for (final entry in wallet.spendableOutputs.entries) {
@@ -32,27 +34,35 @@ class PodSocial extends _$PodSocial {
     if (user == null || profile == null) {
       return const AntiSocial();
     }
-    final client = ref.read(podBlockchainClientProvider);
-    final outgoingFriends =
-        await client.queryEdges("friend", user.userRef, null, []);
-    final incomingFriends =
-        await client.queryEdges("friend", null, user.userRef, []);
-    final friends = [...outgoingFriends.where(incomingFriends.contains)];
-    outgoingFriends.removeWhere(friends.contains);
-    incomingFriends.removeWhere(friends.contains);
 
     final profileData = ProfileData(
       firstName: profile.profileVertex.data.fields["firstName"]?.stringValue,
       lastName: profile.profileVertex.data.fields["lastName"]?.stringValue,
     );
 
+    final client = ref.read(podBlockchainClientProvider);
+    final outgoingFriendEdges =
+        await client.queryEdges("friend", user.userRef, null, []);
+    final outgoingFriends =
+        await Future.wait(outgoingFriendEdges.map(client.outVertex));
+    final incomingFriendEdges =
+        await client.queryEdges("friend", null, user.userRef, []);
+    final incomingFriends =
+        await Future.wait(incomingFriendEdges.map(client.inVertex));
+    final friends = [...outgoingFriends.where(incomingFriends.contains)];
+    outgoingFriends.removeWhere(friends.contains);
+    incomingFriends.removeWhere(friends.contains);
+    final friendData = FriendData(
+      outgoingFriendRequests: outgoingFriends,
+      incomingFriendRequests: incomingFriends,
+      friends: friends,
+    );
+
     return Social(
       user: user.userRef,
       profile: profile.profileRef,
       profileData: profileData,
-      outgoingFriendRequests: outgoingFriends,
-      incomingFriendRequests: incomingFriends,
-      friends: friends,
+      friendData: friendData,
     );
   }
 
@@ -82,9 +92,10 @@ class PodSocial extends _$PodSocial {
           user: userRef,
           profile: profileRef,
           profileData: data,
-          outgoingFriendRequests: [],
-          incomingFriendRequests: [],
-          friends: []));
+          friendData: FriendData(
+              outgoingFriendRequests: [],
+              incomingFriendRequests: [],
+              friends: [])));
     } catch (e, s) {
       state = AsyncError(e, s);
     }
@@ -101,22 +112,17 @@ class PodSocial extends _$PodSocial {
       whereClauses.add(WhereClause("lastName", "==", lastName));
     }
     final profileIds = await client.queryVertices("profile", whereClauses);
-    final profileVertices = await Future.wait(profileIds.map((id) async =>
-        (await client.getTransactionOutputOrRaise(id))
-            .value
-            .graphEntry
-            .vertex));
-    final profiles = profileVertices
-        .map((vertex) => ProfileData(
-              firstName: vertex.data.fields["firstName"]?.stringValue,
-              lastName: vertex.data.fields["lastName"]?.stringValue,
-            ))
-        .toList();
-    final userIds = await Future.wait(profileIds.map((id) async =>
-        (await client.queryEdges("userProfile", id, null, [])).first));
-    return [
-      for (int i = 0; i < profiles.length; i++) (userIds[i], profiles[i])
-    ];
+    final results = <(TransactionOutputReference, ProfileData)>[];
+    for (final profileId in profileIds) {
+      final profileOutput = await client.getTransactionOutputOrRaise(profileId);
+      final profile = ProfileData.fromTransactionOutput(profileOutput);
+      final userProfileEdgeId =
+          (await client.queryEdges("userProfile", profileId, null, [])).first;
+      final userId = await client.outVertex(userProfileEdgeId);
+
+      results.add((userId, profile));
+    }
+    return results;
   }
 
   addFriend(TransactionOutputReference friendId) async {
@@ -125,26 +131,45 @@ class PodSocial extends _$PodSocial {
       if (s is! Social) {
         throw Exception("User must be created before adding friends");
       }
-      if (s.friends.contains(friendId)) {
+      final friendData = s.friendData;
+      if (friendData.friends.contains(friendId)) {
         throw Exception("User is already a friend");
       }
-      if (s.outgoingFriendRequests.contains(friendId)) {
+      if (friendData.outgoingFriendRequests.contains(friendId)) {
         throw Exception("Friend request already sent");
       }
       final graph = await ref.read(podGraphClientProvider.future);
       await graph.createEdge(label: "friend", a: s.user, b: friendId);
-      if (s.incomingFriendRequests.contains(friendId)) {
-        state = AsyncData(s.copyWith(
-            incomingFriendRequests:
-                s.incomingFriendRequests.where((f) => f != friendId).toList(),
-            friends: [...s.friends, friendId]));
+      final FriendData updatedFriendData;
+      if (friendData.incomingFriendRequests.contains(friendId)) {
+        updatedFriendData = friendData.copyWith(
+          incomingFriendRequests: friendData.incomingFriendRequests
+              .where((f) => f != friendId)
+              .toList(),
+          friends: [...friendData.friends, friendId],
+        );
       } else {
-        state = AsyncData(s.copyWith(
-            outgoingFriendRequests: [...s.outgoingFriendRequests, friendId]));
+        updatedFriendData = friendData.copyWith(
+          outgoingFriendRequests: [
+            ...friendData.outgoingFriendRequests,
+            friendId
+          ],
+        );
       }
+      state = AsyncData(s.copyWith(friendData: updatedFriendData));
     } catch (e, s) {
       state = AsyncError(e, s);
     }
+  }
+
+  Future<ProfileData> fetchProfileByUserId(
+      TransactionOutputReference userId) async {
+    final client = ref.read(podBlockchainClientProvider);
+    final profileEdge =
+        (await client.queryEdges("userProfile", null, userId, [])).first;
+    final profileId = await client.inVertex(profileEdge);
+    final profile = await client.getTransactionOutputOrRaise(profileId);
+    return ProfileData.fromTransactionOutput(profile);
   }
 }
 
@@ -162,9 +187,7 @@ class Social extends SocialState with _$Social {
     required TransactionOutputReference user,
     required TransactionOutputReference profile,
     required ProfileData profileData,
-    required List<TransactionOutputReference> outgoingFriendRequests,
-    required List<TransactionOutputReference> incomingFriendRequests,
-    required List<TransactionOutputReference> friends,
+    required FriendData friendData,
   }) = _Social;
 }
 
@@ -174,4 +197,21 @@ class ProfileData with _$ProfileData {
     String? firstName,
     String? lastName,
   }) = _ProfileData;
+
+  factory ProfileData.fromTransactionOutput(TransactionOutput output) =>
+      ProfileData(
+        firstName: output
+            .value.graphEntry.vertex.data.fields["firstName"]?.stringValue,
+        lastName:
+            output.value.graphEntry.vertex.data.fields["lastName"]?.stringValue,
+      );
+}
+
+@freezed
+class FriendData with _$FriendData {
+  const factory FriendData({
+    required List<TransactionOutputReference> outgoingFriendRequests,
+    required List<TransactionOutputReference> incomingFriendRequests,
+    required List<TransactionOutputReference> friends,
+  }) = _FriendData;
 }
