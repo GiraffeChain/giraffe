@@ -1,5 +1,6 @@
 import 'package:blockchain_app/providers/social.dart';
 import 'package:blockchain_app/providers/wallet.dart';
+import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,14 +66,7 @@ class SocialView extends ConsumerWidget {
   }
 
   Widget _social(WidgetRef ref, Social state) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-            "Hello, ${state.profileData.firstName ?? "Stranger"} ${state.profileData.lastName ?? ""}!",
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-      ],
-    );
+    return ActiveSocialView(state: state);
   }
 }
 
@@ -108,5 +102,96 @@ class ProfileEditorState extends State<ProfileEditor> {
             child: const Text("Save"),
           ),
         ],
+      );
+}
+
+class ActiveSocialView extends ConsumerWidget {
+  final Social state;
+
+  const ActiveSocialView({super.key, required this.state});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+            "Hello, ${state.profileData.firstName ?? "Stranger"} ${state.profileData.lastName ?? ""}!",
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+        Text("You have ${state.friends.length} friends.",
+            style: const TextStyle(fontSize: 16)),
+        Text(
+            "You have ${state.outgoingFriendRequests.length} outgoing friend requests.",
+            style: const TextStyle(fontSize: 16)),
+        Text(
+            "You have ${state.incomingFriendRequests.length} incoming friend requests.",
+            style: const TextStyle(fontSize: 16)),
+        const Divider(),
+        const UserSearch(),
+      ],
+    );
+  }
+}
+
+class UserSearch extends ConsumerStatefulWidget {
+  const UserSearch({super.key});
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => UserSearchState();
+}
+
+class UserSearchState extends ConsumerState<UserSearch> {
+  List<(TransactionOutputReference userRef, ProfileData profile)> results = [];
+  String firstName = "";
+  String lastName = "";
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        height: 600,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                SizedBox(
+                  width: 200,
+                  height: 80,
+                  child: TextField(
+                    decoration: const InputDecoration(labelText: "First Name"),
+                    onChanged: (value) => firstName = value,
+                  ),
+                ),
+                SizedBox(
+                  width: 200,
+                  height: 80,
+                  child: TextField(
+                    decoration: const InputDecoration(labelText: "Last Name"),
+                    onChanged: (value) => lastName = value,
+                  ),
+                ),
+                IconButton(
+                    onPressed: () async {
+                      final social = ref.read(podSocialProvider.notifier);
+                      final users = await social.findUsers(
+                          firstName: firstName.isEmpty ? null : firstName,
+                          lastName: lastName.isEmpty ? null : lastName);
+                      setState(() => results = users);
+                    },
+                    icon: const Icon(Icons.search))
+              ],
+            ),
+            Expanded(
+              child: ListView(
+                children: [
+                  for (final (userRef, profile) in results)
+                    ListTile(
+                      title: Text("${profile.firstName} ${profile.lastName}"),
+                      onTap: () => ref
+                          .read(podSocialProvider.notifier)
+                          .addFriend(userRef),
+                    )
+                ],
+              ),
+            ),
+          ],
+        ),
       );
 }
