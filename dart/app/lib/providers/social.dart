@@ -92,7 +92,7 @@ class PodSocial extends _$PodSocial {
           user: userRef,
           profile: profileRef,
           profileData: data,
-          friendData: FriendData(
+          friendData: const FriendData(
               outgoingFriendRequests: [],
               incomingFriendRequests: [],
               friends: [])));
