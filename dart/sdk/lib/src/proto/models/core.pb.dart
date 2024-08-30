@@ -1031,6 +1031,7 @@ class TransactionOutputReference extends $pb.GeneratedMessage {
   static TransactionOutputReference getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<TransactionOutputReference>(create);
   static TransactionOutputReference? _defaultInstance;
 
+  /// Required in _most_ cases. When not provided, acts as a reference to the "current" transaction.
   @$pb.TagNumber(1)
   TransactionId get transactionId => $_getN(0);
   @$pb.TagNumber(1)

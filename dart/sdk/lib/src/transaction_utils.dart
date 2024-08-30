@@ -1,7 +1,7 @@
-import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'proto/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
-import 'package:blockchain_protobuf/google/protobuf/struct.pb.dart' as struct;
+import 'proto/google/protobuf/struct.pb.dart' as struct;
 
 extension TransactionOps on Transaction {
   Future<Set<LockAddress>> requiredWitnesses(

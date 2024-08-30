@@ -1,11 +1,14 @@
 import 'dart:convert';
 
-import 'package:blockchain_sdk/sdk.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/src/http/http_client.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rxdart/transformers.dart';
 import 'package:http/http.dart' as http;
+
+import 'codecs.dart';
+import 'proto/models/core.pb.dart';
+import 'protocol_settings.dart';
+import 'traversal.dart';
 
 abstract class BlockchainClient {
   Future<BlockHeader?> getBlockHeader(BlockId blockId);

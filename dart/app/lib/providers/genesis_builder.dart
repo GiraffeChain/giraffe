@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:blockchain_app/blockchain/private_testnet.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:fpdart/fpdart.dart' hide State;

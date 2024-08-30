@@ -1,5 +1,4 @@
 import '../common/models/common.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:rational/rational.dart';

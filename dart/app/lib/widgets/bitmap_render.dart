@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:bit_array/bit_array.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:flutter/material.dart';
 

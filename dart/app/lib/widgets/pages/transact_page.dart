@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:blockchain_app/providers/transact.dart';
 import 'package:blockchain_app/providers/wallet.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';

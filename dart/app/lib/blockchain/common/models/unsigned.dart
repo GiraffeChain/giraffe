@@ -1,5 +1,6 @@
+import 'package:blockchain_sdk/sdk.dart';
+
 import '../../codecs.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:fixnum/fixnum.dart';
 
 class UnsignedBlockHeader {

@@ -1,4 +1,4 @@
-import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'proto/models/core.pb.dart';
 import 'codecs.dart';
 import 'package:fixnum/fixnum.dart';
 

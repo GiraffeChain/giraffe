@@ -1,6 +1,5 @@
 import 'package:blockchain_app/providers/blockchain_client.dart';
 import 'package:blockchain_app/widgets/bitmap_render.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

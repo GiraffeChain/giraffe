@@ -1,7 +1,6 @@
 import 'package:blockchain_app/providers/social.dart';
 import 'package:blockchain_app/providers/wallet.dart';
 import 'package:blockchain_app/utils.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

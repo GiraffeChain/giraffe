@@ -32,8 +32,6 @@ dependencies:
   freezed_annotation: ^2.4.4
   blockchain_sdk:
     path: ../sdk
-  blockchain_protobuf:
-    path: ../protobuf_dart
   flutter:
     sdk: flutter
   hooks_riverpod: ^2.5.1
