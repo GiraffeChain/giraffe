@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:blockchain_sdk/sdk.dart';
+import 'package:giraffe_sdk/sdk.dart';
 import 'package:collection/collection.dart';
 
 typedef Signer = Future<Witness> Function(WitnessContext);

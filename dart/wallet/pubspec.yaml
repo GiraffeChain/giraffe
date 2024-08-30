@@ -1,0 +1,62 @@
+name: giraffe_wallet
+description: Wallet for the Giraffe blockchain
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.22.2"
+
+dependencies:
+  convert: ^3.1.1
+  cryptography: ^2.5.0
+  cryptography_flutter: ^2.3.0
+  logging: ^1.2.0
+  fixnum: ^1.1.0
+  async: ^2.11.0
+  fpdart: ^1.1.0
+  rxdart: ^0.28.0
+  fast_base58: ^0.2.1
+  integral_isolates: ^0.5.1
+  flutter_background: ^1.2.0
+  intl: ^0.19.0
+  get_time_ago: ^1.2.5
+  bit_array: ^2.2.0
+  provider: ^6.0.5
+  fluro: ^2.0.5
+  path_provider: ^2.1.2
+  file_picker: ^8.0.6
+  grpc: ^4.0.0
+  riverpod: ^2.5.1
+  flutter_riverpod: ^2.5.1
+  freezed_annotation: ^2.4.4
+  giraffe_sdk:
+    path: ../sdk
+  flutter:
+    sdk: flutter
+  hooks_riverpod: ^2.5.1
+  flutter_hooks: ^0.20.5
+  riverpod_annotation: ^2.3.5
+  bip39: ^1.0.6
+  flutter_secure_storage: ^9.2.2
+  quiver: ^3.2.1
+  rational: ^2.2.3
+  hashlib: ^1.19.2
+  collection: ^1.18.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.11
+  freezed: ^2.5.2
+  riverpod_generator: ^2.4.0
+  custom_lint:
+  analyzer: ^6.7.0
+  mockito: ^5.4.4
+  test: ^1.25.7
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/

@@ -8,7 +8,7 @@ import { ed25519 } from '@noble/curves/ed25519';
 import * as bip39 from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
 
-export class Wallet {
+export class GiraffeWallet {
     spendableOutputs: ReferencedOutput[];
     address: LockAddress;
     lock: Lock;
@@ -22,7 +22,7 @@ export class Wallet {
         this.signer = signer;
     }
 
-    static fromSk(sk: Uint8Array): Wallet {
+    static fromSk(sk: Uint8Array): GiraffeWallet {
         const vk = ed25519.getPublicKey(sk);
         const lock: Lock = { ed25519: { vk: bs58.encode(vk) } };
         const lockAddress = lockToAddress(lock);
@@ -30,17 +30,17 @@ export class Wallet {
             const signature = ed25519.sign(sk, ctx.messageToSign);
             return { lock, key: { ed25519: { signature: bs58.encode(signature) } }, lockAddress };
         };
-        return new Wallet(lockAddress, lock, signer);
+        return new GiraffeWallet(lockAddress, lock, signer);
     }
 
-    static genesis(): Wallet {
+    static genesis(): GiraffeWallet {
         const sk = new Uint8Array(32);
-        return Wallet.fromSk(sk);
+        return GiraffeWallet.fromSk(sk);
     }
 
-    static async fromMnemonic(mnemonic: string, password: string): Promise<Wallet> {
+    static async fromMnemonic(mnemonic: string, password: string): Promise<GiraffeWallet> {
         const seed = await bip39.mnemonicToSeed(mnemonic, password);
-        return Wallet.fromSk(seed.slice(0, 32));
+        return GiraffeWallet.fromSk(seed.slice(0, 32));
     }
 
     static generateMnemonic(): string {

@@ -1,22 +1,22 @@
-import { BlockchainClient, RpcBlockchainClient } from "./client";
+import { GiraffeClient, RpcGiraffeClient } from "./client";
 import { transactionSignableBytes } from "./codecs";
 import { Transaction, TransactionOutput, TransactionOutputReference } from "./proto/models/core";
-import { Wallet, WitnessContext } from "./wallet";
+import { GiraffeWallet, WitnessContext } from "./wallet";
 
-export class Blockchain {
-    client: BlockchainClient;
-    wallet: Wallet;
+export class Giraffe {
+    client: GiraffeClient;
+    wallet: GiraffeWallet;
     disposalSteps: (() => Promise<void>)[] = [];
 
-    constructor(client: BlockchainClient, wallet: Wallet) {
+    constructor(client: GiraffeClient, wallet: GiraffeWallet) {
         this.client = client;
         this.wallet = wallet;
     }
 
-    static async init(baseAddress: string, wallet: Wallet): Promise<Blockchain> {
-        const client = new RpcBlockchainClient(baseAddress);
+    static async init(baseAddress: string, wallet: GiraffeWallet): Promise<Giraffe> {
+        const client = new RpcGiraffeClient(baseAddress);
 
-        const blockchain = new Blockchain(client, wallet);
+        const blockchain = new Giraffe(client, wallet);
         blockchain.background();
         return blockchain;
     }

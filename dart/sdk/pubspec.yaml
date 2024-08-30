@@ -1,5 +1,5 @@
-name: blockchain_sdk
-description: Blockchain SDK
+name: giraffe_sdk
+description: Giraffe blockchain SDK
 
 publish_to: 'none'
 

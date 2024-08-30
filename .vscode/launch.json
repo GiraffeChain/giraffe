@@ -5,42 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Relay",
-            "cwd": "dart/server",
-            "request": "launch",
-            "type": "dart",
-            "program": "bin/relay.dart"
-        },
-        {
-            "name": "Block Producer",
-            "cwd": "dart/server",
-            "request": "launch",
-            "type": "dart",
-            "program": "bin/producer.dart"
-        },
-        {
-            "name": "Frontend",
-            "cwd": "dart/app",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
             "name": "Frontend (debug mode)",
-            "cwd": "dart/app",
+            "cwd": "dart/wallet",
             "request": "launch",
             "type": "dart",
             "flutterMode": "debug"
         },
         {
             "name": "Frontend (profile mode)",
-            "cwd": "dart/app",
+            "cwd": "dart/wallet",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
             "name": "Frontend (release mode)",
-            "cwd": "dart/app",
+            "cwd": "dart/wallet",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

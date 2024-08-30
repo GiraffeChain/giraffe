@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:blockchain_sdk/sdk.dart';
+import 'package:giraffe_sdk/sdk.dart';
 
 import 'impl/ec.dart' as ec;
 import 'package:cryptography/cryptography.dart' as c;

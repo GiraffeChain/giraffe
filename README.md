@@ -19,8 +19,7 @@ This blockchain is still in very early development. Everything is experimental. 
   - Most of the code is defined in the `core` module
   - Compiled protobuf files are defined in the `protobuf` module
 - The wallet is defined in Dart/Flutter, and you can find it in the `dart/` directory.
-  - The code is split between the `sdk` and `app` packages
-  - Compiled protobuf files are defined in the `protobuf_dart` package
+  - The code is split between the `sdk` and `wallet` packages
 - The SDK is defined in Typescript, and you can find it in the `typescript/sdk/` directory.
 
 ## Development & Testing

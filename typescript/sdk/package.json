@@ -1,7 +1,7 @@
 {
-  "name": "blockchain-sdk",
+  "name": "giraffe-sdk",
   "version": "0.0.1",
-  "description": "SDK for interacting with my generic blockchain",
+  "description": "SDK for interacting with the Giraffe blockchain",
   "main": "index.js",
   "scripts": {
     "test": "jest"

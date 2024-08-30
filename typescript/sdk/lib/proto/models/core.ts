@@ -10,7 +10,7 @@ import Long from "long";
 import { Struct } from "../google/protobuf/struct";
 import { StringValue, UInt32Value } from "../google/protobuf/wrappers";
 
-export const protobufPackage = "blockchain.models";
+export const protobufPackage = "com.giraffechain.models";
 
 export interface BlockId {
   /** Base58 encoded */
@@ -172,6 +172,7 @@ export interface TransactionInput {
 }
 
 export interface TransactionOutputReference {
+  /** Required in _most_ cases. When not provided, acts as a reference to the "current" transaction. */
   transactionId: TransactionId | undefined;
   index: number;
 }
