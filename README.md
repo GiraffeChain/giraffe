@@ -16,11 +16,19 @@ This blockchain is still in very early development. Everything is experimental. 
   - Misc/support files are defined in `external_proto/`
   - Protobuf models are served over JSON-RPC, not gRPC
 - The backend/relay node is defined in Scala, and you can find it in the `scala/` directory.
-  - Most of the code is defined in the `core` module
+  - Most of the code is defined in the `node` module
   - Compiled protobuf files are defined in the `protobuf` module
 - The wallet is defined in Dart/Flutter, and you can find it in the `dart/` directory.
-  - The code is split between the `sdk` and `wallet` packages
+  - The `sdk` directory contains a client, codecs, wallet, and miscellaneous utilities for interacting with the chain
+  - The `wallet` directory is an application with a built-in wallet, block explorer, staker, and social explorer
 - The SDK is defined in Typescript, and you can find it in the `typescript/sdk/` directory.
+
+## Launching
+At the moment, there are no public testnets. You can instead launch a local private testnet for testing purposes.
+1. `docker run --rm -p 2025:2025 seancheatham/giraffe-node:dev`
+1. Open the [wallet](http://localhost:2025) in your browser
+
+Note: At this time, there is an issue with staking from a web browser. This means you need to run the "Development & Testing" instructions below to launch either the desktop or mobile version of the wallet. Fixing this is a high priority for me.
 
 ## Development & Testing
 ### Dependencies
@@ -32,7 +40,7 @@ This blockchain is still in very early development. Everything is experimental. 
 ### Launch
 1. Start the relay node.
     - `cd scala`
-    - `sbt core/run`
+    - `sbt relay/run`
 1. Start the wallet.
     - `cd ../dart/app`
     - `flutter run`
