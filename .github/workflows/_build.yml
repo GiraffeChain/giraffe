@@ -33,7 +33,7 @@ jobs:
 
       - name: Build
         working-directory: ./dart/wallet
-        run: dart run build_runner build && flutter build web
+        run: dart run build_runner build --delete-conflicting-outputs && flutter build web
 
       - name: Upload Web Wallet Dist
         uses: actions/upload-artifact@v4
