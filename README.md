@@ -1,13 +1,20 @@
-# "Blockchain"
-A generic, unbranded blockchain protocol. It leverages proof-of-stake for its consensus layer and an extended UTxO model for its application layer.
+# Giraffe Chain
+**Blockchain** | **Mobile Staking** | **Graph Database**
 
-Similar to other protocols, the network is made up of relay nodes which verify correctness of the chain and distribute information to other peers. Unlike other protocols, block production is performed client-side within user wallets.
+You've found the repository for yet another blockchain protocol. This protocol uses proof-of-stake for consensus and UTxOs for its ledger.
 
-Similar to other application layers, tokens are distributed and spent using an "Unspent Transaction Output" model. Unlike other UTxO models, each UTxO may represent a "vertex" or "edge" of a ledger-wide graph data structure. Connecting two "vertex" UTxOs with a new "edge" UTxO requires permission from each of the "vertex" UTxOs.
+Similar to other protocols, the network is made up of relay nodes which verify correctness of the chain and distribute information to other peers. **Unlike** other protocols, block production is performed client-side within user wallets. The intention is to decentralize as much as possible by making it as simple as possible for normal users to stake. The ideal outcome is for millions of people to stake from their phones.
+
+Similar to other application layers, tokens are distributed and spent using an "Unspent Transaction Output" model. **Unlike** other UTxO models, each UTxO may represent a "vertex" or "edge" of a ledger-wide graph data structure. Connecting two "vertex" UTxOs with a new "edge" UTxO requires permission from each of the "vertex" UTxOs. The intention is to provide a developer-friendly graph database that is backed by a decentralized blockchain.
+
+To demonstrate the utility of the graph database, the wallet includes a mini social network which allows people to share and connect.
+
+This blockchain is still in very early development. Everything is experimental. Don't use real money (as if such a thing exists). You are more than welcome to use the code in this repository, but there are no guarantees that it'll be bug-free.
 
 ## Implementation
 - Models are defined in protobuf, and you can find them in the `proto/` directory.
   - Misc/support files are defined in `external_proto/`
+  - Protobuf models are served over JSON-RPC, not gRPC
 - The backend/relay node is defined in Scala, and you can find it in the `scala/` directory.
   - Most of the code is defined in the `core` module
   - Compiled protobuf files are defined in the `protobuf` module
