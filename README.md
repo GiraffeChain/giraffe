@@ -24,9 +24,9 @@ This blockchain is still in very early development. Everything is experimental. 
 - The SDK is defined in Typescript, and you can find it in the `typescript/sdk/` directory.
 
 ## Launching
-At the moment, there are no public testnets. You can instead launch a local private testnet for testing purposes.
-1. `docker run --rm -p 2025:2025 seancheatham/giraffe-node:dev`
-1. Open the [wallet](http://localhost:2025) in your browser
+At the moment, there are no public testnets. You can instead launch a local private testnet.
+1. `docker run --rm -p 2024:2024 seancheatham/giraffe-node:dev`
+1. Open the [wallet](http://localhost:2024) in your browser
 
 Note: At this time, there is an issue with staking from a web browser. This means you need to run the "Development & Testing" instructions below to launch either the desktop or mobile version of the wallet. Fixing this is a high priority for me.
 
