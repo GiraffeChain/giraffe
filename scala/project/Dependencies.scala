@@ -34,10 +34,6 @@ object Dependencies {
     "com.halibobor" % "leveldbjni-all" % "1.23.2"
   )
 
-  val grpcServices = Seq(
-    "io.grpc" % "grpc-services" % Versions.ioGrpc
-  )
-
   val http4s = Seq(
     "org.http4s" %% "http4s-ember-client" % Versions.http4s,
     "org.http4s" %% "http4s-ember-server" % Versions.http4s,
@@ -74,6 +70,5 @@ object Versions {
   val fs2 = "3.10.2"
   val circe = "0.14.9"
   val logback = "1.5.6"
-  val ioGrpc = "1.65.1"
   val http4s = "0.23.27"
 }

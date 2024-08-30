@@ -1,12 +1,12 @@
-import { Blockchain } from "../lib/blockchain";
-import { Wallet } from "../lib/wallet";
+import { Giraffe } from "../lib/blockchain";
+import { GiraffeWallet } from "../lib/wallet";
 
 describe("Integration Test", () => {
     test("Test", async () => {
 
-        const wallet = Wallet.genesis();
+        const wallet = GiraffeWallet.genesis();
         const baseAddress = "http://localhost:2025/api";
-        const blockchain = await Blockchain.init(baseAddress, wallet);
+        const blockchain = await Giraffe.init(baseAddress, wallet);
 
         const headId = await blockchain.client.getCanonicalHeadId();
         console.log(headId.value);

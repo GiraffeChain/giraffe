@@ -2,7 +2,7 @@ val scala3 = "3.4.2"
 
 inThisBuild(
   List(
-    organization := "blockchain",
+    organization := "com.giraffechain",
     scalaVersion := scala3,
     testFrameworks += TestFrameworks.MUnit,
     dockerRepository := Some("docker.io"),
@@ -21,37 +21,32 @@ inThisBuild(
 lazy val blockchain = project
   .in(file("."))
   .settings(
-    name := "blockchain",
+    name := "giraffe",
     publish / skip := true,
     publishArtifact := false,
     scalaVersion := scala3
   )
-  .aggregate(core, protobuf)
+  .aggregate(node, protobuf)
 
-lazy val core = project
+lazy val node = project
+  .in(file("node"))
   .enablePlugins(DockerPlugin, JavaAppPackaging)
   .settings(
     dockerBaseImage := "eclipse-temurin:17-jre",
     dockerUpdateLatest := sys.env.get("DOCKER_PUBLISH_LATEST_TAG").fold(false)(_.toBoolean),
     dockerLabels ++= Map(
-      "blockchain.version" -> version.value
+      "giraffe.version" -> version.value
     ),
     dockerExposedPorts := Seq(2023, 2024),
-    Docker / packageName := "blockchain-node",
-    dockerExposedVolumes += "/blockchain",
-    dockerExposedVolumes += "/blockchain-staking",
-    dockerEnvVars ++= Map(
-      "BLOCKCHAIN_APPLICATION_DATA_DIR" -> "/blockchain/data/{genesisBlockId}",
-      "BLOCKCHAIN_CONFIG_FILE" -> "/blockchain/config/user.yaml"
-    ),
-    dockerAlias := DockerAlias(Some("docker.io"), Some("seancheatham"), "blockchain-node", Some(version.value)),
+    Docker / packageName := "giraffe-node",
+    dockerExposedVolumes += "/giraffe",
+    dockerAlias := DockerAlias(Some("docker.io"), Some("seancheatham"), "giraffe-node", Some(version.value)),
     dockerAliases ++= (if (sys.env.get("DOCKER_PUBLISH_DEV_TAG").fold(false)(_.toBoolean))
                          Seq(dockerAlias.value.withTag(Some("dev")))
                        else Seq())
   )
-  .in(file("core"))
   .settings(
-    name := "blockchain-core",
+    name := "giraffe-node",
     libraryDependencies ++=
       Dependencies.logging ++
         Dependencies.cats ++
@@ -60,13 +55,11 @@ lazy val core = project
         Dependencies.scodec ++
         Dependencies.levelDbJni ++
         Dependencies.fs2 ++
-        Dependencies.grpcServices ++
         Dependencies.caseApp ++
         Dependencies.http4s ++
         Dependencies.mUnitTest ++
         Dependencies.circe ++
         Dependencies.sqlite,
-    libraryDependencies += "io.grpc" % "grpc-netty-shaded" % scalapb.compiler.Version.grpcJavaVersion,
     scalacOptions ++= Seq(
       "-source:3.4-migration",
       "-rewrite",
@@ -83,14 +76,14 @@ lazy val protobuf =
     .in(file("protobuf"))
     .enablePlugins(BuildInfoPlugin, Fs2Grpc)
     .settings(
-      name := "blockchain-protobuf",
+      name := "giraffe-protobuf",
       buildInfoKeys := Seq[BuildInfoKey](
         name,
         version,
         scalaVersion,
         sbtVersion
       ),
-      buildInfoPackage := "blockchain.protobuf",
+      buildInfoPackage := "giraffe.protobuf",
       publish / skip := true,
       libraryDependencies ++= Seq(
         "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",

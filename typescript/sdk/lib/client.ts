@@ -4,7 +4,7 @@ import Long from "long";
 
 import { requireDefined } from "./utils";
 
-export abstract class BlockchainClient {
+export abstract class GiraffeClient {
     abstract getHeaderOpt(id: BlockId): Promise<BlockHeader | undefined>;
     abstract getBodyOpt(id: BlockId): Promise<BlockBody | undefined>;
     abstract getBlockOpt(id: BlockId): Promise<FullBlock | undefined>;
@@ -54,7 +54,7 @@ export enum TipChangeType {
     UNAPPLIED
 }
 
-export class RpcBlockchainClient extends BlockchainClient {
+export class RpcGiraffeClient extends GiraffeClient {
     async getHeaderOpt(id: BlockId): Promise<BlockHeader | undefined> {
         try {
             const response = await fetch(`${this.baseAddress}/block-headers/${id}`);
