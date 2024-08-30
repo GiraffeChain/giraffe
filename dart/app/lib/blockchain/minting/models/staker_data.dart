@@ -1,4 +1,4 @@
-import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'package:blockchain_sdk/sdk.dart';
 
 class StakerData {
   final List<int> vrfSk;

@@ -1,5 +1,5 @@
-import 'package:blockchain_protobuf/google/protobuf/struct.pb.dart' as struct;
-import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'proto/google/protobuf/struct.pb.dart' as struct;
+import 'proto/models/core.pb.dart';
 
 import 'blockchain_client.dart';
 import 'wallet.dart';

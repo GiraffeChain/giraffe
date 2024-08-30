@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'codecs.dart';
 import 'common/models/common.dart';
 import 'ledger/block_header_to_body_validation.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 

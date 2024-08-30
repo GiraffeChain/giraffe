@@ -13,7 +13,6 @@ import 'models/vrf_hit.dart';
 import 'staking.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 
 abstract class BlockProducer {
   Stream<FullBlock> makeChild(BlockHeader parentHeader);

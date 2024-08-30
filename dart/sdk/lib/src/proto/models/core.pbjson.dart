@@ -226,16 +226,16 @@ final $typed_data.Uint8List transactionInputDescriptor = $convert.base64Decode(
 const TransactionOutputReference$json = {
   '1': 'TransactionOutputReference',
   '2': [
-    {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionId', '8': {}, '10': 'transactionId'},
+    {'1': 'transactionId', '3': 1, '4': 1, '5': 11, '6': '.blockchain.models.TransactionId', '10': 'transactionId'},
     {'1': 'index', '3': 2, '4': 1, '5': 13, '10': 'index'},
   ],
 };
 
 /// Descriptor for `TransactionOutputReference`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionOutputReferenceDescriptor = $convert.base64Decode(
-    'ChpUcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZRJQCg10cmFuc2FjdGlvbklkGAEgASgLMiAuYm'
-    'xvY2tjaGFpbi5tb2RlbHMuVHJhbnNhY3Rpb25JZEII+kIFigECEAFSDXRyYW5zYWN0aW9uSWQS'
-    'FAoFaW5kZXgYAiABKA1SBWluZGV4');
+    'ChpUcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZRJGCg10cmFuc2FjdGlvbklkGAEgASgLMiAuYm'
+    'xvY2tjaGFpbi5tb2RlbHMuVHJhbnNhY3Rpb25JZFINdHJhbnNhY3Rpb25JZBIUCgVpbmRleBgC'
+    'IAEoDVIFaW5kZXg=');
 
 @$core.Deprecated('Use transactionOutputDescriptor instead')
 const TransactionOutput$json = {

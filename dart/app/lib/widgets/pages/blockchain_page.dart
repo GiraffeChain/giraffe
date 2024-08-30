@@ -8,7 +8,6 @@ import 'package:blockchain_app/widgets/pages/social_page.dart';
 import 'package:blockchain_app/widgets/pages/stake_page.dart';
 import 'package:blockchain_app/widgets/pages/transact_page.dart';
 import '../../blockchain/codecs.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:fluro/fluro.dart';

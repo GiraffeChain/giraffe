@@ -5,7 +5,6 @@ import 'package:blockchain_sdk/sdk.dart';
 import '../crypto/ed25519vrf.dart';
 import 'package:hashlib/hashlib.dart';
 import 'package:rational/rational.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 
 final _testStringArray = utf8.encode("TEST");
 final _nonceStringArray = utf8.encode("NONCE");

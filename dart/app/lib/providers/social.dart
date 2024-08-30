@@ -2,7 +2,6 @@ import 'package:blockchain_app/providers/blockchain_client.dart';
 import 'package:blockchain_app/providers/canonical_head.dart';
 import 'package:blockchain_app/providers/graph_client.dart';
 import 'package:blockchain_app/providers/wallet.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

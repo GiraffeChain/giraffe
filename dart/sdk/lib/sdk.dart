@@ -1,5 +1,9 @@
 library blockchain_sdk;
 
+export 'src/proto/models/core.pb.dart';
+export 'src/proto/models/core.pbenum.dart';
+export 'src/proto/models/core.pbjson.dart';
+
 export 'src/crypto/crypto.dart';
 export 'src/protocol_settings.dart';
 export 'src/utils.dart';

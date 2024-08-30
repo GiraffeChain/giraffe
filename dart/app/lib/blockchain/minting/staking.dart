@@ -9,7 +9,6 @@ import 'models/vrf_hit.dart';
 import 'vrf_calculator.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'dart:async';
 
 abstract class Staking {

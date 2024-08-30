@@ -3,7 +3,6 @@ import 'package:blockchain_app/blockchain/consensus/staker_tracker.dart';
 import 'package:blockchain_app/blockchain/ledger/block_packer.dart';
 import 'package:blockchain_app/providers/staking/staking.dart';
 import 'package:blockchain_app/providers/wallet.dart';
-import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:logging/logging.dart';

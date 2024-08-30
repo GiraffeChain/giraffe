@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'proto/models/core.pb.dart';
 import 'utils.dart';
 import 'crypto/utils.dart';
-import 'package:blockchain_protobuf/google/protobuf/struct.pb.dart' as struct;
-import 'package:blockchain_protobuf/models/core.pb.dart';
+import 'proto/google/protobuf/struct.pb.dart' as struct;
 import 'package:fast_base58/fast_base58.dart';
 
 import 'package:fixnum/fixnum.dart';
