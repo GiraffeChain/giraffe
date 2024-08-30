@@ -75,7 +75,7 @@ class BlockchainConfigFormState extends State<BlockchainConfigForm> {
           ),
           TextField(
             onChanged: (v) => rpcPort = v,
-            decoration: const InputDecoration(hintText: "RPC Port. i.e. 2025"),
+            decoration: const InputDecoration(hintText: "RPC Port. i.e. 2024"),
           ),
           IconButton(
               onPressed: () => _submit(context), icon: const Icon(Icons.send))
@@ -85,7 +85,7 @@ class BlockchainConfigFormState extends State<BlockchainConfigForm> {
   _submit(BuildContext context) {
     final config = LaunchSettings(
       rpcHost: rpcHost ?? "localhost",
-      rpcPort: _parsedPort ?? 2025,
+      rpcPort: _parsedPort ?? 2024,
       rpcSecure: false, // TODO
     );
     widget.onSubmit(context, config);

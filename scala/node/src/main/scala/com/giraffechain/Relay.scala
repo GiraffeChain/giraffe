@@ -59,7 +59,7 @@ case class RelayArgs(
     @HelpMessage("Path to data storage (will be suffixed with the block ID)")
     dataDir: String = Option(System.getenv("BLOCKCHAIN_DATA_DIR")).getOrElse("/tmp/blockchain/data"),
     apiBindHost: String = "0.0.0.0",
-    apiBindPort: Int = 2025,
+    apiBindPort: Int = 2024,
     p2pBindHost: String = "0.0.0.0",
     p2pBindPort: Int = 2023,
     p2pPublicHost: Option[String] = None,

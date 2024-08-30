@@ -5,7 +5,7 @@ describe("Integration Test", () => {
     test("Test", async () => {
 
         const wallet = GiraffeWallet.genesis();
-        const baseAddress = "http://localhost:2025/api";
+        const baseAddress = "http://localhost:2024/api";
         const blockchain = await Giraffe.init(baseAddress, wallet);
 
         const headId = await blockchain.client.getCanonicalHeadId();
