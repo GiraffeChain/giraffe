@@ -21,3 +21,4 @@ project/plugins/project/
 # End of https://www.toptal.com/developers/gitignore/api/sbt
 
 local.sbt
+node/src/main/resources/web/
