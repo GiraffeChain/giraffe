@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:blockchain_sdk/src/http/http_client.dart';
+import 'http/http_client.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:rxdart/transformers.dart';
 import 'package:http/http.dart' as http;

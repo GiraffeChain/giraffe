@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package blockchain.models;
+package giraffe.models;
 
 import "validate/validate.proto";
 import "google/protobuf/wrappers.proto";
