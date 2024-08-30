@@ -6,11 +6,9 @@ on:
       - "main"
 
 jobs:
-  sbt-build:
-    uses: ./.github/workflows/_sbt_build.yml
-
-
+  build:
+    uses: ./.github/workflows/_build.yml
   publish-test-results:
     uses: ./.github/workflows/_publish_test_results.yml
-    needs: [sbt-build]
+    needs: [build]
     if: always()

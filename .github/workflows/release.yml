@@ -6,11 +6,11 @@ on:
       - "v**"
 
 jobs:
-  sbt-build:
-    uses: ./.github/workflows/_sbt_build.yml
+  build:
+    uses: ./.github/workflows/_build.yml
   create-release:
     runs-on: ubuntu-latest
-    needs: [sbt-build]
+    needs: [build]
     steps:
       - name: Create Release
         uses: softprops/action-gh-release@v1

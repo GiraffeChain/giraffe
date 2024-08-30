@@ -6,11 +6,11 @@ on:
       - "main"
 
 jobs:
-  sbt-build:
-    uses: ./.github/workflows/_sbt_build.yml
+  build:
+    uses: ./.github/workflows/_build.yml
   publish-docker-images:
     uses: ./.github/workflows/_docker_publish.yml
-    needs: [sbt-build]
+    needs: [build]
     secrets: inherit
     with:
       dev_tag: true
