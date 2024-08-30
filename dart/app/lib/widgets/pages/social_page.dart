@@ -1,5 +1,6 @@
 import 'package:blockchain_app/providers/social.dart';
 import 'package:blockchain_app/providers/wallet.dart';
+import 'package:blockchain_app/utils.dart';
 import 'package:blockchain_protobuf/models/core.pb.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:flutter/material.dart';
@@ -54,9 +55,7 @@ class SocialView extends ConsumerWidget {
     } else {
       throw Exception("Unknown state: $state");
     }
-    return Card(
-      child: Center(child: body),
-    );
+    return body;
   }
 
   Widget _antiSocial(WidgetRef ref, AntiSocial state) {
@@ -85,24 +84,38 @@ class ProfileEditorState extends State<ProfileEditor> {
 
   // TODO: Use Forms
   @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          TextField(
-            decoration: const InputDecoration(labelText: "First Name"),
-            onChanged: (value) => setState(() => firstName = value),
+  Widget build(BuildContext context) => ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: Card(
+          child: Column(
+            children: [
+              const Text("Create Profile",
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold))
+                  .pad16,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: TextField(
+                  decoration: const InputDecoration(labelText: "First Name"),
+                  onChanged: (value) => setState(() => firstName = value),
+                ).pad16,
+              ),
+              ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 200),
+                  child: TextField(
+                    decoration: const InputDecoration(labelText: "Last Name"),
+                    onChanged: (value) => setState(() => lastName = value),
+                  ).pad16),
+              ElevatedButton(
+                onPressed: () => widget.onSave(ProfileData(
+                    firstName: firstName.isEmpty ? null : firstName,
+                    lastName: lastName.isEmpty ? null : lastName)),
+                child: const Text("Create"),
+              ).pad16,
+            ],
           ),
-          TextField(
-            decoration: const InputDecoration(labelText: "Last Name"),
-            onChanged: (value) => setState(() => lastName = value),
-          ),
-          ElevatedButton(
-            onPressed: () => widget.onSave(ProfileData(
-                firstName: firstName.isEmpty ? null : firstName,
-                lastName: lastName.isEmpty ? null : lastName)),
-            child: const Text("Save"),
-          ),
-        ],
-      );
+        ),
+      ).pad16;
 }
 
 class ActiveSocialView extends ConsumerWidget {
@@ -112,13 +125,13 @@ class ActiveSocialView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final left = leftColumn(ref);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         welcomeMessage(),
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [leftColumn(ref), rightColumn()],
+          children: [if (left != null) left, rightColumn()],
         )
       ],
     );
@@ -130,10 +143,13 @@ class ActiveSocialView extends ConsumerWidget {
         style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold));
   }
 
-  ConstrainedBox leftColumn(WidgetRef ref) {
+  Widget? leftColumn(WidgetRef ref) {
     final curFriends = currentFriends(ref);
     final outFriends = outgoingRequests(ref);
     final inFriends = incomingFriendRequests(ref);
+    if (curFriends == null && outFriends == null && inFriends == null) {
+      return null;
+    }
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 300),
       child: Column(
@@ -219,16 +235,21 @@ class UserSearchState extends ConsumerState<UserSearch> {
   String firstName = "";
   String lastName = "";
   @override
-  Widget build(BuildContext context) => SizedBox(
-        height: 450,
-        child: Card(
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
+  Widget build(BuildContext context) => ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: SizedBox(
+          height: 350,
+          child: Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Search Users",
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold))
+                    .pad8,
+                Row(
+                  children: [
+                    SizedBox(
                       width: 200,
                       height: 80,
                       child: TextField(
@@ -236,11 +257,8 @@ class UserSearchState extends ConsumerState<UserSearch> {
                             const InputDecoration(labelText: "First Name"),
                         onChanged: (value) => firstName = value,
                       ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
+                    ).pad8,
+                    SizedBox(
                       width: 200,
                       height: 80,
                       child: TextField(
@@ -248,37 +266,64 @@ class UserSearchState extends ConsumerState<UserSearch> {
                             const InputDecoration(labelText: "Last Name"),
                         onChanged: (value) => lastName = value,
                       ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: IconButton(
-                        onPressed: () async {
-                          final social = ref.read(podSocialProvider.notifier);
-                          final users = await social.findUsers(
-                              firstName: firstName.isEmpty ? null : firstName,
-                              lastName: lastName.isEmpty ? null : lastName);
-                          setState(() => results = users);
-                        },
-                        icon: const Icon(Icons.search)),
-                  )
-                ],
-              ),
-              Expanded(
-                child: ListView(
-                  children: [
-                    for (final (userRef, profile) in results)
-                      ListTile(
-                        title: Text("${profile.firstName} ${profile.lastName}"),
-                        onTap: () => ref
-                            .read(podSocialProvider.notifier)
-                            .addFriend(userRef),
-                      )
+                    ).pad8,
+                    IconButton(
+                            onPressed: () async {
+                              final social =
+                                  ref.read(podSocialProvider.notifier);
+                              final users = await social.findUsers(
+                                  firstName:
+                                      firstName.isEmpty ? null : firstName,
+                                  lastName: lastName.isEmpty ? null : lastName);
+                              setState(() => results = users);
+                            },
+                            icon: const Icon(Icons.search))
+                        .pad8
                   ],
                 ),
-              ),
-            ],
+                Expanded(
+                  child: resultsList(),
+                ),
+              ],
+            ),
           ),
         ),
       );
+
+  ListView resultsList() {
+    final r = <Widget>[];
+    // TODO: Omit self from search results?
+    for (final (userRef, profile) in results) {
+      r.add(ListTile(
+        title: Row(
+          children: [
+            IconButton(
+                    onPressed: () =>
+                        ref.read(podSocialProvider.notifier).addFriend(userRef),
+                    icon: const Icon(Icons.add))
+                .pad8,
+            Text("${profile.firstName} ${profile.lastName}").pad8,
+          ],
+        ),
+      ));
+    }
+    return ListView(
+      children: [
+        for (final (userRef, profile) in results)
+          ListTile(
+            title: Row(
+              children: [
+                IconButton(
+                        onPressed: () => ref
+                            .read(podSocialProvider.notifier)
+                            .addFriend(userRef),
+                        icon: const Icon(Icons.add))
+                    .pad8,
+                Text("${profile.firstName} ${profile.lastName}").pad8,
+              ],
+            ),
+          )
+      ],
+    );
+  }
 }

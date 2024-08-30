@@ -7,7 +7,7 @@ class VrfArgument {
 
   VrfArgument(this.eta, this.slot);
 
-  List<int> get signableBytes => [...eta, ...slot.toBytesBigEndian()];
+  List<int> get signableBytes => [...eta, ...slot.immutableBytes];
 
   @override
   int get hashCode => Object.hash(eta, slot);

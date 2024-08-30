@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import '../../../lib/blockchain/crypto/ed25519vrf.dart';
+import 'package:blockchain_app/blockchain/crypto/ed25519vrf.dart';
 import 'package:blockchain_sdk/sdk.dart';
 import 'package:test/test.dart';
 import 'package:convert/convert.dart';

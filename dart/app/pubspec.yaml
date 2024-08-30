@@ -8,6 +8,7 @@ environment:
   flutter: ">=3.22.2"
 
 dependencies:
+  convert: ^3.1.1
   cryptography: ^2.5.0
   cryptography_flutter: ^2.3.0
   logging: ^1.2.0
@@ -55,7 +56,6 @@ dev_dependencies:
   custom_lint:
   analyzer: ^6.7.0
   mockito: ^5.4.4
-  convert: ^3.1.1
   test: ^1.25.7
 
 flutter:

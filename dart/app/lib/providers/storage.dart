@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:fast_base58/fast_base58.dart';
@@ -16,8 +15,9 @@ class PodSecureStorage extends _$PodSecureStorage {
       ));
 
   Future<void> setWalletSk(List<int> sk) async {
+    final str = Base58Encode(sk);
     await deleteWalletSk();
-    await state.write(key: _walletSkKey, value: Base58Encode(sk));
+    await state.write(key: _walletSkKey, value: str);
   }
 
   Future<Uint8List?> get getWalletSk async {
