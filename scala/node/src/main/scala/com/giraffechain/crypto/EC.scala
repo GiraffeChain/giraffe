@@ -242,7 +242,6 @@ trait EC {
       z_i ^= (diff & maskv)
       z(zOff + i) = z_i
     }
-    return
   }
 
   private[crypto] def cadd(len: Int, mask: Int, x: Array[Int], y: Array[Int], z: Array[Int]): Int = {
@@ -605,7 +604,6 @@ trait EC {
       cmov(x25519Field.SIZE, mask, precompBase, off, p.xyd, 0)
       off += x25519Field.SIZE
     }
-    return
   }
 
   private[crypto] def pointPrecompVar(p: PointExt, count: Int): Array[PointExt] = {
@@ -709,7 +707,6 @@ trait EC {
         }
         b += 1
       }
-      return
     case _ =>
   }
 
