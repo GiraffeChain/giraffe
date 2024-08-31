@@ -1,8 +1,10 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
 import 'dart:typed_data';
-import 'package:giraffe_sdk/crypto_ec.dart' as ec;
-import 'package:giraffe_sdk/sdk.dart';
+import '../utils.dart';
+import 'ed25519.dart';
+import 'utils.dart';
+import 'impl/ec.dart' as ec;
 import 'package:cryptography/cryptography.dart';
 
 abstract class Ed25519VRF {
@@ -53,15 +55,8 @@ class Ed25519VRFImpl extends Ed25519VRF {
   }
 
   @override
-  Future<Uint8List> getVerificationKey(List<int> secretKey) async {
-    assert(secretKey.length == 32);
-    final h = await _sha512Signed(secretKey);
-    final s = Int8List(ec.SCALAR_BYTES);
-    ec.pruneScalar(h, 0, s);
-    final vk = Int8List(32);
-    ec.scalarMultBaseEncoded(s, vk, 0);
-    return Uint8List.fromList(vk);
-  }
+  Future<Uint8List> getVerificationKey(List<int> secretKey) =>
+      ed25519.getVerificationKey(secretKey);
 
   @override
   Future<bool> verify(

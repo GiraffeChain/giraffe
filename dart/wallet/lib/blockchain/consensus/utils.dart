@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import '../common/models/common.dart';
 import 'package:giraffe_sdk/sdk.dart';
-import '../crypto/ed25519vrf.dart';
 import 'package:hashlib/hashlib.dart';
 import 'package:rational/rational.dart';
 

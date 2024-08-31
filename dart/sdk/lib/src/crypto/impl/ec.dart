@@ -121,7 +121,7 @@ int cadd(int len, Int32 mask, Int32List x, Int32List y, Int32List z) {
   return c.toInt32().toInt();
 }
 
-int shiftDownBit(int len, Int32List z, int c) {
+void shiftDownBit(int len, Int32List z, int c) {
   var i = len;
   var cv = Int32(c);
   while (--i >= 0) {
@@ -129,7 +129,6 @@ int shiftDownBit(int len, Int32List z, int c) {
     z[i] = ((next.shiftRightUnsigned(1)) | (cv << 31)).toInt();
     cv = next;
   }
-  return (cv << 31).toInt();
 }
 
 Int32 shuffle2(Int32 x) {
@@ -155,9 +154,9 @@ bool areAllZeroes(Int8List buf, int off, int len) {
 Int8List calculateS(Int8List r, Int8List k, Int8List s) {
   final t = Int32List(SCALAR_INTS * 2);
   decodeScalar(r, 0, t);
-  final u = Int32List(SCALAR_INTS * 2);
+  final u = Int32List(SCALAR_INTS);
   decodeScalar(k, 0, u);
-  final v = Int32List(SCALAR_INTS * 2);
+  final v = Int32List(SCALAR_INTS);
   decodeScalar(s, 0, v);
   mulAddTo256(u, v, t);
   final result = Int8List(SCALAR_BYTES * 2);
@@ -178,15 +177,15 @@ bool checkScalarVar(Int8List s) {
   return !gte256(n, L);
 }
 
-int decode24(Int8List bs, int off) {
-  var n = (bs[off] & 0xff);
+Int32 decode24(Int8List bs, int off) {
+  var n = Int32(bs[off] & 0xff);
   n |= ((bs[off + 1] & 0xff) << 8);
   n |= ((bs[off + 2] & 0xff) << 16);
   return n;
 }
 
-int decode32v(Int8List bs, int off) {
-  var n = (bs[off].toByte & 0xff);
+Int32 decode32v(Int8List bs, int off) {
+  var n = Int32(bs[off].toByte & 0xff);
   n |= ((bs[off + 1].toByte & 0xff) << 8);
   n |= ((bs[off + 2].toByte & 0xff) << 16);
   n |= (bs[off + 3].toByte << 24);
@@ -194,7 +193,8 @@ int decode32v(Int8List bs, int off) {
 }
 
 void decode32(Int8List bs, int bsOff, Int32List n, int nOff, int nLen) {
-  for (int i = 0; i < nLen; i++) n[nOff + i] = decode32v(bs, bsOff + i * 4);
+  for (int i = 0; i < nLen; i++)
+    n[nOff + i] = decode32v(bs, bsOff + i * 4).toInt();
 }
 
 bool decodePointVar(Int8List p, int pOff, bool negate, PointExt r) {
@@ -309,10 +309,10 @@ void pointAddVar1(bool negate, PointExt p, PointAccum r) {
   final F = x25519Field.create;
   final G = x25519Field.create;
   final H = r.v;
-  late Int32List c;
-  late Int32List d;
-  late Int32List f;
-  late Int32List g;
+  final Int32List c;
+  final Int32List d;
+  final Int32List f;
+  final Int32List g;
   if (negate) {
     c = D;
     d = C;
@@ -350,10 +350,10 @@ void pointAddVar2(bool negate, PointExt p, PointExt q, PointExt r) {
   final F = x25519Field.create;
   final G = x25519Field.create;
   final H = x25519Field.create;
-  late Int32List c;
-  late Int32List d;
-  late Int32List f;
-  late Int32List g;
+  final Int32List c;
+  final Int32List d;
+  final Int32List f;
+  final Int32List g;
   if (negate) {
     c = D;
     d = C;
@@ -570,25 +570,25 @@ void pruneScalar(Int8List n, int nOff, Int8List r) {
 }
 
 Int8List reduceScalar(Int8List n) {
-  var x00 = Int64(decode32v(n, 0)) & M32L; // x00:32/--
-  var x01 = Int64((decode24(n, 4)) << 4) & M32L; // x01:28/--
-  var x02 = Int64(decode32v(n, 7)) & M32L; // x02:32/--
-  var x03 = Int64((decode24(n, 11)) << 4) & M32L; // x03:28/--
-  var x04 = Int64(decode32v(n, 14)) & M32L; // x04:32/--
-  var x05 = Int64((decode24(n, 18)) << 4) & M32L; // x05:28/--
-  var x06 = Int64(decode32v(n, 21)) & M32L; // x06:32/--
-  var x07 = Int64((decode24(n, 25)) << 4) & M32L; // x07:28/--
-  var x08 = Int64(decode32v(n, 28)) & M32L; // x08:32/--
-  var x09 = Int64((decode24(n, 32)) << 4) & M32L; // x09:28/--
-  var x10 = Int64(decode32v(n, 35)) & M32L; // x10:32/--
-  var x11 = Int64((decode24(n, 39)) << 4) & M32L; // x11:28/--
-  var x12 = Int64(decode32v(n, 42)) & M32L; // x12:32/--
-  var x13 = Int64((decode24(n, 46)) << 4) & M32L; // x13:28/--
-  var x14 = Int64(decode32v(n, 49)) & M32L; // x14:32/--
-  var x15 = Int64((decode24(n, 53)) << 4) & M32L; // x15:28/--
-  var x16 = Int64(decode32v(n, 56)) & M32L; // x16:32/--
-  var x17 = Int64((decode24(n, 60)) << 4) & M32L; // x17:28/--
-  final x18 = Int64(n[63]) & Int64(0xff); // x18:08/-- TODO?
+  var x00 = decode32v(n, 0).toInt64() & M32L; // x00:32/--
+  var x01 = ((decode24(n, 4)) << 4).toInt64() & M32L; // x01:28/--
+  var x02 = decode32v(n, 7).toInt64() & M32L; // x02:32/--
+  var x03 = (decode24(n, 11).toInt64() << 4) & M32L; // x03:28/--
+  var x04 = decode32v(n, 14).toInt64() & M32L; // x04:32/--
+  var x05 = (decode24(n, 18).toInt64() << 4) & M32L; // x05:28/--
+  var x06 = decode32v(n, 21).toInt64() & M32L; // x06:32/--
+  var x07 = (decode24(n, 25).toInt64() << 4) & M32L; // x07:28/--
+  var x08 = decode32v(n, 28).toInt64() & M32L; // x08:32/--
+  var x09 = (decode24(n, 32).toInt64() << 4) & M32L; // x09:28/--
+  var x10 = decode32v(n, 35).toInt64() & M32L; // x10:32/--
+  var x11 = (decode24(n, 39).toInt64() << 4) & M32L; // x11:28/--
+  var x12 = decode32v(n, 42).toInt64() & M32L; // x12:32/--
+  var x13 = (decode24(n, 46).toInt64() << 4) & M32L; // x13:28/--
+  var x14 = decode32v(n, 49).toInt64() & M32L; // x14:32/--
+  var x15 = (decode24(n, 53).toInt64() << 4) & M32L; // x15:28/--
+  var x16 = decode32v(n, 56).toInt64() & M32L; // x16:32/--
+  var x17 = (decode24(n, 60).toInt64() << 4) & M32L; // x17:28/--
+  final x18 = Int64(n[63]) & Int64(0xff); // x18:08/--
   var t = Int64(0);
   x09 -= x18 * L0; // x09:34/28
   x10 -= x18 * L1; // x10:33/30
@@ -895,6 +895,11 @@ class PointAccum {
         z = x25519Field.create,
         u = x25519Field.create,
         v = x25519Field.create;
+
+  @override
+  String toString() {
+    return "PointAccum($x, $y, $z, $u, $v)";
+  }
 }
 
 class PointExt {
@@ -910,6 +915,11 @@ class PointExt {
         y = x25519Field.create,
         z = x25519Field.create,
         t = x25519Field.create;
+
+  @override
+  String toString() {
+    return "PointExt($x, $y, $z, $t)";
+  }
 }
 
 class PointPrecomp {

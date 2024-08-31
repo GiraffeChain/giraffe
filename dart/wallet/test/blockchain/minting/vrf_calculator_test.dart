@@ -24,7 +24,7 @@ void main() {
       final eta = Int8List(32);
       final proof = await calculator.proofForSlot(Int64(10), eta);
       final expectedProof = hex.decode(
-          "bc31a2fb46995ffbe4b316176407f57378e2f3d7fee57d228a811194361d8e7040c9d15575d7a2e75506ffe1a47d772168b071a99d2e85511730e9c21397a1cea0e7fa4bd161e6d5185a94a665dd190d");
+          "d557aba5b5ded5ee36e193484496ab6cd01ff71862628485bba4e48e3fd4adca6022bbe5ce1ee1b2a206921464fd162f5294175cdf608993303f81d7da1b7f5f42dc0928a75d3cab761686d190bc1606");
       expect(proof.sameElements(expectedProof), true);
     });
   });

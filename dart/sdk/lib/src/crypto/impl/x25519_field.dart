@@ -45,54 +45,54 @@ void addOne2(Int32List z, int zOff) {
 
 void apm(Int32List x, Int32List y, Int32List zp, Int32List zm) {
   for (int i = 0; i < SIZE; i++) {
-    final xi = x[i];
-    final yi = y[i];
-    zp[i] = (Int32(xi) + yi).toInt();
-    zm[i] = (Int32(xi) - yi).toInt();
+    final xi = Int32(x[i]);
+    final yi = Int32(y[i]);
+    zp[i] = (xi + yi).toInt();
+    zm[i] = (xi - yi).toInt();
   }
 }
 
 void carry(Int32List z) {
-  var z0 = z[0];
-  var z1 = z[1];
-  var z2 = z[2];
-  var z3 = z[3];
-  var z4 = z[4];
-  var z5 = z[5];
-  var z6 = z[6];
-  var z7 = z[7];
-  var z8 = z[8];
-  var z9 = z[9];
-  z3 += (z2 >> 25);
+  var z0 = Int32(z[0]);
+  var z1 = Int32(z[1]);
+  var z2 = Int32(z[2]);
+  var z3 = Int32(z[3]);
+  var z4 = Int32(z[4]);
+  var z5 = Int32(z[5]);
+  var z6 = Int32(z[6]);
+  var z7 = Int32(z[7]);
+  var z8 = Int32(z[8]);
+  var z9 = Int32(z[9]);
+  z3 = (z3 + (z2 >> 25)).toInt32();
   z2 &= M25;
-  z5 += (z4 >> 25);
+  z5 = (z5 + (z4 >> 25)).toInt32();
   z4 &= M25;
-  z8 += (z7 >> 25);
+  z8 = (z8 + (z7 >> 25)).toInt32();
   z7 &= M25;
-  z0 += (z9 >> 25) * 38;
+  z0 = (z0 + (z9 >> 25) * 38).toInt32();
   z9 &= M25;
-  z1 += (z0 >> 26);
+  z1 = (z1 + (z0 >> 26)).toInt32();
   z0 &= M26;
-  z6 += (z5 >> 26);
+  z6 = (z6 + (z5 >> 26)).toInt32();
   z5 &= M26;
-  z2 += (z1 >> 26);
+  z2 = (z2 + (z1 >> 26)).toInt32();
   z1 &= M26;
-  z4 += (z3 >> 26);
+  z4 = (z4 + (z3 >> 26)).toInt32();
   z3 &= M26;
-  z7 += (z6 >> 26);
+  z7 = (z7 + (z6 >> 26)).toInt32();
   z6 &= M26;
-  z9 += (z8 >> 26);
+  z9 = (z9 + (z8 >> 26)).toInt32();
   z8 &= M26;
-  z[0] = z0;
-  z[1] = z1;
-  z[2] = z2;
-  z[3] = z3;
-  z[4] = z4;
-  z[5] = z5;
-  z[6] = z6;
-  z[7] = z7;
-  z[8] = z8;
-  z[9] = z9;
+  z[0] = z0.toInt();
+  z[1] = z1.toInt();
+  z[2] = z2.toInt();
+  z[3] = z3.toInt();
+  z[4] = z4.toInt();
+  z[5] = z5.toInt();
+  z[6] = z6.toInt();
+  z[7] = z7.toInt();
+  z[8] = z8.toInt();
+  z[9] = z9.toInt();
 }
 
 void cmov(int cond, Int32List x, int xOff, Int32List z, int zOff) {
