@@ -74,5 +74,5 @@ class _TestVector {
       "318d2b0bfcc1a1ced8abced025e420e3c59c0c89b214b2251fefbb401fd3421e0d6104a24c1558dde8cbe0647d1b31931799128526bd9b75b39ad8475ec59ce66363b230d5b7831aac57a941c8f62f04",
       "0b17d96088846eaf414b2febb10a4d676e0215a8926b19eb7299654a28544f1b32ea00a0672515a1863c30776fbed4ad1b9632c98fcf017edcd2f403e2428794");
 
-  static const allVectors = [test1];
+  static const allVectors = [test1, test2, test3, test4];
 }

@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:cryptography/dart.dart';
 import 'package:giraffe_sdk/sdk.dart';
 
+import 'impl/ec.dart' as ec;
+
 import 'package:cryptography/cryptography.dart' as c;
-import 'package:ed25519_edwards/src/edwards25519.dart';
 
 abstract class Ed25519 {
   Future<Ed25519KeyPair> generateKeyPair();
@@ -87,7 +87,7 @@ class Ed25519Isolated extends Ed25519 {
           (t) => _verify(t.$1.$1, t.$1.$2, t.$2), ((signature, message), vk));
 }
 
-final _algorithm = DartEd25519();
+final _algorithm = c.Ed25519();
 
 Future<Ed25519KeyPair> _convertAlgKeypair(c.SimpleKeyPair algKeypair) async {
   final sk = await algKeypair.extractPrivateKeyBytes();
@@ -140,16 +140,12 @@ Future<bool> _verify(
 }
 
 Future<Uint8List> getVerificationKeyImpl(List<int> sk) async {
-  final h = (await c.Sha512().hash(sk)).bytes;
-  var digest = h.sublist(0, 32);
-  digest[0] &= 248;
-  digest[31] &= 127;
-  digest[31] |= 64;
-
-  var A = ExtendedGroupElement();
-  var hBytes = digest.sublist(0);
-  GeScalarMultBase(A, hBytes as Uint8List);
-  var publicKeyBytes = Uint8List(32);
-  A.ToBytes(publicKeyBytes);
-  return Uint8List.fromList(publicKeyBytes);
+  final h = Uint8List.fromList((await c.Sha512().hash(sk)).bytes)
+      .int8List
+      .sublist(0, 32);
+  final s = Int8List(ec.SCALAR_BYTES);
+  ec.pruneScalar(h, 0, s);
+  final vk = Int8List(32);
+  ec.scalarMultBaseEncoded(s, vk, 0);
+  return Uint8List.fromList(vk);
 }
