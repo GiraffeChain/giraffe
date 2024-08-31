@@ -11,7 +11,6 @@ import 'package:rxdart/rxdart.dart';
 
 import '../../blockchain/common/clock.dart';
 import '../../blockchain/consensus/leader_election_validation.dart';
-import '../../blockchain/crypto/ed25519vrf.dart';
 import '../../blockchain/minting/block_producer.dart';
 import '../../blockchain/minting/staking.dart';
 import '../../blockchain/minting/vrf_calculator.dart';

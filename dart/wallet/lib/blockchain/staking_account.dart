@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'crypto/ed25519vrf.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:hashlib/hashlib.dart';

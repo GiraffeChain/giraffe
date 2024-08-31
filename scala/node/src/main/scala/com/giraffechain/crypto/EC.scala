@@ -242,6 +242,7 @@ trait EC {
       z_i ^= (diff & maskv)
       z(zOff + i) = z_i
     }
+    return
   }
 
   private[crypto] def cadd(len: Int, mask: Int, x: Array[Int], y: Array[Int], z: Array[Int]): Int = {
@@ -604,6 +605,7 @@ trait EC {
       cmov(x25519Field.SIZE, mask, precompBase, off, p.xyd, 0)
       off += x25519Field.SIZE
     }
+    return
   }
 
   private[crypto] def pointPrecompVar(p: PointExt, count: Int): Array[PointExt] = {
@@ -638,22 +640,24 @@ trait EC {
       precompLock = Some("Locked")
       if (precompBase.nonEmpty) return
       // Precomputed table for the base point in verification ladder
-      val b = new PointExt
-      x25519Field.copy(B_x, 0, b.x, 0)
-      x25519Field.copy(B_y, 0, b.y, 0)
-      pointExtendXY(b)
-      precompBaseTable = pointPrecompVar(b, 1 << (WNAF_WIDTH_BASE - 2))
+      val bPointExt = new PointExt
+      x25519Field.copy(B_x, 0, bPointExt.x, 0)
+      x25519Field.copy(B_y, 0, bPointExt.y, 0)
+      pointExtendXY(bPointExt)
+      precompBaseTable = pointPrecompVar(bPointExt, 1 << (WNAF_WIDTH_BASE - 2))
       val p = new PointAccum
       x25519Field.copy(B_x, 0, p.x, 0)
       x25519Field.copy(B_y, 0, p.y, 0)
       pointExtendXY(p)
       precompBase = new Array[Int](PRECOMP_BLOCKS * PRECOMP_POINTS * 3 * x25519Field.SIZE)
       var off = 0
-      for (b <- 0 until PRECOMP_BLOCKS) {
+      var b = 0
+      while (b < PRECOMP_BLOCKS) {
         val ds = new Array[PointExt](PRECOMP_TEETH)
         val sum = new PointExt
         pointSetNeutral(sum)
-        for (t <- 0 until PRECOMP_TEETH) {
+        var t = 0
+        while (t < PRECOMP_TEETH) {
           val q = pointCopy(p)
           pointAddVar(negate = true, sum, q, sum)
           pointDouble(p)
@@ -661,13 +665,15 @@ trait EC {
           if (b + t != PRECOMP_BLOCKS + PRECOMP_TEETH - 2)
             for (_ <- 1 until PRECOMP_SPACING)
               pointDouble(p)
+          t += 1
         }
         val points = new Array[PointExt](PRECOMP_POINTS)
         var k = 0
         points({
           k += 1; k - 1
         }) = sum
-        for (t <- 0 until (PRECOMP_TEETH - 1)) {
+        t = 0
+        while (t < (PRECOMP_TEETH - 1)) {
           val size = 1 << t
           var j = 0
           while (j < size) {
@@ -676,8 +682,10 @@ trait EC {
             j += 1
             k += 1
           }
+          t += 1
         }
-        for (i <- 0 until PRECOMP_POINTS) {
+        var i = 0
+        while (i < PRECOMP_POINTS) {
           val q = points(i)
           val x = x25519Field.create
           val y = x25519Field.create
@@ -697,8 +705,11 @@ trait EC {
           off += x25519Field.SIZE
           x25519Field.copy(r.xyd, 0, precompBase, off)
           off += x25519Field.SIZE
+          i += 1
         }
+        b += 1
       }
+      return
     case _ =>
   }
 
@@ -859,20 +870,18 @@ trait EC {
       n(i) = shuffle2(n(i))
     val p = new PointPrecomp
     var cOff = (PRECOMP_SPACING - 1) * PRECOMP_TEETH
-    breakable {
-      while (true) {
-        for (b <- 0 until PRECOMP_BLOCKS) {
-          val w = n(b) >>> cOff
-          val sign = (w >>> (PRECOMP_TEETH - 1)) & 1
-          val abs = (w ^ -sign) & PRECOMP_MASK
-          pointLookup(b, abs, p)
-          x25519Field.cswap(sign, p.ypx_h, p.ymx_h)
-          x25519Field.cnegate(sign, p.xyd)
-          pointAddPrecomp(p, r)
-        }
-        if ({ cOff -= PRECOMP_TEETH; cOff } < 0) break()
-        pointDouble(r)
+    while (true) {
+      for (b <- 0 until PRECOMP_BLOCKS) {
+        val w = n(b) >>> cOff
+        val sign = (w >>> (PRECOMP_TEETH - 1)) & 1
+        val abs = (w ^ -sign) & PRECOMP_MASK
+        pointLookup(b, abs, p)
+        x25519Field.cswap(sign, p.ypx_h, p.ymx_h)
+        x25519Field.cnegate(sign, p.xyd)
+        pointAddPrecomp(p, r)
       }
+      if ({ cOff -= PRECOMP_TEETH; cOff } < 0) return
+      pointDouble(r)
     }
   }
 

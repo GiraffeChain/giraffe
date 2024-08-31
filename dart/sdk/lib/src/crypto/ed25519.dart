@@ -3,23 +3,23 @@ import 'dart:typed_data';
 import 'package:cryptography/dart.dart';
 import 'package:giraffe_sdk/sdk.dart';
 
-import 'impl/ec.dart' as ec;
 import 'package:cryptography/cryptography.dart' as c;
+import 'package:ed25519_edwards/src/edwards25519.dart';
 
 abstract class Ed25519 {
   Future<Ed25519KeyPair> generateKeyPair();
   Future<Ed25519KeyPair> generateKeyPairFromSeed(List<int> seed);
-  Future<List<int>> sign(List<int> message, List<int> sk);
-  Future<List<int>> signKeyPair(List<int> message, Ed25519KeyPair keyPair);
+  Future<Uint8List> sign(List<int> message, List<int> sk);
+  Future<Uint8List> signKeyPair(List<int> message, Ed25519KeyPair keyPair);
   Future<bool> verify(List<int> signature, List<int> message, List<int> vk);
-  Future<List<int>> getVerificationKey(List<int> sk);
+  Future<Uint8List> getVerificationKey(List<int> sk);
 }
 
 Ed25519 ed25519 = Ed25519Isolated();
 
 class Ed25519KeyPair {
-  final List<int> sk;
-  final List<int> vk;
+  final Uint8List sk;
+  final Uint8List vk;
 
   Ed25519KeyPair(this.sk, this.vk);
   @override
@@ -43,13 +43,14 @@ class Ed25519Impl extends Ed25519 {
       _generateKeyPairFromSeed(seed);
 
   @override
-  Future<List<int>> getVerificationKey(List<int> sk) => _getVerificationKey(sk);
+  Future<Uint8List> getVerificationKey(List<int> sk) =>
+      getVerificationKeyImpl(sk);
 
   @override
-  Future<List<int>> sign(List<int> message, List<int> sk) => _sign(message, sk);
+  Future<Uint8List> sign(List<int> message, List<int> sk) => _sign(message, sk);
 
   @override
-  Future<List<int>> signKeyPair(List<int> message, Ed25519KeyPair keyPair) =>
+  Future<Uint8List> signKeyPair(List<int> message, Ed25519KeyPair keyPair) =>
       _signKeyPair(message, keyPair);
 
   @override
@@ -67,15 +68,15 @@ class Ed25519Isolated extends Ed25519 {
       isolate(_generateKeyPairFromSeed, seed);
 
   @override
-  Future<List<int>> getVerificationKey(List<int> sk) async =>
-      isolate(_getVerificationKey, sk);
+  Future<Uint8List> getVerificationKey(List<int> sk) async =>
+      isolate(getVerificationKeyImpl, sk);
 
   @override
-  Future<List<int>> sign(List<int> message, List<int> sk) async =>
+  Future<Uint8List> sign(List<int> message, List<int> sk) async =>
       isolate((t) => _sign(t.$1, t.$2), (message, sk));
 
   @override
-  Future<List<int>> signKeyPair(
+  Future<Uint8List> signKeyPair(
           List<int> message, Ed25519KeyPair keyPair) async =>
       isolate((t) => _signKeyPair(t.$1, t.$2), (message, keyPair));
 
@@ -103,13 +104,14 @@ Future<Ed25519KeyPair> _generateKeyPairFromSeed(List<int> seed) async {
   return _convertAlgKeypair(await _algorithm.newKeyPairFromSeed(seed));
 }
 
-Future<List<int>> _sign(List<int> message, List<int> sk) async {
-  final vk = await _getVerificationKey(sk);
-  final uintRes = await _signKeyPair(message, Ed25519KeyPair(sk, vk));
+Future<Uint8List> _sign(List<int> message, List<int> sk) async {
+  final vk = await getVerificationKeyImpl(sk);
+  final uintRes =
+      await _signKeyPair(message, Ed25519KeyPair(Uint8List.fromList(sk), vk));
   return Uint8List.fromList(uintRes);
 }
 
-Future<List<int>> _signKeyPair(
+Future<Uint8List> _signKeyPair(
     List<int> message, Ed25519KeyPair keyPair) async {
   final algKeyPair = c.SimpleKeyPairData(
     keyPair.sk,
@@ -119,7 +121,7 @@ Future<List<int>> _signKeyPair(
 
   final algSignature = await _algorithm.sign(message, keyPair: algKeyPair);
 
-  return algSignature.bytes;
+  return Uint8List.fromList(algSignature.bytes);
 }
 
 Future<bool> _verify(
@@ -137,13 +139,17 @@ Future<bool> _verify(
   return result;
 }
 
-Future<List<int>> _getVerificationKey(List<int> sk) async {
-  final h = Uint8List.fromList((await c.Sha512().hash(sk)).bytes)
-      .int8List
-      .sublist(0, 32);
-  final s = Int8List(ec.SCALAR_BYTES);
-  ec.pruneScalar(h, 0, s);
-  final vk = Int8List(32);
-  ec.scalarMultBaseEncoded(s, vk, 0);
-  return Uint8List.fromList(vk);
+Future<Uint8List> getVerificationKeyImpl(List<int> sk) async {
+  final h = (await c.Sha512().hash(sk)).bytes;
+  var digest = h.sublist(0, 32);
+  digest[0] &= 248;
+  digest[31] &= 127;
+  digest[31] |= 64;
+
+  var A = ExtendedGroupElement();
+  var hBytes = digest.sublist(0);
+  GeScalarMultBase(A, hBytes as Uint8List);
+  var publicKeyBytes = Uint8List(32);
+  A.ToBytes(publicKeyBytes);
+  return Uint8List.fromList(publicKeyBytes);
 }

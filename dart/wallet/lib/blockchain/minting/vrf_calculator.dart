@@ -3,7 +3,6 @@ import '../common/models/common.dart';
 import '../consensus/leader_election_validation.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import '../consensus/models/vrf_argument.dart';
-import '../crypto/ed25519vrf.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:rational/rational.dart';
