@@ -27,8 +27,8 @@ This blockchain is still in very early development. Everything is experimental. 
 At the moment, there are no public testnets. You can instead launch a local private testnet.
 1. `docker run --rm -p 2024:2024 seancheatham/giraffe-node:dev`
 1. Open the [wallet](http://localhost:2024) in your browser
-
-Note: At this time, there is an issue with staking from a web browser. This means you need to run the "Development & Testing" instructions below to launch either the desktop or mobile version of the wallet. Fixing this is a high priority for me.
+1. Select the "Public" wallet (this is a shared/reusable wallet where the secret key is all zeros)
+1. Select the "Stake" Tab. Click the little "warning" triangle to enter advanced mode. In the staker index dropdown, select `0`. Click "Start".
 
 ## Development & Testing
 ### Dependencies
@@ -47,9 +47,11 @@ Note: At this time, there is an issue with staking from a web browser. This mean
 
 ## Wallet Platform Support
 - While the intention is to support staking-based wallets on web and mobile, Linux desktop is currently the most stable.
-  - Android support should generally work. iOS will probably work, but I have no means of testing.
-  - Web support currently suffers an base-52 limitation somewhere in the VRF code. As such, it currently produces invalid blocks.
-  - Web doesn't easily support multithreading, so some aspects of the wallet are slow
+  - Web doesn't easily support multithreading, so some aspects of the wallet are slow.
+  - Android support should generally work.
+  - iOS is not setup yet, and I have no means of testing it. If any Mac/iPhone user wants to lend a hand here, I'd appreciate it.
+  - MacOS is not setup yet, and I have no means of testing it. If any Mac user wants to lend a hand here, I'd appreciate it.
+  - Windows is also not setup yet. I sort of have a means of testing it, but at the moment it's not a high priority. Feel free to create an Issue if you'd like to see this added sooner.
 
 ## Upcoming Goals
 - Stability, resiliency, and error handling of wallet-staking

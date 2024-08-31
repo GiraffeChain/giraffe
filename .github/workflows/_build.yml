@@ -23,17 +23,13 @@ jobs:
       - name: Verify Flutter Installation
         run: flutter doctor -v
 
-      - name: Flutter Clean
-        working-directory: ./dart/wallet
-        run: flutter clean
+      - name: Dart SDK Build and Test
+        working-directory: ./dart/sdk
+        run: dart pub get && dart run build_runner build --delete-conflicting-outputs && dart test && dart test --platform chrome
 
-      - name: Fetch Dependencies
+      - name: Wallet Build and Test
         working-directory: ./dart/wallet
-        run: flutter pub get
-
-      - name: Build
-        working-directory: ./dart/wallet
-        run: dart run build_runner build --delete-conflicting-outputs && flutter build web
+        run: flutter clean && flutter pub get && dart run build_runner build --delete-conflicting-outputs && flutter test && flutter test --platform chrome && flutter build web
 
       - name: Upload Web Wallet Dist
         uses: actions/upload-artifact@v4
