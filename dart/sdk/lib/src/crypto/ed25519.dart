@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cryptography/dart.dart';
 import 'package:giraffe_sdk/sdk.dart';
 
 import 'impl/ec.dart' as ec;
@@ -85,7 +86,7 @@ class Ed25519Isolated extends Ed25519 {
           (t) => _verify(t.$1.$1, t.$1.$2, t.$2), ((signature, message), vk));
 }
 
-final _algorithm = c.Ed25519();
+final _algorithm = DartEd25519();
 
 Future<Ed25519KeyPair> _convertAlgKeypair(c.SimpleKeyPair algKeypair) async {
   final sk = await algKeypair.extractPrivateKeyBytes();
