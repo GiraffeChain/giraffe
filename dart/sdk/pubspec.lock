@@ -118,14 +118,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.3"
-  clock:
-    dependency: transitive
-    description:
-      name: clock
-      sha256: cb6d7f03e1de671e34607e909a7213e31d7752be4fb66a86d29fe1eb14bfb5cf
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.1"
   code_builder:
     dependency: transitive
     description:
@@ -154,10 +146,10 @@ packages:
     dependency: transitive
     description:
       name: coverage
-      sha256: "576aaab8b1abdd452e0f656c3e73da9ead9d7880e15bdc494189d9c1a1baf0db"
+      sha256: c1fb2dce3c0085f39dc72668e85f8e0210ec7de05345821ff58530567df345a5
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.0"
+    version: "1.9.2"
   crypto:
     dependency: transitive
     description:
@@ -254,22 +246,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
-  google_identity_services_web:
-    dependency: transitive
-    description:
-      name: google_identity_services_web
-      sha256: "5be191523702ba8d7a01ca97c17fca096822ccf246b0a9f11923a6ded06199b6"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.1+4"
-  googleapis_auth:
-    dependency: transitive
-    description:
-      name: googleapis_auth
-      sha256: befd71383a955535060acde8792e7efc11d2fccd03dd1d3ec434e85b68775938
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.6.0"
   graphs:
     dependency: transitive
     description:
@@ -278,14 +254,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.2"
-  grpc:
-    dependency: "direct main"
-    description:
-      name: grpc
-      sha256: "7b2bee509ea2750028fe15f5a530bdc8664e7e62e97abf0bb7b0fc65b6d7d2b3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.0.0"
   hashlib:
     dependency: "direct main"
     description:
@@ -318,14 +286,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.2"
-  http2:
-    dependency: transitive
-    description:
-      name: http2
-      sha256: "9ced024a160b77aba8fb8674e38f70875e321d319e6f303ec18e87bd5a4b0c1d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.3.0"
   http_multi_server:
     dependency: transitive
     description:
@@ -342,14 +302,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
-  integral_isolates:
-    dependency: "direct main"
-    description:
-      name: integral_isolates
-      sha256: "62b1b45ea6350edc92d555aa1a98cbda09836b42e51e19e39d49bc39a686e601"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.1"
   io:
     dependency: transitive
     description:
@@ -410,10 +362,10 @@ packages:
     dependency: transitive
     description:
       name: mime
-      sha256: "2e123074287cc9fd6c09de8336dae606d1ddb88d9ac47358826db698c176a1f2"
+      sha256: "801fd0b26f14a4a58ccb09d5892c3fbdeff209594300a542492cf13fba9d247a"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.5"
+    version: "1.0.6"
   mockito:
     dependency: "direct main"
     description:
@@ -455,7 +407,7 @@ packages:
     source: hosted
     version: "1.5.1"
   protobuf:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: protobuf
       sha256: "68645b24e0716782e58948f8467fd42a880f255096a821f9e7d0ec625b00c84d"
@@ -482,10 +434,10 @@ packages:
     dependency: "direct main"
     description:
       name: quiver
-      sha256: b1c1ac5ce6688d77f65f3375a9abb9319b3cb32486bdc7a1e0fdf004d7ba4e47
+      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.1"
+    version: "3.2.2"
   rational:
     dependency: "direct main"
     description:
