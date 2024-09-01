@@ -1,4 +1,4 @@
-import { Giraffe } from "../lib/blockchain";
+import { Giraffe } from "../lib/giraffe";
 import { GiraffeWallet } from "../lib/wallet";
 
 describe("Integration Test", () => {

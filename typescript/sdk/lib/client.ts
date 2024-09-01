@@ -1,5 +1,4 @@
-import { BlockBody, BlockHeader, BlockId, FullBlock, LockAddress, Transaction, TransactionId, TransactionOutput, TransactionOutputReference } from "./proto/models/core";
-
+import { BlockBody, BlockHeader, BlockId, FullBlock, LockAddress, Transaction, TransactionId, TransactionOutput, TransactionOutputReference } from "./models";
 import Long from "long";
 
 import { requireDefined } from "./utils";
@@ -20,8 +19,8 @@ export abstract class GiraffeClient {
     abstract getOutEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]>;
     abstract getInVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference>;
     abstract getOutVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference>;
-    abstract queryVertices(label: String, where: WhereClause[]): Promise<TransactionOutputReference[]>;
-    abstract queryEdges(label: String, a: TransactionOutputReference | undefined, b: TransactionOutputReference | undefined, where: WhereClause[]): Promise<TransactionOutputReference[]>;
+    abstract queryVertices(label: String, where: [string, string, any][]): Promise<TransactionOutputReference[]>;
+    abstract queryEdges(label: String, a: TransactionOutputReference | undefined, b: TransactionOutputReference | undefined, where: [string, string, any][]): Promise<TransactionOutputReference[]>;
 
     getHeader(id: BlockId): Promise<BlockHeader> {
         return this.getHeaderOpt(id).then(requireDefined);
@@ -76,10 +75,10 @@ export class RpcGiraffeClient extends GiraffeClient {
         const references = await response.json();
         return references;
     }
-    async queryVertices(label: String, where: WhereClause[]): Promise<TransactionOutputReference[]> {
+    async queryVertices(label: String, where: [string, string, any][]): Promise<TransactionOutputReference[]> {
         const body = {
             "label": label,
-            "where": where.map(w => w.toJson())
+            "where": where
         };
 
         const response = await fetch(`${this.baseAddress}/graph/query-vertices`, {
@@ -94,10 +93,10 @@ export class RpcGiraffeClient extends GiraffeClient {
         }
         return response.json();
     }
-    async queryEdges(label: String, a: TransactionOutputReference | undefined, b: TransactionOutputReference | undefined, where: WhereClause[]): Promise<TransactionOutputReference[]> {
+    async queryEdges(label: String, a: TransactionOutputReference | undefined, b: TransactionOutputReference | undefined, where: [string, string, any][]): Promise<TransactionOutputReference[]> {
         let body = {
             "label": label,
-            "where": where.map(w => w.toJson())
+            "where": where
         };
         if (a !== undefined) {
             body["a"] = a;
@@ -340,23 +339,5 @@ async function* jsonLineStream(readableStream: ReadableStream<Uint8Array>) {
                 runningText = '';
             } catch (e) { }
         }
-    }
-}
-
-
-
-class WhereClause {
-    key: string;
-    operand: string;
-    value: any;
-
-    constructor(key: string, operand: string, value: any) {
-        this.key = key;
-        this.operand = operand;
-        this.value = value;
-    }
-
-    toJson(): any[] {
-        return [this.key, this.operand, this.value];
     }
 }

@@ -5,6 +5,13 @@ import { Transaction, TransactionInput, TransactionOutput, TransactionOutputRefe
 import { defaultTransactionTip, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils";
 import { GiraffeWallet, WitnessContext } from "./wallet";
 
+export * from "./models";
+export * from "./codecs";
+export * from "./client";
+export * from "./wallet";
+export * from "./graph";
+export * from "./utils";
+
 export class Giraffe {
     client: GiraffeClient;
     wallet: GiraffeWallet;
@@ -44,7 +51,7 @@ export class Giraffe {
         this.disposalSteps.push(() => changes.return({}).then(() => { }));
     }
 
-    async attest(transaction: Transaction): Promise<Transaction> {
+    async sign(transaction: Transaction): Promise<Transaction> {
         const message = transactionSignableBytes(transaction);
         const headId = await this.client.getCanonicalHeadId();
         const head = await this.client.getHeader(headId);
@@ -107,8 +114,10 @@ export class Giraffe {
         await this.client.broadcastTransaction(transaction);
     }
 
-    async attestPayBroadcast(transaction: Transaction): Promise<void> {
-        await this.broadcast(await this.pay(await this.attest(transaction)));
+    async paySignBroadcast(transaction: Transaction): Promise<Transaction> {
+        const tx = await this.sign(await this.pay(transaction))
+        await this.broadcast(tx);
+        return tx;
     }
 
 

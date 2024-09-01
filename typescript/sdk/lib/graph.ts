@@ -1,6 +1,6 @@
 import { GiraffeWallet } from "./wallet";
 import { GiraffeClient } from "./client";
-import { TransactionOutput, TransactionOutputReference } from "./proto/models/core";
+import { TransactionOutput, TransactionOutputReference } from "./models";
 
 import Long from 'long';
 
@@ -13,7 +13,7 @@ export class GiraffeGraph {
         this.client = client;
     }
 
-    createVertexOutput(label: string, data: { [key: string]: any }): TransactionOutput {
+    createVertexOutput(label: string, data: { [key: string]: any } | undefined): TransactionOutput {
         return {
             lockAddress: this.wallet.address,
             value: {
@@ -31,7 +31,7 @@ export class GiraffeGraph {
         };
     }
 
-    createEdgeOutput(label: string, a: TransactionOutputReference | undefined, b: TransactionOutputReference | undefined, data: { [key: string]: any }): TransactionOutput {
+    createEdgeOutput(label: string, a: TransactionOutputReference, b: TransactionOutputReference, data: { [key: string]: any } | undefined): TransactionOutput {
         return {
             lockAddress: this.wallet.address,
             value: {

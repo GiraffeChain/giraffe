@@ -1,13 +1,12 @@
-import { Lock, LockAddress, Transaction, TransactionInput, TransactionOutput, TransactionOutputReference, Witness } from "./proto/models/core";
+import { Lock, LockAddress, TransactionOutput, TransactionOutputReference, Witness } from "./models";
 
 import Long from 'long';
-import { defaultTransactionTip, requireDefined, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils";
-import { lockToAddress, transactionSignableBytes } from "./codecs";
+import { requireDefined } from "./utils";
+import { lockToAddress } from "./codecs";
 import bs58 from 'bs58'
 import { ed25519 } from '@noble/curves/ed25519';
 import * as bip39 from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
-import { GiraffeClient } from "./client";
 
 export class GiraffeWallet {
     spendableOutputs: ReferencedOutput[];
@@ -40,9 +39,9 @@ export class GiraffeWallet {
         return GiraffeWallet.fromSk(sk);
     }
 
-    static async fromMnemonic(mnemonic: string, password: string): Promise<GiraffeWallet> {
+    static async keyFromMnemonic(mnemonic: string, password: string): Promise<Uint8Array> {
         const seed = await bip39.mnemonicToSeed(mnemonic, password);
-        return GiraffeWallet.fromSk(seed.slice(0, 32));
+        return seed.slice(0, 32);
     }
 
     static generateMnemonic(): string {

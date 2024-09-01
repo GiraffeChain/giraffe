@@ -1,5 +1,5 @@
 import { GiraffeClient } from "./client";
-import { Edge, GraphEntry, LockAddress, Transaction, TransactionId, TransactionOutput, TransactionOutputReference } from "./proto/models/core";
+import { GraphEntry, LockAddress, Transaction, TransactionId, TransactionOutput, TransactionOutputReference } from "./models";
 
 import Long from "long";
 

@@ -1,4 +1,4 @@
-import { AccountRegistration, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Value, Vertex } from "./proto/models/core";
+import { AccountRegistration, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Value, Vertex } from "./models";
 import bs58 from 'bs58'
 import Long from "long";
 
