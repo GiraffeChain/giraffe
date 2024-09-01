@@ -10,10 +10,6 @@ jobs:
     steps:
       - name: Checkout current branch
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: git-restore-mtime
-        uses: chetan/git-restore-mtime-action@v2
         
       - name: Install Flutter
         uses: subosito/flutter-action@v2
@@ -42,7 +38,7 @@ jobs:
         run: "(rm -r ../../scala/node/src/main/resources/web || true) && cp -r build/web ../../scala/node/src/main/resources"
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: 17
