@@ -51,7 +51,7 @@ The SDK is written in TypeScript and is published to NPM. Other languages will b
   const giraffe = await g.Giraffe.init("http://localhost:2024/api", g.GiraffeWallet.fromSk(sk));
 
   // Because this is a new wallet, it has no funds. You can receive funds from the "genesis" wallet
-  const genesisGiraffe = await g.Giraffe.init("http://localhost:2024/api", g.GiraffeWallet.genesis());
+  const giraffeGenesis = await g.Giraffe.init("http://localhost:2024/api", g.GiraffeWallet.genesis());
 
   await giraffeGenesis.paySignBroadcast(
     g.Transaction.fromJSON(
