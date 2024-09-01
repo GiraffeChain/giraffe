@@ -12,7 +12,8 @@
     "test": "tests"
   },
   "files": [
-    "dist/lib"
+    "dist/lib",
+    "README.md"
   ],
   "author": "Sean Cheatham",
   "license": "MPL-2.0",

@@ -118,16 +118,16 @@ The SDK is written in TypeScript and is published to NPM. Other languages will b
 
   ```ts
   await giraffe.paySignBroadcast(
-    {
-      inputs: [],
-      outputs: [
-        giraffe.graph.createVertexOutput("user", undefined),
-        giraffe.graph.createVertexOutput("profile", {"firstName": "Alan", "lastName": "Turing"})
-        // Creates an edge connecting two vertices from _this_ transaction
-        giraffe.graph.createEdgeOutput("userProfile", {transactionId: undefined, index: 1}, {transactionId: undefined, index: 0}, {})
-      ],
-      attestation: []
-    }
+    Transaction.fromJSON(
+      {
+        outputs: [
+          giraffe.graph.createVertexOutput("user", undefined),
+          giraffe.graph.createVertexOutput("profile", {"firstName": "Alan", "lastName": "Turing"})
+          // Creates an edge connecting two vertices from _this_ transaction
+          giraffe.graph.createEdgeOutput("userProfile", {transactionId: undefined, index: 1}, {transactionId: undefined, index: 0}, {})
+        ]
+      }
+    )
   );
   ```
 </details>
