@@ -1,8 +1,8 @@
 {
-  "name": "giraffe-sdk",
+  "name": "@giraffechain/giraffe-sdk",
   "version": "0.0.1",
   "description": "SDK for interacting with the Giraffe blockchain",
-  "main": "index.js",
+  "main": "lib/giraffe.js",
   "scripts": {
     "test": "jest"
   },
@@ -23,5 +23,10 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
     "typescript": "^5.5.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seancheatham/giraffe.git",
+    "directory": "typescript/sdk"
   }
 }

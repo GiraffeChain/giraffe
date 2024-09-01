@@ -23,3 +23,7 @@ jobs:
     with:
       dev_tag: false
       latest_tag: true
+  publish-typescript-sdk:
+    uses: ./.github/workflows/_npm_publish.yml
+    needs: [create-release]
+    secrets: inherit
