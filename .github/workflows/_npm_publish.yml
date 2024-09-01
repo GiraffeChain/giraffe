@@ -17,7 +17,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
         working-directory: ./typescript/sdk
-      - run: npm publish --provenance --access public
+      - run: npm publish --access public
         working-directory: ./typescript/sdk
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
