@@ -1,7 +1,7 @@
 import { Lock, LockAddress, TransactionOutput, TransactionOutputReference, Witness } from "./models";
 
 import Long from 'long';
-import { requireDefined } from "./utils";
+import { isPaymentToken, requireDefined } from "./utils";
 import { lockToAddress } from "./codecs";
 import bs58 from 'bs58'
 import { ed25519 } from '@noble/curves/ed25519';
@@ -28,7 +28,7 @@ export class GiraffeWallet {
         const lock: Lock = { ed25519: { vk: bs58.encode(vk) } };
         const lockAddress = lockToAddress(lock);
         const signer: Signer = (ctx: WitnessContext) => {
-            const signature = ed25519.sign(sk, ctx.messageToSign);
+            const signature = ed25519.sign(ctx.messageToSign, sk);
             return { lock, key: { ed25519: { signature: bs58.encode(signature) } }, lockAddress };
         };
         return new GiraffeWallet(lockAddress, [[lockAddress, lock]], [[lockAddress, signer]]);
@@ -56,13 +56,25 @@ export class GiraffeWallet {
         }
     }
 
+    getSpendableOutput(reference: TransactionOutputReference): TransactionOutput | undefined {
+        return this.spendableOutputs.find(([r, _]) => r.transactionId === reference.transactionId && r.index === reference.index)?.[1];
+    }
+
+    getLock(address: LockAddress): Lock | undefined {
+        return this.locks.find(([a, _]) => a.value === address.value)?.[1];
+    }
+
+    getSigner(address: LockAddress): Signer | undefined {
+        return this.signers.find(([a, _]) => a.value === address.value)?.[1];
+    }
+
     updateSpendableOutputs(spendableOutputs: ReferencedOutput[]) {
         this.spendableOutputs = spendableOutputs;
         this.onUpdated();
     }
 
     paymentTokens(): ReferencedOutput[] {
-        return this.spendableOutputs.filter(([_, o]) => o.account === undefined && o.value?.accountRegistration === undefined && o.value?.graphEntry === undefined);
+        return this.spendableOutputs.filter(([_, o]) => isPaymentToken(o));
     }
 }
 

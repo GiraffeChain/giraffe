@@ -2,14 +2,19 @@
   "name": "@giraffechain/giraffe-sdk",
   "version": "0.0.1",
   "description": "SDK for interacting with the Giraffe blockchain",
-  "main": "lib/giraffe.js",
+  "main": "dist/lib/index.js",
+  "types": "dist/lib/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "test": "jest"
   },
   "directories": {
     "test": "tests"
   },
-  "author": "",
+  "files": [
+    "dist/lib"
+  ],
+  "author": "Sean Cheatham",
   "license": "MPL-2.0",
   "dependencies": {
     "@noble/curves": "^1.5.0",

@@ -2,7 +2,7 @@ import { GiraffeClient, RpcGiraffeClient } from "./client";
 import { embedTransactionId, transactionSignableBytes } from "./codecs";
 import { GiraffeGraph } from "./graph";
 import { Transaction, TransactionInput, TransactionOutput, TransactionOutputReference } from "./proto/models/core";
-import { defaultTransactionTip, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils";
+import { defaultTransactionTip, isPaymentToken, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils";
 import { GiraffeWallet, WitnessContext } from "./wallet";
 
 export * from "./models";
@@ -27,7 +27,14 @@ export class Giraffe {
     static async init(baseAddress: string, wallet: GiraffeWallet): Promise<Giraffe> {
         const client = new RpcGiraffeClient(baseAddress);
 
+        try {
+            await client.getCanonicalHeadId();
+        } catch (_) {
+            throw new Error("Unable to contact network");
+        }
+
         const blockchain = new Giraffe(client, wallet);
+        await blockchain.updateWalletUtxos();
         blockchain.background();
         return blockchain;
     }
@@ -42,10 +49,8 @@ export class Giraffe {
 
     async background(): Promise<void> {
         const changes = this.client.follow();
-        for await (const s of changes) {
-            const references = await this.client.getLockAddressState(this.wallet.address);
-            const utxos: [TransactionOutputReference, TransactionOutput][] = await Promise.all(references.map(async r => [r, await this.client.getTransactionOutput(r)]));
-            this.wallet.updateSpendableOutputs(utxos);
+        for await (const _ of changes) {
+            await this.updateWalletUtxos();
         }
 
         this.disposalSteps.push(() => changes.return({}).then(() => { }));
@@ -58,10 +63,11 @@ export class Giraffe {
         const ctx = new WitnessContext(head.height, message);
         const requiredWitnesses = await requiredWitnessesOf(this.client, transaction);
         for (const address of requiredWitnesses) {
-            if (transaction.attestation.findIndex((v, _, __) => v.lockAddress === address) === -1) {
-                const signer = this.wallet.signers.find(([a, _]) => a === address);
+            if (transaction.attestation.findIndex((v, _, __) => v.lockAddress?.value === address.value) === -1) {
+                const signer = this.wallet.getSigner(address);
+                // TODO: Error if undefined?
                 if (signer !== undefined) {
-                    const witness = signer[1](ctx);
+                    const witness = signer(ctx);
                     transaction.attestation.push(witness);
                 }
             }
@@ -76,33 +82,33 @@ export class Giraffe {
                 output.value!.quantity = minQuantity;
             }
         }
+        const remainingSpendableOutputs = [...this.wallet.spendableOutputs.filter(([_, out]) => isPaymentToken(out))];
+        if (remainingSpendableOutputs.length === 0) {
+            throw new Error("No spendable funds");
+        }
         var currentReward = rewardOf(transaction);
-        const remainingSpendableOutputs = [...this.wallet.spendableOutputs];
         var i = 0;
-        while (currentReward.compare(defaultTransactionTip) != 0) {
+        while (!currentReward.eq(defaultTransactionTip)) {
             if (currentReward > defaultTransactionTip) {
-                const output: TransactionOutput = {
+                const output: TransactionOutput = TransactionOutput.fromJSON({
                     lockAddress: this.wallet.address,
                     value: {
                         quantity: currentReward.sub(defaultTransactionTip),
-                        graphEntry: undefined,
-                        accountRegistration: undefined
                     },
-                    account: undefined
-                };
+                });
                 transaction.outputs.push(output);
                 currentReward = defaultTransactionTip;
             } else if (i >= remainingSpendableOutputs.length) {
                 throw new Error("Insufficient funds");
             } else {
-                const out = remainingSpendableOutputs[i];
+                const [ref, output] = remainingSpendableOutputs[i];
                 i++;
-                const input: TransactionInput = {
-                    reference: out[0],
-                    value: out[1].value
-                };
+                const input: TransactionInput = TransactionInput.fromJSON({
+                    reference: ref,
+                    value: output.value!
+                });
                 transaction.inputs.push(input);
-                currentReward = currentReward.add(out[1].value!.quantity);
+                currentReward = currentReward.add(output.value!.quantity);
             }
         }
         embedTransactionId(transaction);
@@ -120,5 +126,10 @@ export class Giraffe {
         return tx;
     }
 
+    async updateWalletUtxos(): Promise<void> {
+        const references = await this.client.getLockAddressState(this.wallet.address);
+        const utxos: [TransactionOutputReference, TransactionOutput][] = await Promise.all(references.map(async r => [r, await this.client.getTransactionOutput(r)]));
+        this.wallet.updateSpendableOutputs(utxos);
+    }
 
 }

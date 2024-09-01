@@ -2,9 +2,6 @@ import { GiraffeWallet } from "./wallet";
 import { GiraffeClient } from "./client";
 import { TransactionOutput, TransactionOutputReference } from "./models";
 
-import Long from 'long';
-
-
 export class GiraffeGraph {
     wallet: GiraffeWallet;
     client: GiraffeClient;
@@ -14,28 +11,23 @@ export class GiraffeGraph {
     }
 
     createVertexOutput(label: string, data: { [key: string]: any } | undefined): TransactionOutput {
-        return {
+        return TransactionOutput.fromJSON({
             lockAddress: this.wallet.address,
             value: {
-                quantity: Long.ZERO,
                 graphEntry: {
                     vertex: {
-                        edgeLockAddress: undefined,
                         label: label,
                         data: data
                     }
                 },
-                accountRegistration: undefined
             },
-            account: undefined
-        };
+        });
     }
 
     createEdgeOutput(label: string, a: TransactionOutputReference, b: TransactionOutputReference, data: { [key: string]: any } | undefined): TransactionOutput {
-        return {
+        return TransactionOutput.fromJSON({
             lockAddress: this.wallet.address,
             value: {
-                quantity: Long.ZERO,
                 graphEntry: {
                     edge: {
                         label: label,
@@ -44,10 +36,8 @@ export class GiraffeGraph {
                         b: b
                     }
                 },
-                accountRegistration: undefined
             },
-            account: undefined
-        };
+        });
     }
 
     localVertices(): TransactionOutputReference[] {

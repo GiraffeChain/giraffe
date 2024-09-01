@@ -2,7 +2,7 @@ import { BlockBody, BlockHeader, BlockId, FullBlock, LockAddress, Transaction, T
 import Long from "long";
 
 import { requireDefined } from "./utils";
-import { showTransactionId } from "./codecs";
+import { decodeBlockId, showBlockId, showLockAddress, showTransactionId, showTransactionOutputReference } from "./codecs";
 
 export abstract class GiraffeClient {
     abstract getHeaderOpt(id: BlockId): Promise<BlockHeader | undefined>;
@@ -60,20 +60,18 @@ export enum TipChangeType {
 
 export class RpcGiraffeClient extends GiraffeClient {
     async getInVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference> {
-        const response = await fetch(`${this.baseAddress}/graph/${showTransactionId(edge.transactionId as TransactionId)}/${edge.index}/in-vertex`);
+        const response = await fetch(`${this.baseAddress}/graph/${showTransactionId(edge.transactionId!)}/${edge.index}/in-vertex`);
         if (!response.ok) {
             throw new Error(`Failed to get inVertex for edge: ${edge}`);
         }
-        const references = await response.json();
-        return references;
+        return TransactionOutputReference.fromJSON(await response.json());
     }
     async getOutVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference> {
-        const response = await fetch(`${this.baseAddress}/graph/${showTransactionId(edge.transactionId as TransactionId)}/${edge.index}/out-vertex`);
+        const response = await fetch(`${this.baseAddress}/graph/${showTransactionId(edge.transactionId!)}/${edge.index}/out-vertex`);
         if (!response.ok) {
             throw new Error(`Failed to get inVertex for edge: ${edge}`);
         }
-        const references = await response.json();
-        return references;
+        return TransactionOutputReference.fromJSON(await response.json());
     }
     async queryVertices(label: String, where: [string, string, any][]): Promise<TransactionOutputReference[]> {
         const body = {
@@ -91,7 +89,8 @@ export class RpcGiraffeClient extends GiraffeClient {
         if (!response.ok) {
             throw new Error(`Failed to query vertices for label: ${label}`);
         }
-        return response.json();
+        const arr = await response.json();
+        return arr.map(TransactionOutputReference.fromJSON);
     }
     async queryEdges(label: String, a: TransactionOutputReference | undefined, b: TransactionOutputReference | undefined, where: [string, string, any][]): Promise<TransactionOutputReference[]> {
         let body = {
@@ -115,141 +114,98 @@ export class RpcGiraffeClient extends GiraffeClient {
         if (!response.ok) {
             throw new Error(`Failed to query vertices for label: ${label}`);
         }
-        return response.json();
+        const arr = await response.json();
+        return arr.map(TransactionOutputReference.fromJSON);
     }
     async getHeaderOpt(id: BlockId): Promise<BlockHeader | undefined> {
-        try {
-            const response = await fetch(`${this.baseAddress}/block-headers/${id}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    return undefined;
-                } else {
-                    throw new Error(`Failed to get block header for id: ${id}`);
-                }
+        const response = await fetch(`${this.baseAddress}/block-headers/${showBlockId(id)}`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                return undefined;
+            } else {
+                throw new Error(`Failed to get block header for id: ${showBlockId(id)}`);
             }
-            const blockHeader = await response.json();
-            return blockHeader;
-        } catch (error) {
-            console.error(`Error getting block header for id: ${id}`, error);
-            return undefined;
         }
+        return BlockHeader.fromJSON(await response.json());
     }
     async getBodyOpt(id: BlockId): Promise<BlockBody | undefined> {
-        try {
-            const response = await fetch(`${this.baseAddress}/block-bodies/${id}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    return undefined;
-                } else {
-                    throw new Error(`Failed to get block body for id: ${id}`);
-                }
+        const response = await fetch(`${this.baseAddress}/block-bodies/${showBlockId(id)}`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                return undefined;
+            } else {
+                throw new Error(`Failed to get block body for id: ${id}`);
             }
-            const blockBody = await response.json();
-            return blockBody;
-        } catch (error) {
-            console.error(`Error getting block body for id: ${id}`, error);
-            return undefined;
         }
+        return BlockBody.fromJSON(await response.json());
     }
 
     async getBlockOpt(id: BlockId): Promise<FullBlock | undefined> {
-        try {
-            const response = await fetch(`${this.baseAddress}/blocks/${id.value}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    return undefined;
-                } else {
-                    throw new Error(`Failed to get block for id: ${id.value}`);
-                }
+        const response = await fetch(`${this.baseAddress}/blocks/${showBlockId(id)}`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                return undefined;
+            } else {
+                throw new Error(`Failed to get block for id: ${showBlockId(id)}`);
             }
-            const fullBlock = await response.json();
-            return fullBlock;
-        } catch (error) {
-            console.error(`Error getting block for id: ${id.value}`, error);
-            return undefined;
         }
+        return FullBlock.fromJSON(await response.json());
     }
     async getTransactionOpt(id: TransactionId): Promise<Transaction | undefined> {
-        try {
-            const response = await fetch(`${this.baseAddress}/transactions/${id.value}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    return undefined;
-                } else {
-                    throw new Error(`Failed to get transaction for id: ${id.value}`);
-                }
+        const response = await fetch(`${this.baseAddress}/transactions/${showTransactionId(id)}`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                return undefined;
+            } else {
+                throw new Error(`Failed to get transaction for id: ${showTransactionId(id)}`);
             }
-            const transaction = await response.json();
-            return transaction;
-        } catch (error) {
-            console.error(`Error getting transaction for id: ${id.value}`, error);
-            return undefined;
         }
+        return Transaction.fromJSON(await response.json());
     }
 
     async getTransactionOutputOpt(reference: TransactionOutputReference): Promise<TransactionOutput | undefined> {
-        try {
-            const response = await fetch(`${this.baseAddress}/transaction-outputs/${reference.transactionId?.value}/${reference.index}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    return undefined;
-                } else {
-                    throw new Error(`Failed to get transaction output for reference: ${reference}`);
-                }
+        const response = await fetch(`${this.baseAddress}/transaction-outputs/${showTransactionId(reference.transactionId!)}/${reference.index}`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                return undefined;
+            } else {
+                throw new Error(`Failed to get transaction output for reference: ${showTransactionOutputReference(reference)}`);
             }
-            const transactionOutput = await response.json();
-            return transactionOutput;
-        } catch (error) {
-            console.error(`Error getting transaction output for reference: ${reference}`, error);
-            return undefined;
         }
+        return TransactionOutput.fromJSON(await response.json());
     }
 
     async getBlockIdAtHeightOpt(height: Long): Promise<BlockId | undefined> {
-        try {
-            const response = await fetch(`${this.baseAddress}/block-ids/${height}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    return undefined;
-                } else {
-                    throw new Error(`Failed to get block id for height: ${height}`);
-                }
+        const response = await fetch(`${this.baseAddress}/block-ids/${height}`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                return undefined;
+            } else {
+                throw new Error(`Failed to get block id for height: ${height}`);
             }
-            return { value: (await response.json())["blockId"] as string };
-        } catch (error) {
-            console.error(`Error getting block id for height: ${height}`, error);
-            return undefined;
         }
+        return decodeBlockId((await response.json())["blockId"]);
     }
 
     async getLockAddressState(address: LockAddress): Promise<TransactionOutputReference[]> {
-        try {
-            const response = await fetch(`${this.baseAddress}/address-states/${address.value}`);
-            if (!response.ok) {
-                throw new Error(`Failed to get lock address state for address: ${address.value}`);
-            }
-            const state = await response.json();
-            return state;
-        } catch (error) {
-            console.error(`Error getting lock address state for address: ${address}`, error);
-            return [];
+        const response = await fetch(`${this.baseAddress}/address-states/${showLockAddress(address)}`);
+        if (!response.ok) {
+            throw new Error(`Failed to get lock address state for address: ${showLockAddress(address)}`);
         }
+        const arr = await response.json();
+        return arr.map(TransactionOutputReference.fromJSON);
     }
 
     async broadcastTransaction(transaction: Transaction): Promise<void> {
-        try {
-            const response = await fetch(`${this.baseAddress}/transactions`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(Transaction.toJSON(transaction))
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to broadcast transaction: ${transaction}`);
-            }
-        } catch (error) {
-            console.error(`Error broadcasting transaction: ${transaction}`, error);
+        const response = await fetch(`${this.baseAddress}/transactions`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(Transaction.toJSON(transaction))
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to broadcast transaction: ${transaction}`);
         }
     }
 
@@ -266,51 +222,38 @@ export class RpcGiraffeClient extends GiraffeClient {
         const stream = response.body;
         if (!stream) throw Error("Null follow stream");
         for await (const change of jsonLineStream(stream)) {
-            if (change["applied"] !== undefined) {
-                yield { type: TipChangeType.APPLIED, blockId: change["applied"] };
-            } else if (change["unapplied"] !== undefined) {
-                yield { type: TipChangeType.UNAPPLIED, blockId: change["unapplied"] };
+            if (change["adopted"] !== undefined) {
+                yield { type: TipChangeType.APPLIED, blockId: change["adopted"] };
+            } else if (change["unadopted"] !== undefined) {
+                yield { type: TipChangeType.UNAPPLIED, blockId: change["unadopted"] };
+            } else {
+                throw Error("Unexpected tip change");
             }
         }
     }
     async getEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]> {
-        try {
-            const response = await fetch(`${this.baseAddress}/graph/${vertex.transactionId?.value}/${vertex.index}/edges`);
-            if (!response.ok) {
-                throw new Error(`Failed to get edges for vertex: ${vertex}`);
-            }
-            const references = await response.json();
-            return references;
-        } catch (error) {
-            console.error(`Error getting edges for vertex: ${vertex}`, error);
-            return [];
+        const response = await fetch(`${this.baseAddress}/graph/${vertex.transactionId?.value}/${vertex.index}/edges`);
+        if (!response.ok) {
+            throw new Error(`Failed to get edges for vertex: ${vertex}`);
         }
+        const arr = await response.json();
+        return arr.map(TransactionOutputReference.fromJSON);
     }
     async getInEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]> {
-        try {
-            const response = await fetch(`${this.baseAddress}/graph/${vertex.transactionId?.value}/${vertex.index}/in-edges`);
-            if (!response.ok) {
-                throw new Error(`Failed to get inEdges for vertex: ${vertex}`);
-            }
-            const references = await response.json();
-            return references;
-        } catch (error) {
-            console.error(`Error getting inEdges for vertex: ${vertex}`, error);
-            return [];
+        const response = await fetch(`${this.baseAddress}/graph/${vertex.transactionId?.value}/${vertex.index}/in-edges`);
+        if (!response.ok) {
+            throw new Error(`Failed to get inEdges for vertex: ${vertex}`);
         }
+        const arr = await response.json();
+        return arr.map(TransactionOutputReference.fromJSON);
     }
     async getOutEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]> {
-        try {
-            const response = await fetch(`${this.baseAddress}/graph/${vertex.transactionId?.value}/${vertex.index}/out-edges`);
-            if (!response.ok) {
-                throw new Error(`Failed to get outEdges for vertex: ${vertex}`);
-            }
-            const references = await response.json();
-            return references;
-        } catch (error) {
-            console.error(`Error getting outEdges for vertex: ${vertex}`, error);
-            return [];
+        const response = await fetch(`${this.baseAddress}/graph/${vertex.transactionId?.value}/${vertex.index}/out-edges`);
+        if (!response.ok) {
+            throw new Error(`Failed to get outEdges for vertex: ${vertex}`);
         }
+        const arr = await response.json();
+        return arr.map(TransactionOutputReference.fromJSON);
     }
 
     private baseAddress: String;

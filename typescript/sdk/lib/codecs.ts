@@ -17,6 +17,10 @@ export function showLockAddress(lockAddress: LockAddress): string {
     return "a_" + lockAddress.value;
 }
 
+export function showTransactionOutputReference(reference: TransactionOutputReference): string {
+    return showTransactionId(requireDefined(reference.transactionId)) + ":" + reference.index;
+}
+
 export function decodeBlockId(input: string): BlockId {
     if (input.startsWith("b_")) return { value: input.substring(2) };
     else return { value: input };
@@ -60,7 +64,8 @@ function encodeInt32(value: number): Uint8Array {
 }
 
 function encodeInt64(value: Long): Uint8Array {
-    return new Uint8Array(value.toBytesBE());
+    const be = value.toBytesBE();
+    return new Uint8Array(be);
 }
 
 function encodeList<T>(encodeT: (t: T) => Uint8Array, list: T[]): Uint8Array {

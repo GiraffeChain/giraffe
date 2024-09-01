@@ -114,14 +114,18 @@ function protoStructMinimumQuantity(struct: { [key: string]: any }): Long {
 }
 
 export function rewardOf(transaction: Transaction): Long {
-    var result = Long.ZERO;
+    var result = Long.fromInt(0, false);
     for (const input of transaction.inputs) {
-        result.add(input.value!.quantity);
+        result = result.add(input.value!.quantity);
     }
     for (const output of transaction.outputs) {
-        result.sub(output.value!.quantity);
+        result = result.sub(output.value!.quantity);
     }
     return result;
 }
 
-export const defaultTransactionTip = new Long(1000);
+export const defaultTransactionTip = Long.fromInt(1000);
+
+export function isPaymentToken(transactionOutput: TransactionOutput): boolean {
+    return transactionOutput.account === undefined && transactionOutput.value?.accountRegistration === undefined && transactionOutput.value?.graphEntry === undefined;
+}
