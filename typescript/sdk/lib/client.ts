@@ -3,6 +3,7 @@ import { BlockBody, BlockHeader, BlockId, FullBlock, LockAddress, Transaction, T
 import Long from "long";
 
 import { requireDefined } from "./utils";
+import { showTransactionId } from "./codecs";
 
 export abstract class GiraffeClient {
     abstract getHeaderOpt(id: BlockId): Promise<BlockHeader | undefined>;
@@ -17,6 +18,10 @@ export abstract class GiraffeClient {
     abstract getEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]>;
     abstract getInEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]>;
     abstract getOutEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]>;
+    abstract getInVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference>;
+    abstract getOutVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference>;
+    abstract queryVertices(label: String, where: WhereClause[]): Promise<TransactionOutputReference[]>;
+    abstract queryEdges(label: String, a: TransactionOutputReference | undefined, b: TransactionOutputReference | undefined, where: WhereClause[]): Promise<TransactionOutputReference[]>;
 
     getHeader(id: BlockId): Promise<BlockHeader> {
         return this.getHeaderOpt(id).then(requireDefined);
@@ -55,6 +60,64 @@ export enum TipChangeType {
 }
 
 export class RpcGiraffeClient extends GiraffeClient {
+    async getInVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference> {
+        const response = await fetch(`${this.baseAddress}/graph/${showTransactionId(edge.transactionId as TransactionId)}/${edge.index}/in-vertex`);
+        if (!response.ok) {
+            throw new Error(`Failed to get inVertex for edge: ${edge}`);
+        }
+        const references = await response.json();
+        return references;
+    }
+    async getOutVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference> {
+        const response = await fetch(`${this.baseAddress}/graph/${showTransactionId(edge.transactionId as TransactionId)}/${edge.index}/out-vertex`);
+        if (!response.ok) {
+            throw new Error(`Failed to get inVertex for edge: ${edge}`);
+        }
+        const references = await response.json();
+        return references;
+    }
+    async queryVertices(label: String, where: WhereClause[]): Promise<TransactionOutputReference[]> {
+        const body = {
+            "label": label,
+            "where": where.map(w => w.toJson())
+        };
+
+        const response = await fetch(`${this.baseAddress}/graph/query-vertices`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to query vertices for label: ${label}`);
+        }
+        return response.json();
+    }
+    async queryEdges(label: String, a: TransactionOutputReference | undefined, b: TransactionOutputReference | undefined, where: WhereClause[]): Promise<TransactionOutputReference[]> {
+        let body = {
+            "label": label,
+            "where": where.map(w => w.toJson())
+        };
+        if (a !== undefined) {
+            body["a"] = a;
+        }
+        if (b !== undefined) {
+            body["b"] = b;
+        }
+
+        const response = await fetch(`${this.baseAddress}/graph/query-edges`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to query vertices for label: ${label}`);
+        }
+        return response.json();
+    }
     async getHeaderOpt(id: BlockId): Promise<BlockHeader | undefined> {
         try {
             const response = await fetch(`${this.baseAddress}/block-headers/${id}`);
@@ -277,5 +340,23 @@ async function* jsonLineStream(readableStream: ReadableStream<Uint8Array>) {
                 runningText = '';
             } catch (e) { }
         }
+    }
+}
+
+
+
+class WhereClause {
+    key: string;
+    operand: string;
+    value: any;
+
+    constructor(key: string, operand: string, value: any) {
+        this.key = key;
+        this.operand = operand;
+        this.value = value;
+    }
+
+    toJson(): any[] {
+        return [this.key, this.operand, this.value];
     }
 }

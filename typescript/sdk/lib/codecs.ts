@@ -5,6 +5,18 @@ import Long from "long";
 import blake2b from 'blake2b';
 import { requireDefined } from "./utils";
 
+export function showBlockId(blockId: BlockId): string {
+    return "b_" + blockId.value;
+}
+
+export function showTransactionId(transactionId: TransactionId): string {
+    return "t_" + transactionId.value;
+}
+
+export function showLockAddress(lockAddress: LockAddress): string {
+    return "a_" + lockAddress.value;
+}
+
 export function decodeBlockId(input: string): BlockId {
     if (input.startsWith("b_")) return { value: input.substring(2) };
     else return { value: input };

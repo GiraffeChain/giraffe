@@ -58,17 +58,19 @@ class Graph {
     return reference;
   }
 
-  List<TransactionOutputReference> get localVertices =>
-      wallet.spendableOutputs.entries
-          .where((e) => e.value.value.hasGraphEntry())
-          .map((e) => e.key)
-          .toList();
+  List<TransactionOutputReference> get localVertices => wallet
+      .spendableOutputs.entries
+      .where((e) =>
+          e.value.value.hasGraphEntry() && e.value.value.graphEntry.hasVertex())
+      .map((e) => e.key)
+      .toList();
 
-  List<TransactionOutputReference> get localEdges =>
-      wallet.spendableOutputs.entries
-          .where((e) => e.value.value.hasGraphEntry())
-          .map((e) => e.key)
-          .toList();
+  List<TransactionOutputReference> get localEdges => wallet
+      .spendableOutputs.entries
+      .where((e) =>
+          e.value.value.hasGraphEntry() && e.value.value.graphEntry.hasEdge())
+      .map((e) => e.key)
+      .toList();
 
   struct.Struct? _convertData(GraphData? data) {
     if (data == null) {

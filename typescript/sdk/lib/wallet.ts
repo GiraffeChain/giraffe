@@ -1,25 +1,27 @@
-import { Lock, LockAddress, TransactionOutput, TransactionOutputReference, Witness } from "./proto/models/core";
+import { Lock, LockAddress, Transaction, TransactionInput, TransactionOutput, TransactionOutputReference, Witness } from "./proto/models/core";
 
 import Long from 'long';
-import { requireDefined } from "./utils";
-import { lockToAddress } from "./codecs";
+import { defaultTransactionTip, requireDefined, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils";
+import { lockToAddress, transactionSignableBytes } from "./codecs";
 import bs58 from 'bs58'
 import { ed25519 } from '@noble/curves/ed25519';
 import * as bip39 from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
+import { GiraffeClient } from "./client";
 
 export class GiraffeWallet {
     spendableOutputs: ReferencedOutput[];
+    pendingOutputs: ReferencedOutput[];
     address: LockAddress;
-    lock: Lock;
-    signer: Signer;
+    locks: [LockAddress, Lock][];
+    signers: [LockAddress, Signer][];
     onUpdated: () => void = () => { };
 
-    constructor(address: LockAddress, lock: Lock, signer: Signer) {
+    constructor(address: LockAddress, locks: [LockAddress, Lock][], signers: [LockAddress, Signer][]) {
         this.spendableOutputs = [];
         this.address = address;
-        this.lock = lock;
-        this.signer = signer;
+        this.locks = locks;
+        this.signers = signers;
     }
 
     static fromSk(sk: Uint8Array): GiraffeWallet {
@@ -30,7 +32,7 @@ export class GiraffeWallet {
             const signature = ed25519.sign(sk, ctx.messageToSign);
             return { lock, key: { ed25519: { signature: bs58.encode(signature) } }, lockAddress };
         };
-        return new GiraffeWallet(lockAddress, lock, signer);
+        return new GiraffeWallet(lockAddress, [[lockAddress, lock]], [[lockAddress, signer]]);
     }
 
     static genesis(): GiraffeWallet {
