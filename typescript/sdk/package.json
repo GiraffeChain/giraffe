@@ -31,7 +31,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/seancheatham/giraffe.git",
+    "url": "https://github.com/seancheatham/giraffe",
     "directory": "typescript/sdk"
   }
 }
