@@ -5,6 +5,8 @@ import { Transaction, TransactionInput, TransactionOutput, TransactionOutputRefe
 import { defaultTransactionTip, isPaymentToken, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils";
 import { GiraffeWallet, WitnessContext } from "./wallet";
 
+import Long from "long";
+
 export * from "./models";
 export * from "./codecs";
 export * from "./client";
@@ -130,6 +132,22 @@ export class Giraffe {
         const references = await this.client.getLockAddressState(this.wallet.address);
         const utxos: [TransactionOutputReference, TransactionOutput][] = await Promise.all(references.map(async r => [r, await this.client.getTransactionOutput(r)]));
         this.wallet.updateSpendableOutputs(utxos);
+    }
+
+    async transferFromGenesisWallet(quantity: Long): Promise<void> {
+        const giraffeGenesis = new Giraffe(this.client, GiraffeWallet.genesis());
+        await giraffeGenesis.updateWalletUtxos();
+        await giraffeGenesis.paySignBroadcast(Transaction.fromJSON({
+            outputs: [
+                {
+                    lockAddress: this.wallet.address,
+                    value: {
+                        quantity: quantity,
+                    },
+                }
+            ]
+        }));
+        await giraffeGenesis.dispose();
     }
 
 }
