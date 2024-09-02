@@ -5,50 +5,117 @@ import Long from "long";
 import blake2b from 'blake2b';
 import { requireDefined } from "./utils";
 
+/**
+ * Converts a BlockId to its corresponding string representation.
+ * 
+ * @param blockId - The BlockId to convert.
+ * @returns The string representation of the BlockId.
+ */
 export function showBlockId(blockId: BlockId): string {
     return "b_" + blockId.value;
 }
 
+/**
+ * Converts a TransactionId to a string representation.
+ * 
+ * @param transactionId - The TransactionId to convert.
+ * @returns The string representation of the TransactionId.
+ */
 export function showTransactionId(transactionId: TransactionId): string {
     return "t_" + transactionId.value;
 }
 
+/**
+ * Converts a LockAddress object to a string representation.
+ * 
+ * @param lockAddress - The LockAddress object to convert.
+ * @returns The string representation of the LockAddress.
+ */
 export function showLockAddress(lockAddress: LockAddress): string {
     return "a_" + lockAddress.value;
 }
 
+/**
+ * Displays a string representation of a transaction output reference.
+ *
+ * @param reference - The transaction output reference to display.
+ * @returns The string representation of the transaction output reference.
+ */
 export function showTransactionOutputReference(reference: TransactionOutputReference): string {
     return showTransactionId(requireDefined(reference.transactionId)) + ":" + reference.index;
 }
 
+/**
+ * Decodes a block ID from the given input string.
+ *
+ * @param input - The input string to decode.
+ * @returns The decoded BlockId object.
+ */
 export function decodeBlockId(input: string): BlockId {
     if (input.startsWith("b_")) return { value: input.substring(2) };
     else return { value: input };
 }
 
+/**
+ * Decodes a transaction ID from the given input.
+ * 
+ * @param input - The input string representing the transaction ID.
+ * @returns The decoded transaction ID.
+ */
 export function decodeTransactionId(input: string): TransactionId {
     if (input.startsWith("t_")) return { value: input.substring(2) };
     else return { value: input };
 }
 
+/**
+ * Decodes a lock address.
+ *
+ * @param input - The input string to decode.
+ * @returns The decoded lock address.
+ */
 export function decodeLockAddress(input: string): LockAddress {
     if (input.startsWith("a_")) return { value: input.substring(2) };
     else return { value: input };
 }
 
+/**
+ * Calculates the signable bytes for a given transaction.
+ *
+ * @param transaction - The transaction object.
+ * @returns The signable bytes as a Uint8Array.
+ */
 export function transactionSignableBytes(transaction: Transaction): Uint8Array {
     return mergeArrays([encodeList(encodeTransactionInput, transaction.inputs), encodeList(encodeTransactionOutput, transaction.outputs), optCodec(transaction.rewardParentBlockId, encodeBlockId)]);
 }
 
+/**
+ * Generates a transaction ID for the given transaction.
+ * If the transaction already has a transaction ID, it returns the existing ID.
+ * Otherwise, it computes a new transaction ID.
+ *
+ * @param transaction - The transaction object.
+ * @returns The transaction ID.
+ */
 export function transactionId(transaction: Transaction): TransactionId {
     if (transaction.transactionId !== undefined) return transaction.transactionId;
     return computeTransactionId(transaction);
 }
 
+/**
+ * Embeds a transaction ID into the given transaction object.
+ * 
+ * @param transaction - The transaction object to embed the ID into.
+ */
 export function embedTransactionId(transaction: Transaction) {
     transaction.transactionId = computeTransactionId(transaction);
 }
 
+/**
+ * Computes the transaction ID for a given transaction.
+ * 
+ * @param transaction - The transaction object.
+ * @returns The transaction ID as a string.
+ */
 export function computeTransactionId(transaction: Transaction): TransactionId {
     return { value: bs58.encode(hash256(transactionSignableBytes(transaction))) };
 }
@@ -146,6 +213,11 @@ function encodeLock(value: Lock): Uint8Array {
     throw Error("Lock type undefined");
 }
 
+/**
+ * Converts a Lock object to a LockAddress object.
+ * @param value - The Lock object to be converted.
+ * @returns The LockAddress object representing the lock's address.
+ */
 export function lockToAddress(value: Lock): LockAddress {
     return { value: bs58.encode(hash256(encodeLock(value))) };
 }
