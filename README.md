@@ -41,7 +41,7 @@ The SDK is written in TypeScript and is published to NPM. Other languages will b
 
 ### Initialize
 <details>
-  <summary>Click to Expaand</summary>
+  <summary>Click to Expand</summary>
 
   #### First launch
   ```ts
