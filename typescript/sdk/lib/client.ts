@@ -4,50 +4,196 @@ import Long from "long";
 import { requireDefined } from "./utils";
 import { decodeBlockId, showBlockId, showLockAddress, showTransactionId, showTransactionOutputReference } from "./codecs";
 
+/**
+ * Represents a client for interacting with the Giraffe blockchain. Blockchain and graph data can be queried using this client. Transactions can also be broadcasted.
+ */
 export abstract class GiraffeClient {
+    /**
+     * Retrieve a block header by its ID, if it exists.
+     * @param id - The Block ID
+     * @returns A Promise that resolves to the BlockHeader, or undefined if the block does not exist.
+     */
     abstract getHeaderOpt(id: BlockId): Promise<BlockHeader | undefined>;
+    /**
+     * Retrieve a block body by its ID, if it exists.
+     * @param id - The Block ID
+     * @returns A Promise that resolves to the BlockBody, or undefined if the block does not exist.
+     */
     abstract getBodyOpt(id: BlockId): Promise<BlockBody | undefined>;
+    /**
+     * Retrieve a full block by its ID, if it exists.
+     * @param id - The Block ID
+     * @returns A Promise that resolves to the FullBlock, or undefined if the block does not exist.
+     */
     abstract getBlockOpt(id: BlockId): Promise<FullBlock | undefined>;
+    /**
+     * Retrieve a transaction by its ID, if it exists.
+     * @param id - The Transaction ID
+     * @returns A Promise that resolves to the Transaction, or undefined if the block does not exist.
+     */
     abstract getTransactionOpt(id: TransactionId): Promise<Transaction | undefined>;
+
+    /**
+     * Retrieve a transaction output by its reference, if it exists.
+     * @param reference - The TransactionOutputReference
+     * @returns A Promise that resolves to the TransactionOutput, or undefined if the output does not exist.
+     */
     abstract getTransactionOutputOpt(reference: TransactionOutputReference): Promise<TransactionOutput | undefined>;
+    /**
+     * Retrieve the Block ID at a given height, if it exists.
+     * @param height - The height of the block. If `0` is provided, the current chain tip is provided. If a negative value is provided, the block is retrieved by depth.
+     * @returns A Promise that resolves to the Block ID, or undefined if the chain hasn't reached the target height.
+     */
     abstract getBlockIdAtHeightOpt(height: Long): Promise<BlockId | undefined>;
+    /**
+     * Get the Transaction Output References that are currently spendable by the given lock address
+     * @param address - The Lock Address
+     * @returns A Promise that resolves to the Transaction Output References that are currently spendable by the given lock address
+     */
     abstract getLockAddressState(address: LockAddress): Promise<TransactionOutputReference[]>;
+    /**
+     * Broadcast a transaction to the network.
+     * @param transaction - The transaction to broadcast.
+     * @returns A Promise that resolves when the transaction has been broadcast. The transaction is not immediately included in the chain.
+     */
     abstract broadcastTransaction(transaction: Transaction): Promise<void>;
+    /**
+     * Follow the chain and receive updates when the chain tip changes.
+     * @returns An AsyncGenerator that yields TipChange objects.
+     */
     abstract follow(): AsyncGenerator<TipChange, any, void>;
+    /**
+     * Retrieve all edges of a vertex.
+     * @param vertex - The vertex to retrieve the edges for.
+     * @returns A Promise that resolves to the TransactionOutputReferences of the associated edges.
+     */
     abstract getEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]>;
+    /**
+     * Retrieve incoming edges of a vertex.
+     * @param vertex - The vertex to retrieve the incoming edges for.
+     * @returns A Promise that resolves to the TransactionOutputReferences of the associated incoming edges.
+     */
     abstract getInEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]>;
+    /**
+     * Retrieve outgoing edges of a vertex.
+     * @param vertex - The vertex to retrieve the outgoing edges for.
+     * @returns A Promise that resolves to the TransactionOutputReferences of the associated outgoing edges.
+     */
     abstract getOutEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]>;
+    /**
+     * Retrieve the reference to the vertex contained at the given edge's `a`.
+     * @param vertex - The reference to the edge containing `a`.
+     * @returns A Promise that resolves to the TransactionOutputReference `a` edge.
+     */
     abstract getInVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference>;
+    /**
+     * Retrieve the reference to the vertex contained at the given edge's `b`.
+     * @param vertex - The reference to the edge containing `b`.
+     * @returns A Promise that resolves to the TransactionOutputReference `b` edge.
+     */
     abstract getOutVertex(edge: TransactionOutputReference): Promise<TransactionOutputReference>;
+    /**
+     * Query vertices in the graph.
+     * @param label - The label of the vertices to query.
+     * @param where - The conditions to filter the vertices by.
+     * @returns A Promise that resolves to the TransactionOutputReferences of the vertices that match the query.
+     */
     abstract queryVertices(label: String, where: [string, string, any][]): Promise<TransactionOutputReference[]>;
+    /**
+     * Query edges in the graph.
+     * @param label - The label of the edges to query.
+     * @param a - The reference to the `a`/source/in vertex.
+     * @param a - The reference to the `b`/destination/out vertex.
+     * @param where - The conditions to filter the edges by.
+     * @returns A Promise that resolves to the TransactionOutputReferences of the edges that match the query.
+     */
     abstract queryEdges(label: String, a: TransactionOutputReference | undefined, b: TransactionOutputReference | undefined, where: [string, string, any][]): Promise<TransactionOutputReference[]>;
 
-    getHeader(id: BlockId): Promise<BlockHeader> {
-        return this.getHeaderOpt(id).then(requireDefined);
+    /**
+     * Retrieves the header of a block with the specified ID.
+     * 
+     * @param id - The ID of the block.
+     * @returns A promise that resolves to the block header.
+     * @throws An error if the block does not exist.
+     */
+    async getHeader(id: BlockId): Promise<BlockHeader> {
+        const t = await this.getHeaderOpt(id);
+        return requireDefined(t);
     }
-    getBody(id: BlockId): Promise<BlockBody> {
-        return this.getBodyOpt(id).then(requireDefined);
+    /**
+     * Retrieves the body of a block with the specified ID.
+     * 
+     * @param id - The ID of the block.
+     * @returns A promise that resolves to the block body.
+     * @throws An error if the block does not exist.
+     */
+    async getBody(id: BlockId): Promise<BlockBody> {
+        const t = await this.getBodyOpt(id);
+        return requireDefined(t);
     }
-    getBlock(id: BlockId): Promise<FullBlock> {
-        return this.getBlockOpt(id).then(requireDefined)
+    /**
+     * Retrieves a full block with the specified ID.
+     * 
+     * @param id - The ID of the block.
+     * @returns A promise that resolves to the full block.
+     * @throws An error if the block does not exist.
+     */
+    async getBlock(id: BlockId): Promise<FullBlock> {
+        const t = await this.getBlockOpt(id);
+        return requireDefined(t);
     }
-    getTransaction(id: TransactionId): Promise<Transaction> {
-        return this.getTransactionOpt(id).then(requireDefined)
+    /**
+     * Retrieves a transaction with the specified ID.
+     * 
+     * @param id - The ID of the transaction.
+     * @returns A promise that resolves to the transaction.
+     * @throws An error if the transaction does not exist.
+     */
+    async getTransaction(id: TransactionId): Promise<Transaction> {
+        const t = await this.getTransactionOpt(id);
+        return requireDefined(t);
     }
-    getTransactionOutput(reference: TransactionOutputReference): Promise<TransactionOutput> {
-        return this.getTransactionOutputOpt(reference).then(requireDefined)
+    /**
+     * Retrieves a transaction output with the specified reference.
+     * 
+     * @param reference - The reference of the transaction output.
+     * @returns A promise that resolves to the transaction output.
+     * @throws An error if the transaction output does not exist.
+     */
+    async getTransactionOutput(reference: TransactionOutputReference): Promise<TransactionOutput> {
+        const t = await this.getTransactionOutputOpt(reference);
+        return requireDefined(t);
     }
-    getBlockIdAtHeight(height: Long): Promise<BlockId> {
-        return this.getBlockIdAtHeightOpt(height).then(requireDefined);
+    /**
+     * Retrieves the block ID at the specified height.
+     * 
+     * @param height - The height of the block.
+     * @returns A promise that resolves to the block ID.
+     * @throws An error if the block does not exist.
+     */
+    async getBlockIdAtHeight(height: Long): Promise<BlockId> {
+        const t = await this.getBlockIdAtHeightOpt(height);
+        return requireDefined(t);
     }
+    /**
+     * Retrieves the canonical head block ID.
+     * @returns A promise that resolves to the canonical head block ID.
+     */
     getCanonicalHeadId(): Promise<BlockId> {
         return this.getBlockIdAtHeight(Long.ZERO);
     }
+    /**
+     * Retrieves the genesis block ID.
+     * @returns A promise that resolves to the genesis block ID.
+     */
     getGenesisId(): Promise<BlockId> {
         return this.getBlockIdAtHeight(Long.ONE);
     }
 }
 
+/**
+ * Represents a change to the canonical head of the blockchain.
+ */
 export interface TipChange {
     type: TipChangeType;
     blockId: BlockId;

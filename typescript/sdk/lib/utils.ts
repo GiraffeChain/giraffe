@@ -8,6 +8,13 @@ export function requireDefined<T>(t: T | undefined): T {
     else return t;
 }
 
+/**
+ * Retrieves the set of lock addresses that must be satisfied in the given transaction's attestation.
+ * 
+ * @param client - The GiraffeClient instance used to interact with the Giraffe network.
+ * @param transaction - The transaction for which to retrieve the required witnesses.
+ * @returns A Promise that resolves to a Set of LockAddress objects representing the required witnesses.
+ */
 export async function requiredWitnessesOf(client: GiraffeClient, transaction: Transaction): Promise<Set<LockAddress>> {
 
     const result: Set<LockAddress> = new Set();
@@ -46,6 +53,14 @@ export async function requiredWitnessesOf(client: GiraffeClient, transaction: Tr
     return result;
 }
 
+/**
+ * Removes the self reference from a transaction output reference.
+ * If the transaction output reference has a transactionId, it is returned as is.
+ * If the transaction output reference does not have a transactionId, a new reference is created with the provided selfTransactionId.
+ * @param output - The transaction output reference to remove self reference from.
+ * @param selfTransactionId - The transactionId to use when creating a new reference without self reference.
+ * @returns The transaction output reference without self reference.
+ */
 export function withoutSelfReference(output: TransactionOutputReference, selfTransactionId: TransactionId): TransactionOutputReference {
     if (output.transactionId === undefined) {
         return { transactionId: selfTransactionId, index: output.index };
@@ -53,6 +68,12 @@ export function withoutSelfReference(output: TransactionOutputReference, selfTra
     return output;
 }
 
+/**
+ * Calculates the required minimum quantity for a given transaction output. Registrations, account associations, and graph entries require extra quantities to be encumbered.
+ * 
+ * @param output - The transaction output.
+ * @returns The required minimum quantity.
+ */
 export function requiredMinimumQuantity(output: TransactionOutput): Long {
     var result = Long.ZERO;
     result.add(100);
@@ -113,6 +134,12 @@ function protoStructMinimumQuantity(struct: { [key: string]: any }): Long {
     return result;
 }
 
+/**
+ * Calculates the current reward of a transaction. The reward is defined as: sum(inputs) - sum(outputs)
+ * 
+ * @param transaction - The transaction object.
+ * @returns The reward of the transaction.
+ */
 export function rewardOf(transaction: Transaction): Long {
     var result = Long.fromInt(0, false);
     for (const input of transaction.inputs) {
@@ -124,8 +151,17 @@ export function rewardOf(transaction: Transaction): Long {
     return result;
 }
 
+/**
+ * The default quantity to be provided as a tip/reward to the block producer.
+ */
 export const defaultTransactionTip = Long.fromInt(1000);
 
+/**
+ * Checks if a transaction output is a payment token, meaning it is not used for staking, is not an account registration, and contains no graph data.
+ * 
+ * @param transactionOutput - The transaction output to check.
+ * @returns `true` if the transaction output is a payment token, `false` otherwise.
+ */
 export function isPaymentToken(transactionOutput: TransactionOutput): boolean {
     return transactionOutput.account === undefined && transactionOutput.value?.accountRegistration === undefined && transactionOutput.value?.graphEntry === undefined;
 }
