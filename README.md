@@ -59,7 +59,7 @@ The SDK is written in TypeScript and is published to NPM. Other languages will b
   await giraffe.transferFromGenesisWallet(5000000);
 
   // Funds will be available in the main wallet after the next block
-  await giraffe.client.follow().next();
+  await giraffe.client.nextBlockId();
   ```
 
   #### Subsequent launches

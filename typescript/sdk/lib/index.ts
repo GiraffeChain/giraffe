@@ -196,7 +196,7 @@ export class Giraffe {
      * @param quantity - The quantity of tokens to transfer.
      * @returns A promise that resolves when the transfer is broadcasted.
      */
-    async transferFromGenesisWallet(quantity: Long): Promise<void> {
+    async transferFromGenesisWallet(quantity: number | Long): Promise<void> {
         const giraffeGenesis = new Giraffe(this.client, GiraffeWallet.genesis());
         await giraffeGenesis.updateWalletUtxos();
         await giraffeGenesis.paySignBroadcast(Transaction.fromJSON({

@@ -15,8 +15,8 @@ class Ed25519VRFTest extends CatsEffectSuite:
 
 case class Ed25519VRFSpec(sk: Array[Byte], vk: Array[Byte], message: Array[Byte], pi: Array[Byte], beta: Array[Byte]):
   def verify(ed25519VRF: Ed25519VRF): Unit =
-//    val actualVk = ed25519VRF.getVerificationKey(sk)
-//    assert(util.Arrays.equals(actualVk, vk))
+    val actualVk = ed25519VRF.getVerificationKey(sk)
+    assert(util.Arrays.equals(actualVk, vk))
     val actualSignature = ed25519VRF.sign(sk, message)
     assert(util.Arrays.equals(actualSignature, pi))
     assert(ed25519VRF.verify(pi, message, vk))
