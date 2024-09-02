@@ -189,6 +189,15 @@ export abstract class GiraffeClient {
     getGenesisId(): Promise<BlockId> {
         return this.getBlockIdAtHeight(Long.ONE);
     }
+
+    async nextBlockId(): Promise<BlockId> {
+        for await (const t of this.follow()) {
+            if (t.type === TipChangeType.APPLIED) {
+                return t.blockId;
+            }
+        }
+        throw new Error("Failed to get next block id");
+    }
 }
 
 /**
