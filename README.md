@@ -1,7 +1,7 @@
 # Giraffe Chain
 **Blockchain** | **Mobile+Web Staking** | **Graph Database** | **Experimental**
 
-### [Documentation](https://seancheatham.github.io/giraffe/)
+### [Documentation](https://docs.giraffechain.com)
 
 You've found the repository for yet another blockchain protocol. This protocol uses proof-of-stake for consensus and UTxOs for its ledger.
 
