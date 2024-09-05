@@ -53,6 +53,11 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        defaultMode: 'light',
+        disableSwitch: true,
+        respectPrefersColorScheme: false,
+      },
       navbar: {
         logo: {
           alt: 'Giraffe Chain Logo',
@@ -75,7 +80,7 @@ const config = {
             items: [
               {
                 label: 'Tutorial',
-                to: '/docs/intro',
+                to: '/docs/home',
               },
             ],
           },
@@ -86,26 +91,30 @@ const config = {
                 label: 'Discord',
                 href: 'https://discord.gg/nvdXF4KxW5',
               },
-              {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/giraffe',
-              }
             ],
           },
           {
             title: 'More',
             items: [
               {
+                label: 'Website',
+                href: 'https://giraffechain.com',
+              },
+              {
                 label: 'GitHub',
                 href: 'https://github.com/SeanCheatham/giraffe',
+              },
+              {
+                label: 'X',
+                href: 'https://x.com/GiraffeChain',
               },
             ],
           },
         ],
       },
       prism: {
-        theme: prismThemes.github,
-        darkTheme: prismThemes.dracula,
+        theme: prismThemes.jettwaveLight,
+        darkTheme: prismThemes.jettwaveDark,
       },
     }),
 };
