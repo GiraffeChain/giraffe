@@ -1,6 +1,8 @@
 # Giraffe Chain
 **Blockchain** | **Mobile+Web Staking** | **Graph Database** | **Experimental**
 
+### [Documentation](https://seancheatham.github.io/giraffe/)
+
 You've found the repository for yet another blockchain protocol. This protocol uses proof-of-stake for consensus and UTxOs for its ledger.
 
 Similar to other application layers, tokens are distributed and spent using an "Unspent Transaction Output" model. *Unlike* other UTxO models, each UTxO may represent a "vertex" or "edge" of a **ledger-wide graph data structure**. Connecting two "vertex" UTxOs with a new "edge" UTxO requires permission from each of the "vertex" UTxOs. The intention is to provide a developer-friendly graph database that is backed by a decentralized blockchain.
