@@ -1,0 +1,65 @@
+name: Build Scala
+
+on:
+  workflow_call:
+
+jobs:
+  build-scala:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Setup SBT
+        run: |
+          mkdir -p $HOME/bin/sbt
+          set -eux && curl --fail --silent --location --retry 3 https://github.com/sbt/sbt/releases/download/v1.10.1/sbt-1.10.1.tgz | gunzip | tar x -C $HOME/bin/sbt
+          echo "$HOME/bin/sbt" >> $GITHUB_PATH
+
+      - name: Cache sbt
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.sbt
+            ~/.ivy2/cache
+            ~/.coursier/cache/v1
+            ~/.cache/coursier/v1
+          key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+
+      - name: Cache project
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/target/**
+            !**/test-results/**
+          key: ${{ format('{0}-project-{1}-{2}', runner.os, github.base_ref, github.run_number) }}
+
+      - name: Compile
+        working-directory: ./scala
+        run: sbt Test/compile
+
+      - name: Tests and Checks
+        working-directory: ./scala
+        run: sbt checkPRTestQuick
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbt-test-results
+          path: "**/test-reports/*.xml"
+      
+      - name: Cleanup before cache
+        shell: bash
+        run: |
+          rm -rf "$HOME/.ivy2/local" || true
+          find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
+          find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
+          find $HOME/.sbt                              -name "*.lock"               -delete || true

@@ -12,10 +12,43 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ts-sdk-dist
+          path: ts
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-wallet-dist
+          path: web-wallet
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-arm64-v8a-wallet-dist
+          path: android-arm64-v8a
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-armeabi-v7a-wallet-dist
+          path: android-armeabi-v7a
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-x86_64-wallet-dist
+          path: android-x86_64
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-deb-wallet-dist
+          path: linux-deb
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
+          fail_on_unmatched_files: true
+          files: |
+            ts
+            web-wallet
+            android-arm64-v8a/app-arm64-v8a-release.apk
+            android-armeabi-v7a/app-armeabi-v7a-release.apk
+            android-x86_64/app-x86_64-release.apk
+            linux-deb/giraffe_1.0.0_amd64.deb
+
   publish-docker-images:
     uses: ./.github/workflows/_docker_publish.yml
     needs: [create-release]
