@@ -1,0 +1,79 @@
+name: Build Dart
+
+on:
+  workflow_call:
+
+jobs:
+  build-dart:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+      
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Verify Flutter Installation
+        run: flutter doctor -v
+
+      - name: Install flutter_to_debian
+        run: dart pub global activate flutter_to_debian
+
+      - name: Dart SDK Compile and Test
+        working-directory: ./dart/sdk
+        run: dart pub get && dart run build_runner build --delete-conflicting-outputs && dart test && dart test --platform chrome
+
+      - name: Wallet Compile and Test
+        working-directory: ./dart/wallet
+        run: flutter clean && flutter pub get && dart run build_runner build --delete-conflicting-outputs && flutter test && flutter test --platform chrome
+
+      - name: Wallet Build Web
+        working-directory: ./dart/wallet
+        run: flutter build web
+        
+      - name: Wallet Build Android
+        working-directory: ./dart/wallet
+        run: flutter build apk --split-per-abi
+        
+      - name: Wallet Build Linux
+        working-directory: ./dart/wallet
+        run: flutter build linux --release && flutter_to_debian
+
+      - name: Upload Web Wallet Dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-wallet-dist
+          path: "dart/wallet/build/web"
+
+      - name: Upload Android Wallet (arm64-v8a)
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-arm64-v8a-wallet-dist
+          path: "dart/wallet/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
+
+      - name: Upload Android Wallet (armeabi-v7a)
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-armeabi-v7a-wallet-dist
+          path: "dart/wallet/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk"
+
+      - name: Upload Android Wallet (x86_64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-x86_64-wallet-dist
+          path: "dart/wallet/build/app/outputs/flutter-apk/app-x86_64-release.apk"
+
+      - name: Upload Linux Wallet
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-deb-wallet-dist
+          path: "dart/wallet/build/linux/x64/release/debian/giraffe_1.0.0_amd64.deb"

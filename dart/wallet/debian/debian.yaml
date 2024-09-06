@@ -1,0 +1,14 @@
+flutter_app: 
+  command: giraffe
+  arch: x64
+  parent: /usr/local/lib
+  nonInteractive: false
+
+control:
+  Package: giraffe
+  Version: 1.0.0
+  Architecture: amd64
+  Priority: optional
+  Depends: libsecret-1-0,libjsoncpp1
+  Maintainer:
+  Description: Wallet for Giraffe Chain
