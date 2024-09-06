@@ -16,7 +16,7 @@ class UnloadedBlockPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder(
-        future: ref.watch(podBlockchainClientProvider).getFullBlock(id),
+        future: ref.watch(podBlockchainClientProvider)!.getFullBlock(id),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data != null) {

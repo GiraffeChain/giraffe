@@ -10,7 +10,7 @@ part 'graph_client.g.dart';
 class PodGraphClient extends _$PodGraphClient {
   @override
   Future<Graph> build() async {
-    final client = ref.read(podBlockchainClientProvider);
+    final client = ref.read(podBlockchainClientProvider)!;
     final wallet = await ref.watch(podWalletProvider.future);
     return Graph(wallet: wallet, client: client);
   }

@@ -7,12 +7,12 @@ part of 'blockchain_client.dart';
 // **************************************************************************
 
 String _$podBlockchainClientHash() =>
-    r'123dd674182afc73f3957d98e293dbb1c9633eb1';
+    r'bfdca7735b8060920c2fd4ec6bb58890302a81e7';
 
 /// See also [PodBlockchainClient].
 @ProviderFor(PodBlockchainClient)
-final podBlockchainClientProvider =
-    AutoDisposeNotifierProvider<PodBlockchainClient, BlockchainClient>.internal(
+final podBlockchainClientProvider = AutoDisposeNotifierProvider<
+    PodBlockchainClient, BlockchainClient?>.internal(
   PodBlockchainClient.new,
   name: r'podBlockchainClientProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -22,6 +22,6 @@ final podBlockchainClientProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$PodBlockchainClient = AutoDisposeNotifier<BlockchainClient>;
+typedef _$PodBlockchainClient = AutoDisposeNotifier<BlockchainClient?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

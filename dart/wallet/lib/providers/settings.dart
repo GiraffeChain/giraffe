@@ -8,21 +8,17 @@ part 'settings.freezed.dart';
 class PodSettings extends _$PodSettings {
   @override
   SettingsState build() => const SettingsState(
-        host: "localhost",
-        port: 2024,
-        secure: false,
+        apiAddress: null, // "http://localhost:2024/api",
       );
 
-  void setRpc(String host, int port, bool secure) {
-    state = state.copyWith(host: host, port: port, secure: secure);
+  void setApiAddress(String? address) {
+    state = state.copyWith(apiAddress: address);
   }
 }
 
 @freezed
 class SettingsState with _$SettingsState {
   const factory SettingsState({
-    required String host,
-    required int port,
-    required bool secure,
+    required String? apiAddress,
   }) = _SettingsState;
 }

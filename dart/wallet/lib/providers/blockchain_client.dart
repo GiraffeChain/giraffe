@@ -7,11 +7,15 @@ part 'blockchain_client.g.dart';
 @riverpod
 class PodBlockchainClient extends _$PodBlockchainClient {
   @override
-  BlockchainClient build() {
+  BlockchainClient? build() {
     final settings = ref.watch(podSettingsProvider);
-    return BlockchainClientFromJsonRpc(
-      baseAddress:
-          "${settings.secure ? 'https' : 'http'}://${settings.host}:${settings.port}/api",
-    );
+    final address = settings.apiAddress;
+    if (address == null) {
+      return null;
+    } else {
+      return BlockchainClientFromJsonRpc(
+        baseAddress: address,
+      );
+    }
   }
 }

@@ -41,7 +41,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const LauncherPage(),
+      home: const SettingsPage(),
       onGenerateRoute: FluroRouter.appRouter.generator,
       theme: ThemeData.from(
           colorScheme: ColorScheme.fromSeed(

@@ -9,7 +9,7 @@ class PodWalletKey extends _$PodWalletKey {
   @override
   Ed25519KeyPair? build() => null;
 
-  void setKey(Ed25519KeyPair keyPair) {
+  void setKey(Ed25519KeyPair? keyPair) {
     state = keyPair;
   }
 
