@@ -19,7 +19,7 @@ class BlockchainPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final client = ref.watch(podBlockchainClientProvider);
+    final client = ref.watch(podBlockchainClientProvider)!;
     return DefaultTabController(
       length: 6,
       child: Scaffold(

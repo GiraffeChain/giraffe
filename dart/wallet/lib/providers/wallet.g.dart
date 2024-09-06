@@ -6,12 +6,12 @@ part of 'wallet.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podWalletHash() => r'ad565b525bff3c51804c2b8918c4dcd2e81515f0';
+String _$podWalletHash() => r'8ecbbd5a2c0a089de674a998c505649b0c2bb372';
 
 /// See also [PodWallet].
 @ProviderFor(PodWallet)
 final podWalletProvider =
-    AutoDisposeStreamNotifierProvider<PodWallet, Wallet>.internal(
+    AutoDisposeAsyncNotifierProvider<PodWallet, Wallet>.internal(
   PodWallet.new,
   name: r'podWalletProvider',
   debugGetCreateSourceHash:
@@ -20,6 +20,6 @@ final podWalletProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$PodWallet = AutoDisposeStreamNotifier<Wallet>;
+typedef _$PodWallet = AutoDisposeAsyncNotifier<Wallet>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

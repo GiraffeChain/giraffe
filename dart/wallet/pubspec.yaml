@@ -42,6 +42,7 @@ dependencies:
   rational: ^2.2.3
   hashlib: ^1.19.2
   collection: ^1.18.0
+  avs_svg_provider: ^1.0.1
 
 dev_dependencies:
   flutter_test:

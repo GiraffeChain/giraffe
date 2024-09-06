@@ -1,4 +1,9 @@
+import 'dart:async';
+
+import 'package:avs_svg_provider/avs_svg_provider.dart';
 import 'package:flutter/services.dart';
+import 'package:giraffe_wallet/providers/wallet.dart';
+import 'package:giraffe_wallet/utils.dart';
 
 import '../../blockchain/private_testnet.dart';
 import '../../providers/settings.dart';
@@ -10,106 +15,180 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bip39/bip39.dart' as bip39;
 
-class LauncherPage extends ConsumerStatefulWidget {
-  const LauncherPage({super.key});
+class SettingsPage extends ConsumerStatefulWidget {
+  const SettingsPage({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => LauncherPageState();
+  ConsumerState<ConsumerStatefulWidget> createState() => SettingsPageState();
 }
 
-class LauncherPageState extends ConsumerState<LauncherPage> {
-  LaunchSettings? launchSettings;
+class SettingsPageState extends ConsumerState<SettingsPage> {
+  late String? apiAddress;
+  String? error;
+  bool valid = false;
+
+  late final TextEditingController addressController;
+
+  @override
+  void initState() {
+    super.initState();
+    apiAddress = ref.read(podSettingsProvider).apiAddress;
+    addressController = TextEditingController(text: apiAddress);
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: SizedBox.fromSize(
-            size: const Size(500, 500),
-            child: Card(
-              child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: launchSettings == null
-                      ? configForm(context)
-                      : walletForm(context)),
+        body: Container(
+          constraints: const BoxConstraints.expand(),
+          decoration: giraffeBackgroundDecoration(),
+          child: SingleChildScrollView(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: 500,
+                child: Container(
+                  decoration: const BoxDecoration(
+                      color: Color(0xCCe9e1cb),
+                      border: Border(
+                          right: BorderSide(
+                              width: 4,
+                              color: Color.fromARGB(255, 124, 120, 108)),
+                          bottom: BorderSide(
+                              width: 6,
+                              color: Color.fromARGB(255, 124, 120, 108))),
+                      borderRadius:
+                          BorderRadius.only(bottomRight: Radius.circular(32))),
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: settingsForm(context),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
       );
 
-  Widget configForm(BuildContext context) => BlockchainConfigForm(
-        onSubmit: (context, config) => setState(() => launchSettings = config),
-      );
-  Widget walletForm(BuildContext context) =>
-      WalletSelectionForm(onSelected: (key) {
-        ref.read(podWalletKeyProvider.notifier).setKey(key);
-        ref.read(podSettingsProvider.notifier).setRpc(launchSettings!.rpcHost,
-            launchSettings!.rpcPort, launchSettings!.rpcSecure);
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => Navigator(
-                      initialRoute: '/',
-                      onGenerateRoute: FluroRouter.appRouter.generator,
-                    )));
-      });
-}
-
-class BlockchainConfigForm extends StatefulWidget {
-  const BlockchainConfigForm({super.key, required this.onSubmit});
-  final void Function(BuildContext, LaunchSettings) onSubmit;
-
-  @override
-  State<StatefulWidget> createState() => BlockchainConfigFormState();
-}
-
-class BlockchainConfigFormState extends State<BlockchainConfigForm> {
-  String? rpcHost;
-  String? rpcPort;
-  @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          TextField(
-            onChanged: (v) => rpcHost = v,
-            decoration:
-                const InputDecoration(hintText: "RPC Host. i.e. localhost"),
-          ),
-          TextField(
-            onChanged: (v) => rpcPort = v,
-            decoration: const InputDecoration(hintText: "RPC Port. i.e. 2024"),
-          ),
-          IconButton(
-              onPressed: () => _submit(context), icon: const Icon(Icons.send))
-        ],
-      );
-
-  _submit(BuildContext context) {
-    final config = LaunchSettings(
-      rpcHost: rpcHost ?? "localhost",
-      rpcPort: _parsedPort ?? 2024,
-      rpcSecure: false, // TODO
+  Column settingsForm(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Image(image: AssetImage("assets/images/logo_with_border.png")),
+        const Text("Welcome to Giraffe Chain",
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+        addressField(context),
+        walletForm(context),
+        connectButton(context),
+      ].padAll8,
     );
-    widget.onSubmit(context, config);
   }
 
-  int? get _parsedPort => (rpcPort != null) ? int.tryParse(rpcPort!) : null;
-}
+  BoxDecoration giraffeBackgroundDecoration() {
+    return BoxDecoration(
+      image: DecorationImage(
+        image: AVSSVGProvider("assets/images/giraffe_bottom_right.svg",
+            scale: 9,
+            gradient: const LinearGradient(
+              colors: <Color>[
+                Color.fromARGB(255, 102, 62, 3),
+                Color.fromARGB(255, 66, 4, 75)
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            )),
+        alignment: Alignment.bottomRight,
+        fit: BoxFit.scaleDown,
+      ),
+      color: const Color(0xFFe9e1cb),
+    );
+  }
 
-class LaunchSettings {
-  final String rpcHost;
-  final int rpcPort;
-  final bool rpcSecure;
+  Widget addressField(BuildContext context) {
+    const prompt = Text("Enter the API Address of a trusted relay node");
+    Timer? timer;
+    void onChanged(String updated) async {
+      apiAddress = updated;
+      setState(() {
+        valid = false;
+        error = null;
+      });
+      timer?.cancel();
+      timer = null;
+      try {
+        final parsed = Uri.parse(updated);
+        assert(parsed.scheme == "http" || parsed.scheme == "https");
+      } catch (_) {
+        setState(() {
+          error = "Invalid URL";
+          valid = false;
+        });
+        return;
+      }
+      error = "Attempting to connect...";
+      timer = Timer(const Duration(milliseconds: 500), () async {
+        try {
+          await BlockchainClientFromJsonRpc(baseAddress: updated)
+              .canonicalHeadId
+              .timeout(const Duration(seconds: 2));
+        } catch (e) {
+          setState(() {
+            error = "Failed to connect";
+            valid = false;
+          });
+          return;
+        }
+        setState(() {
+          error = null;
+          valid = true;
+        });
+      });
+    }
 
-  LaunchSettings(
-      {required this.rpcHost, required this.rpcPort, required this.rpcSecure});
+    final textField = TextField(
+      onChanged: onChanged,
+      controller: addressController,
+      decoration: InputDecoration(
+          hintText: apiAddress ?? "http://localhost:2024/api", label: prompt),
+    );
+    final errorField = error == null
+        ? null
+        : Text(error!, style: const TextStyle(color: Colors.red));
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [textField, if (errorField != null) errorField],
+    );
+  }
+
+  Widget walletForm(BuildContext context) => const WalletSelectionForm();
+
+  Widget connectButton(BuildContext context) {
+    final isValid = valid && ref.watch(podWalletKeyProvider) != null;
+    final Function()? onPressed = isValid
+        ? () {
+            ref.read(podSettingsProvider.notifier).setApiAddress(apiAddress);
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => Navigator(
+                          initialRoute: '/',
+                          onGenerateRoute: FluroRouter.appRouter.generator,
+                        )));
+          }
+        : null;
+    return ElevatedButton.icon(
+      label: const Text("Connect"),
+      onPressed: onPressed,
+      icon: const Icon(Icons.network_ping),
+    );
+  }
 }
 
 class WalletSelectionForm extends ConsumerStatefulWidget {
   const WalletSelectionForm({
     super.key,
-    required this.onSelected,
   });
-
-  final Function(Ed25519KeyPair) onSelected;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -118,14 +197,23 @@ class WalletSelectionForm extends ConsumerStatefulWidget {
 
 class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) {
+    if (ref.watch(podWalletKeyProvider) == null) {
+      return uninitialized(context);
+    } else {
+      return initialized(context);
+    }
+  }
+
+  Widget uninitialized(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("Select a wallet",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           TextButton.icon(
             label: const Text("Public"),
             onPressed: () async =>
-                widget.onSelected(await PrivateTestnet.defaultKeyPair),
+                onSelected(await PrivateTestnet.defaultKeyPair),
             icon: const Icon(Icons.people),
           ),
           TextButton.icon(
@@ -139,8 +227,43 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
             icon: const Icon(Icons.text_format),
           ),
           loadOrResetButtons(context),
+        ].padAll8,
+      );
+
+  Widget initialized(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Wallet is loaded",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))
+              .pad8,
+          FutureBuilder(
+              future: ref.watch(podWalletProvider.future),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final addressStr = snapshot.data!.defaultLockAddress.show;
+                  return TextButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: addressStr));
+                      },
+                      label: Text(addressStr,
+                          style: const TextStyle(fontSize: 12)),
+                      icon: const Icon(Icons.copy));
+                } else {
+                  return const CircularProgressIndicator();
+                }
+              }).pad8,
+          TextButton.icon(
+            label: const Text("Unload"),
+            onPressed: () =>
+                ref.read(podWalletKeyProvider.notifier).setKey(null),
+            icon: const Icon(Icons.power_off),
+          ).pad8,
         ],
       );
+
+  onSelected(Ed25519KeyPair key) {
+    ref.read(podWalletKeyProvider.notifier).setKey(key);
+  }
 
   Widget loadOrResetButtons(BuildContext context) => FutureBuilder(
         future: ref.watch(podSecureStorageProvider.notifier).containsWalletSk,
@@ -173,7 +296,7 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
         context: context, builder: (context) => const CreateWalletModal());
     if (result != null) {
       await ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
-      widget.onSelected(result);
+      onSelected(result);
     }
   }
 
@@ -182,7 +305,7 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
         context: context, builder: (context) => const ImportWalletModal());
     if (result != null) {
       await ref.read(podSecureStorageProvider.notifier).setWalletSk(result.sk);
-      widget.onSelected(result);
+      onSelected(result);
     }
   }
 
@@ -190,7 +313,7 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
     final sk = (await ref.read(podSecureStorageProvider.notifier).getWalletSk)!;
     final vk = Uint8List.fromList(await ed25519.getVerificationKey(sk));
     final Ed25519KeyPair result = Ed25519KeyPair(sk, vk);
-    widget.onSelected(result);
+    onSelected(result);
   }
 }
 

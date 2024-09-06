@@ -6,7 +6,7 @@ part of 'graph_client.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podGraphClientHash() => r'bc1f8338a6e3171769af87943adeea32e78a32c3';
+String _$podGraphClientHash() => r'a38da7b5eb363f2eb92125c9edf619b1db02516c';
 
 /// See also [PodGraphClient].
 @ProviderFor(PodGraphClient)

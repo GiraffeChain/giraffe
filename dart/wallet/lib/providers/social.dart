@@ -39,7 +39,7 @@ class PodSocial extends _$PodSocial {
       lastName: profile.profileVertex.data.fields["lastName"]?.stringValue,
     );
 
-    final client = ref.read(podBlockchainClientProvider);
+    final client = ref.read(podBlockchainClientProvider)!;
     final outgoingFriendEdges =
         await client.queryEdges("friend", user.userRef, null, []);
     final outgoingFriends =
@@ -79,7 +79,7 @@ class PodSocial extends _$PodSocial {
           a: TransactionOutputReference(index: 1),
           b: TransactionOutputReference(index: 0));
       final wallet = await ref.watch(podWalletProvider.future);
-      final client = ref.read(podBlockchainClientProvider);
+      final client = ref.read(podBlockchainClientProvider)!;
       final tx = await wallet.payAndAttest(client,
           Transaction(outputs: [userOutput, profileOutput, edgeOutput]));
       await client.broadcastTransaction(tx);
@@ -102,7 +102,7 @@ class PodSocial extends _$PodSocial {
 
   Future<List<(TransactionOutputReference, ProfileData)>> findUsers(
       {String? firstName, String? lastName}) async {
-    final client = ref.read(podBlockchainClientProvider);
+    final client = ref.read(podBlockchainClientProvider)!;
     final whereClauses = <WhereClause>[];
     if (firstName != null) {
       whereClauses.add(WhereClause("firstName", "==", firstName));
@@ -163,7 +163,7 @@ class PodSocial extends _$PodSocial {
 
   Future<ProfileData> fetchProfileByUserId(
       TransactionOutputReference userId) async {
-    final client = ref.read(podBlockchainClientProvider);
+    final client = ref.read(podBlockchainClientProvider)!;
     final profileEdge =
         (await client.queryEdges("userProfile", null, userId, [])).first;
     final profileId = await client.inVertex(profileEdge);

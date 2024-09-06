@@ -1,4 +1,3 @@
-import 'blockchain_client.dart';
 import 'wallet_key.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -8,13 +7,14 @@ part 'wallet.g.dart';
 @riverpod
 class PodWallet extends _$PodWallet {
   @override
-  Stream<Wallet> build() {
+  Future<Wallet> build() async {
     final keyOpt = ref.watch(podWalletKeyProvider);
-    if (keyOpt == null) {
-      return const Stream.empty();
+    final Wallet wallet;
+    if (keyOpt != null) {
+      wallet = Wallet.withDefaultKeyPair(keyOpt);
     } else {
-      final client = ref.watch(podBlockchainClientProvider);
-      return Wallet.withDefaultKeyPair(keyOpt).streamed(client);
+      wallet = await Wallet.genesis;
     }
+    return wallet;
   }
 }

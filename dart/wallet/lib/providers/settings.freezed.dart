@@ -16,9 +16,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$SettingsState {
-  String get host => throw _privateConstructorUsedError;
-  int get port => throw _privateConstructorUsedError;
-  bool get secure => throw _privateConstructorUsedError;
+  String? get apiAddress => throw _privateConstructorUsedError;
 
   /// Create a copy of SettingsState
   /// with the given fields replaced by the non-null parameter values.
@@ -33,7 +31,7 @@ abstract class $SettingsStateCopyWith<$Res> {
           SettingsState value, $Res Function(SettingsState) then) =
       _$SettingsStateCopyWithImpl<$Res, SettingsState>;
   @useResult
-  $Res call({String host, int port, bool secure});
+  $Res call({String? apiAddress});
 }
 
 /// @nodoc
@@ -51,23 +49,13 @@ class _$SettingsStateCopyWithImpl<$Res, $Val extends SettingsState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? host = null,
-    Object? port = null,
-    Object? secure = null,
+    Object? apiAddress = freezed,
   }) {
     return _then(_value.copyWith(
-      host: null == host
-          ? _value.host
-          : host // ignore: cast_nullable_to_non_nullable
-              as String,
-      port: null == port
-          ? _value.port
-          : port // ignore: cast_nullable_to_non_nullable
-              as int,
-      secure: null == secure
-          ? _value.secure
-          : secure // ignore: cast_nullable_to_non_nullable
-              as bool,
+      apiAddress: freezed == apiAddress
+          ? _value.apiAddress
+          : apiAddress // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -80,7 +68,7 @@ abstract class _$$SettingsStateImplCopyWith<$Res>
       __$$SettingsStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String host, int port, bool secure});
+  $Res call({String? apiAddress});
 }
 
 /// @nodoc
@@ -96,23 +84,13 @@ class __$$SettingsStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? host = null,
-    Object? port = null,
-    Object? secure = null,
+    Object? apiAddress = freezed,
   }) {
     return _then(_$SettingsStateImpl(
-      host: null == host
-          ? _value.host
-          : host // ignore: cast_nullable_to_non_nullable
-              as String,
-      port: null == port
-          ? _value.port
-          : port // ignore: cast_nullable_to_non_nullable
-              as int,
-      secure: null == secure
-          ? _value.secure
-          : secure // ignore: cast_nullable_to_non_nullable
-              as bool,
+      apiAddress: freezed == apiAddress
+          ? _value.apiAddress
+          : apiAddress // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -120,19 +98,14 @@ class __$$SettingsStateImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SettingsStateImpl implements _SettingsState {
-  const _$SettingsStateImpl(
-      {required this.host, required this.port, required this.secure});
+  const _$SettingsStateImpl({required this.apiAddress});
 
   @override
-  final String host;
-  @override
-  final int port;
-  @override
-  final bool secure;
+  final String? apiAddress;
 
   @override
   String toString() {
-    return 'SettingsState(host: $host, port: $port, secure: $secure)';
+    return 'SettingsState(apiAddress: $apiAddress)';
   }
 
   @override
@@ -140,13 +113,12 @@ class _$SettingsStateImpl implements _SettingsState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SettingsStateImpl &&
-            (identical(other.host, host) || other.host == host) &&
-            (identical(other.port, port) || other.port == port) &&
-            (identical(other.secure, secure) || other.secure == secure));
+            (identical(other.apiAddress, apiAddress) ||
+                other.apiAddress == apiAddress));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, host, port, secure);
+  int get hashCode => Object.hash(runtimeType, apiAddress);
 
   /// Create a copy of SettingsState
   /// with the given fields replaced by the non-null parameter values.
@@ -158,17 +130,11 @@ class _$SettingsStateImpl implements _SettingsState {
 }
 
 abstract class _SettingsState implements SettingsState {
-  const factory _SettingsState(
-      {required final String host,
-      required final int port,
-      required final bool secure}) = _$SettingsStateImpl;
+  const factory _SettingsState({required final String? apiAddress}) =
+      _$SettingsStateImpl;
 
   @override
-  String get host;
-  @override
-  int get port;
-  @override
-  bool get secure;
+  String? get apiAddress;
 
   /// Create a copy of SettingsState
   /// with the given fields replaced by the non-null parameter values.

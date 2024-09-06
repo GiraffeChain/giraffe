@@ -32,7 +32,7 @@ class PodBlockProduction extends _$PodBlockProduction {
     final rewardAddress =
         (await ref.read(podWalletProvider.future)).defaultLockAddress;
 
-    final client = ref.read(podBlockchainClientProvider);
+    final client = ref.read(podBlockchainClientProvider)!;
     final canonicalHeadId = await client.canonicalHeadId;
     final canonicalHead = await client.getBlockHeaderOrRaise(canonicalHeadId);
     log.info(

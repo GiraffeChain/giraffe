@@ -12,7 +12,7 @@ class UnloadedTransactionPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FutureBuilder(
-        future: ref.watch(podBlockchainClientProvider).getTransaction(id),
+        future: ref.watch(podBlockchainClientProvider)!.getTransaction(id),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data != null) {

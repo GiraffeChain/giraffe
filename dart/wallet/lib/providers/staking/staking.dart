@@ -36,7 +36,8 @@ class PodStaking extends _$PodStaking {
   }
 
   Future<void> initMintingTestnet(int index) async {
-    final genesis = await ref.read(podBlockchainClientProvider).genesisBlock;
+    final client = ref.read(podBlockchainClientProvider)!;
+    final genesis = await client.genesisBlock;
     final genesisTimestamp = genesis.header.timestamp;
     final seed = [...genesisTimestamp.immutableBytes, ...index.immutableBytes];
     final stakerInitializer = await StakingAccount.generate(
@@ -75,7 +76,7 @@ class PodStaking extends _$PodStaking {
     final wallet = await ref.read(podWalletProvider.future);
     final random = Random.secure();
     final seed = List.generate(32, (_) => random.nextInt(255));
-    final client = ref.read(podBlockchainClientProvider);
+    final client = ref.read(podBlockchainClientProvider)!;
     final stakerInitializer = await StakingAccount.generate(
       minimumStakeAccountQuantity,
       wallet.defaultLockAddress,
