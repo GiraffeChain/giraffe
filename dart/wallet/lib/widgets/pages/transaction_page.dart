@@ -1,3 +1,7 @@
+import 'package:giraffe_wallet/utils.dart';
+import 'package:giraffe_wallet/widgets/giraffe_card.dart';
+import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
+
 import '../../providers/blockchain_client.dart';
 import '../../widgets/bitmap_render.dart';
 import 'package:giraffe_sdk/sdk.dart';
@@ -18,16 +22,13 @@ class UnloadedTransactionPage extends ConsumerWidget {
             if (snapshot.data != null) {
               return TransactionPage(transaction: snapshot.data!);
             } else {
-              return _scaffold(notFound);
+              return GiraffeScaffold(title: "Transaction View", body: notFound);
             }
           } else {
-            return _scaffold(loading);
+            return GiraffeScaffold(title: "Transaction View", body: loading);
           }
         });
   }
-
-  _scaffold(Widget body) =>
-      Scaffold(appBar: AppBar(title: const Text("Block View")), body: body);
 
   static final notFound = Container(
     alignment: Alignment.center,
@@ -45,40 +46,32 @@ class TransactionPage extends StatelessWidget {
 
   const TransactionPage({super.key, required this.transaction});
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: _appBar,
+  Widget build(BuildContext context) => GiraffeScaffold(
+        title: "Transaction View",
         body: _body(context),
-      );
-
-  get _appBar => AppBar(
-        title: const Text("Transaction View"),
       );
 
   _body(BuildContext context) => _paddedCard(
         Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _transactionIdCard(),
-            _transactionMetadataCard(),
+            _transactionIdCard().pad16,
+            _transactionMetadataCard().pad16,
             Expanded(
                 child: Row(
               children: [
                 _inputsCard(),
                 _outputsCard(),
               ],
-            )),
+            ).pad16),
           ],
         ),
       );
 
-  Card _paddedCard(Widget child) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: child,
-        ),
+  Widget _paddedCard(Widget child) => GiraffeCard(
+        child: child,
       );
 
-  Card _transactionIdCard() {
+  Widget _transactionIdCard() {
     return _paddedCard(
       Row(
         children: [
@@ -101,7 +94,7 @@ class TransactionPage extends StatelessWidget {
     );
   }
 
-  Card _transactionMetadataCard() {
+  Widget _transactionMetadataCard() {
     return _paddedCard(
       Row(
         children: [
@@ -114,7 +107,7 @@ class TransactionPage extends StatelessWidget {
     );
   }
 
-  Card _inputsCard() {
+  Widget _inputsCard() {
     return _paddedCard(Column(children: [
       _overUnderWidgets(
           const Text(
@@ -147,7 +140,7 @@ class TransactionPage extends StatelessWidget {
     ]));
   }
 
-  Card _outputsCard() {
+  Widget _outputsCard() {
     return _paddedCard(Column(children: [
       _overUnderWidgets(
           const Text(

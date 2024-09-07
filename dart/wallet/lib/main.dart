@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:giraffe_wallet/widgets/pages/social_page.dart';
 import 'package:giraffe_wallet/widgets/pages/stake_page.dart';
-import 'package:giraffe_wallet/widgets/pages/transact_page.dart';
+import 'package:giraffe_wallet/widgets/pages/wallet_page.dart';
 
 import '../blockchain/common/isolate_pool.dart';
 import 'widgets/pages/block_page.dart';

@@ -1,3 +1,7 @@
+import 'package:giraffe_wallet/utils.dart';
+import 'package:giraffe_wallet/widgets/giraffe_card.dart';
+import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
+
 import '../../providers/blockchain_client.dart';
 import '../bitmap_render.dart';
 import '../../blockchain/codecs.dart';
@@ -22,16 +26,13 @@ class UnloadedBlockPage extends ConsumerWidget {
             if (snapshot.data != null) {
               return BlockPage(block: snapshot.data!);
             } else {
-              return _scaffold(notFound);
+              return GiraffeScaffold(title: "Block View", body: notFound);
             }
           } else {
-            return _scaffold(loading);
+            return GiraffeScaffold(title: "Block View", body: loading);
           }
         });
   }
-
-  _scaffold(Widget body) =>
-      Scaffold(appBar: AppBar(title: const Text("Block View")), body: body);
 
   static final notFound = Container(
     alignment: Alignment.center,
@@ -49,34 +50,26 @@ class BlockPage extends StatelessWidget {
 
   const BlockPage({super.key, required this.block});
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: _appBar,
+  Widget build(BuildContext context) => GiraffeScaffold(
+        title: "Block View",
         body: _body(context),
-      );
-
-  get _appBar => AppBar(
-        title: const Text("Block View"),
       );
 
   _body(BuildContext context) => _paddedCard(
         Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _blockIdCard(),
-            _blockMetadataCard(context),
-            Expanded(child: _transactionsCard(context)),
+            _blockIdCard().pad16,
+            _blockMetadataCard(context).pad16,
+            Expanded(child: _transactionsCard(context).pad16),
           ],
         ),
       );
 
-  Card _paddedCard(Widget child) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: child,
-        ),
+  Widget _paddedCard(Widget child) => GiraffeCard(
+        child: child,
       );
 
-  Card _blockIdCard() {
+  Widget _blockIdCard() {
     return _paddedCard(
       Row(
         children: [
@@ -101,7 +94,7 @@ class BlockPage extends StatelessWidget {
     );
   }
 
-  Card _blockMetadataCard(BuildContext context) {
+  Widget _blockMetadataCard(BuildContext context) {
     return _paddedCard(
       Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -138,7 +131,7 @@ class BlockPage extends StatelessWidget {
             child: BitMapViewer.forBlock(block.header.parentHeaderId)));
   }
 
-  Card _transactionsCard(BuildContext context) {
+  Widget _transactionsCard(BuildContext context) {
     return _paddedCard(Column(children: [
       _overUnderWidgets(
           const Text(

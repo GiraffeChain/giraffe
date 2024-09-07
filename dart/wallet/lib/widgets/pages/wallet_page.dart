@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:giraffe_wallet/utils.dart';
-import 'package:giraffe_wallet/widgets/giraffe_background.dart';
+import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
+import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../../providers/transact.dart';
@@ -20,20 +21,17 @@ class StreamedTransactView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Wallet"),
-      ),
-      body: GiraffeBackground(
-          child: Align(
+    return GiraffeScaffold(
+      title: "Wallet",
+      body: Align(
         alignment: Alignment.topLeft,
         child: SizedBox(
           width: 600,
           child: GiraffeCard(
             child: body(context, ref),
-          ).pad16,
+          ),
         ),
-      )),
+      ),
     );
   }
 
@@ -67,34 +65,36 @@ class TransactView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(podTransactProvider);
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: ExpansionPanelList.radio(children: [
-                ExpansionPanelRadio(
-                  value: "Inputs",
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text("Your address:",
+                style: TextStyle(fontWeight: FontWeight.bold))
+            .pad8,
+        const ClipboardAddressButton().pad8,
+        const Divider(),
+        Expanded(
+          child: SingleChildScrollView(
+            child: ExpansionPanelList.radio(children: [
+              ExpansionPanelRadio(
+                value: "Inputs",
+                headerBuilder: (context, isExpanded) =>
+                    const ListTile(title: Text("Inputs")),
+                body: _inputsTile(ref, state).pad16,
+              ),
+              ExpansionPanelRadio(
+                  value: "Outputs",
                   headerBuilder: (context, isExpanded) =>
-                      const ListTile(title: Text("Inputs")),
-                  body: _inputsTile(ref, state).pad16,
-                ),
-                ExpansionPanelRadio(
-                    value: "Outputs",
-                    headerBuilder: (context, isExpanded) =>
-                        const ListTile(title: Text("Outputs")),
-                    body: _outputsTile(ref, state).pad16),
-              ]),
-            ),
+                      const ListTile(title: Text("Outputs")),
+                  body: _outputsTile(ref, state).pad16),
+            ]),
           ),
-          IconButton(
-            onPressed: () => _transact(ref, state),
-            icon: const Icon(Icons.send),
-          ).pad16
-        ],
-      ),
+        ),
+        IconButton(
+          onPressed: () => _transact(ref, state),
+          icon: const Icon(Icons.send),
+        ).pad16
+      ],
     );
   }
 

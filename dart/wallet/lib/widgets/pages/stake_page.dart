@@ -1,4 +1,5 @@
 import 'package:giraffe_wallet/utils.dart';
+import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../../providers/staking/block_production.dart';
@@ -10,7 +11,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
 
-import '../giraffe_background.dart';
 import '../giraffe_card.dart';
 
 class StakeView extends ConsumerStatefulWidget {
@@ -24,12 +24,9 @@ class StakeViewState extends ConsumerState<StakeView> {
   bool advancedMode = false;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Stake"),
-      ),
-      body: GiraffeBackground(
-          child: Align(
+    return GiraffeScaffold(
+      title: "Stake",
+      body: Align(
         alignment: Alignment.topLeft,
         child: SizedBox(
           width: 600,
@@ -37,7 +34,7 @@ class StakeViewState extends ConsumerState<StakeView> {
             child: body(context),
           ).pad16,
         ),
-      )),
+      ),
     );
   }
 
@@ -71,6 +68,7 @@ class StakeViewState extends ConsumerState<StakeView> {
   Widget get loading => const Center(child: CircularProgressIndicator());
 
   Widget get noStaker => Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
               "Help improve the network by staking your tokens, and earn rewards in the process!"),
@@ -83,6 +81,7 @@ class StakeViewState extends ConsumerState<StakeView> {
       );
 
   Widget get advancedModeCard => Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
               "This area is for developers/testers only. Please be careful!"),
@@ -161,7 +160,7 @@ class RunMinting extends ConsumerWidget {
     if (production is ActivePodBlockProductionState) {
       stopFunction = production.stop;
     }
-    return Column(children: [
+    return Column(mainAxisSize: MainAxisSize.min, children: [
       TextButton.icon(
         onPressed: () => ref.read(podStakingProvider.notifier).reset(),
         label: const Text("Delete Staker"),

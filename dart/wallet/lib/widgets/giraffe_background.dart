@@ -31,5 +31,13 @@ final BoxDecoration _giraffeBackgroundDecoration = BoxDecoration(
     alignment: Alignment.bottomRight,
     fit: BoxFit.scaleDown,
   ),
-  color: const Color(0xFFe9e1cb),
+  // color: const Color(0xFFe9e1cb),
+  gradient: const LinearGradient(
+    colors: <Color>[
+      Color.fromARGB(255, 255, 192, 97),
+      Color.fromARGB(255, 204, 130, 19),
+    ],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  ),
 );

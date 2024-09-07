@@ -1,10 +1,11 @@
+import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
+
 import '../../providers/social.dart';
 import '../../utils.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../giraffe_background.dart';
 import '../giraffe_card.dart';
 
 class SocialView extends ConsumerWidget {
@@ -14,12 +15,9 @@ class SocialView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Social"),
-      ),
-      body: GiraffeBackground(
-          child: Align(
+    return GiraffeScaffold(
+      title: "Social",
+      body: Align(
         alignment: Alignment.topLeft,
         child: SizedBox(
           width: 600,
@@ -27,7 +25,7 @@ class SocialView extends ConsumerWidget {
             child: body(context, ref),
           ).pad16,
         ),
-      )),
+      ),
     );
   }
 

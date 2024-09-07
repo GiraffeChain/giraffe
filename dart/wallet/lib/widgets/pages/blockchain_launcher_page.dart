@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:giraffe_wallet/providers/wallet.dart';
 import 'package:giraffe_wallet/utils.dart';
+import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';
 import 'package:giraffe_wallet/widgets/giraffe_background.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 
@@ -43,9 +43,11 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
               child: SingleChildScrollView(
         child: Align(
           alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: 500,
-            child: GiraffeCard(child: settingsForm(context)),
+          child: GiraffeCard(
+            child: SizedBox(
+              width: 500,
+              child: settingsForm(context),
+            ),
           ),
         ),
       )));
@@ -197,22 +199,7 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
           const Text("Wallet is loaded",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))
               .pad8,
-          FutureBuilder(
-              future: ref.watch(podWalletProvider.future),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final addressStr = snapshot.data!.defaultLockAddress.show;
-                  return TextButton.icon(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: addressStr));
-                      },
-                      label: Text(addressStr,
-                          style: const TextStyle(fontSize: 12)),
-                      icon: const Icon(Icons.copy));
-                } else {
-                  return const CircularProgressIndicator();
-                }
-              }).pad8,
+          const ClipboardAddressButton().pad8,
           TextButton.icon(
             label: const Text("Unload"),
             onPressed: () =>
