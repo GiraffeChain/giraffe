@@ -1,15 +1,6 @@
-import 'dart:async';
-
-import 'package:async/async.dart';
-import '../../providers/blockchain_client.dart';
-import 'genesis_builder_page.dart';
-import 'receive_page.dart';
-import 'social_page.dart';
-import 'stake_page.dart';
-import 'transact_page.dart';
-import '../../blockchain/codecs.dart';
-import 'package:giraffe_sdk/sdk.dart';
-import 'package:fixnum/fixnum.dart';
+import 'package:giraffe_wallet/utils.dart';
+import 'package:giraffe_wallet/widgets/giraffe_background.dart';
+import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,151 +10,62 @@ class BlockchainPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final client = ref.watch(podBlockchainClientProvider)!;
-    return DefaultTabController(
-      length: 6,
-      child: Scaffold(
-          appBar: _appBar(context, client),
-          body: Container(
-              constraints: const BoxConstraints.expand(),
-              child: _tabBarView(context, client))),
-    );
-  }
-
-  _tabBar(BuildContext context) {
-    return const TabBar(tabs: [
-      Tab(icon: Icon(Icons.square_outlined), child: Text("Chain")),
-      Tab(icon: Icon(Icons.send), child: Text("Send")),
-      Tab(icon: Icon(Icons.wallet), child: Text("Receive")),
-      Tab(icon: Icon(Icons.publish), child: Text("Stake")),
-      Tab(
-          icon: Icon(Icons.baby_changing_station),
-          child: Text("Genesis Builder")),
-      Tab(icon: Icon(Icons.person), child: Text("Social")),
-    ]);
-  }
-
-  _tabBarView(BuildContext context, BlockchainClient client) {
-    return TabBarView(children: [
-      LiveBlocksView(client: client),
-      StreamedTransactView(client: client),
-      const ReceiveView(),
-      StakeView(client: client),
-      const GenesisBuilderView(),
-      StreamedSocialView(client: client),
-    ]);
-  }
-
-  static const _metadataTextStyle =
-      TextStyle(fontSize: 12, fontWeight: FontWeight.bold);
-
-  AppBar _appBar(BuildContext context, BlockchainClient client) {
-    final slotTicker = _slotText(context, client);
-    return AppBar(
-      title: StreamBuilder(
-        stream: client.adoptedBlocks
-            .map((b) => b.header)
-            .asyncMap((header) async => [
-                  const VerticalDivider(),
-                  Text((header.id).show, style: _metadataTextStyle),
-                  const VerticalDivider(),
-                  Text("Height: ${header.height}", style: _metadataTextStyle)
-                ]),
-        builder: (context, snapshot) => Row(children: <Widget>[
-          slotTicker,
-          ...?snapshot.data,
-        ]),
-      ),
-      bottom: _tabBar(context),
-    );
-  }
-
-  _slotText(BuildContext context, BlockchainClient client) =>
-      StreamBuilder<Int64>(
-          stream: Stream.fromFuture(client.genesisBlock)
-              .map((b) => (
-                    b.header.timestamp,
-                    Int64(ProtocolSettings.defaultSettings
-                        .mergeFromMap(b.header.settings)
-                        .slotDuration
-                        .inMilliseconds)
-                  ))
-              .asyncExpand((t) => Stream.periodic(const Duration(seconds: 1))
-                  .map((_) =>
-                      (Int64(DateTime.now().millisecondsSinceEpoch) - t.$1) ~/
-                      t.$2)),
-          builder: (context, snapshot) => Row(children: [
-                const VerticalDivider(),
-                Text("Slot: ${snapshot.data ?? Int64.ZERO}",
-                    style: _metadataTextStyle),
-              ]));
-}
-
-class LiveBlocksView extends StatelessWidget {
-  final BlockchainClient client;
-
-  const LiveBlocksView({super.key, required this.client});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: StreamBuilder(
-        stream: _accumulateBlocksStream(context),
-        builder: (context, snapshot) => _blocksView(snapshot.data ?? []),
-      ),
-    );
-  }
-
-  Stream<List<FullBlock>> _accumulateBlocksStream(BuildContext context) =>
-      _fullBlocks.transform(StreamTransformer.fromBind((inStream) {
-        final List<FullBlock> state = [];
-        return inStream.map((block) {
-          state.insert(0, block);
-          return List.of(state);
-        });
-      }));
-
-  Widget _blocksView(List<FullBlock> blocks) => SizedBox(
-        width: 500,
-        child: ListView.separated(
-          itemCount: blocks.length,
-          itemBuilder: (context, index) => BlockCard(block: blocks[index]),
-          separatorBuilder: (BuildContext context, int index) =>
-              const Divider(),
-        ),
-      );
-
-  Stream<FullBlock> get _fullBlocks => StreamGroup.merge(
-          [Stream.fromFuture(client.canonicalHeadId), client.adoptions])
-      .asyncMap(client.getFullBlockOrRaise);
-}
-
-class BlockCard extends StatelessWidget {
-  final FullBlock block;
-
-  const BlockCard({super.key, required this.block});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FluroRouter.appRouter
-          .navigateTo(context, "/blocks/${block.header.id.show}"),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(block.header.id.show),
-              Text("Height: ${block.header.height}"),
-              Text("Slot: ${block.header.slot}"),
-              Text("Timestamp: ${block.header.timestamp}"),
-              Text("Transactions: ${block.fullBody.transactions.length}"),
-            ],
+    return Scaffold(
+        body: GiraffeBackground(
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: 600,
+          child: GiraffeCard(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              searchBox(context, ref).pad16,
+              navigationBlock(context, ref).pad16,
+            ]),
           ),
         ),
       ),
-    );
+    ));
+  }
+
+  Widget searchBox(BuildContext context, WidgetRef ref) {
+    final controller = TextEditingController();
+    return Row(children: [
+      Expanded(
+          child: TextField(
+              controller: controller,
+              decoration: const InputDecoration(hintText: "Search"))),
+      IconButton(
+          icon: const Icon(Icons.search),
+          onPressed: () {
+            final id = controller.text;
+            if (id.isNotEmpty) {
+              FluroRouter.appRouter.navigateTo(context, "/blocks/$id");
+            }
+          })
+    ]);
+  }
+
+  Widget navigationBlock(BuildContext context, WidgetRef ref) {
+    return Column(
+        children: [
+      ElevatedButton.icon(
+          label: const Text("Wallet"),
+          icon: const Icon(Icons.wallet),
+          onPressed: () {
+            FluroRouter.appRouter.navigateTo(context, "/wallet");
+          }),
+      ElevatedButton.icon(
+          label: const Text("Social"),
+          icon: const Icon(Icons.people),
+          onPressed: () {
+            FluroRouter.appRouter.navigateTo(context, "/social");
+          }),
+      ElevatedButton.icon(
+          label: const Text("Stake"),
+          icon: const Icon(Icons.publish),
+          onPressed: () {
+            FluroRouter.appRouter.navigateTo(context, "/stake");
+          }),
+    ].padAll16);
   }
 }

@@ -1,3 +1,6 @@
+import 'package:giraffe_wallet/utils.dart';
+
+import '../../providers/blockchain_client.dart';
 import '../../providers/staking/block_production.dart';
 import '../../providers/staking/staking.dart';
 import '../../providers/storage.dart';
@@ -7,10 +10,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
 
-class StakeView extends ConsumerStatefulWidget {
-  final BlockchainClient client;
+import '../giraffe_background.dart';
+import '../giraffe_card.dart';
 
-  const StakeView({super.key, required this.client});
+class StakeView extends ConsumerStatefulWidget {
+  const StakeView({super.key});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => StakeViewState();
@@ -20,9 +24,31 @@ class StakeViewState extends ConsumerState<StakeView> {
   bool advancedMode = false;
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Stake"),
+      ),
+      body: GiraffeBackground(
+          child: Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: 600,
+          child: GiraffeCard(
+            child: body(context),
+          ).pad16,
+        ),
+      )),
+    );
+  }
+
+  Widget body(BuildContext context) {
+    final client = ref.watch(podBlockchainClientProvider);
+    if (client == null) {
+      return const Center(child: Text("Not initialized"));
+    }
     final state = ref.watch(podStakingProvider);
     if (state != null) {
-      return RunMinting(client: widget.client);
+      return RunMinting(client: client);
     } else if (advancedMode) {
       return advancedModeCard;
     } else {
@@ -35,18 +61,16 @@ class StakeViewState extends ConsumerState<StakeView> {
             return v;
           }),
           builder: (context, snapshot) => snapshot.hasData
-              ? (snapshot.data! ? RunMinting(client: widget.client) : noStaker)
+              ? (snapshot.data! ? RunMinting(client: client) : noStaker)
               : snapshot.hasError
                   ? Center(child: Text("An error occurred: ${snapshot.error}"))
                   : loading);
     }
   }
 
-  Widget get loading =>
-      const Card(child: Center(child: CircularProgressIndicator()));
+  Widget get loading => const Center(child: CircularProgressIndicator());
 
-  Widget get noStaker => Card(
-          child: Column(
+  Widget get noStaker => Column(
         children: [
           const Text(
               "Help improve the network by staking your tokens, and earn rewards in the process!"),
@@ -55,11 +79,10 @@ class StakeViewState extends ConsumerState<StakeView> {
           IconButton(
               icon: const Icon(Icons.warning),
               onPressed: () => setState(() => advancedMode = true)),
-        ],
-      ));
+        ].padAll16,
+      );
 
-  Widget get advancedModeCard => Card(
-          child: Column(
+  Widget get advancedModeCard => Column(
         children: [
           const Text(
               "This area is for developers/testers only. Please be careful!"),
@@ -72,8 +95,8 @@ class StakeViewState extends ConsumerState<StakeView> {
           DropdownButton<int>(
               items: const [DropdownMenuItem(value: 0, child: Text("0"))],
               onChanged: (index) => _onTestnetStakerSelected(index ?? 0)),
-        ],
-      ));
+        ].padAll16,
+      );
 
   Future<void> _onTestnetStakerSelected(int index) async {
     await ref.read(podStakingProvider.notifier).initMintingTestnet(index);
@@ -138,26 +161,24 @@ class RunMinting extends ConsumerWidget {
     if (production is ActivePodBlockProductionState) {
       stopFunction = production.stop;
     }
-    return Card(
-      child: Column(children: [
-        TextButton.icon(
-          onPressed: () => ref.read(podStakingProvider.notifier).reset(),
-          label: const Text("Delete Staker"),
-          icon: const Icon(Icons.delete),
-        ),
-        stopFunction != null
-            ? TextButton.icon(
-                onPressed: () => stopFunction!(),
-                label: const Text("Stop"),
-                icon: const Icon(Icons.stop),
-              )
-            : TextButton.icon(
-                onPressed: () =>
-                    ref.read(podBlockProductionProvider.notifier).start(),
-                label: const Text("Start"),
-                icon: const Icon(Icons.play_arrow)),
-      ]),
-    );
+    return Column(children: [
+      TextButton.icon(
+        onPressed: () => ref.read(podStakingProvider.notifier).reset(),
+        label: const Text("Delete Staker"),
+        icon: const Icon(Icons.delete),
+      ),
+      stopFunction != null
+          ? TextButton.icon(
+              onPressed: () => stopFunction!(),
+              label: const Text("Stop"),
+              icon: const Icon(Icons.stop),
+            )
+          : TextButton.icon(
+              onPressed: () =>
+                  ref.read(podBlockProductionProvider.notifier).start(),
+              label: const Text("Start"),
+              icon: const Icon(Icons.play_arrow)),
+    ]);
   }
 
   static final log = Logger("MintingWidget");

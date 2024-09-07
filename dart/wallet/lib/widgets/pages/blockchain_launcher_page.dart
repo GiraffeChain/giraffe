@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:avs_svg_provider/avs_svg_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:giraffe_wallet/providers/wallet.dart';
 import 'package:giraffe_wallet/utils.dart';
+import 'package:giraffe_wallet/widgets/giraffe_background.dart';
+import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 
 import '../../blockchain/private_testnet.dart';
 import '../../providers/settings.dart';
@@ -38,36 +39,16 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Container(
-          constraints: const BoxConstraints.expand(),
-          decoration: giraffeBackgroundDecoration(),
-          child: SingleChildScrollView(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: 500,
-                child: Container(
-                  decoration: const BoxDecoration(
-                      color: Color(0xCCe9e1cb),
-                      border: Border(
-                          right: BorderSide(
-                              width: 4,
-                              color: Color.fromARGB(255, 124, 120, 108)),
-                          bottom: BorderSide(
-                              width: 6,
-                              color: Color.fromARGB(255, 124, 120, 108))),
-                      borderRadius:
-                          BorderRadius.only(bottomRight: Radius.circular(32))),
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: settingsForm(context),
-                  ),
-                ),
-              ),
-            ),
+          body: GiraffeBackground(
+              child: SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 500,
+            child: GiraffeCard(child: settingsForm(context)),
           ),
         ),
-      );
+      )));
 
   Column settingsForm(BuildContext context) {
     return Column(
@@ -81,26 +62,6 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
         walletForm(context),
         connectButton(context),
       ].padAll8,
-    );
-  }
-
-  BoxDecoration giraffeBackgroundDecoration() {
-    return BoxDecoration(
-      image: DecorationImage(
-        image: AVSSVGProvider("assets/images/giraffe_bottom_right.svg",
-            scale: 9,
-            gradient: const LinearGradient(
-              colors: <Color>[
-                Color.fromARGB(255, 102, 62, 3),
-                Color.fromARGB(255, 66, 4, 75)
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            )),
-        alignment: Alignment.bottomRight,
-        fit: BoxFit.scaleDown,
-      ),
-      color: const Color(0xFFe9e1cb),
     );
   }
 

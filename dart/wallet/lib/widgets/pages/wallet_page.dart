@@ -1,5 +1,10 @@
 import 'dart:async';
 
+import 'package:giraffe_wallet/utils.dart';
+import 'package:giraffe_wallet/widgets/giraffe_background.dart';
+import 'package:giraffe_wallet/widgets/giraffe_card.dart';
+
+import '../../providers/blockchain_client.dart';
 import '../../providers/transact.dart';
 import '../../providers/wallet.dart';
 import 'package:giraffe_sdk/sdk.dart';
@@ -11,12 +16,32 @@ import 'package:logging/logging.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 
 class StreamedTransactView extends ConsumerWidget {
-  final BlockchainClient client;
-
-  const StreamedTransactView({super.key, required this.client});
+  const StreamedTransactView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Wallet"),
+      ),
+      body: GiraffeBackground(
+          child: Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: 600,
+          child: GiraffeCard(
+            child: body(context, ref),
+          ).pad16,
+        ),
+      )),
+    );
+  }
+
+  Widget body(BuildContext context, WidgetRef ref) {
+    final client = ref.watch(podBlockchainClientProvider);
+    if (client == null) {
+      return const Center(child: Text("Not initialized"));
+    }
     return switch (ref.watch(podWalletProvider)) {
       AsyncData(:final value) => TransactView(
           wallet: value,
@@ -44,32 +69,31 @@ class TransactView extends ConsumerWidget {
     final state = ref.watch(podTransactProvider);
     return Padding(
       padding: const EdgeInsets.all(8),
-      child: Card(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: ExpansionPanelList.radio(children: [
-                  ExpansionPanelRadio(
-                    value: "Inputs",
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: ExpansionPanelList.radio(children: [
+                ExpansionPanelRadio(
+                  value: "Inputs",
+                  headerBuilder: (context, isExpanded) =>
+                      const ListTile(title: Text("Inputs")),
+                  body: _inputsTile(ref, state).pad16,
+                ),
+                ExpansionPanelRadio(
+                    value: "Outputs",
                     headerBuilder: (context, isExpanded) =>
-                        const ListTile(title: Text("Inputs")),
-                    body: _inputsTile(ref, state),
-                  ),
-                  ExpansionPanelRadio(
-                      value: "Outputs",
-                      headerBuilder: (context, isExpanded) =>
-                          const ListTile(title: Text("Outputs")),
-                      body: _outputsTile(ref, state)),
-                ]),
-              ),
+                        const ListTile(title: Text("Outputs")),
+                    body: _outputsTile(ref, state).pad16),
+              ]),
             ),
-            IconButton(
-              onPressed: () => _transact(ref, state),
-              icon: const Icon(Icons.send),
-            )
-          ],
-        ),
+          ),
+          IconButton(
+            onPressed: () => _transact(ref, state),
+            icon: const Icon(Icons.send),
+          ).pad16
+        ],
       ),
     );
   }
