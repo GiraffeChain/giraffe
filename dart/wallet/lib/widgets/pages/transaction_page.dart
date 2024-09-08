@@ -1,6 +1,7 @@
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
+import 'package:giraffe_wallet/widgets/over_under.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../../widgets/bitmap_render.dart';
@@ -182,15 +183,6 @@ class TransactionPage extends StatelessWidget {
         Text(underText, style: const TextStyle(color: Colors.blueGrey)),
       );
 
-  Widget _overUnderWidgets(Widget over, Widget under) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            over,
-            const Divider(),
-            under,
-          ],
-        ),
-      );
+  Widget _overUnderWidgets(Widget over, Widget under) =>
+      OverUnder(over: over, under: under);
 }
