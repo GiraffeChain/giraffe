@@ -96,37 +96,46 @@ class BlockchainPage extends ConsumerWidget {
                         FluroRouter.appRouter
                             .navigateTo(context, "/blocks/${value.show}");
                       },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text("Chain Tip ID",
-                                  style: TextStyle(
-                                      fontSize: 10,
-                                      color: Color(0x99000000),
-                                      fontWeight: FontWeight.bold)),
-                              Text(value.show,
-                                  style: const TextStyle(
-                                      fontSize: 10, color: Color(0x99000000))),
-                            ],
-                          ),
-                          const VerticalDivider(),
-                          Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text("Height",
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        color: Color(0x99000000),
-                                        fontWeight: FontWeight.bold)),
-                                Text(snapshot.data!.height.toString(),
-                                    style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Color(0x99000000))),
-                              ]),
-                        ],
+                      child: SizedBox(
+                        height: 48,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text("Chain Tip ID",
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          color: Color(0x99000000),
+                                          fontWeight: FontWeight.bold)),
+                                  Flexible(
+                                    child: Text(value.show,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            fontSize: 10,
+                                            color: Color(0x99000000))),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const VerticalDivider(),
+                            Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text("Height",
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          color: Color(0x99000000),
+                                          fontWeight: FontWeight.bold)),
+                                  Text(snapshot.data!.height.toString(),
+                                      style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Color(0x99000000))),
+                                ]),
+                          ],
+                        ),
                       ),
                     ),
                   )

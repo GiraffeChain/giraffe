@@ -45,7 +45,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const SettingsPage(),
+      home: const BlockchainLauncherPage(),
       onGenerateRoute: FluroRouter.appRouter.generator,
       theme: ThemeData.from(
           colorScheme: ColorScheme.fromSeed(

@@ -59,8 +59,7 @@ class TransactView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return ListView(
       children: [
         const Text("Address",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
@@ -158,21 +157,26 @@ class WalletBalances extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     switch (ref.watch(podWalletProvider)) {
       case AsyncData(:final value):
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        return Wrap(
           children: [
-            OverUnder(
-                over: const Text("Total Funds",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                under: Text(value.totalFunds.toString())),
-            OverUnder(
-                over: const Text("Staked Funds",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                under: Text(value.stakedFunds.toString())),
-            OverUnder(
-                over: const Text("Liquid Funds",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                under: Text(value.liquidFunds.toString())),
+            SizedBox(
+                width: 120,
+                child: OverUnder(
+                    over: const Text("Total Funds",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    under: Text(value.totalFunds.toString()))),
+            SizedBox(
+                width: 120,
+                child: OverUnder(
+                    over: const Text("Staked Funds",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    under: Text(value.stakedFunds.toString()))),
+            SizedBox(
+                width: 120,
+                child: OverUnder(
+                    over: const Text("Liquid Funds",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    under: Text(value.liquidFunds.toString()))),
           ],
         );
       case AsyncError(:final error):

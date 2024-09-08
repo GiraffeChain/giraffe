@@ -5,6 +5,7 @@ import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';
 import 'package:giraffe_wallet/widgets/giraffe_background.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
+import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 
 import '../../blockchain/private_testnet.dart';
 import '../../providers/settings.dart';
@@ -16,8 +17,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bip39/bip39.dart' as bip39;
 
+class BlockchainLauncherPage extends ConsumerWidget {
+  const BlockchainLauncherPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder(
+        future: ref
+            .read(podSecureStorageProvider.notifier)
+            .apiAddress
+            .then((v) => Wrapped(v)),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return SettingsPage(initialApiAddress: snapshot.requireData.value);
+          } else if (snapshot.hasError) {
+            return error(snapshot.error!);
+          } else {
+            return loading;
+          }
+        });
+  }
+
+  Widget get loading =>
+      const GiraffeScaffold(body: Center(child: CircularProgressIndicator()));
+
+  Widget error(Object message) =>
+      GiraffeScaffold(body: Center(child: Text(message.toString())));
+}
+
+class Wrapped<T> {
+  final T value;
+
+  Wrapped(this.value);
+}
+
 class SettingsPage extends ConsumerStatefulWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, required this.initialApiAddress});
+
+  final String? initialApiAddress;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => SettingsPageState();
@@ -26,15 +63,19 @@ class SettingsPage extends ConsumerStatefulWidget {
 class SettingsPageState extends ConsumerState<SettingsPage> {
   late String? apiAddress;
   String? error;
-  bool valid = false;
+  bool addressIsValid = false;
+  Timer? debounceTimer;
 
   late final TextEditingController addressController;
 
   @override
   void initState() {
     super.initState();
-    apiAddress = ref.read(podSettingsProvider).apiAddress;
+    apiAddress = widget.initialApiAddress;
     addressController = TextEditingController(text: apiAddress);
+    if (apiAddress != null) {
+      checkAddress(apiAddress!);
+    }
   }
 
   @override
@@ -68,44 +109,10 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget addressField(BuildContext context) {
-    const prompt = Text("Enter the API Address of a trusted relay node");
-    Timer? timer;
-    void onChanged(String updated) async {
+    const prompt = Text("API Address");
+    void onChanged(String updated) {
       apiAddress = updated;
-      setState(() {
-        valid = false;
-        error = null;
-      });
-      timer?.cancel();
-      timer = null;
-      try {
-        final parsed = Uri.parse(updated);
-        assert(parsed.scheme == "http" || parsed.scheme == "https");
-      } catch (_) {
-        setState(() {
-          error = "Invalid URL";
-          valid = false;
-        });
-        return;
-      }
-      error = "Attempting to connect...";
-      timer = Timer(const Duration(milliseconds: 500), () async {
-        try {
-          await BlockchainClientFromJsonRpc(baseAddress: updated)
-              .canonicalHeadId
-              .timeout(const Duration(seconds: 2));
-        } catch (e) {
-          setState(() {
-            error = "Failed to connect";
-            valid = false;
-          });
-          return;
-        }
-        setState(() {
-          error = null;
-          valid = true;
-        });
-      });
+      checkAddress(updated);
     }
 
     final textField = TextField(
@@ -124,10 +131,47 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  checkAddress(String updated) async {
+    setState(() {
+      addressIsValid = false;
+      error = null;
+    });
+    debounceTimer?.cancel();
+    debounceTimer = null;
+    try {
+      final parsed = Uri.parse(updated);
+      assert(parsed.scheme == "http" || parsed.scheme == "https");
+    } catch (_) {
+      setState(() {
+        error = "Invalid URL";
+        addressIsValid = false;
+      });
+      return;
+    }
+    error = "Attempting to connect...";
+    debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        await BlockchainClientFromJsonRpc(baseAddress: updated)
+            .canonicalHeadId
+            .timeout(const Duration(seconds: 2));
+      } catch (e) {
+        setState(() {
+          error = "Failed to connect";
+          addressIsValid = false;
+        });
+        return;
+      }
+      setState(() {
+        error = null;
+        addressIsValid = true;
+      });
+    });
+  }
+
   Widget walletForm(BuildContext context) => const WalletSelectionForm();
 
   Widget connectButton(BuildContext context) {
-    final isValid = valid && ref.watch(podWalletKeyProvider) != null;
+    final isValid = addressIsValid && ref.watch(podWalletKeyProvider) != null;
     final Function()? onPressed = isValid
         ? () {
             ref.read(podSettingsProvider.notifier).setApiAddress(apiAddress);

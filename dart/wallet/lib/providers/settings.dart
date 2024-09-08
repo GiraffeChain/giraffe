@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:giraffe_wallet/providers/storage.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'settings.g.dart';
@@ -7,12 +8,17 @@ part 'settings.freezed.dart';
 @Riverpod(keepAlive: true)
 class PodSettings extends _$PodSettings {
   @override
-  SettingsState build() => const SettingsState(
-        apiAddress: null, // "http://localhost:2024/api",
-      );
+  Future<SettingsState> build() async {
+    final previous =
+        await ref.read(podSecureStorageProvider.notifier).apiAddress;
+    return SettingsState(apiAddress: previous);
+  }
 
   void setApiAddress(String? address) {
-    state = state.copyWith(apiAddress: address);
+    if (address != null) {
+      ref.read(podSecureStorageProvider.notifier).setApiAddress(address);
+    }
+    state = AsyncData(SettingsState(apiAddress: address));
   }
 }
 
