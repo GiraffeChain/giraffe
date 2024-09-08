@@ -13,10 +13,12 @@ class GiraffeScaffold extends StatelessWidget {
       extendBodyBehindAppBar: true,
       appBar: title != null ? appBar(title!) : null,
       body: GiraffeBackground(
-          child: Padding(
-        padding:
-            const EdgeInsets.only(left: 32, right: 32, top: 64, bottom: 32),
-        child: body,
+          child: SafeArea(
+        child: Padding(
+          padding:
+              const EdgeInsets.only(left: 32, right: 32, top: 8, bottom: 32),
+          child: body,
+        ),
       )),
     );
   }

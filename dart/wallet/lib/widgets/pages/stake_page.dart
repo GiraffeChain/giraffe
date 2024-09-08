@@ -67,8 +67,7 @@ class StakeViewState extends ConsumerState<StakeView> {
 
   Widget get loading => const Center(child: CircularProgressIndicator());
 
-  Widget get noStaker => Column(
-        mainAxisSize: MainAxisSize.min,
+  Widget get noStaker => ListView(
         children: [
           const Text(
               "Help improve the network by staking your tokens, and earn rewards in the process!"),
@@ -80,8 +79,7 @@ class StakeViewState extends ConsumerState<StakeView> {
         ].padAll16,
       );
 
-  Widget get advancedModeCard => Column(
-        mainAxisSize: MainAxisSize.min,
+  Widget get advancedModeCard => ListView(
         children: [
           const Text(
               "This area is for developers/testers only. Please be careful!"),

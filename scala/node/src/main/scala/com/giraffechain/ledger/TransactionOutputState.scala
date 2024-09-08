@@ -1,11 +1,11 @@
 package com.giraffechain.ledger
 
-import com.giraffechain.*
-import com.giraffechain.codecs.given
-import com.giraffechain.models.*
 import cats.data.OptionT
 import cats.effect.{Async, MonadCancelThrow, Resource}
 import cats.implicits.*
+import com.giraffechain.*
+import com.giraffechain.codecs.given
+import com.giraffechain.models.*
 import scodec.bits.BitVector
 
 trait TransactionOutputState[F[_]]:
@@ -83,7 +83,7 @@ class TransactionOutputStateBSSImpl[F[_]: Async](fetchBody: FetchBody[F], fetchT
                       .getOrRaise(transactionId)
                       .map(v => v.clear(input.reference.index))
                       .flatMap(updated =>
-                        if (updated.populationCount > 1)
+                        if (updated.populationCount >= 1)
                           state.put(transactionId, updated)
                         else state.remove(transactionId)
                       )

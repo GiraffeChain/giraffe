@@ -79,32 +79,35 @@ class ProfileEditorState extends State<ProfileEditor> {
   @override
   Widget build(BuildContext context) => ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("Create Profile",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold))
-                .pad16,
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 200),
-              child: TextField(
-                decoration: const InputDecoration(labelText: "First Name"),
-                onChanged: (value) => setState(() => firstName = value),
-              ).pad16,
-            ),
-            ConstrainedBox(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Create Profile",
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold))
+                  .pad16,
+              ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 200),
                 child: TextField(
-                  decoration: const InputDecoration(labelText: "Last Name"),
-                  onChanged: (value) => setState(() => lastName = value),
-                ).pad16),
-            ElevatedButton(
-              onPressed: () => widget.onSave(ProfileData(
-                  firstName: firstName.isEmpty ? null : firstName,
-                  lastName: lastName.isEmpty ? null : lastName)),
-              child: const Text("Create"),
-            ).pad16,
-          ],
+                  decoration: const InputDecoration(labelText: "First Name"),
+                  onChanged: (value) => setState(() => firstName = value),
+                ).pad16,
+              ),
+              ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 200),
+                  child: TextField(
+                    decoration: const InputDecoration(labelText: "Last Name"),
+                    onChanged: (value) => setState(() => lastName = value),
+                  ).pad16),
+              ElevatedButton(
+                onPressed: () => widget.onSave(ProfileData(
+                    firstName: firstName.isEmpty ? null : firstName,
+                    lastName: lastName.isEmpty ? null : lastName)),
+                child: const Text("Create"),
+              ).pad16,
+            ],
+          ),
         ),
       ).pad16;
 }
@@ -117,14 +120,16 @@ class ActiveSocialView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final left = leftColumn(ref);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        welcomeMessage(),
-        Row(
-          children: [if (left != null) left, rightColumn()],
-        )
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          welcomeMessage(),
+          Wrap(
+            children: [if (left != null) left, rightColumn()],
+          )
+        ],
+      ),
     );
   }
 
@@ -180,7 +185,7 @@ class ActiveSocialView extends ConsumerWidget {
       WidgetRef ref, String title, List<TransactionOutputReference> users) {
     final social = ref.read(podSocialProvider.notifier);
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 300, minWidth: 300),
+      constraints: const BoxConstraints(minWidth: 300),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -235,7 +240,7 @@ class UserSearchState extends ConsumerState<UserSearch> {
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
                   .pad8,
-              Row(
+              Wrap(
                 children: [
                   SizedBox(
                     width: 200,
