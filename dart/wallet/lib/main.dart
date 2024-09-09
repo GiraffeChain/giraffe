@@ -1,5 +1,9 @@
 import 'dart:io';
 
+import 'package:giraffe_wallet/widgets/pages/social_page.dart';
+import 'package:giraffe_wallet/widgets/pages/stake_page.dart';
+import 'package:giraffe_wallet/widgets/pages/wallet_page.dart';
+
 import '../blockchain/common/isolate_pool.dart';
 import 'widgets/pages/block_page.dart';
 import 'widgets/pages/blockchain_launcher_page.dart';
@@ -41,7 +45,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const SettingsPage(),
+      home: const BlockchainLauncherPage(),
       onGenerateRoute: FluroRouter.appRouter.generator,
       theme: ThemeData.from(
           colorScheme: ColorScheme.fromSeed(
@@ -65,4 +69,11 @@ initRouter() {
       handler: Handler(
           handlerFunc: (context, params) => UnloadedTransactionPage(
               id: decodeTransactionId(params["id"]![0]))));
+  FluroRouter.appRouter.define("/wallet",
+      handler: Handler(
+          handlerFunc: (context, params) => const StreamedTransactView()));
+  FluroRouter.appRouter.define("/social",
+      handler: Handler(handlerFunc: (context, params) => const SocialView()));
+  FluroRouter.appRouter.define("/stake",
+      handler: Handler(handlerFunc: (context, params) => const StakeView()));
 }

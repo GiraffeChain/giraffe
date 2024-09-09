@@ -68,7 +68,7 @@ class PodSocial extends _$PodSocial {
   createUser(ProfileData data) async {
     state = const AsyncLoading();
     try {
-      final graph = await ref.watch(podGraphClientProvider.future);
+      final graph = await ref.read(podGraphClientProvider.future);
       final userOutput = graph.createVertexOutput(label: "user");
       final profileOutput = graph.createVertexOutput(label: "profile", data: {
         "firstName": data.firstName,
@@ -78,7 +78,7 @@ class PodSocial extends _$PodSocial {
           label: "userProfile",
           a: TransactionOutputReference(index: 1),
           b: TransactionOutputReference(index: 0));
-      final wallet = await ref.watch(podWalletProvider.future);
+      final wallet = await ref.read(podWalletProvider.future);
       final client = ref.read(podBlockchainClientProvider)!;
       final tx = await wallet.payAndAttest(client,
           Transaction(outputs: [userOutput, profileOutput, edgeOutput]));

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:fixnum/fixnum.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:collection/collection.dart';
 
@@ -197,4 +198,18 @@ class Wallet {
   Future<Transaction> payAndAttest(
           BlockchainClient view, Transaction transaction) async =>
       attest(view, await pay(view, transaction));
+
+  Int64 get totalFunds => spendableOutputs.values
+      .map((v) => v.value.quantity)
+      .fold(Int64.ZERO, (a, b) => a + b);
+
+  Int64 get stakedFunds => spendableOutputs.values
+      .where((v) => v.hasAccount() || v.value.hasAccountRegistration())
+      .map((v) => v.value.quantity)
+      .fold(Int64.ZERO, (a, b) => a + b);
+
+  Int64 get liquidFunds => spendableOutputs.values
+      .where((o) => o.isPaymentToken)
+      .map((v) => v.value.quantity)
+      .fold(Int64.ZERO, (a, b) => a + b);
 }

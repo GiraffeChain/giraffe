@@ -32,6 +32,13 @@ class PodSecureStorage extends _$PodSecureStorage {
   Future<bool> get containsWalletSk => state.containsKey(key: _walletSkKey);
 
   Future<void> deleteWalletSk() => state.delete(key: _walletSkKey);
+
+  Future<void> setApiAddress(String url) async {
+    await state.write(key: _apiUrlKey, value: url);
+  }
+
+  Future<String?> get apiAddress => state.read(key: _apiUrlKey);
 }
 
 const _walletSkKey = 'wallet_sk';
+const _apiUrlKey = 'api_address';

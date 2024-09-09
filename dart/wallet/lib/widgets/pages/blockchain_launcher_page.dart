@@ -1,9 +1,11 @@
 import 'dart:async';
 
-import 'package:avs_svg_provider/avs_svg_provider.dart';
 import 'package:flutter/services.dart';
-import 'package:giraffe_wallet/providers/wallet.dart';
 import 'package:giraffe_wallet/utils.dart';
+import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';
+import 'package:giraffe_wallet/widgets/giraffe_background.dart';
+import 'package:giraffe_wallet/widgets/giraffe_card.dart';
+import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 
 import '../../blockchain/private_testnet.dart';
 import '../../providers/settings.dart';
@@ -15,8 +17,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bip39/bip39.dart' as bip39;
 
+class BlockchainLauncherPage extends ConsumerWidget {
+  const BlockchainLauncherPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder(
+        future: ref
+            .read(podSecureStorageProvider.notifier)
+            .apiAddress
+            .then((v) => Wrapped(v)),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return SettingsPage(initialApiAddress: snapshot.requireData.value);
+          } else if (snapshot.hasError) {
+            return error(snapshot.error!);
+          } else {
+            return loading;
+          }
+        });
+  }
+
+  Widget get loading =>
+      const GiraffeScaffold(body: Center(child: CircularProgressIndicator()));
+
+  Widget error(Object message) =>
+      GiraffeScaffold(body: Center(child: Text(message.toString())));
+}
+
+class Wrapped<T> {
+  final T value;
+
+  Wrapped(this.value);
+}
+
 class SettingsPage extends ConsumerStatefulWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, required this.initialApiAddress});
+
+  final String? initialApiAddress;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => SettingsPageState();
@@ -25,49 +63,35 @@ class SettingsPage extends ConsumerStatefulWidget {
 class SettingsPageState extends ConsumerState<SettingsPage> {
   late String? apiAddress;
   String? error;
-  bool valid = false;
+  bool addressIsValid = false;
+  Timer? debounceTimer;
 
   late final TextEditingController addressController;
 
   @override
   void initState() {
     super.initState();
-    apiAddress = ref.read(podSettingsProvider).apiAddress;
+    apiAddress = widget.initialApiAddress;
     addressController = TextEditingController(text: apiAddress);
+    if (apiAddress != null) {
+      checkAddress(apiAddress!);
+    }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Container(
-          constraints: const BoxConstraints.expand(),
-          decoration: giraffeBackgroundDecoration(),
-          child: SingleChildScrollView(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: 500,
-                child: Container(
-                  decoration: const BoxDecoration(
-                      color: Color(0xCCe9e1cb),
-                      border: Border(
-                          right: BorderSide(
-                              width: 4,
-                              color: Color.fromARGB(255, 124, 120, 108)),
-                          bottom: BorderSide(
-                              width: 6,
-                              color: Color.fromARGB(255, 124, 120, 108))),
-                      borderRadius:
-                          BorderRadius.only(bottomRight: Radius.circular(32))),
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: settingsForm(context),
-                  ),
-                ),
-              ),
+          body: GiraffeBackground(
+              child: SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: GiraffeCard(
+            child: SizedBox(
+              width: 500,
+              child: settingsForm(context),
             ),
           ),
         ),
-      );
+      )));
 
   Column settingsForm(BuildContext context) {
     return Column(
@@ -84,65 +108,11 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  BoxDecoration giraffeBackgroundDecoration() {
-    return BoxDecoration(
-      image: DecorationImage(
-        image: AVSSVGProvider("assets/images/giraffe_bottom_right.svg",
-            scale: 9,
-            gradient: const LinearGradient(
-              colors: <Color>[
-                Color.fromARGB(255, 102, 62, 3),
-                Color.fromARGB(255, 66, 4, 75)
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            )),
-        alignment: Alignment.bottomRight,
-        fit: BoxFit.scaleDown,
-      ),
-      color: const Color(0xFFe9e1cb),
-    );
-  }
-
   Widget addressField(BuildContext context) {
-    const prompt = Text("Enter the API Address of a trusted relay node");
-    Timer? timer;
-    void onChanged(String updated) async {
+    const prompt = Text("API Address");
+    void onChanged(String updated) {
       apiAddress = updated;
-      setState(() {
-        valid = false;
-        error = null;
-      });
-      timer?.cancel();
-      timer = null;
-      try {
-        final parsed = Uri.parse(updated);
-        assert(parsed.scheme == "http" || parsed.scheme == "https");
-      } catch (_) {
-        setState(() {
-          error = "Invalid URL";
-          valid = false;
-        });
-        return;
-      }
-      error = "Attempting to connect...";
-      timer = Timer(const Duration(milliseconds: 500), () async {
-        try {
-          await BlockchainClientFromJsonRpc(baseAddress: updated)
-              .canonicalHeadId
-              .timeout(const Duration(seconds: 2));
-        } catch (e) {
-          setState(() {
-            error = "Failed to connect";
-            valid = false;
-          });
-          return;
-        }
-        setState(() {
-          error = null;
-          valid = true;
-        });
-      });
+      checkAddress(updated);
     }
 
     final textField = TextField(
@@ -161,10 +131,47 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  checkAddress(String updated) async {
+    setState(() {
+      addressIsValid = false;
+      error = null;
+    });
+    debounceTimer?.cancel();
+    debounceTimer = null;
+    try {
+      final parsed = Uri.parse(updated);
+      assert(parsed.scheme == "http" || parsed.scheme == "https");
+    } catch (_) {
+      setState(() {
+        error = "Invalid URL";
+        addressIsValid = false;
+      });
+      return;
+    }
+    error = "Attempting to connect...";
+    debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        await BlockchainClientFromJsonRpc(baseAddress: updated)
+            .canonicalHeadId
+            .timeout(const Duration(seconds: 2));
+      } catch (e) {
+        setState(() {
+          error = "Failed to connect";
+          addressIsValid = false;
+        });
+        return;
+      }
+      setState(() {
+        error = null;
+        addressIsValid = true;
+      });
+    });
+  }
+
   Widget walletForm(BuildContext context) => const WalletSelectionForm();
 
   Widget connectButton(BuildContext context) {
-    final isValid = valid && ref.watch(podWalletKeyProvider) != null;
+    final isValid = addressIsValid && ref.watch(podWalletKeyProvider) != null;
     final Function()? onPressed = isValid
         ? () {
             ref.read(podSettingsProvider.notifier).setApiAddress(apiAddress);
@@ -236,22 +243,7 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
           const Text("Wallet is loaded",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))
               .pad8,
-          FutureBuilder(
-              future: ref.watch(podWalletProvider.future),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final addressStr = snapshot.data!.defaultLockAddress.show;
-                  return TextButton.icon(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: addressStr));
-                      },
-                      label: Text(addressStr,
-                          style: const TextStyle(fontSize: 12)),
-                      icon: const Icon(Icons.copy));
-                } else {
-                  return const CircularProgressIndicator();
-                }
-              }).pad8,
+          const ClipboardAddressButton().pad8,
           TextButton.icon(
             label: const Text("Unload"),
             onPressed: () =>

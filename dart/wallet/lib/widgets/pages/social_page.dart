@@ -1,41 +1,35 @@
+import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
+
 import '../../providers/social.dart';
-import '../../providers/wallet.dart';
 import '../../utils.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class StreamedSocialView extends ConsumerWidget {
-  final BlockchainClient client;
-
-  const StreamedSocialView({super.key, required this.client});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return switch (ref.watch(podWalletProvider)) {
-      AsyncData(:final value) => SocialView(
-          wallet: value,
-          client: client,
-        ),
-      AsyncError(:final error) =>
-        Center(child: Text("An error occurred: $error")),
-      _ => const Center(child: CircularProgressIndicator())
-    };
-  }
-}
+import '../giraffe_card.dart';
 
 class SocialView extends ConsumerWidget {
   const SocialView({
     super.key,
-    required this.wallet,
-    required this.client,
   });
-
-  final Wallet wallet;
-  final BlockchainClient client;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return GiraffeScaffold(
+      title: "Social",
+      body: Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: 600,
+          child: GiraffeCard(
+            child: body(context, ref),
+          ).pad16,
+        ),
+      ),
+    );
+  }
+
+  Widget body(BuildContext context, WidgetRef ref) {
     final state = ref.watch(podSocialProvider);
     return switch (state) {
       AsyncData(:final value) => _loaded(ref, value),
@@ -85,8 +79,9 @@ class ProfileEditorState extends State<ProfileEditor> {
   @override
   Widget build(BuildContext context) => ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
-        child: Card(
+        child: SingleChildScrollView(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Text("Create Profile",
                       style:
@@ -125,14 +120,16 @@ class ActiveSocialView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final left = leftColumn(ref);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        welcomeMessage(),
-        Row(
-          children: [if (left != null) left, rightColumn()],
-        )
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          welcomeMessage(),
+          Wrap(
+            children: [if (left != null) left, rightColumn()],
+          )
+        ],
+      ),
     );
   }
 
@@ -187,27 +184,25 @@ class ActiveSocialView extends ConsumerWidget {
   Widget userList(
       WidgetRef ref, String title, List<TransactionOutputReference> users) {
     final social = ref.read(podSocialProvider.notifier);
-    return Card(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 300, minWidth: 300),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              for (final friend in users)
-                FutureBuilder(
-                    future: social.fetchProfileByUserId(friend),
-                    builder: (context, snapshot) => snapshot.hasData
-                        ? Text(
-                            "${snapshot.data?.firstName ?? ""} ${snapshot.data?.lastName ?? ""}")
-                        : snapshot.hasError
-                            ? Text(
-                                "Error: ${snapshot.error}\n${snapshot.stackTrace}")
-                            : const CircularProgressIndicator()),
-            ],
-          ),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 300),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            for (final friend in users)
+              FutureBuilder(
+                  future: social.fetchProfileByUserId(friend),
+                  builder: (context, snapshot) => snapshot.hasData
+                      ? Text(
+                          "${snapshot.data?.firstName ?? ""} ${snapshot.data?.lastName ?? ""}")
+                      : snapshot.hasError
+                          ? Text(
+                              "Error: ${snapshot.error}\n${snapshot.stackTrace}")
+                          : const CircularProgressIndicator()),
+          ],
         ),
       ),
     );
@@ -238,53 +233,48 @@ class UserSearchState extends ConsumerState<UserSearch> {
         constraints: const BoxConstraints(maxWidth: 600),
         child: SizedBox(
           height: 350,
-          child: Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Search Users",
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold))
-                    .pad8,
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 200,
-                      height: 80,
-                      child: TextField(
-                        decoration:
-                            const InputDecoration(labelText: "First Name"),
-                        onChanged: (value) => firstName = value,
-                      ),
-                    ).pad8,
-                    SizedBox(
-                      width: 200,
-                      height: 80,
-                      child: TextField(
-                        decoration:
-                            const InputDecoration(labelText: "Last Name"),
-                        onChanged: (value) => lastName = value,
-                      ),
-                    ).pad8,
-                    IconButton(
-                            onPressed: () async {
-                              final social =
-                                  ref.read(podSocialProvider.notifier);
-                              final users = await social.findUsers(
-                                  firstName:
-                                      firstName.isEmpty ? null : firstName,
-                                  lastName: lastName.isEmpty ? null : lastName);
-                              setState(() => results = users);
-                            },
-                            icon: const Icon(Icons.search))
-                        .pad8
-                  ],
-                ),
-                Expanded(
-                  child: resultsList(),
-                ),
-              ],
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Search Users",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
+                  .pad8,
+              Wrap(
+                children: [
+                  SizedBox(
+                    width: 200,
+                    height: 80,
+                    child: TextField(
+                      decoration:
+                          const InputDecoration(labelText: "First Name"),
+                      onChanged: (value) => firstName = value,
+                    ),
+                  ).pad8,
+                  SizedBox(
+                    width: 200,
+                    height: 80,
+                    child: TextField(
+                      decoration: const InputDecoration(labelText: "Last Name"),
+                      onChanged: (value) => lastName = value,
+                    ),
+                  ).pad8,
+                  IconButton(
+                          onPressed: () async {
+                            final social = ref.read(podSocialProvider.notifier);
+                            final users = await social.findUsers(
+                                firstName: firstName.isEmpty ? null : firstName,
+                                lastName: lastName.isEmpty ? null : lastName);
+                            setState(() => results = users);
+                          },
+                          icon: const Icon(Icons.search))
+                      .pad8
+                ],
+              ),
+              Expanded(
+                child: resultsList(),
+              ),
+            ],
           ),
         ),
       );
