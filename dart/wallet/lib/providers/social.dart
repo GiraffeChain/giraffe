@@ -14,7 +14,6 @@ class PodSocial extends _$PodSocial {
   @override
   Future<SocialState> build() async {
     final wallet = await ref.watch(podWalletProvider.future);
-    ref.watch(podCanonicalHeadProvider);
     ({TransactionOutputReference userRef, Vertex userVertex})? user;
     ({TransactionOutputReference profileRef, Vertex profileVertex})? profile;
     for (final entry in wallet.spendableOutputs.entries) {
@@ -33,6 +32,7 @@ class PodSocial extends _$PodSocial {
     if (user == null || profile == null) {
       return const AntiSocial();
     }
+    ref.watch(podCanonicalHeadProvider);
 
     final profileData = ProfileData(
       firstName: profile.profileVertex.data.fields["firstName"]?.stringValue,

@@ -6,6 +6,7 @@ import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';
 import 'package:giraffe_wallet/widgets/giraffe_background.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
+import 'package:giraffe_wallet/widgets/pages/advanced_page.dart';
 
 import '../../blockchain/private_testnet.dart';
 import '../../providers/settings.dart';
@@ -104,6 +105,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
         addressField(context),
         walletForm(context),
         connectButton(context),
+        advancedButton(context),
       ].padAll8,
     );
   }
@@ -188,6 +190,21 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
       label: const Text("Connect"),
       onPressed: onPressed,
       icon: const Icon(Icons.network_ping),
+    );
+  }
+
+  Widget advancedButton(BuildContext context) {
+    return TextButton.icon(
+      onPressed: () => Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const AdvancedPage())),
+      icon: const Icon(
+        Icons.warning,
+        size: 18,
+      ),
+      label: const Text(
+        "Advanced",
+        style: TextStyle(fontSize: 11),
+      ),
     );
   }
 }

@@ -1,23 +1,42 @@
-import '../../providers/genesis_builder.dart';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/services.dart';
+import 'package:giraffe_wallet/blockchain/codecs.dart';
+import 'package:giraffe_wallet/widgets/giraffe_card.dart';
+import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../../blockchain/genesis.dart';
+import '../../blockchain/private_testnet.dart';
+import '../../blockchain/staking_account.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart' hide State;
 
-class GenesisBuilderView extends ConsumerWidget {
-  const GenesisBuilderView({super.key});
+class GenesisBuilderPage extends StatefulWidget {
+  const GenesisBuilderPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(podGenesisBuilderProvider);
-    return SingleChildScrollView(
-      child: Center(
-        child: SizedBox(
-          width: 800,
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
+  State<StatefulWidget> createState() => GenesisBuilderState();
+}
+
+class GenesisBuilderState extends State<GenesisBuilderPage> {
+  String seed = "test";
+  List<(LockAddress, Int64)> stakers = List.empty(growable: true);
+  List<(LockAddress, Int64)> unstaked = List.empty(growable: true);
+  Directory? savedDir;
+
+  @override
+  Widget build(BuildContext context) {
+    return GiraffeScaffold(
+      title: "Genesis Builder",
+      body: SingleChildScrollView(
+        child: Center(
+          child: SizedBox(
+            width: 800,
+            child: GiraffeCard(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,13 +46,13 @@ class GenesisBuilderView extends ConsumerWidget {
                     style: TextStyle(fontSize: 44, fontWeight: FontWeight.bold),
                   ),
                   const Divider(),
-                  _seedRow(state, ref),
+                  _seedRow,
                   const Divider(),
-                  _formRow("Stakers", _stakersTile(state, ref)),
+                  _formRow("Stakers", _stakersTile),
                   const Divider(),
-                  _formRow("Unstaked", _unstakedTile(state, ref)),
+                  _formRow("Unstaked", _unstakedTile),
                   const Divider(),
-                  _saveButton(state, ref),
+                  _saveButton,
                 ],
               ),
             ),
@@ -43,14 +62,14 @@ class GenesisBuilderView extends ConsumerWidget {
     );
   }
 
-  Widget _seedRow(GenesisBuilderState state, WidgetRef ref) {
+  Widget get _seedRow {
     return _formRow(
         "Seed",
         SizedBox(
           width: 150,
           child: TextField(
-            controller: TextEditingController(text: state.seed),
-            onChanged: ref.read(podGenesisBuilderProvider.notifier).setSeed,
+            controller: TextEditingController(text: seed),
+            onChanged: (v) => seed = v,
           ),
         ));
   }
@@ -67,33 +86,40 @@ class GenesisBuilderView extends ConsumerWidget {
         body
       ]);
 
-  Widget _stakersTile(GenesisBuilderState state, WidgetRef ref) {
+  Widget get _stakersTile {
     return Column(
       children: [
         DataTable(
           columns: _tableHeader,
-          rows: state.stakers
-              .mapWithIndex((e, i) => _stakerEntryRow(ref, e, i))
-              .toList(),
+          rows: stakers.mapWithIndex((e, i) => _stakerEntryRow(e, i)).toList(),
         ),
         IconButton(
-            onPressed: ref.read(podGenesisBuilderProvider.notifier).addStaker,
+            onPressed: () async {
+              final address = await PrivateTestnet.defaultLockAddress;
+              setState(() {
+                stakers.add((address, Int64(10000)));
+              });
+            },
             icon: const Icon(Icons.add))
       ],
     );
   }
 
-  Widget _unstakedTile(GenesisBuilderState state, WidgetRef ref) {
+  Widget get _unstakedTile {
     return Column(
       children: [
         DataTable(
           columns: _tableHeader,
-          rows: state.unstaked
-              .mapWithIndex((e, i) => _unstakedEntryRow(ref, e, i))
-              .toList(),
+          rows:
+              unstaked.mapWithIndex((e, i) => _unstakedEntryRow(e, i)).toList(),
         ),
         IconButton(
-            onPressed: ref.read(podGenesisBuilderProvider.notifier).addUnstaked,
+            onPressed: () async {
+              final address = await PrivateTestnet.defaultLockAddress;
+              setState(() {
+                unstaked.add((address, Int64(10000)));
+              });
+            },
             icon: const Icon(Icons.add))
       ],
     );
@@ -126,75 +152,115 @@ class GenesisBuilderView extends ConsumerWidget {
     ),
   ];
 
-  DataRow _stakerEntryRow(
-      WidgetRef ref, (LockAddress, Int64) entry, int index) {
+  DataRow _stakerEntryRow((LockAddress, Int64) entry, int index) {
     return DataRow(
       cells: [
         DataCell(TextFormField(
           initialValue: entry.$2.toString(),
-          onChanged: (value) => ref
-              .read(podGenesisBuilderProvider.notifier)
-              .updateStakerQuantity(index, Int64.parseInt(value)),
+          onChanged: (value) => setState(() {
+            stakers[index] = (stakers[index].$1, Int64.parseInt(value));
+          }),
         )),
         DataCell(TextFormField(
           initialValue: entry.$1.show,
-          onChanged: (value) => ref
-              .read(podGenesisBuilderProvider.notifier)
-              .updateStakerAddress(index, decodeLockAddress(value)),
+          onChanged: (value) => setState(() {
+            stakers[index] = (decodeLockAddress(value), stakers[index].$2);
+          }),
         )),
         DataCell(
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () => ref
-                .read(podGenesisBuilderProvider.notifier)
-                .deleteStaker(index),
+            onPressed: () => setState(() {
+              stakers.removeAt(index);
+            }),
           ),
         ),
       ],
     );
   }
 
-  DataRow _unstakedEntryRow(
-      WidgetRef ref, (LockAddress, Int64) entry, int index) {
+  DataRow _unstakedEntryRow((LockAddress, Int64) entry, int index) {
     return DataRow(
       cells: [
         DataCell(TextFormField(
           initialValue: entry.$2.toString(),
-          onChanged: (value) => ref
-              .read(podGenesisBuilderProvider.notifier)
-              .updateUnstakedQuantity(index, Int64.parseInt(value)),
+          onChanged: (value) => setState(() {
+            unstaked[index] = (unstaked[index].$1, Int64.parseInt(value));
+          }),
         )),
         DataCell(TextFormField(
           initialValue: entry.$1.show,
-          onChanged: (value) => ref
-              .read(podGenesisBuilderProvider.notifier)
-              .updateUnstakedAddress(index, decodeLockAddress(value)),
+          onChanged: (value) => setState(() {
+            unstaked[index] = (decodeLockAddress(value), unstaked[index].$2);
+          }),
         )),
         DataCell(
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () => ref
-                .read(podGenesisBuilderProvider.notifier)
-                .deleteUnstaked(index),
+            onPressed: () => setState(() {
+              unstaked.removeAt(index);
+            }),
           ),
         ),
       ],
     );
   }
 
-  Widget _saveButton(GenesisBuilderState state, WidgetRef ref) {
+  Widget get _saveButton {
     final button = TextButton.icon(
-      onPressed: ref.read(podGenesisBuilderProvider.notifier).save,
+      onPressed: save,
       icon: const Icon(Icons.save),
       label: const Text("Save"),
     );
-    return state.savedDir == null
-        ? button
-        : Row(
-            children: [
-              button,
-              Text("Saved to ${state.savedDir!.path}"),
-            ],
-          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        button,
+        if (savedDir != null)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: TextButton.icon(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: savedDir!.path));
+              },
+              label: Text(savedDir!.path,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12)),
+              icon: const Icon(Icons.copy),
+            ),
+          )
+      ],
+    );
+  }
+
+  Future<void> save() async {
+    final genesisInitDirectory = Directory(
+        "${(await getApplicationDocumentsDirectory()).path}/blockchain/genesis-init");
+    final stakerEntries = await Future.wait(stakers.mapWithIndex((e, index) {
+      return StakingAccount.generate(
+          e.$2, e.$1, utf8.encode(seed + index.toString()));
+    }).toList());
+    final unstakedTransaction = Transaction(
+        outputs: unstaked.map((t) => TransactionOutput(
+            lockAddress: t.$1, value: Value(quantity: t.$2))));
+    final genesisTransactions = [
+      unstakedTransaction,
+      ...stakerEntries.map((s) => s.transaction)
+    ];
+    final genesisConfig = GenesisConfig(
+        Int64(DateTime.now().millisecondsSinceEpoch),
+        genesisTransactions,
+        [],
+        ProtocolSettings.defaultAsMap);
+    final genesis = genesisConfig.block;
+
+    final saveDir =
+        Directory("${genesisInitDirectory.path}/${genesis.header.id.show}");
+    await Future.wait(stakerEntries.mapWithIndex(
+        (s, index) => s.save(Directory("${saveDir.path}/stakers/$index"))));
+    await Genesis.save(saveDir, genesis);
+    setState(() {
+      savedDir = saveDir;
+    });
   }
 }
