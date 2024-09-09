@@ -17,6 +17,10 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: npm
           cache-dependency-path: typescript/sdk/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: ts-sdk-dist
+          path: typescript/sdk/dist
       - run: npm ci
         working-directory: ./typescript/sdk
       - run: npm publish --access public
