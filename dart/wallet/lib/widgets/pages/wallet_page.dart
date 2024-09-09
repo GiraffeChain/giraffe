@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:fixnum/fixnum.dart';
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';
@@ -81,12 +83,23 @@ class TransferFunds extends ConsumerStatefulWidget {
 }
 
 class TransferFundsState extends ConsumerState<TransferFunds> {
-  String _to = "";
-  String _amount = "";
-  String? error;
+  String toAddress = "";
+  String quantity = "";
+  String? toError = "Enter a valid address";
+  String? quantityError = "Enter a valid quantity";
+  String? transferError;
+  Transaction? broadcastedTransaction;
 
   @override
   Widget build(BuildContext context) {
+    if (broadcastedTransaction != null) {
+      return transferring(context, broadcastedTransaction!);
+    } else {
+      return transferForm(context);
+    }
+  }
+
+  Widget transferForm(BuildContext context) {
     return Column(
       children: [
         const Text("Transfer Funds",
@@ -95,15 +108,15 @@ class TransferFundsState extends ConsumerState<TransferFunds> {
         TextField(
           decoration: const InputDecoration(labelText: "To"),
           onChanged: (str) {
-            error = null;
-            _to = str;
+            toAddress = str;
+            checkLockAddress();
           },
         ).pad8,
         TextField(
-          decoration: const InputDecoration(labelText: "Amount"),
+          decoration: const InputDecoration(labelText: "Quantity"),
           onChanged: (str) {
-            error = null;
-            _amount = str;
+            quantity = str;
+            checkQuantity();
           },
         ).pad8,
         errorWidget(),
@@ -112,26 +125,74 @@ class TransferFundsState extends ConsumerState<TransferFunds> {
     );
   }
 
+  Widget transferring(
+      BuildContext context, Transaction broadcastedTransaction) {
+    return Column(
+      children: [
+        const Text("Transferring Funds",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+            .pad8,
+        const CircularProgressIndicator().pad8,
+        Text(
+          broadcastedTransaction.id.show,
+          style: const TextStyle(
+              fontStyle: FontStyle.italic,
+              fontSize: 11,
+              fontWeight: FontWeight.bold),
+        ).pad8,
+      ],
+    );
+  }
+
+  checkQuantity() {
+    final amount = Int64.tryParseInt(quantity);
+    if (amount == null) {
+      setState(() => quantityError = "Invalid quantity");
+    } else if (quantityError != null) {
+      setState(() => quantityError = null);
+    }
+  }
+
+  checkLockAddress() {
+    try {
+      decodeLockAddress(toAddress);
+      if (toError != null) {
+        setState(() => toError = null);
+      }
+    } catch (e) {
+      setState(() => toError = "Invalid address");
+    }
+  }
+
+  List<String> get allErrors => [
+        if (toError != null) toError!,
+        if (quantityError != null) quantityError!,
+        if (transferError != null) transferError!,
+      ];
+
   Widget errorWidget() {
-    if (error == null) {
+    final errors = allErrors;
+    if (errors.isEmpty) {
       return const SizedBox();
     }
-    return Text(error!, style: const TextStyle(color: Colors.red));
+    errorText(String error) =>
+        Text(error, style: const TextStyle(color: Colors.red));
+    if (errors.length == 1) {
+      return errorText(errors.first);
+    } else {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: errors.map((e) => errorText(e)).toList(),
+      );
+    }
   }
 
   Widget submitButton() {
-    final Function()? onPressed = error == null
+    final errors = allErrors;
+    final Function()? onPressed = errors.isEmpty
         ? () async {
-            final amount = Int64.tryParseInt(_amount);
-            if (amount == null) {
-              setState(() => error = "Invalid amount");
-              return;
-            }
-            final to = decodeLockAddress(_to);
-            if (to == null) {
-              setState(() => error = "Invalid address");
-              return;
-            }
+            final amount = Int64.parseInt(quantity);
+            final LockAddress to = decodeLockAddress(toAddress);
             final client = ref.read(podBlockchainClientProvider)!;
             final wallet = await ref.read(podWalletProvider.future);
             final tx = await wallet.payAndAttest(
@@ -140,7 +201,22 @@ class TransferFundsState extends ConsumerState<TransferFunds> {
                   TransactionOutput(
                       lockAddress: to, value: Value(quantity: amount))
                 ]));
-            await client.broadcastTransaction(tx);
+            setState(() {
+              broadcastedTransaction = tx;
+            });
+            try {
+              await client.broadcastTransaction(tx);
+              await client.adoptions.first;
+            } catch (e) {
+              setState(() {
+                transferError = "Failed to broadcast transaction: $e";
+              });
+              return;
+            }
+            setState(() {
+              transferError = null;
+              broadcastedTransaction = null;
+            });
           }
         : null;
     return ElevatedButton.icon(

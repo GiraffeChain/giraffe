@@ -70,8 +70,20 @@ class StakeViewState extends ConsumerState<StakeView> {
   Widget get noStaker => ListView(
         children: [
           const Text(
-              "Help improve the network by staking your tokens, and earn rewards in the process!"),
-          const Text("To begin, register a new account."),
+            "Staking and Block Production",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ).pad8,
+          const Text(
+            "Help improve the network by staking your tokens, and earn rewards in the process!",
+            style: TextStyle(fontSize: 12),
+            textAlign: TextAlign.center,
+          ).pad8,
+          const Text(
+            "To begin, register a new account.",
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
           registerButton(context),
           IconButton(
               icon: const Icon(Icons.warning),
@@ -154,29 +166,68 @@ class RunMinting extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final production = ref.watch(podBlockProductionProvider);
-    Future<void> Function()? stopFunction;
     if (production is ActivePodBlockProductionState) {
-      stopFunction = production.stop;
+      final stop = production.stop;
+      if (stop == null) {
+        return inactive(context, ref);
+      } else {
+        return active(context, () => stop());
+      }
+    } else {
+      return inactive(context, ref);
     }
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      TextButton.icon(
-        onPressed: () => ref.read(podStakingProvider.notifier).reset(),
-        label: const Text("Delete Staker"),
-        icon: const Icon(Icons.delete),
-      ),
-      stopFunction != null
-          ? TextButton.icon(
-              onPressed: () => stopFunction!(),
-              label: const Text("Stop"),
-              icon: const Icon(Icons.stop),
-            )
-          : TextButton.icon(
-              onPressed: () =>
-                  ref.read(podBlockProductionProvider.notifier).start(),
-              label: const Text("Start"),
-              icon: const Icon(Icons.play_arrow)),
-    ]);
   }
+
+  Widget active(BuildContext context, Function() stop) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("Staking is active.",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
+              .pad8,
+          const Text(
+            "Your device is making blocks in the background. Network and power consumption may be higher than normal.",
+            style: TextStyle(fontSize: 12),
+            textAlign: TextAlign.center,
+          ).pad8,
+          const Text(
+            "If you recently registered, the network will place you into a delay period before you can make new blocks. This is to prevent abuse. Block production will automatically begin when it can.",
+            style: TextStyle(fontSize: 12),
+            textAlign: TextAlign.center,
+          ).pad8,
+          const Divider(),
+          TextButton.icon(
+            onPressed: stop,
+            label: const Text("Stop"),
+            icon: const Icon(Icons.stop),
+          ).pad8,
+        ],
+      );
+
+  Widget inactive(BuildContext context, WidgetRef ref) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("Staking is inactive.",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
+              .pad8,
+          const Text(
+            "Your device is not currently making blocks, but you can start at any time.",
+            style: TextStyle(fontSize: 12),
+            textAlign: TextAlign.center,
+          ).pad8,
+          const Divider(),
+          TextButton.icon(
+                  onPressed: () =>
+                      ref.read(podBlockProductionProvider.notifier).start(),
+                  label: const Text("Start"),
+                  icon: const Icon(Icons.play_arrow))
+              .pad8,
+          TextButton.icon(
+            onPressed: () => ref.read(podStakingProvider.notifier).reset(),
+            label: const Text("Delete Staker"),
+            icon: const Icon(Icons.delete),
+          ).pad8,
+        ],
+      );
 
   static final log = Logger("MintingWidget");
 }

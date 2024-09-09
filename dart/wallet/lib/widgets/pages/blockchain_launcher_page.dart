@@ -99,7 +99,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Image(image: AssetImage("assets/images/logo_with_border.png")),
-        const Text("Welcome to Giraffe Chain",
+        const Text("Giraffe Chain",
             style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
         addressField(context),
         walletForm(context),

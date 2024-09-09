@@ -21,7 +21,9 @@ extension ListCodec<T> on List<T> {
 }
 
 BlockId decodeBlockId(String input) {
-  return BlockId()..value = input.startsWith("b_") ? input.substring(2) : input;
+  final value = input.startsWith("b_") ? input.substring(2) : input;
+  assert(value.decodeBase58.length == 32);
+  return BlockId(value: value);
 }
 
 extension IterableCodecs<T> on Iterable<T> {
@@ -56,8 +58,9 @@ extension TransactionIdCodecs on TransactionId {
 }
 
 TransactionId decodeTransactionId(String input) {
-  return TransactionId()
-    ..value = input.startsWith("t_") ? input.substring(2) : input;
+  final value = input.startsWith("t_") ? input.substring(2) : input;
+  assert(value.decodeBase58.length == 32);
+  return TransactionId(value: value);
 }
 
 extension TransactionCodecs on Transaction {
@@ -200,8 +203,9 @@ extension LockAddressCodecs on LockAddress {
 }
 
 LockAddress decodeLockAddress(String input) {
-  return LockAddress()
-    ..value = input.startsWith("a_") ? input.substring(2) : input;
+  final value = input.startsWith("a_") ? input.substring(2) : input;
+  assert(value.decodeBase58.length == 32);
+  return LockAddress(value: value);
 }
 
 extension LockCodecs on Lock {

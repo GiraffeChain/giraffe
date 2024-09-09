@@ -1,6 +1,7 @@
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
+import 'package:giraffe_wallet/widgets/over_under.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../bitmap_render.dart';
@@ -55,112 +56,125 @@ class BlockPage extends StatelessWidget {
         body: _body(context),
       );
 
-  _body(BuildContext context) => _paddedCard(
-        Column(
+  _body(BuildContext context) => GiraffeCard(
+        child: ListView(
           children: [
             _blockIdCard().pad16,
             _blockMetadataCard(context).pad16,
-            Expanded(child: _transactionsCard(context).pad16),
+            _transactionsCard(context).pad16,
           ],
         ),
       );
 
-  Widget _paddedCard(Widget child) => GiraffeCard(
-        child: child,
-      );
-
   Widget _blockIdCard() {
-    return _paddedCard(
-      Row(
-        children: [
-          SizedBox.square(
-              dimension: 64, child: BitMapViewer.forBlock(block.header.id)),
-          _overUnderWidgets(
-            const Text("Block ID",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                )),
-            Text(
-              block.header.id.show,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.blueGrey,
-              ),
+    return Wrap(
+      children: [
+        SizedBox.square(
+            dimension: 64, child: BitMapViewer.forBlock(block.header.id)),
+        OverUnder(
+          over: const Text("Block ID",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              )),
+          under: Text(
+            block.header.id.show,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.blueGrey,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _blockMetadataCard(BuildContext context) {
-    return _paddedCard(
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _paddedCard(_overUnder("Height", block.header.height.toString())),
-          _paddedCard(_overUnder("Slot", block.header.slot.toString())),
-          _paddedCard(_overUnder(
-            "Timestamp",
-            DateFormat().format(_headerDateTime()),
-          )),
-          _paddedCard(StreamBuilder(
-            stream: Stream.periodic(const Duration(seconds: 1)),
-            builder: (context, snapshot) => _overUnder(
-              "Minted",
-              GetTimeAgo.parse(_headerDateTime()),
+    return Wrap(
+      children: [
+        _overUnder("Height", block.header.height.toString()),
+        _overUnder("Slot", block.header.slot.toString()),
+        _overUnder(
+          "Timestamp",
+          DateFormat().format(_headerDateTime()),
+        ),
+        StreamBuilder(
+          stream: Stream.periodic(const Duration(seconds: 1)),
+          builder: (context, snapshot) => _overUnder(
+            "Minted",
+            GetTimeAgo.parse(_headerDateTime()),
+          ),
+        ),
+        OverUnder(
+            over: const Text(
+              "Parent",
+              style: _defaultOverStyle,
             ),
-          )),
-          _paddedCard(_overUnderWidgets(
-              const Text("Parent"),
-              block.header.height > 1
-                  ? _parentLink(context)
-                  : const Icon(Icons.account_tree))),
-        ],
-      ),
+            under: block.header.height > 1
+                ? _parentLink(context)
+                : const Icon(Icons.account_tree)),
+      ],
     );
   }
 
   _parentLink(BuildContext context) {
-    return OutlinedButton(
-        onPressed: () => FluroRouter.appRouter
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () => FluroRouter.appRouter
             .navigateTo(context, "/blocks/${block.header.parentHeaderId.show}"),
         child: SizedBox.square(
-            dimension: 32,
-            child: BitMapViewer.forBlock(block.header.parentHeaderId)));
+          dimension: 32,
+          child: BitMapViewer.forBlock(block.header.parentHeaderId),
+        ),
+      ),
+    );
   }
 
   Widget _transactionsCard(BuildContext context) {
-    return _paddedCard(Column(children: [
-      _overUnderWidgets(
-          const Text(
+    if (block.fullBody.transactions.isEmpty) {
+      return const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Empty Block",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+          Icon(Icons.money_off, size: 48),
+        ],
+      );
+    }
+    return Column(children: [
+      OverUnder(
+          over: const Text(
             "Transactions",
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          DataTable(
-            columns: const [
-              DataColumn(label: Text("ID")),
-              DataColumn(label: Text("In")),
-              DataColumn(label: Text("Out")),
-              DataColumn(label: Text("Tip")),
-            ],
-            rows: block.fullBody.transactions
-                .map((t) => DataRow(cells: [
-                      DataCell(TextButton(
-                        child: SizedBox.square(
-                            dimension: 32,
-                            child: BitMapViewer.forTransaction(t.id)),
-                        onPressed: () => FluroRouter.appRouter
-                            .navigateTo(context, "/transactions/${t.id.show}"),
-                      )),
-                      DataCell(Text(t.inputSum.toString())),
-                      DataCell(Text(t.outputSum.toString())),
-                      DataCell(Text(t.reward.toString())),
-                    ]))
-                .toList(),
+          under: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columnSpacing: 24,
+              columns: const [
+                DataColumn(label: Text("ID")),
+                DataColumn(label: Text("In")),
+                DataColumn(label: Text("Out")),
+                DataColumn(label: Text("Tip")),
+              ],
+              rows: block.fullBody.transactions
+                  .map((t) => DataRow(cells: [
+                        DataCell(TextButton(
+                          child: SizedBox.square(
+                              dimension: 32,
+                              child: BitMapViewer.forTransaction(t.id)),
+                          onPressed: () => FluroRouter.appRouter.navigateTo(
+                              context, "/transactions/${t.id.show}"),
+                        )),
+                        DataCell(Text(t.inputSum.toString())),
+                        DataCell(Text(t.outputSum.toString())),
+                        DataCell(Text(t.reward.toString())),
+                      ]))
+                  .toList(),
+            ),
           ))
-    ]));
+    ]);
   }
 
   DateTime _headerDateTime() {
@@ -171,20 +185,8 @@ class BlockPage extends StatelessWidget {
       TextStyle(fontWeight: FontWeight.bold);
   static const TextStyle _defaultUnderStyle = TextStyle(color: Colors.blueGrey);
 
-  Widget _overUnder(String overText, String underText) => _overUnderWidgets(
-        Text(overText, style: _defaultOverStyle),
-        Text(underText, style: _defaultUnderStyle),
-      );
-
-  Widget _overUnderWidgets(Widget over, Widget under) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            over,
-            const Divider(),
-            under,
-          ],
-        ),
+  Widget _overUnder(String overText, String underText) => OverUnder(
+        over: Text(overText, style: _defaultOverStyle),
+        under: Text(underText, style: _defaultUnderStyle),
       );
 }

@@ -52,70 +52,56 @@ class TransactionPage extends StatelessWidget {
         body: _body(context),
       );
 
-  _body(BuildContext context) => _paddedCard(
-        Column(
+  _body(BuildContext context) => GiraffeCard(
+        child: ListView(
           children: [
             _transactionIdCard().pad16,
             _transactionMetadataCard().pad16,
-            Expanded(
-                child: Row(
-              children: [
-                _inputsCard(),
-                _outputsCard(),
-              ],
-            ).pad16),
+            _inputsCard().pad16,
+            _outputsCard().pad16,
           ],
         ),
       );
 
-  Widget _paddedCard(Widget child) => GiraffeCard(
-        child: child,
-      );
-
   Widget _transactionIdCard() {
-    return _paddedCard(
-      Row(
-        children: [
-          SizedBox.square(
-              dimension: 64,
-              child: BitMapViewer.forTransaction(transaction.id)),
-          _overUnderWidgets(
-              const Text("Transaction ID",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  )),
-              Text(transaction.id.show,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.blueGrey,
-                  ))),
-        ],
-      ),
+    return Wrap(
+      children: [
+        SizedBox.square(
+            dimension: 64, child: BitMapViewer.forTransaction(transaction.id)),
+        OverUnder(
+          over: const Text("Transaction ID",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              )),
+          under: Text(
+            transaction.id.show,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.blueGrey,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _transactionMetadataCard() {
-    return _paddedCard(
-      Row(
-        children: [
-          _paddedCard(_overUnder(
-            "Reward",
-            transaction.reward.toString(),
-          )),
-        ],
-      ),
+    return _overUnder(
+      "Reward",
+      transaction.reward.toString(),
     );
   }
 
   Widget _inputsCard() {
-    return _paddedCard(Column(children: [
-      _overUnderWidgets(
-          const Text(
-            "Inputs",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          DataTable(
+    return _overUnderWidgets(
+        const Text(
+          "Inputs",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
             columns: const [
               DataColumn(label: Text("UTxO Reference")),
               DataColumn(label: Text("Quantity")),
@@ -137,18 +123,19 @@ class TransactionPage extends StatelessWidget {
                           : Container()),
                     ]))
                 .toList(),
-          ))
-    ]));
+          ),
+        ));
   }
 
   Widget _outputsCard() {
-    return _paddedCard(Column(children: [
-      _overUnderWidgets(
-          const Text(
-            "Outputs",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          DataTable(
+    return _overUnderWidgets(
+        const Text(
+          "Outputs",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
             columns: const [
               DataColumn(label: Text("Quantity")),
               DataColumn(label: Text("Address")),
@@ -171,8 +158,8 @@ class TransactionPage extends StatelessWidget {
                           : Container()),
                     ]))
                 .toList(),
-          ))
-    ]));
+          ),
+        ));
   }
 
   Widget _overUnder(String overText, String underText) => _overUnderWidgets(

@@ -15,7 +15,6 @@ class OverUnder extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           over,
-          const Divider(),
           under,
         ],
       ),
