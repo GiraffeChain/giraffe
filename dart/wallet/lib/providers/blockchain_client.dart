@@ -21,7 +21,7 @@ class PodBlockchainClient extends _$PodBlockchainClient {
         }
       case AsyncLoading():
         return null;
-      case AsyncError(:final error):
+      case AsyncError():
         return null;
       default:
         return null;

@@ -11,11 +11,12 @@ import cats.implicits.*
 import com.google.common.primitives.{Ints, Longs}
 import fs2.io.file.{Files, Path}
 import fs2.{Chunk, Stream}
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scodec.bits.ByteVector
 
 object Testnet:
 
-  def init[F[_]: Async: Files: Random: CryptoResources](outputDir: Path, testnetString: String): F[FullBlock] =
+  def init[F[_]: Async: Files: Random: CryptoResources](testnetString: String): F[FullBlock] =
     Async[F]
       .delay(
         testnetString.split(":") match {
@@ -26,10 +27,9 @@ object Testnet:
           case _ => throw IllegalArgumentException("Invalid testnet string")
         }
       )
-      .flatMap((timestamp, stakes) => init(outputDir, timestamp, stakes))
+      .flatMap((timestamp, stakes) => init(timestamp, stakes))
 
   def init[F[_]: Async: Files: Random: CryptoResources](
-      outputDir: Path,
       timestamp: Option[Timestamp] = None,
       stakes: Option[List[Long]] = None
   ): F[FullBlock] =
@@ -53,15 +53,8 @@ object Testnet:
       )
       transactions = (registrationTransactions ++ otherTransactions).map(_.withEmbeddedId)
       fullBlock <- Genesis.init(timestampValue, transactions)
-      dir = outputDir / fullBlock.header.id.show
-      _ <- Files[F]
-        .exists(dir)
-        .ifM(
-          ().pure[F],
-          accounts.traverseWithIndexM((account, index) =>
-            account.save(dir / "stakers" / index.toString)
-          ) *> BlockLoading.save(dir / "genesis")(fullBlock)
-        )
+      logger = Slf4jLogger.getLoggerFromName[F]("Testnet")
+      _ <- accounts.traverseWithIndexM((account, index) => logger.info(s"Testnet Staker $index: ${account.serialized}"))
     } yield fullBlock
 
   val sk: Array[Byte] = Array.fill(32)(0)
@@ -101,6 +94,13 @@ class TestnetAccount(
       _ <- Stream.chunk(Chunk.array(operatorSk)).through(Files[F].writeAll(dir / "operator")).compile.drain
       _ <- Stream.chunk(Chunk.array(account.toByteArray)).through(Files[F].writeAll(dir / "account")).compile.drain
     } yield ()
+
+  def serialized: String = {
+    val bytes = ByteVector(vrfSk) ++ ByteVector(operatorSk) ++ ByteVector.fromValidBase58(
+      account.transactionId.get.value
+    ) ++ ByteVector(Ints.toByteArray(account.index))
+    bytes.toBase58
+  }
 
 object TestnetAccount:
   def generate[F[_]: Sync: Random: CryptoResources](

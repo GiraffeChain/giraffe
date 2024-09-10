@@ -14,7 +14,7 @@ import fs2.io.file.{Files, Path}
 import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.slf4j.{Slf4jFactory, Slf4jLogger}
 
-object Relay extends ResourceApp.Forever:
+object NodeMain extends ResourceApp.Forever:
 
   private given LoggerFactory[IO] = Slf4jFactory.create[IO]
 

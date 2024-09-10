@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:giraffe_wallet/blockchain/minting/models/staker_data.dart';
 import 'package:hashlib/hashlib.dart';
 
 class StakingAccount {
@@ -38,13 +37,11 @@ class StakingAccount {
   TransactionOutputReference get account =>
       TransactionOutputReference(transactionId: transaction.id, index: 0);
 
-  Future<void> save(Directory directory) async {
-    await directory.create(recursive: true);
-    await File("${directory.path}/vrf").writeAsBytes(vrfSk);
-    await File("${directory.path}/operator").writeAsBytes(operatorSk);
-    await File("${directory.path}/account")
-        .writeAsBytes(account.writeToBuffer());
-  }
+  StakerData get stakerData => StakerData(
+        vrfSk: vrfSk,
+        operatorSk: operatorSk,
+        account: account,
+      );
 
   static Future<StakingAccount> generate(
       Int64 quantity, LockAddress lockAddress, List<int> seed) async {
