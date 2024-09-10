@@ -6,8 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 Future<bool> directoryContainsStakingFiles(String dir) async =>
     (await File("$dir/vrf").exists()) &&
     (await File("$dir/operator").exists()) &&
-    (await File("$dir/account").exists()) &&
-    (await File("$dir/kes").exists());
+    (await File("$dir/account").exists());
 
 Future<void> initMintingFromDirectory(
     String path, FlutterSecureStorage secureStorage) async {
@@ -20,6 +19,6 @@ Future<void> initMintingFromDirectory(
       key: "blockchain-staker-account",
       value: base64.encode(await File("$path/account").readAsBytes()));
   secureStorage.write(
-      key: "blockchain-staker-kes",
-      value: base64.encode(await File("$path/kes").readAsBytes()));
+      key: "blockchain-staker-operator-sk",
+      value: base64.encode(await File("$path/operator").readAsBytes()));
 }

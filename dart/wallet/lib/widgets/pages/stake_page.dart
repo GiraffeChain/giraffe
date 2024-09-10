@@ -1,3 +1,5 @@
+import 'package:fixnum/fixnum.dart';
+import 'package:giraffe_wallet/providers/wallet.dart';
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 
@@ -13,17 +15,11 @@ import 'package:logging/logging.dart';
 
 import '../giraffe_card.dart';
 
-class StakeView extends ConsumerStatefulWidget {
+class StakeView extends ConsumerWidget {
   const StakeView({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => StakeViewState();
-}
-
-class StakeViewState extends ConsumerState<StakeView> {
-  bool advancedMode = false;
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GiraffeScaffold(
       title: "Stake",
       body: Align(
@@ -31,14 +27,14 @@ class StakeViewState extends ConsumerState<StakeView> {
         child: SizedBox(
           width: 600,
           child: GiraffeCard(
-            child: body(context),
+            child: body(context, ref),
           ).pad16,
         ),
       ),
     );
   }
 
-  Widget body(BuildContext context) {
+  Widget body(BuildContext context, WidgetRef ref) {
     final client = ref.watch(podBlockchainClientProvider);
     if (client == null) {
       return const Center(child: Text("Not initialized"));
@@ -46,8 +42,6 @@ class StakeViewState extends ConsumerState<StakeView> {
     final state = ref.watch(podStakingProvider);
     if (state != null) {
       return RunMinting(client: client);
-    } else if (advancedMode) {
-      return advancedModeCard;
     } else {
       return FutureBuilder(
           future: stakingIsInitialized(ref.watch(podSecureStorageProvider))
@@ -58,7 +52,9 @@ class StakeViewState extends ConsumerState<StakeView> {
             return v;
           }),
           builder: (context, snapshot) => snapshot.hasData
-              ? (snapshot.data! ? RunMinting(client: client) : noStaker)
+              ? (snapshot.data!
+                  ? RunMinting(client: client)
+                  : const StakingNotConfigured())
               : snapshot.hasError
                   ? Center(child: Text("An error occurred: ${snapshot.error}"))
                   : loading);
@@ -66,30 +62,45 @@ class StakeViewState extends ConsumerState<StakeView> {
   }
 
   Widget get loading => const Center(child: CircularProgressIndicator());
+}
 
-  Widget get noStaker => ListView(
-        children: [
-          const Text(
-            "Staking and Block Production",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ).pad8,
-          const Text(
-            "Help improve the network by staking your tokens, and earn rewards in the process!",
-            style: TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
-          ).pad8,
-          const Text(
-            "To begin, register a new account.",
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          registerButton(context),
-          IconButton(
-              icon: const Icon(Icons.warning),
-              onPressed: () => setState(() => advancedMode = true)),
-        ].padAll16,
-      );
+class StakingNotConfigured extends ConsumerStatefulWidget {
+  const StakingNotConfigured({super.key});
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      StakingNotConfiguredState();
+}
+
+class StakingNotConfiguredState extends ConsumerState<StakingNotConfigured> {
+  bool advancedMode = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        const Text(
+          "Staking and Block Production",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ).pad8,
+        const Text(
+          "Help improve the network by staking your tokens, and earn rewards in the process!",
+          style: TextStyle(fontSize: 12),
+          textAlign: TextAlign.center,
+        ).pad8,
+        const Text(
+          "To begin, register a new account.",
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        registerButton(context),
+        IconButton(
+            icon: const Icon(Icons.warning),
+            onPressed: () => setState(() => advancedMode = true)),
+      ].padAll16,
+    );
+  }
 
   Widget get advancedModeCard => ListView(
         children: [
@@ -171,14 +182,14 @@ class RunMinting extends ConsumerWidget {
       if (stop == null) {
         return inactive(context, ref);
       } else {
-        return active(context, () => stop());
+        return active(context, ref, () => stop());
       }
     } else {
       return inactive(context, ref);
     }
   }
 
-  Widget active(BuildContext context, Function() stop) => Column(
+  Widget active(BuildContext context, WidgetRef ref, Function() stop) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text("Staking is active.",
@@ -195,6 +206,7 @@ class RunMinting extends ConsumerWidget {
             textAlign: TextAlign.center,
           ).pad8,
           const Divider(),
+          editStakeSlider(ref),
           TextButton.icon(
             onPressed: stop,
             label: const Text("Stop"),
@@ -215,6 +227,7 @@ class RunMinting extends ConsumerWidget {
             textAlign: TextAlign.center,
           ).pad8,
           const Divider(),
+          editStakeSlider(ref),
           TextButton.icon(
                   onPressed: () =>
                       ref.read(podBlockProductionProvider.notifier).start(),
@@ -229,7 +242,110 @@ class RunMinting extends ConsumerWidget {
         ],
       );
 
+  Widget editStakeSlider(WidgetRef ref) => FutureBuilder(
+      future: ref.watch(podWalletProvider.future),
+      builder: (context, snapshot) => snapshot.hasData
+          ? EditStakeSlider(wallet: snapshot.data!)
+          : const CircularProgressIndicator());
+
   static final log = Logger("MintingWidget");
+}
+
+class EditStakeSlider extends ConsumerStatefulWidget {
+  final Wallet wallet;
+  const EditStakeSlider({
+    super.key,
+    required this.wallet,
+  });
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => EditStakeSliderState();
+}
+
+class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
+  late double desiredStake;
+  late Int64 initialStake;
+  Transaction? updateTransaction;
+
+  @override
+  void initState() {
+    super.initState();
+    initialStake = widget.wallet.stakedFunds + minimumRegistrationQuantity;
+    desiredStake = initialStake.toDouble();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final liquid = widget.wallet.liquidFunds;
+    return Column(
+      children: [
+        Text("Staked Funds: $initialStake"),
+        Row(
+          children: [
+            Slider(
+              value: desiredStake.toDouble(),
+              min: minimumRegistrationQuantity.toDouble(), // TODO
+              max: (liquid + initialStake).toDouble(),
+              divisions: 69,
+              onChanged: (value) {
+                setState(() {
+                  desiredStake = value;
+                });
+              },
+              label: desiredStake.toString(),
+            ),
+            saveButton,
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget get saveButton {
+    Function()? onPressed;
+    if (Int64(desiredStake.round()) != initialStake) {
+      onPressed = () async {
+        final inputs = widget.wallet.spendableOutputs.entries
+            .where((e) => e.value.hasAccount())
+            .map(
+                (e) => TransactionInput(reference: e.key, value: e.value.value))
+            .toList();
+        final accountRef = widget.wallet.spendableOutputs.entries
+            .firstWhere((e) => e.value.value.hasAccountRegistration())
+            .key;
+        final client = ref.read(podBlockchainClientProvider)!;
+
+        final transaction = await widget.wallet.payAndAttest(
+          client,
+          Transaction(
+            inputs: inputs,
+            outputs: [
+              TransactionOutput(
+                value: Value(
+                    quantity: Int64(desiredStake.round()) -
+                        minimumRegistrationQuantity),
+                lockAddress: widget.wallet.defaultLockAddress,
+                account: accountRef,
+              ),
+            ],
+          ),
+        );
+        setState(() {
+          updateTransaction = transaction;
+        });
+        await client.broadcastTransaction(transaction);
+        await client.confirmTransaction(transaction.id);
+        setState(() {
+          updateTransaction = null;
+        });
+      };
+    }
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.save),
+      label: const Text("Save"),
+    );
+  }
 }
 
 Future<bool> stakingIsInitialized(FlutterSecureStorage storage) async =>

@@ -70,7 +70,7 @@ extension TransactionOutputOps on TransactionOutput {
       result += 50; // Adding to existing staking account
     }
     if (value.hasAccountRegistration()) {
-      result += 1000; // Creating a new staking account
+      result += minimumRegistrationQuantity; // Creating a new staking account
     }
     if (value.hasGraphEntry()) {
       result += graphEntryMinimumQuantity(value.graphEntry);
@@ -78,6 +78,8 @@ extension TransactionOutputOps on TransactionOutput {
     return result;
   }
 }
+
+final minimumRegistrationQuantity = Int64(1000);
 
 Int64 graphEntryMinimumQuantity(GraphEntry graphEntry) {
   Int64 result = Int64.ZERO;

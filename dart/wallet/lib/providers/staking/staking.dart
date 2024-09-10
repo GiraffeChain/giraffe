@@ -78,55 +78,18 @@ class PodStaking extends _$PodStaking {
     final seed = List.generate(32, (_) => random.nextInt(255));
     final client = ref.read(podBlockchainClientProvider)!;
     final stakerInitializer = await StakingAccount.generate(
-      minimumStakeAccountQuantity,
+      Int64.ZERO,
       wallet.defaultLockAddress,
       seed,
     );
-    final outputs = List.of(stakerInitializer.transaction.outputs);
-    final inputs = <TransactionInput>[];
-    var remaining = minimumStakeAccountQuantity;
-    final availableInputKeys = wallet.spendableOutputs.keys.toList();
-    final sortedInputs = wallet.spendableOutputs.entries
+    final inputs = wallet.spendableOutputs.entries
         .where((e) =>
-            !e.value.value.hasGraphEntry() &&
-            !e.value.value.hasAccountRegistration())
-        .toList()
-      ..sort((e1, e2) =>
-          e1.value.value.quantity.compareTo(e2.value.value.quantity));
-
-    if (sortedInputs.isEmpty) {
-      throw Exception("No spendable funds");
-    }
-    var i = 0;
-    while (remaining > Int64.ZERO && i < sortedInputs.length) {
-      final key = availableInputKeys
-          .removeAt(random.nextInt(availableInputKeys.length));
-      final output = wallet.spendableOutputs[key]!;
-      final value = output.value.quantity;
-      inputs.add(TransactionInput(
-        reference: key,
-        value: output.value,
-      ));
-      remaining -= value;
-      i++;
-    }
-
-    if (remaining > 0) {
-      throw Exception("Not enough funds to register staking account");
-    }
-
-    if (remaining < 0) {
-      outputs.add(TransactionOutput(
-        lockAddress: wallet.defaultLockAddress,
-        value: Value(quantity: -remaining),
-      ));
-    }
-    final transaction = await wallet.attest(
-        client,
-        Transaction(
-          inputs: inputs,
-          outputs: outputs,
-        ));
+            e.value.hasAccount() || e.value.value.hasAccountRegistration())
+        .map((e) => TransactionInput(reference: e.key, value: e.value.value))
+        .toList();
+    final outputs = List.of(stakerInitializer.transaction.outputs);
+    final transaction = await wallet.payAndAttest(
+        client, Transaction(inputs: inputs, outputs: outputs));
     await client.broadcastTransaction(transaction);
     final account =
         TransactionOutputReference(transactionId: transaction.id, index: 0);
@@ -153,5 +116,3 @@ class PodStaking extends _$PodStaking {
 
   static final log = Logger("Blockchain.Staking");
 }
-
-final minimumStakeAccountQuantity = Int64.parseInt("10000000");

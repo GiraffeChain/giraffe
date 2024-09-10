@@ -363,6 +363,9 @@ class CreateWalletModalState extends State<CreateWalletModal> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
+            obscureText: true,
+            enableSuggestions: false,
+            autocorrect: false,
             onChanged: (v) => passphrase = v,
             decoration: const InputDecoration(hintText: "Passphrase"),
           ),
@@ -444,6 +447,9 @@ class ImportWalletModalState extends State<ImportWalletModal> {
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: TextField(
+          obscureText: true,
+          enableSuggestions: false,
+          autocorrect: false,
           onChanged: (v) => passphrase = v,
           decoration: const InputDecoration(hintText: "Passphrase"),
         ),

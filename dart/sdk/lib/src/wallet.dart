@@ -157,6 +157,7 @@ class Wallet {
     var currentReward = transaction.reward;
     final remainingSpendableOutputs = QueueList.from(Map.of(spendableOutputs)
         .entries
+        .where((e) => transaction.inputs.every((i) => i.reference != e.key))
         .where((e) => e.value.isPaymentToken)
         .sortedByCompare(
             (e) => e.value.value.quantity, (a, b) => a.compareTo(b)));
@@ -212,4 +213,11 @@ class Wallet {
       .where((o) => o.isPaymentToken)
       .map((v) => v.value.quantity)
       .fold(Int64.ZERO, (a, b) => a + b);
+
+  TransactionOutputReference? get stakingAccountReference =>
+      spendableOutputs.entries
+          .firstWhereOrNull(
+            (e) => e.value.value.hasAccountRegistration(),
+          )
+          ?.key;
 }
