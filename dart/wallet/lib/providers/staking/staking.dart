@@ -9,10 +9,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../blockchain/minting/models/staker_data.dart';
-import '../../blockchain/private_testnet.dart';
 import '../../blockchain/staking_account.dart';
-import 'staking_io.dart' if (dart.library.html) 'staking_web.dart'
-    as staking_support;
 
 part 'staking.g.dart';
 
@@ -35,41 +32,18 @@ class PodStaking extends _$PodStaking {
     state = stakerData;
   }
 
-  Future<void> initMintingTestnet(int index) async {
-    final client = ref.read(podBlockchainClientProvider)!;
-    final genesis = await client.genesisBlock;
-    final genesisTimestamp = genesis.header.timestamp;
-    final seed = [...genesisTimestamp.immutableBytes, ...index.immutableBytes];
-    final stakerInitializer = await StakingAccount.generate(
-        Int64(10000000), await PrivateTestnet.defaultLockAddress, seed);
-    final operatorVkStr = stakerInitializer.operatorVk.base58;
-    final accountTx = genesis.fullBody.transactions.firstWhere((tx) => tx
-        .outputs
-        .where((o) =>
-            o.value.hasAccountRegistration() &&
-            o.value.accountRegistration.stakingRegistration.vk == operatorVkStr)
-        .isNotEmpty);
-    final account =
-        TransactionOutputReference(transactionId: accountTx.id, index: 0);
+  Future<void> initFromStakerData(StakerData stakerData) async {
     final secureStorage = ref.read(podSecureStorageProvider);
     await secureStorage.write(
         key: "blockchain-staker-vrf-sk",
-        value: base64.encode(stakerInitializer.vrfSk));
-    await secureStorage.write(
-        key: "blockchain-staker-operator-sk",
-        value: base64.encode(stakerInitializer.operatorSk));
+        value: base64.encode(stakerData.vrfSk));
     await secureStorage.write(
         key: "blockchain-staker-account",
-        value: base64.encode(account.writeToBuffer()));
-    await initMinting();
-  }
-
-  Future<void> initMintingFromDirectory(
-    String path,
-  ) async {
-    staking_support.initMintingFromDirectory(
-        path, ref.read(podSecureStorageProvider));
-    await initMinting();
+        value: base64.encode(stakerData.account.writeToBuffer()));
+    await secureStorage.write(
+        key: "blockchain-staker-operator-sk",
+        value: base64.encode(stakerData.operatorSk));
+    state = stakerData;
   }
 
   Future<void> register() async {

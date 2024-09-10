@@ -19,6 +19,10 @@ jobs:
       - run: zip -r ts-sdk.zip ts-sdk/
       - uses: actions/download-artifact@v4
         with:
+          name: cli-staker
+          path: cli-staker
+      - uses: actions/download-artifact@v4
+        with:
           name: web-wallet-dist
           path: web-wallet
       - run: zip -r web-wallet.zip web-wallet/
@@ -45,6 +49,7 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             ts-sdk.zip
+            cli-staker/staker
             web-wallet.zip
             android-arm64-v8a/app-arm64-v8a-release.apk
             android-armeabi-v7a/app-armeabi-v7a-release.apk

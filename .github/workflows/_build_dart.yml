@@ -38,6 +38,16 @@ jobs:
         working-directory: ./dart/wallet
         run: flutter clean && flutter pub get && dart run build_runner build --delete-conflicting-outputs && flutter test && flutter test --platform chrome
 
+      - name: Wallet Build CLI Staker
+        working-directory: ./dart/wallet
+        run: mkdir -p build/bin && dart compile exe bin/staker.dart -o build/bin/staker
+
+      - name: Upload CLI Staker
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-staker
+          path: "dart/wallet/build/bin/staker"
+
       - name: Wallet Build Web
         working-directory: ./dart/wallet
         run: flutter build web

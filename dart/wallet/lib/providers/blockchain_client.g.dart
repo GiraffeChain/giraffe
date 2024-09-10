@@ -7,7 +7,7 @@ part of 'blockchain_client.dart';
 // **************************************************************************
 
 String _$podBlockchainClientHash() =>
-    r'8c0dcf42f817b16e118507a421c24bdfc43608e3';
+    r'63ec0cfbae9f7926a3968b26d3aec390c63df252';
 
 /// See also [PodBlockchainClient].
 @ProviderFor(PodBlockchainClient)

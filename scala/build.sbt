@@ -38,6 +38,10 @@ lazy val node = project
       "giraffe.version" -> version.value
     ),
     dockerExposedPorts := Seq(2023, 2024),
+    dockerEnvVars ++= Map(
+      "BLOCKCHAIN_DATA_DIR" -> "/giraffe/data",
+      "_JAVA_OPTIONS" -> "-XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:+UseParallelGC"
+    ),
     Docker / packageName := "giraffe-node",
     dockerExposedVolumes += "/giraffe",
     dockerAlias := DockerAlias(Some("docker.io"), Some("seancheatham"), "giraffe-node", Some(version.value)),

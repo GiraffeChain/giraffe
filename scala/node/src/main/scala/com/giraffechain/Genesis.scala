@@ -67,7 +67,7 @@ object Genesis:
   def parse[F[_]: Async: Files: Random: CryptoResources](arg: String): F[FullBlock] =
     Sync[F].defer {
       if (arg.startsWith("testnet:")) {
-        Testnet.init(Path("/tmp/blockchain-genesis"), arg.substring(8))
+        Testnet.init(arg.substring(8))
       } else {
         HeaderToBodyValidation
           .staticParentTxRoot(ParentTxRoot.decodeBase58.toByteArray)

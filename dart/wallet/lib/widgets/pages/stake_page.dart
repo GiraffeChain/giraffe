@@ -1,4 +1,5 @@
 import 'package:fixnum/fixnum.dart';
+import 'package:giraffe_wallet/blockchain/minting/models/staker_data.dart';
 import 'package:giraffe_wallet/providers/wallet.dart';
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
@@ -73,13 +74,8 @@ class StakingNotConfigured extends ConsumerStatefulWidget {
 }
 
 class StakingNotConfiguredState extends ConsumerState<StakingNotConfigured> {
-  bool advancedMode = false;
-
   @override
   Widget build(BuildContext context) {
-    if (advancedMode) {
-      return advancedModeCard;
-    }
     return ListView(
       children: [
         const Text(
@@ -98,42 +94,16 @@ class StakingNotConfiguredState extends ConsumerState<StakingNotConfigured> {
           textAlign: TextAlign.center,
         ),
         registerButton(context),
-        IconButton(
-            icon: const Icon(Icons.warning),
-            onPressed: () => setState(() => advancedMode = true)),
+        const Text(
+          "Alternatively, you can import from a backup.",
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        ImportStaker(
+            onImported: (data) =>
+                ref.read(podStakingProvider.notifier).initFromStakerData(data)),
       ].padAll16,
     );
-  }
-
-  Widget get advancedModeCard => ListView(
-        children: [
-          const Text(
-              "This area is for developers/testers only. Please be careful!"),
-          const Text("Import your keys from a local directory"),
-          DirectoryChooser(
-              onDirectorySelected: (path) =>
-                  _onDirectorySelected(context, path)),
-          const Text(
-              "Alternatively, if this is a testnet, select the desired staker index (0, 1, 2, etc.)."),
-          DropdownButton<int>(
-              items: const [DropdownMenuItem(value: 0, child: Text("0"))],
-              onChanged: (index) => _onTestnetStakerSelected(index ?? 0)),
-        ].padAll16,
-      );
-
-  Future<void> _onTestnetStakerSelected(int index) async {
-    await ref.read(podStakingProvider.notifier).initMintingTestnet(index);
-  }
-
-  Future<void> _onDirectorySelected(BuildContext context, String path) async {
-    try {
-      await ref
-          .read(podStakingProvider.notifier)
-          .initMintingFromDirectory(path);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Invalid staking directory selected.")));
-    }
   }
 
   Widget registerButton(BuildContext context) => TextButton.icon(
@@ -142,32 +112,49 @@ class StakingNotConfiguredState extends ConsumerState<StakingNotConfigured> {
       icon: const Icon(Icons.app_registration_rounded));
 }
 
-class DirectoryChooser extends StatefulWidget {
-  final void Function(String) onDirectorySelected;
+class ImportStaker extends StatefulWidget {
+  final void Function(StakerData) onImported;
 
-  const DirectoryChooser({super.key, required this.onDirectorySelected});
+  const ImportStaker({super.key, required this.onImported});
 
   @override
-  State<StatefulWidget> createState() => DirectoryChooserState();
+  State<StatefulWidget> createState() => ImportStakerState();
 }
 
-class DirectoryChooserState extends State<DirectoryChooser> {
-  String _value = "";
+class ImportStakerState extends State<ImportStaker> {
+  StakerData? parsed;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 200,
-      width: 500,
-      child: Row(
-        children: [
-          Expanded(child: TextFormField(onChanged: (str) => _value = str)),
-          TextButton.icon(
-              onPressed: () => widget.onDirectorySelected(_value),
-              icon: const Icon(Icons.copy_all),
-              label: const Text("Import"))
-        ],
-      ),
+    final onPressed = parsed != null ? () => widget.onImported(parsed!) : null;
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  onChanged: (str) {
+                    setState(() {
+                      parsed = null;
+                      try {
+                        parsed = StakerData.deserialize(str);
+                      } catch (_) {}
+                    });
+                  }),
+            ),
+            TextButton.icon(
+                onPressed: onPressed,
+                icon: const Icon(Icons.copy_all),
+                label: const Text("Import"))
+          ],
+        ),
+        if (parsed == null)
+          const Text("Invalid staker data",
+              style: TextStyle(color: Colors.red)),
+      ],
     );
   }
 }

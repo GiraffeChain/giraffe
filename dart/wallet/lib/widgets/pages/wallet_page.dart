@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:fixnum/fixnum.dart';
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';

@@ -256,8 +256,10 @@ class GenesisBuilderState extends State<GenesisBuilderPage> {
 
     final saveDir =
         Directory("${genesisInitDirectory.path}/${genesis.header.id.show}");
-    await Future.wait(stakerEntries.mapWithIndex(
-        (s, index) => s.save(Directory("${saveDir.path}/stakers/$index"))));
+    await Directory("${saveDir.path}/stakers").create(recursive: true);
+    await Future.wait(stakerEntries.mapWithIndex((s, index) =>
+        File("${saveDir.path}/stakers/$index")
+            .writeAsString(s.stakerData.serialized)));
     await Genesis.save(saveDir, genesis);
     setState(() {
       savedDir = saveDir;

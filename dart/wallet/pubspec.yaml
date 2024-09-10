@@ -43,6 +43,7 @@ dependencies:
   hashlib: ^1.19.2
   collection: ^1.18.0
   avs_svg_provider: ^1.0.1
+  args: ^2.5.0
 
 dev_dependencies:
   flutter_test:
