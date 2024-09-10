@@ -92,8 +92,8 @@ class PodBlockProduction extends _$PodBlockProduction {
     }).listen(null);
 
     Future<void> c() async {
-      await mainSub.cancel();
       await cancel();
+      await mainSub.cancel();
     }
 
     ref.onDispose(() async {

@@ -1,8 +1,8 @@
 package com.giraffechain.consensus
 
-import com.giraffechain.utility.Ratio
 import cats.Show
 import cats.implicits.showInterpolator
+import com.giraffechain.utility.Ratio
 
 import scala.concurrent.duration.{FiniteDuration, given}
 
@@ -80,7 +80,7 @@ object ProtocolSettings:
     vrfAmplitude = Ratio(1, 2),
     vrfSlotGap = 1,
     chainSelectionKLookback = 576,
-    slotDuration = 3000.milli
+    slotDuration = 1000.milli
   )
 
   val ShortEpochs: ProtocolSettings = ProtocolSettings(
@@ -91,7 +91,7 @@ object ProtocolSettings:
     vrfAmplitude = Ratio(9, 10),
     vrfSlotGap = 1,
     chainSelectionKLookback = 9,
-    slotDuration = 3000.milli
+    slotDuration = 1000.milli
   )
 
   given Show[ProtocolSettings] = Show.fromToString

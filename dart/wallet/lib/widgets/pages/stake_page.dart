@@ -77,6 +77,9 @@ class StakingNotConfiguredState extends ConsumerState<StakingNotConfigured> {
 
   @override
   Widget build(BuildContext context) {
+    if (advancedMode) {
+      return advancedModeCard;
+    }
     return ListView(
       children: [
         const Text(
@@ -182,7 +185,9 @@ class RunMinting extends ConsumerWidget {
       if (stop == null) {
         return inactive(context, ref);
       } else {
-        return active(context, ref, () => stop());
+        // TODO: code smell: not using local "stop" variable
+        return active(context, ref,
+            () => ref.read(podBlockProductionProvider.notifier).stop());
       }
     } else {
       return inactive(context, ref);
@@ -270,17 +275,21 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
   @override
   void initState() {
     super.initState();
-    initialStake = widget.wallet.stakedFunds + minimumRegistrationQuantity;
+    initialStake = widget.wallet.stakedFunds;
     desiredStake = initialStake.toDouble();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (updateTransaction != null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final liquid = widget.wallet.liquidFunds;
     return Column(
       children: [
         Text("Staked Funds: $initialStake"),
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Slider(
               value: desiredStake.toDouble(),
@@ -310,9 +319,8 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
             .map(
                 (e) => TransactionInput(reference: e.key, value: e.value.value))
             .toList();
-        final accountRef = widget.wallet.spendableOutputs.entries
-            .firstWhere((e) => e.value.value.hasAccountRegistration())
-            .key;
+        final accountEntry = widget.wallet.spendableOutputs.entries
+            .firstWhere((e) => e.value.value.hasAccountRegistration());
         final client = ref.read(podBlockchainClientProvider)!;
 
         final transaction = await widget.wallet.payAndAttest(
@@ -323,9 +331,9 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
               TransactionOutput(
                 value: Value(
                     quantity: Int64(desiredStake.round()) -
-                        minimumRegistrationQuantity),
+                        accountEntry.value.value.quantity),
                 lockAddress: widget.wallet.defaultLockAddress,
-                account: accountRef,
+                account: accountEntry.key,
               ),
             ],
           ),

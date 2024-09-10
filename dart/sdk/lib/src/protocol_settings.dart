@@ -69,7 +69,7 @@ class ProtocolSettings {
     "vrf-amplitude": "1/2",
     "vrf-slot-gap": "1",
     "chain-selection-k-lookback": "576",
-    "slot-duration-ms": "3000",
+    "slot-duration-ms": "1000",
   };
 
   @override
