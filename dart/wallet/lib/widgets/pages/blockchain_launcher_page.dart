@@ -80,9 +80,8 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-          body: GiraffeBackground(
-              child: SingleChildScrollView(
+  Widget build(BuildContext context) => GiraffeScaffold(
+          body: SingleChildScrollView(
         child: Align(
           alignment: Alignment.topLeft,
           child: GiraffeCard(
@@ -92,7 +91,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
             ),
           ),
         ),
-      )));
+      ));
 
   Column settingsForm(BuildContext context) {
     return Column(

@@ -7,6 +7,7 @@ import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
+import 'package:giraffe_wallet/widgets/search_box.dart';
 
 class BlockchainPage extends ConsumerWidget {
   const BlockchainPage({super.key});
@@ -24,30 +25,12 @@ class BlockchainPage extends ConsumerWidget {
                   style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
               headInfo(context, ref),
               navigationBlock(context, ref).pad16,
-              searchBox(context, ref).pad16,
+              const SearchBox().pad16,
             ]),
           ),
         ),
       ),
     );
-  }
-
-  Widget searchBox(BuildContext context, WidgetRef ref) {
-    final controller = TextEditingController();
-    return Row(children: [
-      Expanded(
-          child: TextField(
-              controller: controller,
-              decoration: const InputDecoration(hintText: "Search"))),
-      IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: () {
-            final id = controller.text;
-            if (id.isNotEmpty) {
-              FluroRouter.appRouter.navigateTo(context, "/blocks/$id");
-            }
-          })
-    ]);
   }
 
   Widget navigationBlock(BuildContext context, WidgetRef ref) {

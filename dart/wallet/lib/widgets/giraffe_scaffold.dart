@@ -9,17 +9,19 @@ class GiraffeScaffold extends StatelessWidget {
   const GiraffeScaffold({super.key, this.title, required this.body});
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: title != null ? appBar(title!) : null,
-      body: GiraffeBackground(
-          child: SafeArea(
-        child: Padding(
-          padding:
-              const EdgeInsets.only(left: 32, right: 32, top: 8, bottom: 32),
-          child: body,
-        ),
-      )),
+    return SelectionArea(
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: title != null ? appBar(title!) : null,
+        body: GiraffeBackground(
+            child: SafeArea(
+          child: Padding(
+            padding:
+                const EdgeInsets.only(left: 32, right: 32, top: 8, bottom: 32),
+            child: body,
+          ),
+        )),
+      ),
     );
   }
 
