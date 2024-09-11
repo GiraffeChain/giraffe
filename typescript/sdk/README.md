@@ -18,14 +18,16 @@ This blockchain is still in very **early development**. Everything is **experime
 ## Limitations
 - Staking currently requires significant trust in the connected relay node.
 - To limit an explosion of storage, graph data is encumbered by tokens/funds. There is a limit on the vertex/edge information that can be stored.
-- Blocks are currently produced every ~30 seconds.
+- Blocks are currently produced every ~10 seconds.
 
 ## Run
 At the moment, there are no public testnets. That'll happen eventually. You can instead launch a local private testnet.
 1. `docker run --rm -p 2024:2024 seancheatham/giraffe-node:latest`
+1. Take note of a line near the top of the logs that looks like this: `INFO  Testnet - Testnet Staker 0: A498AybCn9K9Btmar1tKnyR8...`
+  Copy the long string of text after the `: `.
 1. Open the [wallet](http://localhost:2024) in your browser
 1. Select the "Public" wallet (this is a shared wallet meant for testing purposes)
-1. Select the "Stake" Tab. Click the little "warning" triangle to enter advanced mode. In the staker index dropdown, select `0`. Click "Start".
+1. Select the "Stake" Button. Click the little "warning" triangle to enter advanced mode. Paste the string from the previous text into the `Import` input. Click `Import`.
 
 ## SDK
 

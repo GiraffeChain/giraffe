@@ -29,7 +29,8 @@ class BlockchainLauncherPage extends ConsumerWidget {
             .then((v) => Wrapped(v)),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return SettingsPage(initialApiAddress: snapshot.requireData.value);
+            return SettingsPage(
+                initialApiAddress: snapshot.requireData.value ?? "/api");
           } else if (snapshot.hasError) {
             return error(snapshot.error!);
           } else {
@@ -140,7 +141,9 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
     debounceTimer = null;
     try {
       final parsed = Uri.parse(updated);
-      assert(parsed.scheme == "http" || parsed.scheme == "https");
+      assert(parsed.scheme.isEmpty ||
+          parsed.scheme == "http" ||
+          parsed.scheme == "https");
     } catch (_) {
       setState(() {
         error = "Invalid URL";
