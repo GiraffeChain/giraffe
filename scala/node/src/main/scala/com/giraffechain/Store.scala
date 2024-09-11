@@ -1,12 +1,12 @@
 package com.giraffechain
 
-import com.giraffechain.codecs.{*, given}
-import com.giraffechain.models.*
 import cats.data.OptionT
 import cats.effect.implicits.*
 import cats.effect.{Async, Resource, Sync}
 import cats.implicits.*
 import cats.{Applicative, Monad, MonadThrow, Show}
+import com.giraffechain.codecs.{*, given}
+import com.giraffechain.models.*
 import com.github.benmanes.caffeine.cache.Caffeine
 import fs2.io.file.{Files, Path}
 import org.fusesource.leveldbjni.JniDBFactory
@@ -43,6 +43,7 @@ case class DataStores[F[_]](
     stakers: Store[F, TransactionOutputReference, ActiveStaker],
     blockHeightIndex: Store[F, Long, BlockId],
     metadata: Store[F, String, Array[Byte]],
+    transactionHeights: Store[F, TransactionId, Height],
     transactionOutputs: Store[F, TransactionOutputReference, TransactionOutput],
     sqlite: Connection
 ):
@@ -79,7 +80,8 @@ case class DataStores[F[_]](
         EventIdGetterSetters.Indices.TransactionOutputState,
         EventIdGetterSetters.Indices.Mempool,
         EventIdGetterSetters.Indices.AccountState,
-        EventIdGetterSetters.Indices.Graph
+        EventIdGetterSetters.Indices.Graph,
+        EventIdGetterSetters.Indices.TransactionHeight
       ).traverseTap(currentEventIds.put(_, genesis.header.parentHeaderId))
       _ <- headers.put(genesis.header.id, genesis.header)
       _ <- bodies.put(
@@ -168,6 +170,11 @@ object DataStores:
             basePath / "metadata",
             12
           ),
+          makeCachedStore[F, TransactionId, Height](
+            factory,
+            basePath / "transaction-heights",
+            4096
+          ),
           Sqlite.connection[F]((basePath / "sqlite.db").toString)
         ).mapN(
           (
@@ -185,6 +192,7 @@ object DataStores:
               stakers,
               blockHeightIndex,
               metaData,
+              transactionHeights,
               sqlite
           ) =>
             DataStores(
@@ -202,6 +210,7 @@ object DataStores:
               stakers,
               blockHeightIndex,
               metaData,
+              transactionHeights,
               new TransactionOutputStore(transactions),
               sqlite
             )
@@ -294,6 +303,9 @@ class EventIdGetterSetters[F[_]: MonadThrow](
   val graphState: EventIdGetterSetters.GetterSetter[F] =
     EventIdGetterSetters.GetterSetter.forByte(store)(Indices.Graph)
 
+  val transactionHeightState: EventIdGetterSetters.GetterSetter[F] =
+    EventIdGetterSetters.GetterSetter.forByte(store)(Indices.TransactionHeight)
+
 object EventIdGetterSetters:
 
   /** Captures a getter function and a setter function for a particular "Current Event ID"
@@ -323,6 +335,7 @@ object EventIdGetterSetters:
     val AccountState: Byte = 5
     val Mempool: Byte = 6
     val Graph: Byte = 7
+    val TransactionHeight: Byte = 8
 
 class LevelDbStore[F[
     _

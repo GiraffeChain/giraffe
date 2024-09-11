@@ -16,6 +16,8 @@ abstract class BlockchainClient {
   Future<Transaction?> getTransaction(TransactionId transactionId);
   Future<TransactionOutput?> getTransactionOutput(
       TransactionOutputReference reference);
+  Future<TransactionConfirmation?> getTransactionConfirmation(
+      TransactionId transactionId);
   Future<BlockId?> getBlockIdAtHeight(Int64 height);
   Future<BlockId> get canonicalHeadId =>
       getBlockIdAtHeight(Int64.ZERO).then((v) => v!);
@@ -455,6 +457,19 @@ class BlockchainClientFromJsonRpc extends BlockchainClient {
     );
     assert(response.statusCode == 200, "HTTP Error: ${response.body}");
     return TransactionOutputReference()
+      ..mergeFromProto3Json(json.decode(utf8.decode(response.bodyBytes)));
+  }
+
+  @override
+  Future<TransactionConfirmation?> getTransactionConfirmation(
+      TransactionId transactionId) async {
+    final response = await httpClient.get(
+      Uri.parse("$baseAddress/transactions/${transactionId.show}/confirmation"),
+      headers: headers,
+    );
+    if (response.statusCode == 404) return null;
+    assert(response.statusCode == 200, "HTTP Error: ${response.body}");
+    return TransactionConfirmation()
       ..mergeFromProto3Json(json.decode(utf8.decode(response.bodyBytes)));
   }
 }

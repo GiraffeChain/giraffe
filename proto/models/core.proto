@@ -118,6 +118,11 @@ message Transaction {
     BlockId rewardParentBlockId = 5;
 }
 
+message TransactionConfirmation {
+    uint64 height = 1;
+    uint64 depth = 2;
+}
+
 message Witness {
     LockAddress lockAddress = 3 [(validate.rules).message.required = true];
     Lock lock = 1 [(validate.rules).message.required = true];

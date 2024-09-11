@@ -834,6 +834,70 @@ class Transaction extends $pb.GeneratedMessage {
   BlockId ensureRewardParentBlockId() => $_ensure(4);
 }
 
+class TransactionConfirmation extends $pb.GeneratedMessage {
+  factory TransactionConfirmation({
+    $fixnum.Int64? height,
+    $fixnum.Int64? depth,
+  }) {
+    final $result = create();
+    if (height != null) {
+      $result.height = height;
+    }
+    if (depth != null) {
+      $result.depth = depth;
+    }
+    return $result;
+  }
+  TransactionConfirmation._() : super();
+  factory TransactionConfirmation.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory TransactionConfirmation.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionConfirmation', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.giraffechain.models'), createEmptyInstance: create)
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'depth', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  TransactionConfirmation clone() => TransactionConfirmation()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  TransactionConfirmation copyWith(void Function(TransactionConfirmation) updates) => super.copyWith((message) => updates(message as TransactionConfirmation)) as TransactionConfirmation;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TransactionConfirmation create() => TransactionConfirmation._();
+  TransactionConfirmation createEmptyInstance() => create();
+  static $pb.PbList<TransactionConfirmation> createRepeated() => $pb.PbList<TransactionConfirmation>();
+  @$core.pragma('dart2js:noInline')
+  static TransactionConfirmation getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<TransactionConfirmation>(create);
+  static TransactionConfirmation? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get height => $_getI64(0);
+  @$pb.TagNumber(1)
+  set height($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasHeight() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearHeight() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get depth => $_getI64(1);
+  @$pb.TagNumber(2)
+  set depth($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasDepth() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDepth() => clearField(2);
+}
+
 class Witness extends $pb.GeneratedMessage {
   factory Witness({
     Lock? lock,
