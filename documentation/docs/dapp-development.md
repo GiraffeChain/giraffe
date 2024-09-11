@@ -1,7 +1,7 @@
 ---
 title: dApp Development
 description: Information about developing and testing dApps (decentralized applications).
-sidebar_position: 5
+sidebar_position: 3
 ---
 
 # dApp Development

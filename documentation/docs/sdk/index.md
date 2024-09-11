@@ -1,7 +1,7 @@
 ---
 description: Information about the Giraffe Chain SDK
 slug: /sdk
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Software Development Kit (SDK)
