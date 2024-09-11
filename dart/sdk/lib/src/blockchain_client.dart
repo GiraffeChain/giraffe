@@ -16,6 +16,8 @@ abstract class BlockchainClient {
   Future<Transaction?> getTransaction(TransactionId transactionId);
   Future<TransactionOutput?> getTransactionOutput(
       TransactionOutputReference reference);
+  Future<TransactionConfirmation?> getTransactionConfirmation(
+      TransactionId transactionId);
   Future<BlockId?> getBlockIdAtHeight(Int64 height);
   Future<BlockId> get canonicalHeadId =>
       getBlockIdAtHeight(Int64.ZERO).then((v) => v!);
@@ -109,19 +111,17 @@ abstract class BlockchainClient {
       getBlockHeaderOrRaise(await canonicalHeadId);
 
   Future<void> confirmTransaction(TransactionId id) async {
-    var h = Int64.ZERO;
-    while (h > Int64(-3)) {
-      final body = await (getBlockBodyOrRaise((await getBlockIdAtHeight(h))!));
-      if (body.transactionIds.contains(id)) {
-        return;
-      }
+    final c = await getTransactionConfirmation(id);
+    if (c != null && c.depth > Int64(2)) {
+      return;
     }
-    final o2 = await adoptions.asyncMap(getBlockBody).take(3).firstWhere(
-        (o) => o?.transactionIds.contains(id) ?? false,
-        orElse: () => null);
-    if (o2 == null)
-      throw Exception("Unable to confirm transaction within 3 blocks");
-    return;
+
+    await traversal
+        .asyncMap((_) => getTransactionConfirmation(id))
+        .whereNotNull()
+        .firstWhere((c) => c.depth > Int64(2))
+        .timeout(const Duration(
+            minutes: 1)); // TODO: This is dependent on block rate
   }
 }
 
@@ -455,6 +455,19 @@ class BlockchainClientFromJsonRpc extends BlockchainClient {
     );
     assert(response.statusCode == 200, "HTTP Error: ${response.body}");
     return TransactionOutputReference()
+      ..mergeFromProto3Json(json.decode(utf8.decode(response.bodyBytes)));
+  }
+
+  @override
+  Future<TransactionConfirmation?> getTransactionConfirmation(
+      TransactionId transactionId) async {
+    final response = await httpClient.get(
+      Uri.parse("$baseAddress/transactions/${transactionId.show}/confirmation"),
+      headers: headers,
+    );
+    if (response.statusCode == 404) return null;
+    assert(response.statusCode == 200, "HTTP Error: ${response.body}");
+    return TransactionConfirmation()
       ..mergeFromProto3Json(json.decode(utf8.decode(response.bodyBytes)));
   }
 }

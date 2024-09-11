@@ -191,6 +191,20 @@ final $typed_data.Uint8List transactionDescriptor = $convert.base64Decode(
     'l0bmVzc1ILYXR0ZXN0YXRpb24SUgoTcmV3YXJkUGFyZW50QmxvY2tJZBgFIAEoCzIgLmNvbS5n'
     'aXJhZmZlY2hhaW4ubW9kZWxzLkJsb2NrSWRSE3Jld2FyZFBhcmVudEJsb2NrSWQ=');
 
+@$core.Deprecated('Use transactionConfirmationDescriptor instead')
+const TransactionConfirmation$json = {
+  '1': 'TransactionConfirmation',
+  '2': [
+    {'1': 'height', '3': 1, '4': 1, '5': 4, '10': 'height'},
+    {'1': 'depth', '3': 2, '4': 1, '5': 4, '10': 'depth'},
+  ],
+};
+
+/// Descriptor for `TransactionConfirmation`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List transactionConfirmationDescriptor = $convert.base64Decode(
+    'ChdUcmFuc2FjdGlvbkNvbmZpcm1hdGlvbhIWCgZoZWlnaHQYASABKARSBmhlaWdodBIUCgVkZX'
+    'B0aBgCIAEoBFIFZGVwdGg=');
+
 @$core.Deprecated('Use witnessDescriptor instead')
 const Witness$json = {
   '1': 'Witness',

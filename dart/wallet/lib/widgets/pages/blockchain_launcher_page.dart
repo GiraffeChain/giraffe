@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';
-import 'package:giraffe_wallet/widgets/giraffe_background.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/pages/advanced_page.dart';

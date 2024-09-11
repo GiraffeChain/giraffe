@@ -1,15 +1,15 @@
 package com.giraffechain.rpc
 
-import com.giraffechain.BlockchainCore
-import com.giraffechain.codecs.{*, given}
-import com.giraffechain.consensus.TraversalStep
-import com.giraffechain.ledger.*
-import com.giraffechain.models.*
 import cats.data.OptionT
 import cats.effect.implicits.*
 import cats.effect.{IO, Resource}
 import cats.implicits.*
 import com.comcast.ip4s.{Host, Port}
+import com.giraffechain.BlockchainCore
+import com.giraffechain.codecs.{*, given}
+import com.giraffechain.consensus.TraversalStep
+import com.giraffechain.ledger.*
+import com.giraffechain.models.*
 import fs2.Stream
 import io.circe.syntax.*
 import io.circe.{Decoder, DecodingFailure, Encoder, Json}
@@ -99,6 +99,22 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
         OptionT(IO(id.decodeTransactionId).flatMap(core.dataStores.transactions.get))
           .map(_.withEmbeddedId)
           .map(_.asJson)
+          .fold(Response().withStatus(Status.NotFound))(Response().withEntity)
+          .logError
+      case GET -> Root / "transactions" / id / "confirmation" =>
+        OptionT(
+          IO(id.decodeTransactionId).flatMap(id =>
+            core.consensus.localChain.currentHead.flatMap(
+              core.ledger.transactionHeightState.transactionHeight(_)(id)
+            )
+          )
+        )
+          .semiflatMap(height =>
+            core.consensus.localChain.currentHead
+              .flatMap(core.dataStores.headers.getOrRaise)
+              .map(_.height - height)
+              .map(TransactionConfirmation(height, _).asJson)
+          )
           .fold(Response().withStatus(Status.NotFound))(Response().withEntity)
           .logError
       case GET -> Root / "block-ids" / height =>

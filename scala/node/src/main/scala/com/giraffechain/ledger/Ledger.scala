@@ -1,11 +1,11 @@
 package com.giraffechain.ledger
 
+import cats.effect.{Async, Resource}
+import cats.implicits.*
 import com.giraffechain.codecs.given
 import com.giraffechain.consensus.LocalChain
 import com.giraffechain.crypto.CryptoResources
 import com.giraffechain.{BlockIdTree, Clock, DataStores, EventIdGetterSetters}
-import cats.effect.{Async, Resource}
-import cats.implicits.*
 
 case class Ledger[F[_]](
     transactionValidation: TransactionValidation[F],
@@ -16,7 +16,8 @@ case class Ledger[F[_]](
     accountState: AccountState[F],
     addressState: AddressState[F],
     blockPacker: BlockPacker[F],
-    graphState: GraphState[F]
+    graphState: GraphState[F],
+    transactionHeightState: TransactionHeightState[F]
 )
 
 object Ledger:
@@ -94,6 +95,15 @@ object Ledger:
         dataStores.transactionOutputs.getOrRaise
       )
       graphState <- GraphState.make(graphStateBSS)
+      transactionHeightsBSS <- TransactionHeightState.makeBSS(
+        dataStores.transactionHeights.pure[F],
+        eventIdGetterSetters.transactionHeightState.get(),
+        blockIdTree,
+        eventIdGetterSetters.transactionHeightState.set,
+        dataStores.headers.getOrRaise,
+        dataStores.bodies.getOrRaise
+      )
+      transactionHeightState <- TransactionHeightState.make(transactionHeightsBSS)
     } yield Ledger(
       transactionValidation,
       bodyValidation,
@@ -103,5 +113,6 @@ object Ledger:
       accountState,
       addressState,
       mempoolBlockPacker,
-      graphState
+      graphState,
+      transactionHeightState
     )

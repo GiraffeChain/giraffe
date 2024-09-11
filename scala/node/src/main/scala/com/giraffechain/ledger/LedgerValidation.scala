@@ -1,13 +1,13 @@
 package com.giraffechain.ledger
 
+import cats.data.{EitherT, NonEmptyChain}
+import cats.effect.{Resource, Sync}
+import cats.implicits.*
 import com.giraffechain.*
 import com.giraffechain.codecs.{*, given}
 import com.giraffechain.crypto.CryptoResources
 import com.giraffechain.models.*
 import com.giraffechain.utility.*
-import cats.data.{EitherT, NonEmptyChain}
-import cats.effect.{Resource, Sync}
-import cats.implicits.*
 
 trait TransactionValidation[F[_]]:
   def validate(transaction: Transaction, context: TransactionValidationContext): ValidationResult[F]

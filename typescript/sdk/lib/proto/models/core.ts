@@ -160,6 +160,11 @@ export interface Transaction {
   rewardParentBlockId: BlockId | undefined;
 }
 
+export interface TransactionConfirmation {
+  height: Long;
+  depth: Long;
+}
+
 export interface Witness {
   lockAddress: LockAddress | undefined;
   lock: Lock | undefined;
@@ -1322,6 +1327,82 @@ export const Transaction = {
     message.rewardParentBlockId = (object.rewardParentBlockId !== undefined && object.rewardParentBlockId !== null)
       ? BlockId.fromPartial(object.rewardParentBlockId)
       : undefined;
+    return message;
+  },
+};
+
+function createBaseTransactionConfirmation(): TransactionConfirmation {
+  return { height: Long.UZERO, depth: Long.UZERO };
+}
+
+export const TransactionConfirmation = {
+  encode(message: TransactionConfirmation, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (!message.height.equals(Long.UZERO)) {
+      writer.uint32(8).uint64(message.height.toString());
+    }
+    if (!message.depth.equals(Long.UZERO)) {
+      writer.uint32(16).uint64(message.depth.toString());
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TransactionConfirmation {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTransactionConfirmation();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 8) {
+            break;
+          }
+
+          message.height = Long.fromString(reader.uint64().toString(), true);
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.depth = Long.fromString(reader.uint64().toString(), true);
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TransactionConfirmation {
+    return {
+      height: isSet(object.height) ? Long.fromValue(object.height) : Long.UZERO,
+      depth: isSet(object.depth) ? Long.fromValue(object.depth) : Long.UZERO,
+    };
+  },
+
+  toJSON(message: TransactionConfirmation): unknown {
+    const obj: any = {};
+    if (!message.height.equals(Long.UZERO)) {
+      obj.height = (message.height || Long.UZERO).toString();
+    }
+    if (!message.depth.equals(Long.UZERO)) {
+      obj.depth = (message.depth || Long.UZERO).toString();
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<TransactionConfirmation>, I>>(base?: I): TransactionConfirmation {
+    return TransactionConfirmation.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<TransactionConfirmation>, I>>(object: I): TransactionConfirmation {
+    const message = createBaseTransactionConfirmation();
+    message.height = (object.height !== undefined && object.height !== null)
+      ? Long.fromValue(object.height)
+      : Long.UZERO;
+    message.depth = (object.depth !== undefined && object.depth !== null) ? Long.fromValue(object.depth) : Long.UZERO;
     return message;
   },
 };

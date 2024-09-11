@@ -1,4 +1,4 @@
-import { BlockBody, BlockHeader, BlockId, FullBlock, LockAddress, Transaction, TransactionId, TransactionOutput, TransactionOutputReference } from "./models";
+import { BlockBody, BlockHeader, BlockId, FullBlock, LockAddress, Transaction, TransactionConfirmation, TransactionId, TransactionOutput, TransactionOutputReference } from "./models";
 import Long from "long";
 
 import { requireDefined } from "./utils";
@@ -39,6 +39,14 @@ export abstract class GiraffeClient {
      * @returns A Promise that resolves to the TransactionOutput, or undefined if the output does not exist.
      */
     abstract getTransactionOutputOpt(reference: TransactionOutputReference): Promise<TransactionOutput | undefined>;
+
+    /**
+     * Retrieve a transaction confirmation by its ID, if it exists.
+     * @param id - The Transaction ID
+     * @returns A Promise that resolves to the TransactionConfirmation, or undefined if the confirmation does not exist.
+     */
+    abstract getTransactionConfirmationOpt(id: TransactionId): Promise<TransactionConfirmation | undefined>;
+
     /**
      * Retrieve the Block ID at a given height, if it exists.
      * @param height - The height of the block. If `0` is provided, the current chain tip is provided. If a negative value is provided, the block is retrieved by depth.
@@ -328,6 +336,18 @@ export class RpcGiraffeClient extends GiraffeClient {
             }
         }
         return TransactionOutput.fromJSON(await response.json());
+    }
+
+    async getTransactionConfirmationOpt(id: TransactionId): Promise<TransactionConfirmation | undefined> {
+        const response = await fetch(`${this.baseAddress}/transactions/${showTransactionId(id)}/confirmation`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                return undefined;
+            } else {
+                throw new Error(`Failed to get transaction confirmation for id: ${showTransactionId(id)}`);
+            }
+        }
+        return TransactionConfirmation.fromJSON(await response.json());
     }
 
     async getBlockIdAtHeightOpt(height: Long): Promise<BlockId | undefined> {
