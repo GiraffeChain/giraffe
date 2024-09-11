@@ -157,10 +157,10 @@ export function rewardOf(transaction: Transaction): Long {
 export const defaultTransactionTip = Long.fromInt(1000);
 
 /**
- * Checks if a transaction output is a payment token, meaning it is not used for staking, is not an account registration, and contains no graph data.
+ * Checks if a transaction output is a liquid token, meaning it is not used for staking, is not an account registration, and contains no graph data.
  * 
  * @param transactionOutput - The transaction output to check.
- * @returns `true` if the transaction output is a payment token, `false` otherwise.
+ * @returns `true` if the transaction output is a liquid token, `false` otherwise.
  */
 export function isPaymentToken(transactionOutput: TransactionOutput): boolean {
     return transactionOutput.account === undefined && transactionOutput.value?.accountRegistration === undefined && transactionOutput.value?.graphEntry === undefined;

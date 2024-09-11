@@ -1,7 +1,7 @@
 import { Lock, LockAddress, TransactionOutput, TransactionOutputReference, Witness } from "./models";
 
 import Long from 'long';
-import { isPaymentToken, requireDefined } from "./utils";
+import { isPaymentToken as isLiquidToken, requireDefined } from "./utils";
 import { lockToAddress } from "./codecs";
 import bs58 from 'bs58'
 import { ed25519 } from '@noble/curves/ed25519';
@@ -139,12 +139,12 @@ export class GiraffeWallet {
     }
 
     /**
-     * Retrieves the payment tokens from the spendable outputs.
+     * Retrieves the liquid tokens from the spendable outputs.
      * 
-     * @returns An array of ReferencedOutput objects representing the payment tokens.
+     * @returns An array of ReferencedOutput objects representing the liquid tokens.
      */
-    paymentTokens(): ReferencedOutput[] {
-        return this.spendableOutputs.filter(([_, o]) => isPaymentToken(o));
+    liquidTokens(): ReferencedOutput[] {
+        return this.spendableOutputs.filter(([_, o]) => isLiquidToken(o));
     }
 }
 

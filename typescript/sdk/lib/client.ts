@@ -198,6 +198,10 @@ export abstract class GiraffeClient {
         return this.getBlockIdAtHeight(Long.ONE);
     }
 
+    /**
+     * Waits for the next block adoption
+     * @returns The adopted block's ID
+     */
     async nextBlockId(): Promise<BlockId> {
         for await (const t of this.follow()) {
             if (t.type === TipChangeType.APPLIED) {
@@ -348,6 +352,35 @@ export class RpcGiraffeClient extends GiraffeClient {
             }
         }
         return TransactionConfirmation.fromJSON(await response.json());
+    }
+
+    /**
+     * Checks that the requested transaction appears in the blockchain with sufficient depth, within a timeout.
+     * @param id the ID of the transaciton to check
+     */
+    async confirmTransaction(id: TransactionId): Promise<void> {
+        await Promise.race([
+            this.confirmTransactionNoTimeout(id),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 60000))
+        ]);
+    }
+
+    /**
+     * Checks that the requested transaction appears in the blockchain with sufficient depth, without timeout
+     * @param id the ID of the transaciton to check
+     */
+    async confirmTransactionNoTimeout(id: TransactionId): Promise<void> {
+        const c = await this.getTransactionConfirmationOpt(id);
+        if (c != null && c.depth > new Long(2)) {
+            return;
+        }
+
+        for await (const _ of this.follow()) {
+            const c = await this.getTransactionConfirmationOpt(id);
+            if (c != null && c.depth > new Long(2)) {
+                return;
+            }
+        }
     }
 
     async getBlockIdAtHeightOpt(height: Long): Promise<BlockId | undefined> {

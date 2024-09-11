@@ -212,4 +212,18 @@ export class Giraffe {
         await giraffeGenesis.dispose();
     }
 
+    /**
+     * Retrieves the given UTxOs from the local wallet (of any type, including registration, delegation, or graph entry), and converts their value back into the local
+     * wallet as a liquid token.
+     * @param outputs UTxOs from the local wallet that should be consumed and converted into liquid funds
+     */
+    async liquidate(outputs: TransactionOutputReference[]): Promise<void> {
+        const inputs: TransactionInput[] = [];
+        for (const ref of outputs) {
+            const output = await this.client.getTransactionOutput(ref);
+            inputs.push(TransactionInput.fromJSON({ reference: ref, value: output.value! }));
+        }
+        await this.paySignBroadcast(Transaction.fromJSON({ inputs: inputs }));
+    }
+
 }
