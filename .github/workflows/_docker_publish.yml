@@ -55,6 +55,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push images to registries
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cli-staker
+          path: dart/wallet/build/bin
+      
+      - name: Build Staker Image
+        working-directory: dart/wallet
+        run: |
+          docker build -t seancheatham/giraffe-staker:${{ inputs.latest_tag && 'latest' || 'dev '}} .
+          docker push seancheatham/giraffe-staker:${{ inputs.latest_tag && 'latest' || 'dev '}}
+
+      - name: Push Node Image to DockerHub
         working-directory: ./scala
         run: DOCKER_PUBLISH_DEV_TAG=${{ inputs.dev_tag }} DOCKER_PUBLISH_LATEST_TAG=${{ inputs.latest_tag }} sbt Docker/publish
