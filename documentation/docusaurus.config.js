@@ -91,6 +91,10 @@ const config = {
                 label: 'Discord',
                 href: 'https://discord.gg/nvdXF4KxW5',
               },
+              {
+                label: 'X',
+                href: 'https://x.com/GiraffeChain',
+              },
             ],
           },
           {
@@ -103,10 +107,6 @@ const config = {
               {
                 label: 'GitHub',
                 href: 'https://github.com/SeanCheatham/giraffe',
-              },
-              {
-                label: 'X',
-                href: 'https://x.com/GiraffeChain',
               },
             ],
           },

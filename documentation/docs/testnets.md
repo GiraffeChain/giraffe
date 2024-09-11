@@ -21,7 +21,7 @@ The 0th testnet has already been wiped, Giraffe is now on the 1st testnet.
 ## Testnet 1
 Open the [Wallet/App](https://testnet.giraffechain.com) to see the current state of the chain, access your funds, stake, and more.
 
-If you want to help with relay options, you can do so using Docker.
+If you want to help with relay operations, you can do so using Docker.
 1. `docker volume create giraffe`
 1. `docker run -d --name giraffe --restart=always -p 2023:2023 -p 2024:2024 -v giraffe:/giraffe giraffechain/node:dev --genesis https://github.com/SeanCheatham/blockchain/raw/genesis/b_9JabitnBvokxRXfsoCGMrahsub3FpTCwKsUXY9XHW22M.pbuf --peer testnet.giraffechain.com:2023`
     - Note: If you are able to open your firewall for public access on port 2023, you can add the `--p2p-public-host auto` argument
