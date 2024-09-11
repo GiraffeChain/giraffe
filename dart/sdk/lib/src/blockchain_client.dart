@@ -111,19 +111,17 @@ abstract class BlockchainClient {
       getBlockHeaderOrRaise(await canonicalHeadId);
 
   Future<void> confirmTransaction(TransactionId id) async {
-    var h = Int64.ZERO;
-    while (h > Int64(-3)) {
-      final body = await (getBlockBodyOrRaise((await getBlockIdAtHeight(h))!));
-      if (body.transactionIds.contains(id)) {
-        return;
-      }
+    final c = await getTransactionConfirmation(id);
+    if (c != null && c.depth > Int64(2)) {
+      return;
     }
-    final o2 = await adoptions.asyncMap(getBlockBody).take(3).firstWhere(
-        (o) => o?.transactionIds.contains(id) ?? false,
-        orElse: () => null);
-    if (o2 == null)
-      throw Exception("Unable to confirm transaction within 3 blocks");
-    return;
+
+    await traversal
+        .asyncMap((_) => getTransactionConfirmation(id))
+        .whereNotNull()
+        .firstWhere((c) => c.depth > Int64(2))
+        .timeout(const Duration(
+            minutes: 1)); // TODO: This is dependent on block rate
   }
 }
 

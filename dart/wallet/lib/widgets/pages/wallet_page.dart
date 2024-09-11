@@ -204,7 +204,7 @@ class TransferFundsState extends ConsumerState<TransferFunds> {
             });
             try {
               await client.broadcastTransaction(tx);
-              await client.adoptions.first;
+              await client.confirmTransaction(tx.id);
             } catch (e) {
               setState(() {
                 transferError = "Failed to broadcast transaction: $e";
