@@ -1,18 +1,17 @@
 package com.giraffechain.p2p
 
-import com.giraffechain.consensus.ChainSelectionOutcome
-import com.giraffechain.ledger.TransactionValidationContext
-import com.giraffechain.codecs.{*, given}
-import com.giraffechain.models.*
-import com.giraffechain.ledger.*
-import com.giraffechain.*
 import cats.data.OptionT
 import cats.effect.Async
-import cats.implicits.*
 import cats.effect.implicits.*
 import cats.effect.std.Random
+import cats.implicits.*
+import com.giraffechain.*
+import com.giraffechain.codecs.{*, given}
+import com.giraffechain.consensus.ChainSelectionOutcome
+import com.giraffechain.ledger.*
+import com.giraffechain.models.*
 import com.google.protobuf.ByteString
-import fs2.Stream
+import fs2.{Pipe, Pull, Stream}
 import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration.*
@@ -102,7 +101,8 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
                 .flatMap(remoteHeader =>
                   core.consensus.localChain.currentHead.flatMap(currentHeadId =>
                     if (remoteHeader.parentHeaderId == currentHeadId)
-                      fetchVerifyPersist(remoteHeader)
+                      checkHeader(remoteHeader) >> fetchFullBlock(remoteHeader)
+                        .flatTap(checkBody)
                         .flatTap(adoptAndLog)
                         .as(true)
                     else
@@ -112,27 +112,6 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
             )
       )
       .iterateWhile(identity)
-      .void
-
-  private def sync(commonAncestor: BlockHeader): F[Unit] =
-    (commonAncestor.height + 1, none[FullBlock])
-      .tailRecM((h, lastProcessed) =>
-        OptionT(interface.blockIdAtHeight(h))
-          .semiflatMap(remoteId =>
-            OptionT(interface.fetchHeader(remoteId))
-              .getOrRaise(new IllegalArgumentException("Remote header not found"))
-              .ensure(new IllegalStateException("Remote peer branched during syncing"))(header =>
-                lastProcessed.forall(_.header.id == header.parentHeaderId)
-              )
-              .flatMap(fetchVerifyPersist)
-              .map(_.some)
-              .tupleLeft(h + 1)
-          )
-          .flatTapNone(lastProcessed.traverse(adoptAndLog))
-          .toLeft(lastProcessed)
-          .value
-      )
-      .flatTap(_.traverse(adoptAndLog))
       .void
 
   private def mempoolSync: F[Unit] =
@@ -149,7 +128,27 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
       )
       .foreverM
 
-  private def fetchVerifyPersist(header: BlockHeader): F[FullBlock] =
+  private def sync(commonAncestor: BlockHeader): F[Unit] =
+    Stream
+      .unfold(commonAncestor.height + 1)(v => Some(v, v + 1))
+      .parEvalMap(32)(interface.blockIdAtHeight)
+      .unNoneTerminate
+      .parEvalMap(128)(id =>
+        OptionT(interface.fetchHeader(id))
+          .getOrRaise(new IllegalArgumentException("Remote header not found"))
+      )
+      .through(noForks)
+      .through(fetchVerifyPersistPipe)
+      .through(adoptSparsely)
+      .compile
+      .drain
+
+  private def fetchVerifyPersistPipe: Pipe[F, BlockHeader, FullBlock] =
+    _.evalTap(checkHeader)
+      .parEvalMap(16)(fetchFullBlock)
+      .evalTap(checkBody)
+
+  private def checkHeader(header: BlockHeader): F[Unit] =
     for {
       _ <- Logger[F].info(show"Processing remote block id=${header.id}")
       _ <- core.consensus.headerValidation
@@ -157,8 +156,12 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
         .leftMap(errors => new IllegalArgumentException(errors.head))
         .rethrowT
       _ <- core.dataStores.headers.put(header.id, header)
-      parentHeader <- core.dataStores.headers.getOrRaise(header.parentHeaderId)
       _ <- core.blockIdTree.associate(header.id, header.parentHeaderId)
+    } yield ()
+
+  private def fetchFullBlock(header: BlockHeader): F[FullBlock] =
+    for {
+      parentHeader <- core.dataStores.headers.getOrRaise(header.parentHeaderId)
       body <- OptionT(core.dataStores.bodies.get(header.id))
         .orElse(
           OptionT(interface.fetchBody(header.id))
@@ -167,30 +170,41 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
             )
         )
         .getOrRaise(new IllegalArgumentException("Remote body not found"))
-      transactions <- body.transactionIds.traverse(id =>
-        OptionT(core.dataStores.transactions.get(id))
-          .orElse(OptionT(interface.fetchTransaction(id)))
-          .getOrRaise(new IllegalArgumentException("Remote transaction not found"))
-      )
+      transactions <- Stream
+        .iterable(body.transactionIds)
+        .parEvalMap(16)(id =>
+          OptionT(core.dataStores.transactions.get(id))
+            .orElse(OptionT(interface.fetchTransaction(id)))
+            .getOrRaise(new IllegalArgumentException("Remote transaction not found"))
+        )
+        .compile
+        .toList
       fullBody = FullBlockBody(transactions)
+    } yield FullBlock(header, fullBody)
+
+  private def checkBody(fullBlock: FullBlock): F[Unit] =
+    for {
       _ <- core.ledger.bodyValidation
         .validate(
-          fullBody,
+          fullBlock.fullBody,
           TransactionValidationContext(
-            header.parentHeaderId,
-            header.height,
-            header.slot
+            fullBlock.header.parentHeaderId,
+            fullBlock.header.height,
+            fullBlock.header.slot
           )
         )
         .leftMap(errors => new IllegalArgumentException(errors.head))
         .rethrowT
-      _ <- core.dataStores.bodies.contains(header.id).ifM(().pure[F], core.dataStores.bodies.put(header.id, body))
-      _ <- transactions.traverseTap(transaction =>
+      body = BlockBody(fullBlock.fullBody.transactions.map(_.id))
+      _ <- core.dataStores.bodies
+        .contains(fullBlock.header.id)
+        .ifM(().pure[F], core.dataStores.bodies.put(fullBlock.header.id, body))
+      _ <- fullBlock.fullBody.transactions.traverseTap(transaction =>
         core.dataStores.transactions
           .contains(transaction.id)
           .ifM(().pure[F], core.dataStores.transactions.put(transaction.id, transaction))
       )
-    } yield FullBlock(header, fullBody)
+    } yield ()
 
   private def adoptAndLog(fullBlock: FullBlock): F[Unit] =
     core.consensus.localChain.adopt(fullBlock.header.id) >>
@@ -201,3 +215,59 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
           show" slot=${fullBlock.header.slot}" +
           show" transactions=${fullBlock.fullBody.transactions.map(_.id)}"
       )
+
+  private def noForks: Pipe[F, BlockHeader, BlockHeader] = {
+    def start(s: Stream[F, BlockHeader]): Pull[F, BlockHeader, Unit] =
+      s.pull.uncons1.flatMap {
+        case Some((head, tail)) =>
+          Pull.output1(head) >> go(tail, head)
+        case None =>
+          Pull.done
+      }
+
+    def go(
+        s: Stream[F, BlockHeader],
+        previous: BlockHeader
+    ): Pull[F, BlockHeader, Unit] =
+      s.pull.uncons1.flatMap {
+        case Some((head, tlStream)) =>
+          if (head.parentHeaderId != previous.id)
+            Pull.raiseError(new IllegalStateException("Remote peer branched during sync"))
+          else Pull.output1(head) >> go(tlStream, head)
+        case None =>
+          Pull.done
+      }
+
+    start(_).stream
+  }
+
+  private def adoptSparsely: Pipe[F, FullBlock, FullBlock] = {
+    val epochThirdLength = core.clock.epochLength / 3L
+    def start(s: Stream[F, FullBlock]): Pull[F, FullBlock, Unit] =
+      s.pull.uncons1.flatMap {
+        case Some((head, tail)) =>
+          Pull.output1(head) >> go(tail, head, false, head.header.slot / epochThirdLength)
+        case None =>
+          Pull.done
+      }
+
+    def go(
+        s: Stream[F, FullBlock],
+        previous: FullBlock,
+        previousWasAdopted: Boolean,
+        lastAdoptedThird: Long
+    ): Pull[F, FullBlock, Unit] =
+      s.pull.uncons1.flatMap {
+        case Some((head, tail)) =>
+          val third = head.header.slot / epochThirdLength
+          if (third != lastAdoptedThird)
+            Pull.eval(adoptAndLog(head)) >> Pull.output1(head) >> go(tail, head, true, third)
+          else
+            Pull.output1(head) >> go(tail, head, false, lastAdoptedThird)
+        case None =>
+          if (previousWasAdopted) Pull.done
+          else Pull.eval(adoptAndLog(previous)) >> Pull.done
+      }
+
+    start(_).stream
+  }
