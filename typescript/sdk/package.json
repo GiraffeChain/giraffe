@@ -16,6 +16,15 @@
     "README.md"
   ],
   "author": "Sean Cheatham",
+  "keywords": [
+    "blockchain",
+    "giraffe",
+    "sdk",
+    "web3",
+    "graph",
+    "database",
+    "wallet"
+  ],
   "license": "MPL-2.0",
   "dependencies": {
     "@noble/curves": "^1.5.0",
