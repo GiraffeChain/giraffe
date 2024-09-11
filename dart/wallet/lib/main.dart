@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:giraffe_wallet/widgets/pages/address_page.dart';
 import 'package:giraffe_wallet/widgets/pages/social_page.dart';
 import 'package:giraffe_wallet/widgets/pages/stake_page.dart';
 import 'package:giraffe_wallet/widgets/pages/wallet_page.dart';
@@ -69,6 +70,10 @@ initRouter() {
       handler: Handler(
           handlerFunc: (context, params) => UnloadedTransactionPage(
               id: decodeTransactionId(params["id"]![0]))));
+  FluroRouter.appRouter.define("/addresses/:address",
+      handler: Handler(
+          handlerFunc: (context, params) => UnloadedAddressPage(
+              address: decodeLockAddress(params["address"]![0]))));
   FluroRouter.appRouter.define("/wallet",
       handler: Handler(
           handlerFunc: (context, params) => const StreamedTransactView()));

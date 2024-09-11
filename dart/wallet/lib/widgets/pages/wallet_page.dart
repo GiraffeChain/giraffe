@@ -11,6 +11,9 @@ import 'package:giraffe_sdk/sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../bitmap_render.dart';
+import '../tappable_link.dart';
+
 class StreamedTransactView extends ConsumerWidget {
   const StreamedTransactView({super.key});
 
@@ -61,9 +64,21 @@ class TransactView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ListView(
       children: [
-        const Text("Address",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
-            .pad8,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            TappableLink(
+              route: "/addresses/${wallet.defaultLockAddress.show}",
+              child: SizedBox.square(
+                  dimension: 32,
+                  child:
+                      BitMapViewer.forLockAddress(wallet.defaultLockAddress)),
+            ).pad8,
+            const Text("Address",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                .pad8,
+          ],
+        ),
         const ClipboardAddressButton().pad8,
         const WalletBalances().pad8,
         const Divider(),

@@ -2,6 +2,7 @@ import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/over_under.dart';
+import 'package:giraffe_wallet/widgets/tappable_link.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../bitmap_render.dart';
@@ -118,15 +119,11 @@ class BlockPage extends StatelessWidget {
   }
 
   _parentLink(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () => FluroRouter.appRouter
-            .navigateTo(context, "/blocks/${block.header.parentHeaderId.show}"),
-        child: SizedBox.square(
-          dimension: 32,
-          child: BitMapViewer.forBlock(block.header.parentHeaderId),
-        ),
+    return TappableLink(
+      route: "/blocks/${block.header.parentHeaderId.show}",
+      child: SizedBox.square(
+        dimension: 32,
+        child: BitMapViewer.forBlock(block.header.parentHeaderId),
       ),
     );
   }

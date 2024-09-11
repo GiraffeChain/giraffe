@@ -2,6 +2,7 @@ import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/over_under.dart';
+import 'package:giraffe_wallet/widgets/tappable_link.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../../widgets/bitmap_render.dart';
@@ -111,10 +112,14 @@ class TransactionPage extends StatelessWidget {
             rows: transaction.inputs
                 .map((t) => DataRow(cells: [
                       DataCell(Row(children: [
-                        SizedBox.square(
-                            dimension: 32,
-                            child: BitMapViewer.forTransaction(
-                                t.reference.transactionId)),
+                        TappableLink(
+                          route:
+                              "/transactions/${t.reference.transactionId.show}",
+                          child: SizedBox.square(
+                              dimension: 32,
+                              child: BitMapViewer.forTransaction(
+                                  t.reference.transactionId)),
+                        ),
                         Text("#${t.reference.index}"),
                       ])),
                       DataCell(Text(t.value.quantity.toString())),
@@ -145,9 +150,12 @@ class TransactionPage extends StatelessWidget {
             rows: transaction.outputs
                 .map((t) => DataRow(cells: [
                       DataCell(Text(t.value.quantity.toString())),
-                      DataCell(SizedBox.square(
-                          dimension: 32,
-                          child: BitMapViewer.forLockAddress(t.lockAddress))),
+                      DataCell(TappableLink(
+                        route: "/addresses/${t.lockAddress.show}",
+                        child: SizedBox.square(
+                            dimension: 32,
+                            child: BitMapViewer.forLockAddress(t.lockAddress)),
+                      )),
                       DataCell(t.value.hasGraphEntry()
                           ? (t.value.graphEntry.hasVertex()
                               ? const Icon(Icons.circle)
