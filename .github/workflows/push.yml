@@ -10,6 +10,9 @@ jobs:
     uses: ./.github/workflows/_build.yml
   publish-docker-images:
     uses: ./.github/workflows/_docker_publish.yml
+    permissions:
+      contents: read
+      packages: write
     needs: [build]
     secrets: inherit
     with:
