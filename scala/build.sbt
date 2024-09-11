@@ -42,9 +42,9 @@ lazy val node = project
       "BLOCKCHAIN_DATA_DIR" -> "/giraffe/data",
       "_JAVA_OPTIONS" -> "-XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:+UseParallelGC"
     ),
-    Docker / packageName := "giraffe-node",
+    Docker / packageName := "node",
     dockerExposedVolumes += "/giraffe",
-    dockerAlias := DockerAlias(Some("docker.io"), Some("seancheatham"), "giraffe-node", Some(version.value)),
+    dockerAlias := DockerAlias(Some("docker.io"), Some("giraffechain"), "node", Some(version.value)),
     dockerAliases ++= (if (sys.env.get("DOCKER_PUBLISH_DEV_TAG").fold(false)(_.toBoolean))
                          Seq(dockerAlias.value.withTag(Some("dev")))
                        else Seq())

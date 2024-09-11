@@ -8,7 +8,7 @@ sidebar_position: 3
 When developing decentralized applications, it often helps to test against private local testnets that can be created and destroyed as needed.
 
 ## Launch Private Testnet
-1. `docker run --rm -p 2024:2024 seancheatham/giraffe-node:dev`
+1. `docker run --rm -p 2024:2024 giraffechain/node:dev`
 1. Take note of a line near the top of the logs that looks like this: `INFO  Testnet - Testnet Staker 0: A498AybCn9K9Btmar1tKnyR8...`
   Copy the long string of text after the `: `.
 1. Open the [wallet](http://localhost:2024) in your browser

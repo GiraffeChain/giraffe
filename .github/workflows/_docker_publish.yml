@@ -64,8 +64,8 @@ jobs:
       - name: Build Staker Image
         working-directory: dart/wallet
         run: |
-          docker build -t seancheatham/giraffe-staker:${{ inputs.latest_tag && 'latest' || 'dev'}} .
-          docker push seancheatham/giraffe-staker:${{ inputs.latest_tag && 'latest' || 'dev'}}
+          docker build -t giraffechain/staker:${{ inputs.latest_tag && 'latest' || 'dev'}} .
+          docker push giraffechain/staker:${{ inputs.latest_tag && 'latest' || 'dev'}}
 
       - name: Push Node Image to DockerHub
         working-directory: ./scala
