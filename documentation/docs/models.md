@@ -4,7 +4,7 @@ sidebar_position: 6
 ---
 
 # Data Models
-Giraffe Chain's models and data types are primarily defined using Protobuf and then compiled into target languages. These definitions are located [here](https://github.com/SeanCheatham/giraffe/blob/main/proto/models/core.proto).
+Giraffe Chain's models and data types are primarily defined using Protobuf and then compiled into target languages. These definitions are located [here](https://github.com/GiraffeChain/giraffe/blob/main/proto/models/core.proto).
 
 While not a comprehensive list, here is a general summary:
 

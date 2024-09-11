@@ -23,5 +23,5 @@ Open the [Wallet/App](https://testnet.giraffechain.com) to see the current state
 
 If you want to help with relay operations, you can do so using Docker.
 1. `docker volume create giraffe`
-1. `docker run -d --name giraffe --restart=always -p 2023:2023 -p 2024:2024 -v giraffe:/giraffe giraffechain/node:dev --genesis https://github.com/SeanCheatham/blockchain/raw/genesis/b_9JabitnBvokxRXfsoCGMrahsub3FpTCwKsUXY9XHW22M.pbuf --peer testnet.giraffechain.com:2023`
+1. `docker run -d --name giraffe --restart=always -p 2023:2023 -p 2024:2024 -v giraffe:/giraffe giraffechain/node:dev --genesis https://github.com/GiraffeChain/giraffe/raw/genesis/b_9JabitnBvokxRXfsoCGMrahsub3FpTCwKsUXY9XHW22M.pbuf --peer testnet.giraffechain.com:2023`
     - Note: If you are able to open your firewall for public access on port 2023, you can add the `--p2p-public-host auto` argument

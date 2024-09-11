@@ -20,7 +20,7 @@ const config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'seancheatham', // Usually your GitHub org/user name.
+  organizationName: 'giraffechain', // Usually your GitHub org/user name.
   projectName: 'giraffe', // Usually your repo name.
 
   onBrokenLinks: 'throw',
@@ -106,7 +106,7 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/SeanCheatham/giraffe',
+                href: 'https://github.com/GiraffeChain/giraffe',
               },
             ],
           },
