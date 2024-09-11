@@ -1,6 +1,6 @@
 ---
 description: Information about the data types used in Giraffe Chain.
-sidebar_position: 5
+sidebar_position: 6
 ---
 
 # Data Models

@@ -1,4 +1,6 @@
-# Giraffe Chain 🦒 
-**Blockchain ⛓** | **Mobile+Web Staking 📱** | **Graph Database 🖫** | **Experimental 🧪**
+# 🦒 Giraffe Chain 
+**⛓ Blockchain** | **📱Mobile+Web Staking** | **🖫Graph Database** | **🧪Experimental**
 
-### [Documentation 🖹](https://docs.giraffechain.com)
+### [🏠 Home](https://giraffechain.com)
+### [📖 Documentation](https://docs.giraffechain.com)
+### [🖥️ Testnet](https://testnet.giraffechain.com)
