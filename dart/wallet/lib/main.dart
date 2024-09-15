@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:giraffe_wallet/widgets/pages/address_page.dart';
 import 'package:giraffe_wallet/widgets/pages/social_page.dart';
 import 'package:giraffe_wallet/widgets/pages/stake_page.dart';
+import 'package:giraffe_wallet/widgets/pages/transaction_output_page.dart';
 import 'package:giraffe_wallet/widgets/pages/wallet_page.dart';
 
 import '../blockchain/common/isolate_pool.dart';
@@ -70,6 +71,11 @@ initRouter() {
       handler: Handler(
           handlerFunc: (context, params) => UnloadedTransactionPage(
               id: decodeTransactionId(params["id"]![0]))));
+  FluroRouter.appRouter.define("/transactions/:id/:index",
+      handler: Handler(
+          handlerFunc: (context, params) => UnloadedTransactionOutputPage(
+              reference: TransactionOutputReference(
+                  transactionId: decodeTransactionId(params["id"]![0])))));
   FluroRouter.appRouter.define("/addresses/:address",
       handler: Handler(
           handlerFunc: (context, params) => UnloadedAddressPage(

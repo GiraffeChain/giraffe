@@ -3,12 +3,15 @@ import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/over_under.dart';
+import 'package:giraffe_wallet/widgets/pages/transaction_output_page.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../../widgets/bitmap_render.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../tappable_link.dart';
 
 class UnloadedAddressPage extends ConsumerWidget {
   final LockAddress address;
@@ -69,45 +72,25 @@ class AddressPage extends StatelessWidget {
   _body(BuildContext context) => GiraffeCard(
         child: ListView(
           children: [
-            _addressCard().pad16,
+            AddressCard(address: address, scale: 1.25).pad16,
             _outputsCard().pad16,
           ],
         ),
       );
 
-  Widget _addressCard() {
-    return Wrap(
-      children: [
-        SizedBox.square(
-            dimension: 64, child: BitMapViewer.forLockAddress(address)),
-        OverUnder(
-          over: const Text("Address",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              )),
-          under: Text(
-            address.show,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.blueGrey,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _outputsCard() {
-    return _overUnderWidgets(
-        const Text(
+    return OverUnder(
+        over: const Text(
           "Outputs",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        SingleChildScrollView(
+        under: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
+            dataRowMinHeight: 96,
+            dataRowMaxHeight: 128,
             columns: const [
+              DataColumn(label: Text("Reference")),
               DataColumn(label: Text("Quantity")),
               DataColumn(label: Text("Graph Entry")),
               DataColumn(label: Text("Registration")),
@@ -115,6 +98,10 @@ class AddressPage extends StatelessWidget {
             rows: outputs.map((rec) {
               final t = rec.$2;
               return DataRow(cells: [
+                DataCell(TappableLink(
+                    route:
+                        "/transactions/${rec.$1.transactionId.show}/${rec.$1.index}",
+                    child: TransactionOutputIdCard(reference: rec.$1))),
                 DataCell(Text(t.value.quantity.toString())),
                 DataCell(t.value.hasGraphEntry()
                     ? (t.value.graphEntry.hasVertex()
@@ -129,15 +116,41 @@ class AddressPage extends StatelessWidget {
           ),
         ));
   }
+}
 
-  Widget _overUnder(String overText, String underText) => _overUnderWidgets(
-        Text(
-          overText,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+class AddressCard extends StatelessWidget {
+  const AddressCard({
+    super.key,
+    required this.address,
+    this.scale = 1.0,
+  });
+
+  final LockAddress address;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      children: [
+        SizedBox.square(
+                dimension: 48 * scale,
+                child: BitMapViewer.forLockAddress(address))
+            .pad(4 * scale),
+        OverUnder(
+          over: Text("Address",
+              style: TextStyle(
+                fontSize: 16 * scale,
+                fontWeight: FontWeight.bold,
+              )).pad(2 * scale),
+          under: Text(
+            address.show,
+            style: TextStyle(
+              fontSize: 13 * scale,
+              color: Colors.blueGrey,
+            ),
+          ).pad(2 * scale),
         ),
-        Text(underText, style: const TextStyle(color: Colors.blueGrey)),
-      );
-
-  Widget _overUnderWidgets(Widget over, Widget under) =>
-      OverUnder(over: over, under: under);
+      ],
+    );
+  }
 }
