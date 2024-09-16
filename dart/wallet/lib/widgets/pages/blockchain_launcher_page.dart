@@ -6,13 +6,13 @@ import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/pages/advanced_page.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../blockchain/private_testnet.dart';
 import '../../providers/settings.dart';
 import '../../providers/storage.dart';
 import '../../providers/wallet_key.dart';
 import 'package:giraffe_sdk/sdk.dart';
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bip39/bip39.dart' as bip39;
@@ -178,13 +178,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
     final Function()? onPressed = isValid
         ? () {
             ref.read(podSettingsProvider.notifier).setApiAddress(apiAddress);
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => Navigator(
-                          initialRoute: '/',
-                          onGenerateRoute: FluroRouter.appRouter.generator,
-                        )));
+            context.push("/blockchain");
           }
         : null;
     return ElevatedButton.icon(

@@ -3,11 +3,11 @@ import 'package:giraffe_wallet/providers/blockchain_client.dart';
 import 'package:giraffe_wallet/providers/canonical_head.dart';
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/search_box.dart';
+import 'package:go_router/go_router.dart';
 
 class BlockchainPage extends ConsumerWidget {
   const BlockchainPage({super.key});
@@ -41,21 +41,21 @@ class BlockchainPage extends ConsumerWidget {
           label: const Text("Wallet"),
           icon: const Icon(Icons.wallet),
           onPressed: () {
-            FluroRouter.appRouter.navigateTo(context, "/wallet");
+            context.push("/wallet");
           }),
       ElevatedButton.icon(
           // style: buttonStyle,
           label: const Text("Social"),
           icon: const Icon(Icons.people),
           onPressed: () {
-            FluroRouter.appRouter.navigateTo(context, "/social");
+            context.push("/social");
           }),
       ElevatedButton.icon(
           // style: buttonStyle,
           label: const Text("Stake"),
           icon: const Icon(Icons.publish),
           onPressed: () {
-            FluroRouter.appRouter.navigateTo(context, "/stake");
+            context.push("/stake");
           }),
     ].padAll8);
   }
@@ -76,8 +76,7 @@ class BlockchainPage extends ConsumerWidget {
                     cursor: SystemMouseCursors.click,
                     child: GestureDetector(
                       onTap: () {
-                        FluroRouter.appRouter
-                            .navigateTo(context, "/blocks/${value.show}");
+                        context.push("/blocks/${value.show}");
                       },
                       child: SizedBox(
                         height: 48,

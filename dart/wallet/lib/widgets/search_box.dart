@@ -1,6 +1,6 @@
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class SearchBox extends ConsumerWidget {
   const SearchBox({
@@ -20,9 +20,9 @@ class SearchBox extends ConsumerWidget {
           onPressed: () {
             final value = controller.text;
             if (value.startsWith("b_")) {
-              FluroRouter.appRouter.navigateTo(context, "/blocks/$value");
+              context.push("/blocks/$value");
             } else if (value.startsWith("t_")) {
-              FluroRouter.appRouter.navigateTo(context, "/transactions/$value");
+              context.push("/transactions/$value");
             }
           })
     ]);
