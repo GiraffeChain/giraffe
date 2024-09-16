@@ -1,3 +1,4 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
@@ -60,35 +61,12 @@ class BlockPage extends StatelessWidget {
   _body(BuildContext context) => GiraffeCard(
         child: ListView(
           children: [
-            _blockIdCard().pad16,
+            BlockIdCard(block: block, scale: 1.25).pad16,
             _blockMetadataCard(context).pad16,
             _transactionsCard(context).pad16,
           ],
         ),
       );
-
-  Widget _blockIdCard() {
-    return Wrap(
-      children: [
-        SizedBox.square(
-            dimension: 64, child: BitMapViewer.forBlock(block.header.id)),
-        OverUnder(
-          over: const Text("Block ID",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              )),
-          under: Text(
-            block.header.id.show,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.blueGrey,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _blockMetadataCard(BuildContext context) {
     return Wrap(
@@ -114,7 +92,7 @@ class BlockPage extends StatelessWidget {
             under: block.header.height > 1
                 ? _parentLink(context)
                 : const Icon(Icons.account_tree)),
-      ],
+      ].intersperse(const VerticalDivider()).toList(),
     );
   }
 
@@ -186,4 +164,41 @@ class BlockPage extends StatelessWidget {
         over: Text(overText, style: _defaultOverStyle),
         under: Text(underText, style: _defaultUnderStyle),
       );
+}
+
+class BlockIdCard extends StatelessWidget {
+  const BlockIdCard({
+    super.key,
+    required this.block,
+    this.scale = 1.0,
+  });
+
+  final FullBlock block;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      children: [
+        SizedBox.square(
+                dimension: 48 * scale,
+                child: BitMapViewer.forBlock(block.header.id))
+            .pad(4 * scale),
+        OverUnder(
+          over: Text("Block ID",
+              style: TextStyle(
+                fontSize: 16 * scale,
+                fontWeight: FontWeight.bold,
+              )).pad(2 * scale),
+          under: Text(
+            block.header.id.show,
+            style: TextStyle(
+              fontSize: 13 * scale,
+              color: Colors.blueGrey,
+            ),
+          ),
+        ).pad(2 * scale),
+      ],
+    );
+  }
 }

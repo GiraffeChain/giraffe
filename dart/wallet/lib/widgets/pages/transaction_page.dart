@@ -1,7 +1,9 @@
+import 'package:fpdart/fpdart.dart' hide State;
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/over_under.dart';
+import 'package:giraffe_wallet/widgets/pages/transaction_output_page.dart';
 import 'package:giraffe_wallet/widgets/tappable_link.dart';
 
 import '../../providers/blockchain_client.dart';
@@ -56,36 +58,13 @@ class TransactionPage extends StatelessWidget {
   _body(BuildContext context) => GiraffeCard(
         child: ListView(
           children: [
-            _transactionIdCard().pad16,
+            TransactionIdCard(transaction: transaction, scale: 1.25).pad16,
             _transactionMetadataCard().pad16,
             _inputsCard().pad16,
             _outputsCard().pad16,
           ],
         ),
       );
-
-  Widget _transactionIdCard() {
-    return Wrap(
-      children: [
-        SizedBox.square(
-            dimension: 64, child: BitMapViewer.forTransaction(transaction.id)),
-        OverUnder(
-          over: const Text("Transaction ID",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              )),
-          under: Text(
-            transaction.id.show,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.blueGrey,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _transactionMetadataCard() {
     return _overUnder(
@@ -106,22 +85,12 @@ class TransactionPage extends StatelessWidget {
             columns: const [
               DataColumn(label: Text("UTxO Reference")),
               DataColumn(label: Text("Quantity")),
-              // DataColumn(label: Text("Address")), // TODO
               DataColumn(label: Text("Registration")),
             ],
             rows: transaction.inputs
                 .map((t) => DataRow(cells: [
-                      DataCell(Row(children: [
-                        TappableLink(
-                          route:
-                              "/transactions/${t.reference.transactionId.show}",
-                          child: SizedBox.square(
-                              dimension: 32,
-                              child: BitMapViewer.forTransaction(
-                                  t.reference.transactionId)),
-                        ),
-                        Text("#${t.reference.index}"),
-                      ])),
+                      DataCell(TransactionOutputIdCard(
+                          reference: t.reference, tappable: true)),
                       DataCell(Text(t.value.quantity.toString())),
                       DataCell(t.value.hasAccountRegistration()
                           ? const Icon(Icons.app_registration_rounded)
@@ -142,13 +111,17 @@ class TransactionPage extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: DataTable(
             columns: const [
-              DataColumn(label: Text("Quantity")),
+              DataColumn(label: Text("Index"), numeric: true),
+              DataColumn(label: Text("Quantity"), numeric: true),
               DataColumn(label: Text("Address")),
               DataColumn(label: Text("Graph Entry")),
               DataColumn(label: Text("Registration")),
             ],
             rows: transaction.outputs
-                .map((t) => DataRow(cells: [
+                .mapWithIndex((t, index) => DataRow(cells: [
+                      DataCell(TappableLink(
+                          route: "/transactions/${transaction.id.show}/$index",
+                          child: Text(index.toString()))),
                       DataCell(Text(t.value.quantity.toString())),
                       DataCell(TappableLink(
                         route: "/addresses/${t.lockAddress.show}",
@@ -180,4 +153,41 @@ class TransactionPage extends StatelessWidget {
 
   Widget _overUnderWidgets(Widget over, Widget under) =>
       OverUnder(over: over, under: under);
+}
+
+class TransactionIdCard extends StatelessWidget {
+  const TransactionIdCard({
+    super.key,
+    required this.transaction,
+    this.scale = 1.0,
+  });
+
+  final Transaction transaction;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      children: [
+        SizedBox.square(
+                dimension: 48 * scale,
+                child: BitMapViewer.forTransaction(transaction.id))
+            .pad(4 * scale),
+        OverUnder(
+          over: Text("Transaction ID",
+              style: TextStyle(
+                fontSize: 16 * scale,
+                fontWeight: FontWeight.bold,
+              )).pad(2 * scale),
+          under: Text(
+            transaction.id.show,
+            style: TextStyle(
+              fontSize: 13 * scale,
+              color: Colors.blueGrey,
+            ),
+          ).pad(2 * scale),
+        ),
+      ],
+    );
+  }
 }
