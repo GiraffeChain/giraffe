@@ -75,7 +75,8 @@ initRouter() {
       handler: Handler(
           handlerFunc: (context, params) => UnloadedTransactionOutputPage(
               reference: TransactionOutputReference(
-                  transactionId: decodeTransactionId(params["id"]![0])))));
+                  transactionId: decodeTransactionId(params["id"]![0]),
+                  index: int.parse(params["index"]![0])))));
   FluroRouter.appRouter.define("/addresses/:address",
       handler: Handler(
           handlerFunc: (context, params) => UnloadedAddressPage(

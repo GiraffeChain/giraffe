@@ -3,7 +3,6 @@ import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/over_under.dart';
-import 'package:giraffe_wallet/widgets/pages/genesis_builder_page.dart';
 import 'package:giraffe_wallet/widgets/tappable_link.dart';
 
 import '../../providers/blockchain_client.dart';

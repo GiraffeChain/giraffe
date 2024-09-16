@@ -3,7 +3,7 @@ import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/over_under.dart';
-import 'package:giraffe_wallet/widgets/pages/genesis_builder_page.dart';
+import 'package:giraffe_wallet/widgets/pages/transaction_output_page.dart';
 import 'package:giraffe_wallet/widgets/tappable_link.dart';
 
 import '../../providers/blockchain_client.dart';
@@ -89,17 +89,8 @@ class TransactionPage extends StatelessWidget {
             ],
             rows: transaction.inputs
                 .map((t) => DataRow(cells: [
-                      DataCell(Row(children: [
-                        TappableLink(
-                          route:
-                              "/transactions/${t.reference.transactionId.show}",
-                          child: SizedBox.square(
-                              dimension: 32,
-                              child: BitMapViewer.forTransaction(
-                                  t.reference.transactionId)),
-                        ),
-                        Text("#${t.reference.index}"),
-                      ])),
+                      DataCell(TransactionOutputIdCard(
+                          reference: t.reference, tappable: true)),
                       DataCell(Text(t.value.quantity.toString())),
                       DataCell(t.value.hasAccountRegistration()
                           ? const Icon(Icons.app_registration_rounded)
