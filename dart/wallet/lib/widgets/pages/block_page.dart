@@ -4,12 +4,12 @@ import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/over_under.dart';
 import 'package:giraffe_wallet/widgets/tappable_link.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../bitmap_render.dart';
 import '../../blockchain/codecs.dart';
 import 'package:giraffe_sdk/sdk.dart';
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_time_ago/get_time_ago.dart';
@@ -139,8 +139,8 @@ class BlockPage extends StatelessWidget {
                           child: SizedBox.square(
                               dimension: 32,
                               child: BitMapViewer.forTransaction(t.id)),
-                          onPressed: () => FluroRouter.appRouter.navigateTo(
-                              context, "/transactions/${t.id.show}"),
+                          onPressed: () =>
+                              context.push("/transactions/${t.id.show}"),
                         )),
                         DataCell(Text(t.inputSum.toString())),
                         DataCell(Text(t.outputSum.toString())),

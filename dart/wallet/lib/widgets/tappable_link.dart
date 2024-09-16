@@ -1,5 +1,5 @@
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class TappableLink extends StatelessWidget {
   final Widget child;
@@ -12,7 +12,7 @@ class TappableLink extends StatelessWidget {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () => FluroRouter.appRouter.navigateTo(context, route),
+        onTap: () => context.push(route),
         child: child,
       ),
     );

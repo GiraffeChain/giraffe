@@ -5,6 +5,7 @@ import 'package:giraffe_wallet/widgets/pages/social_page.dart';
 import 'package:giraffe_wallet/widgets/pages/stake_page.dart';
 import 'package:giraffe_wallet/widgets/pages/transaction_output_page.dart';
 import 'package:giraffe_wallet/widgets/pages/wallet_page.dart';
+import 'package:go_router/go_router.dart';
 
 import '../blockchain/common/isolate_pool.dart';
 import 'widgets/pages/block_page.dart';
@@ -12,11 +13,12 @@ import 'widgets/pages/blockchain_launcher_page.dart';
 import 'widgets/pages/blockchain_page.dart';
 import 'widgets/pages/transaction_page.dart';
 import 'package:giraffe_sdk/sdk.dart';
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+
+import 'widgets/pages/transfer_page.dart';
 
 var _isolate = LocalCompute;
 
@@ -35,8 +37,6 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  initRouter();
-
   runApp(const ProviderScope(child: MainApp()));
 }
 
@@ -45,47 +45,50 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const BlockchainLauncherPage(),
-      onGenerateRoute: FluroRouter.appRouter.generator,
-      theme: ThemeData.from(
-          colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.brown,
-        brightness: Brightness.light,
-        surface: Colors.brown[100],
-      )),
+    return MaterialApp.router(
+      routerConfig: _router,
+      theme: _theme,
     );
   }
 }
 
-initRouter() {
-  FluroRouter.appRouter.define("/",
-      handler:
-          Handler(handlerFunc: (context, params) => const BlockchainPage()));
-  FluroRouter.appRouter.define("/blocks/:id",
-      handler: Handler(
-          handlerFunc: (context, params) =>
-              UnloadedBlockPage(id: decodeBlockId(params["id"]![0]))));
-  FluroRouter.appRouter.define("/transactions/:id",
-      handler: Handler(
-          handlerFunc: (context, params) => UnloadedTransactionPage(
-              id: decodeTransactionId(params["id"]![0]))));
-  FluroRouter.appRouter.define("/transactions/:id/:index",
-      handler: Handler(
-          handlerFunc: (context, params) => UnloadedTransactionOutputPage(
-              reference: TransactionOutputReference(
-                  transactionId: decodeTransactionId(params["id"]![0]),
-                  index: int.parse(params["index"]![0])))));
-  FluroRouter.appRouter.define("/addresses/:address",
-      handler: Handler(
-          handlerFunc: (context, params) => UnloadedAddressPage(
-              address: decodeLockAddress(params["address"]![0]))));
-  FluroRouter.appRouter.define("/wallet",
-      handler: Handler(
-          handlerFunc: (context, params) => const StreamedTransactView()));
-  FluroRouter.appRouter.define("/social",
-      handler: Handler(handlerFunc: (context, params) => const SocialView()));
-  FluroRouter.appRouter.define("/stake",
-      handler: Handler(handlerFunc: (context, params) => const StakeView()));
-}
+final _theme = ThemeData.from(
+    colorScheme: ColorScheme.fromSeed(
+  seedColor: Colors.brown,
+  brightness: Brightness.light,
+  surface: Colors.brown[100],
+));
+
+final _router = GoRouter(routes: [
+  GoRoute(
+      path: '/', builder: (context, state) => const BlockchainLauncherPage()),
+  GoRoute(
+      path: '/blockchain', builder: (context, state) => const BlockchainPage()),
+  GoRoute(
+      path: '/blocks/:id',
+      builder: (context, state) =>
+          UnloadedBlockPage(id: decodeBlockId(state.pathParameters['id']!))),
+  GoRoute(
+      path: '/transactions/:id',
+      builder: (context, state) => UnloadedTransactionPage(
+          id: decodeTransactionId(state.pathParameters['id']!))),
+  GoRoute(
+      path: '/transactions/:id/:index',
+      builder: (context, state) => UnloadedTransactionOutputPage(
+          reference: TransactionOutputReference(
+              transactionId: decodeTransactionId(state.pathParameters['id']!),
+              index: int.parse(state.pathParameters['index']!)))),
+  GoRoute(
+      path: '/addresses/:address',
+      builder: (context, state) => UnloadedAddressPage(
+          address: decodeLockAddress(state.pathParameters['address']!))),
+  GoRoute(
+      path: '/wallet',
+      builder: (context, state) => const StreamedTransactView()),
+  GoRoute(path: '/social', builder: (context, state) => const SocialView()),
+  GoRoute(path: '/stake', builder: (context, state) => const StakeView()),
+  GoRoute(
+      path: '/transfer/:tx58',
+      builder: (context, state) =>
+          TransferPage(transferData: state.pathParameters['tx58']!)),
+]);

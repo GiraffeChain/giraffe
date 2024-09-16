@@ -6,7 +6,7 @@ part of 'wallet_key.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podWalletKeyHash() => r'cf11959aa0f2c6714e770107e83e56ba0c3f7341';
+String _$podWalletKeyHash() => r'd4a0214def337634ff06c66038385d81242df053';
 
 /// See also [PodWalletKey].
 @ProviderFor(PodWalletKey)
