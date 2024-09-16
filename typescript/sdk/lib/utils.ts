@@ -2,6 +2,7 @@ import { GiraffeClient } from "./client";
 import { GraphEntry, LockAddress, Transaction, TransactionId, TransactionOutput, TransactionOutputReference } from "./models";
 
 import Long from "long";
+import bs58 from 'bs58'
 
 export function requireDefined<T>(t: T | undefined): T {
     if (t === undefined) throw ReferenceError("Element Not Defined");
@@ -164,4 +165,17 @@ export const defaultTransactionTip = Long.fromInt(1000);
  */
 export function isPaymentToken(transactionOutput: TransactionOutput): boolean {
     return transactionOutput.account === undefined && transactionOutput.value?.accountRegistration === undefined && transactionOutput.value?.graphEntry === undefined;
+}
+
+/**
+ * Constructs a URL which can be sent to another user to open in their own wallet to pay for a transaction.
+ * 
+ * @param transaction - A base transaction to be sent to the user to be paid, signed, and broadcasted.
+ * @param walletBaseAddress - The base URL of the wallet. (i.e. https://testnet.giraffechain.com/#)
+ * @returns The URL for the wallet transfer page.
+ */
+export function getWalletTransferUrl(transaction: Transaction, walletBaseAddress: string): string {
+    const bytes = Transaction.encode(transaction).finish();
+    const encoded = bs58.encode(bytes);
+    return `${walletBaseAddress}/transfer/${encoded}`;
 }
