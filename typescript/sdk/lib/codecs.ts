@@ -51,8 +51,9 @@ export function showTransactionOutputReference(reference: TransactionOutputRefer
  * @returns The decoded BlockId object.
  */
 export function decodeBlockId(input: string): BlockId {
-    if (input.startsWith("b_")) return { value: input.substring(2) };
-    else return { value: input };
+    const value = input.startsWith("b_") ? input.substring(2) : input;
+    if (bs58.decodeUnsafe(value)?.length !== 32) throw Error("Invalid block ID");
+    return { value };
 }
 
 /**
@@ -62,8 +63,9 @@ export function decodeBlockId(input: string): BlockId {
  * @returns The decoded transaction ID.
  */
 export function decodeTransactionId(input: string): TransactionId {
-    if (input.startsWith("t_")) return { value: input.substring(2) };
-    else return { value: input };
+    const value = input.startsWith("t_") ? input.substring(2) : input;
+    if (bs58.decodeUnsafe(value)?.length !== 32) throw Error("Invalid transaction ID");
+    return { value };
 }
 
 /**
@@ -73,8 +75,9 @@ export function decodeTransactionId(input: string): TransactionId {
  * @returns The decoded lock address.
  */
 export function decodeLockAddress(input: string): LockAddress {
-    if (input.startsWith("a_")) return { value: input.substring(2) };
-    else return { value: input };
+    const value = input.startsWith("a_") ? input.substring(2) : input;
+    if (bs58.decodeUnsafe(value)?.length !== 32) throw Error("Invalid address");
+    return { value };
 }
 
 /**

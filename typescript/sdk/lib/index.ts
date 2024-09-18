@@ -19,7 +19,6 @@ export class Giraffe {
     client: GiraffeClient;
     wallet: GiraffeWallet;
     graph: GiraffeGraph
-    disposalSteps: (() => Promise<void>)[] = [];
 
     /**
      * Constructs a new instance of the class.
@@ -55,17 +54,14 @@ export class Giraffe {
         return blockchain;
     }
 
+    private closed = false;
+
     /**
-     * Asynchronously disposes the object.
-     * 
-     * @returns A promise that resolves when the disposal is complete.
+     * Disposes of the SDK and the clients.
      */
-    async dispose(): Promise<void> {
-        var step = this.disposalSteps.pop();
-        while (step !== undefined) {
-            await step();
-            step = this.disposalSteps.pop();
-        }
+    close(): void {
+        this.closed = true;
+        this.client.close();
     }
 
     /**
@@ -73,9 +69,8 @@ export class Giraffe {
      * @returns A promise that resolves when the background process is complete.
      */
     async background(): Promise<void> {
-        const changes = this.client.follow();
-        this.disposalSteps.push(() => changes.return({}).then(() => { }));
-        for await (const _ of changes) {
+        for await (const _ of this.client.follow()) {
+            if (this.closed) return;
             await this.updateWalletUtxos();
         }
     }
@@ -210,7 +205,7 @@ export class Giraffe {
                 }
             ]
         }));
-        await giraffeGenesis.dispose();
+        giraffeGenesis.close();
     }
 
     /**

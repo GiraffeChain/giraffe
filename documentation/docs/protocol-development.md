@@ -1,7 +1,7 @@
 ---
 title: Protocol Development
 description: Information about developing, testing, and contributing to the protocol.
-sidebar_position: 7
+sidebar_position: 8
 ---
 
 # Protocol Development

@@ -3,6 +3,8 @@ import { BlockBody, BlockHeader, BlockId, FullBlock, LockAddress, Transaction, T
 import { requireDefined } from "./utils.js";
 import { decodeBlockId, showBlockId, showLockAddress, showTransactionId, showTransactionOutputReference } from "./codecs.js";
 
+import withResolvers from "promise.withresolvers";
+
 /**
  * Represents a client for interacting with the Giraffe blockchain. Blockchain and graph data can be queried using this client. Transactions can also be broadcasted.
  */
@@ -237,7 +239,11 @@ export abstract class GiraffeClient {
                 return;
             }
         }
+
+        throw Error("Could not confirm transaction")
     }
+
+    abstract close(): void;
 }
 
 /**
@@ -416,7 +422,20 @@ export class RpcGiraffeClient extends GiraffeClient {
         }
     }
 
-    async *follow(): AsyncGenerator<TipChange, any, void> {
+    private followable: Rebroadcastable<TipChange> = new Rebroadcastable(() => this.followImpl());
+
+    private closed = false;
+
+    close() {
+        this.followable.close();
+        this.closed = true;
+    }
+
+    follow(): AsyncGenerator<TipChange, any, void> {
+        return this.followable.listen();
+    }
+
+    private async *followImpl(): AsyncGenerator<TipChange, any, void> {
         const response = await fetch(`${this.baseAddress}/follow`, {
             method: "GET",
             headers: {
@@ -428,7 +447,7 @@ export class RpcGiraffeClient extends GiraffeClient {
         }
         const stream = response.body;
         if (!stream) throw Error("Null follow stream");
-        for await (const change of jsonLineStream(stream)) {
+        for await (const change of this.jsonLineStream(stream)) {
             if (change["adopted"] !== undefined) {
                 yield { type: TipChangeType.APPLIED, blockId: change["adopted"] };
             } else if (change["unadopted"] !== undefined) {
@@ -438,6 +457,34 @@ export class RpcGiraffeClient extends GiraffeClient {
             }
         }
     }
+
+
+
+    /// https://github.com/pamelafox/ndjson-readablestream/blob/main/index.mjs
+    private async *jsonLineStream(readableStream: ReadableStream<Uint8Array>) {
+        const reader = readableStream.getReader();
+        let runningText = '';
+        let decoder = new TextDecoder('utf-8');
+        try {
+            while (!this.closed) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                var text = decoder.decode(value, { stream: true });
+                const objects = text.split('\n');
+                for (const obj of objects) {
+                    try {
+                        runningText += obj;
+                        let result = JSON.parse(runningText);
+                        yield result;
+                        runningText = '';
+                    } catch (e) { }
+                }
+            }
+        } finally {
+            reader.cancel();
+        }
+    }
+
     async getEdges(vertex: TransactionOutputReference): Promise<TransactionOutputReference[]> {
         const response = await fetch(`${this.baseAddress}/graph/${vertex.transactionId?.value}/${vertex.index}/edges`);
         if (!response.ok) {
@@ -471,23 +518,70 @@ export class RpcGiraffeClient extends GiraffeClient {
 
 }
 
-/// https://github.com/pamelafox/ndjson-readablestream/blob/main/index.mjs
-async function* jsonLineStream(readableStream: ReadableStream<Uint8Array>) {
-    const reader = readableStream.getReader();
-    let runningText = '';
-    let decoder = new TextDecoder('utf-8');
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        var text = decoder.decode(value, { stream: true });
-        const objects = text.split('\n');
-        for (const obj of objects) {
-            try {
-                runningText += obj;
-                let result = JSON.parse(runningText);
-                yield result;
-                runningText = '';
-            } catch (e) { }
+class Rebroadcastable<T> {
+    gen: () => AsyncGenerator<T, any, void>;
+    private listeners: { resolve: (t: T) => void, reject: (e: any) => void, done: () => void }[] = [];
+    private g: AsyncGenerator<T, any, void> | undefined;
+    constructor(gen: () => AsyncGenerator<T, any, void>) {
+        this.gen = gen;
+    }
+
+    async *run() {
+        this.g = this.gen();
+        try {
+            for await (const t of this.g) {
+                if (this.listeners.length == 0) {
+                    break;
+                }
+                for (const listener of this.listeners) {
+                    listener.resolve(t);
+                }
+            }
+            for (const listener of this.listeners) {
+                listener.done();
+            }
+            this.listeners.length = 0;
+            this.g = undefined;
+        } catch (e) {
+            for (const listener of this.listeners) {
+                listener.reject(e);
+            }
+            this.listeners.length = 0;
         }
+    }
+
+    async *listen(): AsyncGenerator<T, any, void> {
+        var wrappedP = withResolvers(Promise);
+        const resolve = (t: T) => wrappedP.resolve(t);
+        const reject = (e: any) => wrappedP.reject(e);
+        const done = () => wrappedP.resolve(undefined);
+        const listener = {
+            resolve: resolve,
+            reject: reject,
+            done: done
+        };
+        this.listeners.push(listener);
+        if (!this.g) this.run();
+        try {
+            while (true) {
+                const v = await wrappedP;
+                if (v !== undefined) {
+                    yield v;
+                }
+                else {
+                    return;
+                }
+            }
+        } finally {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        }
+    }
+
+    close() {
+        for (const listener of this.listeners) {
+            listener.done();
+        }
+        this.listeners.length = 0;
+        this.g?.return(undefined);
     }
 }
