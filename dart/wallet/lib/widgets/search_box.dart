@@ -16,15 +16,19 @@ class SearchBox extends ConsumerWidget {
               controller: controller,
               decoration: const InputDecoration(hintText: "Search"))),
       IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: () {
-            final value = controller.text;
-            if (value.startsWith("b_")) {
-              context.push("/blocks/$value");
-            } else if (value.startsWith("t_")) {
-              context.push("/transactions/$value");
-            }
-          })
+        icon: const Icon(Icons.search),
+        onPressed: () => handleQuery(context, controller.text),
+      ),
     ]);
+  }
+
+  void handleQuery(BuildContext context, String value) {
+    if (value.startsWith("b_")) {
+      context.push("/blocks/$value");
+    } else if (value.startsWith("t_")) {
+      context.push("/transactions/$value");
+    } else if (value.startsWith("a_")) {
+      context.push("/addresses/$value");
+    }
   }
 }
