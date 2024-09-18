@@ -9,6 +9,7 @@ import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_wallet/widgets/over_under.dart';
 import 'package:giraffe_wallet/widgets/pages/transaction_output_page.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../bitmap_render.dart';
@@ -21,23 +22,49 @@ class TransferPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final Widget child;
     switch (ref.watch(podWalletProvider)) {
       case AsyncData(:final value):
         final client = ref.watch(podBlockchainClientProvider);
         if (client == null) {
-          return const GiraffeScaffold(
-              title: "Transfer",
-              body: Text("No blockchain client initialized"));
+          child = uninitialized(context);
+        } else {
+          child = body(client, value);
         }
-        return GiraffeScaffold(
-          title: "Transfer",
-          body: body(client, value),
-        );
+        break;
       default:
-        return const GiraffeScaffold(
-            title: "Transfer", body: Text("No wallet initialized"));
+        child = uninitialized(context);
     }
+    return GiraffeScaffold(title: "Transfer", body: child);
   }
+
+  Widget uninitialized(BuildContext context) => Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: 480,
+          child: GiraffeCard(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Giraffe Wallet has not been initialized.",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold))
+                    .pad8,
+                const Text(
+                        "Please navigate to the settings page to create a wallet and specify an API endpoint.",
+                        style: TextStyle(fontSize: 16))
+                    .pad8,
+                ElevatedButton.icon(
+                        onPressed: () => context.push("/"),
+                        label: const Text("Settings"),
+                        icon: const Icon(Icons.settings))
+                    .pad8,
+              ],
+            ),
+          ),
+        ),
+      );
 
   Widget body(BlockchainClient client, Wallet wallet) {
     try {
