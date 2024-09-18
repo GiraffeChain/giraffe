@@ -17,11 +17,11 @@ Giraffe is trying something different. Anyone with a GitHub account can use the 
    - Copy your address
 1. Click the ⭐ Star button on the [Giraffe repository](https://github.com/GiraffeChain/giraffe)
 1. Create a new public [Gist](https://gist.github.com/)
-   - `Gist description...`: Leave empty
-   - `Filename including extension...`: {address}.giraffe_faucet
+   - **Gist description...**: Leave empty
+   - **Filename including extension...**: `{address}.giraffe_faucet`
       - Don't include the curly braces `{}`
       - Example: `a_86eTia5YDjNxE6fc917aJB6VsttYzepbve8TJghkuZPE.giraffe_faucet`
-   - `Contents`: Anything
+   - **Contents**: Anything
    - [Example](https://gist.github.com/SeanCheatham/49930ef9c697ada824c89bf950507ccd)
 1. Done! Periodically, the faucet will run in the background and deposit funds at your address.
 
