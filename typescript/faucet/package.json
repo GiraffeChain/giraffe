@@ -26,7 +26,7 @@
   ],
   "license": "MPL-2.0",
   "dependencies": {
-    "@giraffechain/giraffe-sdk": "file:../sdk",
+    "@giraffechain/giraffe-sdk": "^0.0.17",
     "@octokit/core": "^5.2.0",
     "bs58": "^6.0.0"
   },
