@@ -27,7 +27,7 @@ jobs:
         working-directory: typescript/faucet
         run: node dist/index.js
         env:
-          GIRAFFE_WALLET_SK: "11111111111111111111111111111111"
+          GIRAFFE_WALLET_SK: ${{ secrets.FAUCET_WALLET_SK }}
           FAUCET_QUANTITY_PER_USER: "1000"
           GIRAFFE_API_ADDRESS: "https://testnet.giraffechain.com/api"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.FAUCET_GITHUB_TOKEN }}
