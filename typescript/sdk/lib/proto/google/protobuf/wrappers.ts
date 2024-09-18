@@ -6,7 +6,6 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import Long from "long";
 
 export const protobufPackage = "google.protobuf";
 
@@ -37,7 +36,7 @@ export interface FloatValue {
  */
 export interface Int64Value {
   /** The int64 value. */
-  value: Long;
+  value: number;
 }
 
 /**
@@ -47,7 +46,7 @@ export interface Int64Value {
  */
 export interface UInt64Value {
   /** The uint64 value. */
-  value: Long;
+  value: number;
 }
 
 /**
@@ -215,13 +214,13 @@ export const FloatValue = {
 };
 
 function createBaseInt64Value(): Int64Value {
-  return { value: Long.ZERO };
+  return { value: 0 };
 }
 
 export const Int64Value = {
   encode(message: Int64Value, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (!message.value.equals(Long.ZERO)) {
-      writer.uint32(8).int64(message.value.toString());
+    if (message.value !== 0) {
+      writer.uint32(8).int64(message.value);
     }
     return writer;
   },
@@ -238,7 +237,7 @@ export const Int64Value = {
             break;
           }
 
-          message.value = Long.fromString(reader.int64().toString());
+          message.value = longToNumber(reader.int64());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -250,13 +249,13 @@ export const Int64Value = {
   },
 
   fromJSON(object: any): Int64Value {
-    return { value: isSet(object.value) ? Long.fromValue(object.value) : Long.ZERO };
+    return { value: isSet(object.value) ? globalThis.Number(object.value) : 0 };
   },
 
   toJSON(message: Int64Value): unknown {
     const obj: any = {};
-    if (!message.value.equals(Long.ZERO)) {
-      obj.value = (message.value || Long.ZERO).toString();
+    if (message.value !== 0) {
+      obj.value = Math.round(message.value);
     }
     return obj;
   },
@@ -266,19 +265,19 @@ export const Int64Value = {
   },
   fromPartial<I extends Exact<DeepPartial<Int64Value>, I>>(object: I): Int64Value {
     const message = createBaseInt64Value();
-    message.value = (object.value !== undefined && object.value !== null) ? Long.fromValue(object.value) : Long.ZERO;
+    message.value = object.value ?? 0;
     return message;
   },
 };
 
 function createBaseUInt64Value(): UInt64Value {
-  return { value: Long.UZERO };
+  return { value: 0 };
 }
 
 export const UInt64Value = {
   encode(message: UInt64Value, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (!message.value.equals(Long.UZERO)) {
-      writer.uint32(8).uint64(message.value.toString());
+    if (message.value !== 0) {
+      writer.uint32(8).uint64(message.value);
     }
     return writer;
   },
@@ -295,7 +294,7 @@ export const UInt64Value = {
             break;
           }
 
-          message.value = Long.fromString(reader.uint64().toString(), true);
+          message.value = longToNumber(reader.uint64());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -307,13 +306,13 @@ export const UInt64Value = {
   },
 
   fromJSON(object: any): UInt64Value {
-    return { value: isSet(object.value) ? Long.fromValue(object.value) : Long.UZERO };
+    return { value: isSet(object.value) ? globalThis.Number(object.value) : 0 };
   },
 
   toJSON(message: UInt64Value): unknown {
     const obj: any = {};
-    if (!message.value.equals(Long.UZERO)) {
-      obj.value = (message.value || Long.UZERO).toString();
+    if (message.value !== 0) {
+      obj.value = Math.round(message.value);
     }
     return obj;
   },
@@ -323,7 +322,7 @@ export const UInt64Value = {
   },
   fromPartial<I extends Exact<DeepPartial<UInt64Value>, I>>(object: I): UInt64Value {
     const message = createBaseUInt64Value();
-    message.value = (object.value !== undefined && object.value !== null) ? Long.fromValue(object.value) : Long.UZERO;
+    message.value = object.value ?? 0;
     return message;
   },
 };
@@ -641,7 +640,7 @@ function base64FromBytes(arr: Uint8Array): string {
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin ? T
-  : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
+  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
@@ -649,6 +648,17 @@ export type DeepPartial<T> = T extends Builtin ? T
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Exact<P, I extends P> = P extends Builtin ? P
   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
+
+function longToNumber(int64: { toString(): string }): number {
+  const num = globalThis.Number(int64.toString());
+  if (num > globalThis.Number.MAX_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+  }
+  if (num < globalThis.Number.MIN_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
+  }
+  return num;
+}
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

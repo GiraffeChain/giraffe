@@ -149,6 +149,9 @@ class Wallet {
   Future<Transaction> pay(
       BlockchainClient view, Transaction transaction) async {
     for (final output in transaction.outputs) {
+      if (!output.hasLockAddress()) {
+        output.lockAddress = defaultLockAddress;
+      }
       final minQuantity = output.requiredMinimumQuantity;
       if (output.value.quantity < minQuantity) {
         output.value.quantity = minQuantity;

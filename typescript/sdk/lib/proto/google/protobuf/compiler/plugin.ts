@@ -6,8 +6,7 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import Long from "long";
-import { FileDescriptorProto, GeneratedCodeInfo } from "../descriptor";
+import { FileDescriptorProto, GeneratedCodeInfo } from "../descriptor.js";
 
 export const protobufPackage = "google.protobuf.compiler";
 
@@ -77,7 +76,7 @@ export interface CodeGeneratorResponse {
    * A bitmask of supported features that the code generator supports.
    * This is a bitwise "or" of values from the Feature enum.
    */
-  supportedFeatures?: Long | undefined;
+  supportedFeatures?: number | undefined;
   file: CodeGeneratorResponse_File[];
 }
 
@@ -402,7 +401,7 @@ export const CodeGeneratorRequest = {
 };
 
 function createBaseCodeGeneratorResponse(): CodeGeneratorResponse {
-  return { error: "", supportedFeatures: Long.UZERO, file: [] };
+  return { error: "", supportedFeatures: 0, file: [] };
 }
 
 export const CodeGeneratorResponse = {
@@ -410,8 +409,8 @@ export const CodeGeneratorResponse = {
     if (message.error !== undefined && message.error !== "") {
       writer.uint32(10).string(message.error);
     }
-    if (message.supportedFeatures !== undefined && !message.supportedFeatures.equals(Long.UZERO)) {
-      writer.uint32(16).uint64(message.supportedFeatures.toString());
+    if (message.supportedFeatures !== undefined && message.supportedFeatures !== 0) {
+      writer.uint32(16).uint64(message.supportedFeatures);
     }
     for (const v of message.file) {
       CodeGeneratorResponse_File.encode(v!, writer.uint32(122).fork()).join();
@@ -438,7 +437,7 @@ export const CodeGeneratorResponse = {
             break;
           }
 
-          message.supportedFeatures = Long.fromString(reader.uint64().toString(), true);
+          message.supportedFeatures = longToNumber(reader.uint64());
           continue;
         case 15:
           if (tag !== 122) {
@@ -459,7 +458,7 @@ export const CodeGeneratorResponse = {
   fromJSON(object: any): CodeGeneratorResponse {
     return {
       error: isSet(object.error) ? globalThis.String(object.error) : "",
-      supportedFeatures: isSet(object.supportedFeatures) ? Long.fromValue(object.supportedFeatures) : Long.UZERO,
+      supportedFeatures: isSet(object.supportedFeatures) ? globalThis.Number(object.supportedFeatures) : 0,
       file: globalThis.Array.isArray(object?.file)
         ? object.file.map((e: any) => CodeGeneratorResponse_File.fromJSON(e))
         : [],
@@ -471,8 +470,8 @@ export const CodeGeneratorResponse = {
     if (message.error !== undefined && message.error !== "") {
       obj.error = message.error;
     }
-    if (message.supportedFeatures !== undefined && !message.supportedFeatures.equals(Long.UZERO)) {
-      obj.supportedFeatures = (message.supportedFeatures || Long.UZERO).toString();
+    if (message.supportedFeatures !== undefined && message.supportedFeatures !== 0) {
+      obj.supportedFeatures = Math.round(message.supportedFeatures);
     }
     if (message.file?.length) {
       obj.file = message.file.map((e) => CodeGeneratorResponse_File.toJSON(e));
@@ -486,9 +485,7 @@ export const CodeGeneratorResponse = {
   fromPartial<I extends Exact<DeepPartial<CodeGeneratorResponse>, I>>(object: I): CodeGeneratorResponse {
     const message = createBaseCodeGeneratorResponse();
     message.error = object.error ?? "";
-    message.supportedFeatures = (object.supportedFeatures !== undefined && object.supportedFeatures !== null)
-      ? Long.fromValue(object.supportedFeatures)
-      : Long.UZERO;
+    message.supportedFeatures = object.supportedFeatures ?? 0;
     message.file = object.file?.map((e) => CodeGeneratorResponse_File.fromPartial(e)) || [];
     return message;
   },
@@ -605,7 +602,7 @@ export const CodeGeneratorResponse_File = {
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin ? T
-  : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
+  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
@@ -613,6 +610,17 @@ export type DeepPartial<T> = T extends Builtin ? T
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Exact<P, I extends P> = P extends Builtin ? P
   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
+
+function longToNumber(int64: { toString(): string }): number {
+  const num = globalThis.Number(int64.toString());
+  if (num > globalThis.Number.MAX_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+  }
+  if (num < globalThis.Number.MIN_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
+  }
+  return num;
+}
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

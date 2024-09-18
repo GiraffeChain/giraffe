@@ -6,9 +6,8 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import Long from "long";
-import { Duration } from "../google/protobuf/duration";
-import { Timestamp } from "../google/protobuf/timestamp";
+import { Duration } from "../google/protobuf/duration.js";
+import { Timestamp } from "../google/protobuf/timestamp.js";
 
 export const protobufPackage = "validate";
 
@@ -240,21 +239,21 @@ export interface Int32Rules {
 export interface Int64Rules {
   /** Const specifies that this field must be exactly the specified value */
   const?:
-    | Long
+    | number
     | undefined;
   /**
    * Lt specifies that this field must be less than the specified value,
    * exclusive
    */
   lt?:
-    | Long
+    | number
     | undefined;
   /**
    * Lte specifies that this field must be less than or equal to the
    * specified value, inclusive
    */
   lte?:
-    | Long
+    | number
     | undefined;
   /**
    * Gt specifies that this field must be greater than the specified value,
@@ -262,7 +261,7 @@ export interface Int64Rules {
    * range is reversed.
    */
   gt?:
-    | Long
+    | number
     | undefined;
   /**
    * Gte specifies that this field must be greater than or equal to the
@@ -270,18 +269,18 @@ export interface Int64Rules {
    * specified Lt or Lte, the range is reversed.
    */
   gte?:
-    | Long
+    | number
     | undefined;
   /**
    * In specifies that this field must be equal to one of the specified
    * values
    */
-  in: Long[];
+  in: number[];
   /**
    * NotIn specifies that this field cannot be equal to one of the specified
    * values
    */
-  notIn: Long[];
+  notIn: number[];
 }
 
 /** UInt32Rules describes the constraints applied to `uint32` values */
@@ -336,21 +335,21 @@ export interface UInt32Rules {
 export interface UInt64Rules {
   /** Const specifies that this field must be exactly the specified value */
   const?:
-    | Long
+    | number
     | undefined;
   /**
    * Lt specifies that this field must be less than the specified value,
    * exclusive
    */
   lt?:
-    | Long
+    | number
     | undefined;
   /**
    * Lte specifies that this field must be less than or equal to the
    * specified value, inclusive
    */
   lte?:
-    | Long
+    | number
     | undefined;
   /**
    * Gt specifies that this field must be greater than the specified value,
@@ -358,7 +357,7 @@ export interface UInt64Rules {
    * range is reversed.
    */
   gt?:
-    | Long
+    | number
     | undefined;
   /**
    * Gte specifies that this field must be greater than or equal to the
@@ -366,18 +365,18 @@ export interface UInt64Rules {
    * specified Lt or Lte, the range is reversed.
    */
   gte?:
-    | Long
+    | number
     | undefined;
   /**
    * In specifies that this field must be equal to one of the specified
    * values
    */
-  in: Long[];
+  in: number[];
   /**
    * NotIn specifies that this field cannot be equal to one of the specified
    * values
    */
-  notIn: Long[];
+  notIn: number[];
 }
 
 /** SInt32Rules describes the constraints applied to `sint32` values */
@@ -432,21 +431,21 @@ export interface SInt32Rules {
 export interface SInt64Rules {
   /** Const specifies that this field must be exactly the specified value */
   const?:
-    | Long
+    | number
     | undefined;
   /**
    * Lt specifies that this field must be less than the specified value,
    * exclusive
    */
   lt?:
-    | Long
+    | number
     | undefined;
   /**
    * Lte specifies that this field must be less than or equal to the
    * specified value, inclusive
    */
   lte?:
-    | Long
+    | number
     | undefined;
   /**
    * Gt specifies that this field must be greater than the specified value,
@@ -454,7 +453,7 @@ export interface SInt64Rules {
    * range is reversed.
    */
   gt?:
-    | Long
+    | number
     | undefined;
   /**
    * Gte specifies that this field must be greater than or equal to the
@@ -462,18 +461,18 @@ export interface SInt64Rules {
    * specified Lt or Lte, the range is reversed.
    */
   gte?:
-    | Long
+    | number
     | undefined;
   /**
    * In specifies that this field must be equal to one of the specified
    * values
    */
-  in: Long[];
+  in: number[];
   /**
    * NotIn specifies that this field cannot be equal to one of the specified
    * values
    */
-  notIn: Long[];
+  notIn: number[];
 }
 
 /** Fixed32Rules describes the constraints applied to `fixed32` values */
@@ -528,21 +527,21 @@ export interface Fixed32Rules {
 export interface Fixed64Rules {
   /** Const specifies that this field must be exactly the specified value */
   const?:
-    | Long
+    | number
     | undefined;
   /**
    * Lt specifies that this field must be less than the specified value,
    * exclusive
    */
   lt?:
-    | Long
+    | number
     | undefined;
   /**
    * Lte specifies that this field must be less than or equal to the
    * specified value, inclusive
    */
   lte?:
-    | Long
+    | number
     | undefined;
   /**
    * Gt specifies that this field must be greater than the specified value,
@@ -550,7 +549,7 @@ export interface Fixed64Rules {
    * range is reversed.
    */
   gt?:
-    | Long
+    | number
     | undefined;
   /**
    * Gte specifies that this field must be greater than or equal to the
@@ -558,18 +557,18 @@ export interface Fixed64Rules {
    * specified Lt or Lte, the range is reversed.
    */
   gte?:
-    | Long
+    | number
     | undefined;
   /**
    * In specifies that this field must be equal to one of the specified
    * values
    */
-  in: Long[];
+  in: number[];
   /**
    * NotIn specifies that this field cannot be equal to one of the specified
    * values
    */
-  notIn: Long[];
+  notIn: number[];
 }
 
 /** SFixed32Rules describes the constraints applied to `sfixed32` values */
@@ -624,21 +623,21 @@ export interface SFixed32Rules {
 export interface SFixed64Rules {
   /** Const specifies that this field must be exactly the specified value */
   const?:
-    | Long
+    | number
     | undefined;
   /**
    * Lt specifies that this field must be less than the specified value,
    * exclusive
    */
   lt?:
-    | Long
+    | number
     | undefined;
   /**
    * Lte specifies that this field must be less than or equal to the
    * specified value, inclusive
    */
   lte?:
-    | Long
+    | number
     | undefined;
   /**
    * Gt specifies that this field must be greater than the specified value,
@@ -646,7 +645,7 @@ export interface SFixed64Rules {
    * range is reversed.
    */
   gt?:
-    | Long
+    | number
     | undefined;
   /**
    * Gte specifies that this field must be greater than or equal to the
@@ -654,18 +653,18 @@ export interface SFixed64Rules {
    * specified Lt or Lte, the range is reversed.
    */
   gte?:
-    | Long
+    | number
     | undefined;
   /**
    * In specifies that this field must be equal to one of the specified
    * values
    */
-  in: Long[];
+  in: number[];
   /**
    * NotIn specifies that this field cannot be equal to one of the specified
    * values
    */
-  notIn: Long[];
+  notIn: number[];
 }
 
 /** BoolRules describes the constraints applied to `bool` values */
@@ -686,7 +685,7 @@ export interface StringRules {
    * characters may differ from the number of bytes in the string.
    */
   len?:
-    | Long
+    | number
     | undefined;
   /**
    * MinLen specifies that this field must be the specified number of
@@ -694,7 +693,7 @@ export interface StringRules {
    * characters may differ from the number of bytes in the string.
    */
   minLen?:
-    | Long
+    | number
     | undefined;
   /**
    * MaxLen specifies that this field must be the specified number of
@@ -702,28 +701,28 @@ export interface StringRules {
    * characters may differ from the number of bytes in the string.
    */
   maxLen?:
-    | Long
+    | number
     | undefined;
   /**
    * LenBytes specifies that this field must be the specified number of bytes
    * at a minimum
    */
   lenBytes?:
-    | Long
+    | number
     | undefined;
   /**
    * MinBytes specifies that this field must be the specified number of bytes
    * at a minimum
    */
   minBytes?:
-    | Long
+    | number
     | undefined;
   /**
    * MaxBytes specifies that this field must be the specified number of bytes
    * at a maximum
    */
   maxBytes?:
-    | Long
+    | number
     | undefined;
   /**
    * Pattern specifes that this field must match against the specified
@@ -855,21 +854,21 @@ export interface BytesRules {
     | undefined;
   /** Len specifies that this field must be the specified number of bytes */
   len?:
-    | Long
+    | number
     | undefined;
   /**
    * MinLen specifies that this field must be the specified number of bytes
    * at a minimum
    */
   minLen?:
-    | Long
+    | number
     | undefined;
   /**
    * MaxLen specifies that this field must be the specified number of bytes
    * at a maximum
    */
   maxLen?:
-    | Long
+    | number
     | undefined;
   /**
    * Pattern specifes that this field must match against the specified
@@ -979,14 +978,14 @@ export interface RepeatedRules {
    * items at a minimum
    */
   minItems?:
-    | Long
+    | number
     | undefined;
   /**
    * MaxItems specifies that this field must have the specified number of
    * items at a maximum
    */
   maxItems?:
-    | Long
+    | number
     | undefined;
   /**
    * Unique specifies that all elements in this field must be unique. This
@@ -1011,14 +1010,14 @@ export interface MapRules {
    * KVs at a minimum
    */
   minPairs?:
-    | Long
+    | number
     | undefined;
   /**
    * MaxPairs specifies that this field must have the specified number of
    * KVs at a maximum
    */
   maxPairs?:
-    | Long
+    | number
     | undefined;
   /**
    * NoSparse specifies values in this field cannot be unset. This only
@@ -2129,34 +2128,34 @@ export const Int32Rules = {
 };
 
 function createBaseInt64Rules(): Int64Rules {
-  return { const: Long.ZERO, lt: Long.ZERO, lte: Long.ZERO, gt: Long.ZERO, gte: Long.ZERO, in: [], notIn: [] };
+  return { const: 0, lt: 0, lte: 0, gt: 0, gte: 0, in: [], notIn: [] };
 }
 
 export const Int64Rules = {
   encode(message: Int64Rules, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.const !== undefined && !message.const.equals(Long.ZERO)) {
-      writer.uint32(8).int64(message.const.toString());
+    if (message.const !== undefined && message.const !== 0) {
+      writer.uint32(8).int64(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.ZERO)) {
-      writer.uint32(16).int64(message.lt.toString());
+    if (message.lt !== undefined && message.lt !== 0) {
+      writer.uint32(16).int64(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.ZERO)) {
-      writer.uint32(24).int64(message.lte.toString());
+    if (message.lte !== undefined && message.lte !== 0) {
+      writer.uint32(24).int64(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.ZERO)) {
-      writer.uint32(32).int64(message.gt.toString());
+    if (message.gt !== undefined && message.gt !== 0) {
+      writer.uint32(32).int64(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.ZERO)) {
-      writer.uint32(40).int64(message.gte.toString());
+    if (message.gte !== undefined && message.gte !== 0) {
+      writer.uint32(40).int64(message.gte);
     }
     writer.uint32(50).fork();
     for (const v of message.in) {
-      writer.int64(v.toString());
+      writer.int64(v);
     }
     writer.join();
     writer.uint32(58).fork();
     for (const v of message.notIn) {
-      writer.int64(v.toString());
+      writer.int64(v);
     }
     writer.join();
     return writer;
@@ -2174,39 +2173,39 @@ export const Int64Rules = {
             break;
           }
 
-          message.const = Long.fromString(reader.int64().toString());
+          message.const = longToNumber(reader.int64());
           continue;
         case 2:
           if (tag !== 16) {
             break;
           }
 
-          message.lt = Long.fromString(reader.int64().toString());
+          message.lt = longToNumber(reader.int64());
           continue;
         case 3:
           if (tag !== 24) {
             break;
           }
 
-          message.lte = Long.fromString(reader.int64().toString());
+          message.lte = longToNumber(reader.int64());
           continue;
         case 4:
           if (tag !== 32) {
             break;
           }
 
-          message.gt = Long.fromString(reader.int64().toString());
+          message.gt = longToNumber(reader.int64());
           continue;
         case 5:
           if (tag !== 40) {
             break;
           }
 
-          message.gte = Long.fromString(reader.int64().toString());
+          message.gte = longToNumber(reader.int64());
           continue;
         case 6:
           if (tag === 48) {
-            message.in.push(Long.fromString(reader.int64().toString()));
+            message.in.push(longToNumber(reader.int64()));
 
             continue;
           }
@@ -2214,7 +2213,7 @@ export const Int64Rules = {
           if (tag === 50) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.in.push(Long.fromString(reader.int64().toString()));
+              message.in.push(longToNumber(reader.int64()));
             }
 
             continue;
@@ -2223,7 +2222,7 @@ export const Int64Rules = {
           break;
         case 7:
           if (tag === 56) {
-            message.notIn.push(Long.fromString(reader.int64().toString()));
+            message.notIn.push(longToNumber(reader.int64()));
 
             continue;
           }
@@ -2231,7 +2230,7 @@ export const Int64Rules = {
           if (tag === 58) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.notIn.push(Long.fromString(reader.int64().toString()));
+              message.notIn.push(longToNumber(reader.int64()));
             }
 
             continue;
@@ -2249,38 +2248,38 @@ export const Int64Rules = {
 
   fromJSON(object: any): Int64Rules {
     return {
-      const: isSet(object.const) ? Long.fromValue(object.const) : Long.ZERO,
-      lt: isSet(object.lt) ? Long.fromValue(object.lt) : Long.ZERO,
-      lte: isSet(object.lte) ? Long.fromValue(object.lte) : Long.ZERO,
-      gt: isSet(object.gt) ? Long.fromValue(object.gt) : Long.ZERO,
-      gte: isSet(object.gte) ? Long.fromValue(object.gte) : Long.ZERO,
-      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => Long.fromValue(e)) : [],
-      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => Long.fromValue(e)) : [],
+      const: isSet(object.const) ? globalThis.Number(object.const) : 0,
+      lt: isSet(object.lt) ? globalThis.Number(object.lt) : 0,
+      lte: isSet(object.lte) ? globalThis.Number(object.lte) : 0,
+      gt: isSet(object.gt) ? globalThis.Number(object.gt) : 0,
+      gte: isSet(object.gte) ? globalThis.Number(object.gte) : 0,
+      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => globalThis.Number(e)) : [],
+      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => globalThis.Number(e)) : [],
     };
   },
 
   toJSON(message: Int64Rules): unknown {
     const obj: any = {};
-    if (message.const !== undefined && !message.const.equals(Long.ZERO)) {
-      obj.const = (message.const || Long.ZERO).toString();
+    if (message.const !== undefined && message.const !== 0) {
+      obj.const = Math.round(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.ZERO)) {
-      obj.lt = (message.lt || Long.ZERO).toString();
+    if (message.lt !== undefined && message.lt !== 0) {
+      obj.lt = Math.round(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.ZERO)) {
-      obj.lte = (message.lte || Long.ZERO).toString();
+    if (message.lte !== undefined && message.lte !== 0) {
+      obj.lte = Math.round(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.ZERO)) {
-      obj.gt = (message.gt || Long.ZERO).toString();
+    if (message.gt !== undefined && message.gt !== 0) {
+      obj.gt = Math.round(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.ZERO)) {
-      obj.gte = (message.gte || Long.ZERO).toString();
+    if (message.gte !== undefined && message.gte !== 0) {
+      obj.gte = Math.round(message.gte);
     }
     if (message.in?.length) {
-      obj.in = message.in.map((e) => (e || Long.ZERO).toString());
+      obj.in = message.in.map((e) => Math.round(e));
     }
     if (message.notIn?.length) {
-      obj.notIn = message.notIn.map((e) => (e || Long.ZERO).toString());
+      obj.notIn = message.notIn.map((e) => Math.round(e));
     }
     return obj;
   },
@@ -2290,13 +2289,13 @@ export const Int64Rules = {
   },
   fromPartial<I extends Exact<DeepPartial<Int64Rules>, I>>(object: I): Int64Rules {
     const message = createBaseInt64Rules();
-    message.const = (object.const !== undefined && object.const !== null) ? Long.fromValue(object.const) : Long.ZERO;
-    message.lt = (object.lt !== undefined && object.lt !== null) ? Long.fromValue(object.lt) : Long.ZERO;
-    message.lte = (object.lte !== undefined && object.lte !== null) ? Long.fromValue(object.lte) : Long.ZERO;
-    message.gt = (object.gt !== undefined && object.gt !== null) ? Long.fromValue(object.gt) : Long.ZERO;
-    message.gte = (object.gte !== undefined && object.gte !== null) ? Long.fromValue(object.gte) : Long.ZERO;
-    message.in = object.in?.map((e) => Long.fromValue(e)) || [];
-    message.notIn = object.notIn?.map((e) => Long.fromValue(e)) || [];
+    message.const = object.const ?? 0;
+    message.lt = object.lt ?? 0;
+    message.lte = object.lte ?? 0;
+    message.gt = object.gt ?? 0;
+    message.gte = object.gte ?? 0;
+    message.in = object.in?.map((e) => e) || [];
+    message.notIn = object.notIn?.map((e) => e) || [];
     return message;
   },
 };
@@ -2475,34 +2474,34 @@ export const UInt32Rules = {
 };
 
 function createBaseUInt64Rules(): UInt64Rules {
-  return { const: Long.UZERO, lt: Long.UZERO, lte: Long.UZERO, gt: Long.UZERO, gte: Long.UZERO, in: [], notIn: [] };
+  return { const: 0, lt: 0, lte: 0, gt: 0, gte: 0, in: [], notIn: [] };
 }
 
 export const UInt64Rules = {
   encode(message: UInt64Rules, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.const !== undefined && !message.const.equals(Long.UZERO)) {
-      writer.uint32(8).uint64(message.const.toString());
+    if (message.const !== undefined && message.const !== 0) {
+      writer.uint32(8).uint64(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.UZERO)) {
-      writer.uint32(16).uint64(message.lt.toString());
+    if (message.lt !== undefined && message.lt !== 0) {
+      writer.uint32(16).uint64(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.UZERO)) {
-      writer.uint32(24).uint64(message.lte.toString());
+    if (message.lte !== undefined && message.lte !== 0) {
+      writer.uint32(24).uint64(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.UZERO)) {
-      writer.uint32(32).uint64(message.gt.toString());
+    if (message.gt !== undefined && message.gt !== 0) {
+      writer.uint32(32).uint64(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.UZERO)) {
-      writer.uint32(40).uint64(message.gte.toString());
+    if (message.gte !== undefined && message.gte !== 0) {
+      writer.uint32(40).uint64(message.gte);
     }
     writer.uint32(50).fork();
     for (const v of message.in) {
-      writer.uint64(v.toString());
+      writer.uint64(v);
     }
     writer.join();
     writer.uint32(58).fork();
     for (const v of message.notIn) {
-      writer.uint64(v.toString());
+      writer.uint64(v);
     }
     writer.join();
     return writer;
@@ -2520,39 +2519,39 @@ export const UInt64Rules = {
             break;
           }
 
-          message.const = Long.fromString(reader.uint64().toString(), true);
+          message.const = longToNumber(reader.uint64());
           continue;
         case 2:
           if (tag !== 16) {
             break;
           }
 
-          message.lt = Long.fromString(reader.uint64().toString(), true);
+          message.lt = longToNumber(reader.uint64());
           continue;
         case 3:
           if (tag !== 24) {
             break;
           }
 
-          message.lte = Long.fromString(reader.uint64().toString(), true);
+          message.lte = longToNumber(reader.uint64());
           continue;
         case 4:
           if (tag !== 32) {
             break;
           }
 
-          message.gt = Long.fromString(reader.uint64().toString(), true);
+          message.gt = longToNumber(reader.uint64());
           continue;
         case 5:
           if (tag !== 40) {
             break;
           }
 
-          message.gte = Long.fromString(reader.uint64().toString(), true);
+          message.gte = longToNumber(reader.uint64());
           continue;
         case 6:
           if (tag === 48) {
-            message.in.push(Long.fromString(reader.uint64().toString(), true));
+            message.in.push(longToNumber(reader.uint64()));
 
             continue;
           }
@@ -2560,7 +2559,7 @@ export const UInt64Rules = {
           if (tag === 50) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.in.push(Long.fromString(reader.uint64().toString(), true));
+              message.in.push(longToNumber(reader.uint64()));
             }
 
             continue;
@@ -2569,7 +2568,7 @@ export const UInt64Rules = {
           break;
         case 7:
           if (tag === 56) {
-            message.notIn.push(Long.fromString(reader.uint64().toString(), true));
+            message.notIn.push(longToNumber(reader.uint64()));
 
             continue;
           }
@@ -2577,7 +2576,7 @@ export const UInt64Rules = {
           if (tag === 58) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.notIn.push(Long.fromString(reader.uint64().toString(), true));
+              message.notIn.push(longToNumber(reader.uint64()));
             }
 
             continue;
@@ -2595,38 +2594,38 @@ export const UInt64Rules = {
 
   fromJSON(object: any): UInt64Rules {
     return {
-      const: isSet(object.const) ? Long.fromValue(object.const) : Long.UZERO,
-      lt: isSet(object.lt) ? Long.fromValue(object.lt) : Long.UZERO,
-      lte: isSet(object.lte) ? Long.fromValue(object.lte) : Long.UZERO,
-      gt: isSet(object.gt) ? Long.fromValue(object.gt) : Long.UZERO,
-      gte: isSet(object.gte) ? Long.fromValue(object.gte) : Long.UZERO,
-      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => Long.fromValue(e)) : [],
-      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => Long.fromValue(e)) : [],
+      const: isSet(object.const) ? globalThis.Number(object.const) : 0,
+      lt: isSet(object.lt) ? globalThis.Number(object.lt) : 0,
+      lte: isSet(object.lte) ? globalThis.Number(object.lte) : 0,
+      gt: isSet(object.gt) ? globalThis.Number(object.gt) : 0,
+      gte: isSet(object.gte) ? globalThis.Number(object.gte) : 0,
+      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => globalThis.Number(e)) : [],
+      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => globalThis.Number(e)) : [],
     };
   },
 
   toJSON(message: UInt64Rules): unknown {
     const obj: any = {};
-    if (message.const !== undefined && !message.const.equals(Long.UZERO)) {
-      obj.const = (message.const || Long.UZERO).toString();
+    if (message.const !== undefined && message.const !== 0) {
+      obj.const = Math.round(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.UZERO)) {
-      obj.lt = (message.lt || Long.UZERO).toString();
+    if (message.lt !== undefined && message.lt !== 0) {
+      obj.lt = Math.round(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.UZERO)) {
-      obj.lte = (message.lte || Long.UZERO).toString();
+    if (message.lte !== undefined && message.lte !== 0) {
+      obj.lte = Math.round(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.UZERO)) {
-      obj.gt = (message.gt || Long.UZERO).toString();
+    if (message.gt !== undefined && message.gt !== 0) {
+      obj.gt = Math.round(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.UZERO)) {
-      obj.gte = (message.gte || Long.UZERO).toString();
+    if (message.gte !== undefined && message.gte !== 0) {
+      obj.gte = Math.round(message.gte);
     }
     if (message.in?.length) {
-      obj.in = message.in.map((e) => (e || Long.UZERO).toString());
+      obj.in = message.in.map((e) => Math.round(e));
     }
     if (message.notIn?.length) {
-      obj.notIn = message.notIn.map((e) => (e || Long.UZERO).toString());
+      obj.notIn = message.notIn.map((e) => Math.round(e));
     }
     return obj;
   },
@@ -2636,13 +2635,13 @@ export const UInt64Rules = {
   },
   fromPartial<I extends Exact<DeepPartial<UInt64Rules>, I>>(object: I): UInt64Rules {
     const message = createBaseUInt64Rules();
-    message.const = (object.const !== undefined && object.const !== null) ? Long.fromValue(object.const) : Long.UZERO;
-    message.lt = (object.lt !== undefined && object.lt !== null) ? Long.fromValue(object.lt) : Long.UZERO;
-    message.lte = (object.lte !== undefined && object.lte !== null) ? Long.fromValue(object.lte) : Long.UZERO;
-    message.gt = (object.gt !== undefined && object.gt !== null) ? Long.fromValue(object.gt) : Long.UZERO;
-    message.gte = (object.gte !== undefined && object.gte !== null) ? Long.fromValue(object.gte) : Long.UZERO;
-    message.in = object.in?.map((e) => Long.fromValue(e)) || [];
-    message.notIn = object.notIn?.map((e) => Long.fromValue(e)) || [];
+    message.const = object.const ?? 0;
+    message.lt = object.lt ?? 0;
+    message.lte = object.lte ?? 0;
+    message.gt = object.gt ?? 0;
+    message.gte = object.gte ?? 0;
+    message.in = object.in?.map((e) => e) || [];
+    message.notIn = object.notIn?.map((e) => e) || [];
     return message;
   },
 };
@@ -2821,34 +2820,34 @@ export const SInt32Rules = {
 };
 
 function createBaseSInt64Rules(): SInt64Rules {
-  return { const: Long.ZERO, lt: Long.ZERO, lte: Long.ZERO, gt: Long.ZERO, gte: Long.ZERO, in: [], notIn: [] };
+  return { const: 0, lt: 0, lte: 0, gt: 0, gte: 0, in: [], notIn: [] };
 }
 
 export const SInt64Rules = {
   encode(message: SInt64Rules, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.const !== undefined && !message.const.equals(Long.ZERO)) {
-      writer.uint32(8).sint64(message.const.toString());
+    if (message.const !== undefined && message.const !== 0) {
+      writer.uint32(8).sint64(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.ZERO)) {
-      writer.uint32(16).sint64(message.lt.toString());
+    if (message.lt !== undefined && message.lt !== 0) {
+      writer.uint32(16).sint64(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.ZERO)) {
-      writer.uint32(24).sint64(message.lte.toString());
+    if (message.lte !== undefined && message.lte !== 0) {
+      writer.uint32(24).sint64(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.ZERO)) {
-      writer.uint32(32).sint64(message.gt.toString());
+    if (message.gt !== undefined && message.gt !== 0) {
+      writer.uint32(32).sint64(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.ZERO)) {
-      writer.uint32(40).sint64(message.gte.toString());
+    if (message.gte !== undefined && message.gte !== 0) {
+      writer.uint32(40).sint64(message.gte);
     }
     writer.uint32(50).fork();
     for (const v of message.in) {
-      writer.sint64(v.toString());
+      writer.sint64(v);
     }
     writer.join();
     writer.uint32(58).fork();
     for (const v of message.notIn) {
-      writer.sint64(v.toString());
+      writer.sint64(v);
     }
     writer.join();
     return writer;
@@ -2866,39 +2865,39 @@ export const SInt64Rules = {
             break;
           }
 
-          message.const = Long.fromString(reader.sint64().toString());
+          message.const = longToNumber(reader.sint64());
           continue;
         case 2:
           if (tag !== 16) {
             break;
           }
 
-          message.lt = Long.fromString(reader.sint64().toString());
+          message.lt = longToNumber(reader.sint64());
           continue;
         case 3:
           if (tag !== 24) {
             break;
           }
 
-          message.lte = Long.fromString(reader.sint64().toString());
+          message.lte = longToNumber(reader.sint64());
           continue;
         case 4:
           if (tag !== 32) {
             break;
           }
 
-          message.gt = Long.fromString(reader.sint64().toString());
+          message.gt = longToNumber(reader.sint64());
           continue;
         case 5:
           if (tag !== 40) {
             break;
           }
 
-          message.gte = Long.fromString(reader.sint64().toString());
+          message.gte = longToNumber(reader.sint64());
           continue;
         case 6:
           if (tag === 48) {
-            message.in.push(Long.fromString(reader.sint64().toString()));
+            message.in.push(longToNumber(reader.sint64()));
 
             continue;
           }
@@ -2906,7 +2905,7 @@ export const SInt64Rules = {
           if (tag === 50) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.in.push(Long.fromString(reader.sint64().toString()));
+              message.in.push(longToNumber(reader.sint64()));
             }
 
             continue;
@@ -2915,7 +2914,7 @@ export const SInt64Rules = {
           break;
         case 7:
           if (tag === 56) {
-            message.notIn.push(Long.fromString(reader.sint64().toString()));
+            message.notIn.push(longToNumber(reader.sint64()));
 
             continue;
           }
@@ -2923,7 +2922,7 @@ export const SInt64Rules = {
           if (tag === 58) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.notIn.push(Long.fromString(reader.sint64().toString()));
+              message.notIn.push(longToNumber(reader.sint64()));
             }
 
             continue;
@@ -2941,38 +2940,38 @@ export const SInt64Rules = {
 
   fromJSON(object: any): SInt64Rules {
     return {
-      const: isSet(object.const) ? Long.fromValue(object.const) : Long.ZERO,
-      lt: isSet(object.lt) ? Long.fromValue(object.lt) : Long.ZERO,
-      lte: isSet(object.lte) ? Long.fromValue(object.lte) : Long.ZERO,
-      gt: isSet(object.gt) ? Long.fromValue(object.gt) : Long.ZERO,
-      gte: isSet(object.gte) ? Long.fromValue(object.gte) : Long.ZERO,
-      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => Long.fromValue(e)) : [],
-      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => Long.fromValue(e)) : [],
+      const: isSet(object.const) ? globalThis.Number(object.const) : 0,
+      lt: isSet(object.lt) ? globalThis.Number(object.lt) : 0,
+      lte: isSet(object.lte) ? globalThis.Number(object.lte) : 0,
+      gt: isSet(object.gt) ? globalThis.Number(object.gt) : 0,
+      gte: isSet(object.gte) ? globalThis.Number(object.gte) : 0,
+      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => globalThis.Number(e)) : [],
+      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => globalThis.Number(e)) : [],
     };
   },
 
   toJSON(message: SInt64Rules): unknown {
     const obj: any = {};
-    if (message.const !== undefined && !message.const.equals(Long.ZERO)) {
-      obj.const = (message.const || Long.ZERO).toString();
+    if (message.const !== undefined && message.const !== 0) {
+      obj.const = Math.round(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.ZERO)) {
-      obj.lt = (message.lt || Long.ZERO).toString();
+    if (message.lt !== undefined && message.lt !== 0) {
+      obj.lt = Math.round(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.ZERO)) {
-      obj.lte = (message.lte || Long.ZERO).toString();
+    if (message.lte !== undefined && message.lte !== 0) {
+      obj.lte = Math.round(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.ZERO)) {
-      obj.gt = (message.gt || Long.ZERO).toString();
+    if (message.gt !== undefined && message.gt !== 0) {
+      obj.gt = Math.round(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.ZERO)) {
-      obj.gte = (message.gte || Long.ZERO).toString();
+    if (message.gte !== undefined && message.gte !== 0) {
+      obj.gte = Math.round(message.gte);
     }
     if (message.in?.length) {
-      obj.in = message.in.map((e) => (e || Long.ZERO).toString());
+      obj.in = message.in.map((e) => Math.round(e));
     }
     if (message.notIn?.length) {
-      obj.notIn = message.notIn.map((e) => (e || Long.ZERO).toString());
+      obj.notIn = message.notIn.map((e) => Math.round(e));
     }
     return obj;
   },
@@ -2982,13 +2981,13 @@ export const SInt64Rules = {
   },
   fromPartial<I extends Exact<DeepPartial<SInt64Rules>, I>>(object: I): SInt64Rules {
     const message = createBaseSInt64Rules();
-    message.const = (object.const !== undefined && object.const !== null) ? Long.fromValue(object.const) : Long.ZERO;
-    message.lt = (object.lt !== undefined && object.lt !== null) ? Long.fromValue(object.lt) : Long.ZERO;
-    message.lte = (object.lte !== undefined && object.lte !== null) ? Long.fromValue(object.lte) : Long.ZERO;
-    message.gt = (object.gt !== undefined && object.gt !== null) ? Long.fromValue(object.gt) : Long.ZERO;
-    message.gte = (object.gte !== undefined && object.gte !== null) ? Long.fromValue(object.gte) : Long.ZERO;
-    message.in = object.in?.map((e) => Long.fromValue(e)) || [];
-    message.notIn = object.notIn?.map((e) => Long.fromValue(e)) || [];
+    message.const = object.const ?? 0;
+    message.lt = object.lt ?? 0;
+    message.lte = object.lte ?? 0;
+    message.gt = object.gt ?? 0;
+    message.gte = object.gte ?? 0;
+    message.in = object.in?.map((e) => e) || [];
+    message.notIn = object.notIn?.map((e) => e) || [];
     return message;
   },
 };
@@ -3167,34 +3166,34 @@ export const Fixed32Rules = {
 };
 
 function createBaseFixed64Rules(): Fixed64Rules {
-  return { const: Long.UZERO, lt: Long.UZERO, lte: Long.UZERO, gt: Long.UZERO, gte: Long.UZERO, in: [], notIn: [] };
+  return { const: 0, lt: 0, lte: 0, gt: 0, gte: 0, in: [], notIn: [] };
 }
 
 export const Fixed64Rules = {
   encode(message: Fixed64Rules, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.const !== undefined && !message.const.equals(Long.UZERO)) {
-      writer.uint32(9).fixed64(message.const.toString());
+    if (message.const !== undefined && message.const !== 0) {
+      writer.uint32(9).fixed64(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.UZERO)) {
-      writer.uint32(17).fixed64(message.lt.toString());
+    if (message.lt !== undefined && message.lt !== 0) {
+      writer.uint32(17).fixed64(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.UZERO)) {
-      writer.uint32(25).fixed64(message.lte.toString());
+    if (message.lte !== undefined && message.lte !== 0) {
+      writer.uint32(25).fixed64(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.UZERO)) {
-      writer.uint32(33).fixed64(message.gt.toString());
+    if (message.gt !== undefined && message.gt !== 0) {
+      writer.uint32(33).fixed64(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.UZERO)) {
-      writer.uint32(41).fixed64(message.gte.toString());
+    if (message.gte !== undefined && message.gte !== 0) {
+      writer.uint32(41).fixed64(message.gte);
     }
     writer.uint32(50).fork();
     for (const v of message.in) {
-      writer.fixed64(v.toString());
+      writer.fixed64(v);
     }
     writer.join();
     writer.uint32(58).fork();
     for (const v of message.notIn) {
-      writer.fixed64(v.toString());
+      writer.fixed64(v);
     }
     writer.join();
     return writer;
@@ -3212,39 +3211,39 @@ export const Fixed64Rules = {
             break;
           }
 
-          message.const = Long.fromString(reader.fixed64().toString(), true);
+          message.const = longToNumber(reader.fixed64());
           continue;
         case 2:
           if (tag !== 17) {
             break;
           }
 
-          message.lt = Long.fromString(reader.fixed64().toString(), true);
+          message.lt = longToNumber(reader.fixed64());
           continue;
         case 3:
           if (tag !== 25) {
             break;
           }
 
-          message.lte = Long.fromString(reader.fixed64().toString(), true);
+          message.lte = longToNumber(reader.fixed64());
           continue;
         case 4:
           if (tag !== 33) {
             break;
           }
 
-          message.gt = Long.fromString(reader.fixed64().toString(), true);
+          message.gt = longToNumber(reader.fixed64());
           continue;
         case 5:
           if (tag !== 41) {
             break;
           }
 
-          message.gte = Long.fromString(reader.fixed64().toString(), true);
+          message.gte = longToNumber(reader.fixed64());
           continue;
         case 6:
           if (tag === 49) {
-            message.in.push(Long.fromString(reader.fixed64().toString(), true));
+            message.in.push(longToNumber(reader.fixed64()));
 
             continue;
           }
@@ -3252,7 +3251,7 @@ export const Fixed64Rules = {
           if (tag === 50) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.in.push(Long.fromString(reader.fixed64().toString(), true));
+              message.in.push(longToNumber(reader.fixed64()));
             }
 
             continue;
@@ -3261,7 +3260,7 @@ export const Fixed64Rules = {
           break;
         case 7:
           if (tag === 57) {
-            message.notIn.push(Long.fromString(reader.fixed64().toString(), true));
+            message.notIn.push(longToNumber(reader.fixed64()));
 
             continue;
           }
@@ -3269,7 +3268,7 @@ export const Fixed64Rules = {
           if (tag === 58) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.notIn.push(Long.fromString(reader.fixed64().toString(), true));
+              message.notIn.push(longToNumber(reader.fixed64()));
             }
 
             continue;
@@ -3287,38 +3286,38 @@ export const Fixed64Rules = {
 
   fromJSON(object: any): Fixed64Rules {
     return {
-      const: isSet(object.const) ? Long.fromValue(object.const) : Long.UZERO,
-      lt: isSet(object.lt) ? Long.fromValue(object.lt) : Long.UZERO,
-      lte: isSet(object.lte) ? Long.fromValue(object.lte) : Long.UZERO,
-      gt: isSet(object.gt) ? Long.fromValue(object.gt) : Long.UZERO,
-      gte: isSet(object.gte) ? Long.fromValue(object.gte) : Long.UZERO,
-      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => Long.fromValue(e)) : [],
-      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => Long.fromValue(e)) : [],
+      const: isSet(object.const) ? globalThis.Number(object.const) : 0,
+      lt: isSet(object.lt) ? globalThis.Number(object.lt) : 0,
+      lte: isSet(object.lte) ? globalThis.Number(object.lte) : 0,
+      gt: isSet(object.gt) ? globalThis.Number(object.gt) : 0,
+      gte: isSet(object.gte) ? globalThis.Number(object.gte) : 0,
+      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => globalThis.Number(e)) : [],
+      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => globalThis.Number(e)) : [],
     };
   },
 
   toJSON(message: Fixed64Rules): unknown {
     const obj: any = {};
-    if (message.const !== undefined && !message.const.equals(Long.UZERO)) {
-      obj.const = (message.const || Long.UZERO).toString();
+    if (message.const !== undefined && message.const !== 0) {
+      obj.const = Math.round(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.UZERO)) {
-      obj.lt = (message.lt || Long.UZERO).toString();
+    if (message.lt !== undefined && message.lt !== 0) {
+      obj.lt = Math.round(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.UZERO)) {
-      obj.lte = (message.lte || Long.UZERO).toString();
+    if (message.lte !== undefined && message.lte !== 0) {
+      obj.lte = Math.round(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.UZERO)) {
-      obj.gt = (message.gt || Long.UZERO).toString();
+    if (message.gt !== undefined && message.gt !== 0) {
+      obj.gt = Math.round(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.UZERO)) {
-      obj.gte = (message.gte || Long.UZERO).toString();
+    if (message.gte !== undefined && message.gte !== 0) {
+      obj.gte = Math.round(message.gte);
     }
     if (message.in?.length) {
-      obj.in = message.in.map((e) => (e || Long.UZERO).toString());
+      obj.in = message.in.map((e) => Math.round(e));
     }
     if (message.notIn?.length) {
-      obj.notIn = message.notIn.map((e) => (e || Long.UZERO).toString());
+      obj.notIn = message.notIn.map((e) => Math.round(e));
     }
     return obj;
   },
@@ -3328,13 +3327,13 @@ export const Fixed64Rules = {
   },
   fromPartial<I extends Exact<DeepPartial<Fixed64Rules>, I>>(object: I): Fixed64Rules {
     const message = createBaseFixed64Rules();
-    message.const = (object.const !== undefined && object.const !== null) ? Long.fromValue(object.const) : Long.UZERO;
-    message.lt = (object.lt !== undefined && object.lt !== null) ? Long.fromValue(object.lt) : Long.UZERO;
-    message.lte = (object.lte !== undefined && object.lte !== null) ? Long.fromValue(object.lte) : Long.UZERO;
-    message.gt = (object.gt !== undefined && object.gt !== null) ? Long.fromValue(object.gt) : Long.UZERO;
-    message.gte = (object.gte !== undefined && object.gte !== null) ? Long.fromValue(object.gte) : Long.UZERO;
-    message.in = object.in?.map((e) => Long.fromValue(e)) || [];
-    message.notIn = object.notIn?.map((e) => Long.fromValue(e)) || [];
+    message.const = object.const ?? 0;
+    message.lt = object.lt ?? 0;
+    message.lte = object.lte ?? 0;
+    message.gt = object.gt ?? 0;
+    message.gte = object.gte ?? 0;
+    message.in = object.in?.map((e) => e) || [];
+    message.notIn = object.notIn?.map((e) => e) || [];
     return message;
   },
 };
@@ -3513,34 +3512,34 @@ export const SFixed32Rules = {
 };
 
 function createBaseSFixed64Rules(): SFixed64Rules {
-  return { const: Long.ZERO, lt: Long.ZERO, lte: Long.ZERO, gt: Long.ZERO, gte: Long.ZERO, in: [], notIn: [] };
+  return { const: 0, lt: 0, lte: 0, gt: 0, gte: 0, in: [], notIn: [] };
 }
 
 export const SFixed64Rules = {
   encode(message: SFixed64Rules, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.const !== undefined && !message.const.equals(Long.ZERO)) {
-      writer.uint32(9).sfixed64(message.const.toString());
+    if (message.const !== undefined && message.const !== 0) {
+      writer.uint32(9).sfixed64(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.ZERO)) {
-      writer.uint32(17).sfixed64(message.lt.toString());
+    if (message.lt !== undefined && message.lt !== 0) {
+      writer.uint32(17).sfixed64(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.ZERO)) {
-      writer.uint32(25).sfixed64(message.lte.toString());
+    if (message.lte !== undefined && message.lte !== 0) {
+      writer.uint32(25).sfixed64(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.ZERO)) {
-      writer.uint32(33).sfixed64(message.gt.toString());
+    if (message.gt !== undefined && message.gt !== 0) {
+      writer.uint32(33).sfixed64(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.ZERO)) {
-      writer.uint32(41).sfixed64(message.gte.toString());
+    if (message.gte !== undefined && message.gte !== 0) {
+      writer.uint32(41).sfixed64(message.gte);
     }
     writer.uint32(50).fork();
     for (const v of message.in) {
-      writer.sfixed64(v.toString());
+      writer.sfixed64(v);
     }
     writer.join();
     writer.uint32(58).fork();
     for (const v of message.notIn) {
-      writer.sfixed64(v.toString());
+      writer.sfixed64(v);
     }
     writer.join();
     return writer;
@@ -3558,39 +3557,39 @@ export const SFixed64Rules = {
             break;
           }
 
-          message.const = Long.fromString(reader.sfixed64().toString());
+          message.const = longToNumber(reader.sfixed64());
           continue;
         case 2:
           if (tag !== 17) {
             break;
           }
 
-          message.lt = Long.fromString(reader.sfixed64().toString());
+          message.lt = longToNumber(reader.sfixed64());
           continue;
         case 3:
           if (tag !== 25) {
             break;
           }
 
-          message.lte = Long.fromString(reader.sfixed64().toString());
+          message.lte = longToNumber(reader.sfixed64());
           continue;
         case 4:
           if (tag !== 33) {
             break;
           }
 
-          message.gt = Long.fromString(reader.sfixed64().toString());
+          message.gt = longToNumber(reader.sfixed64());
           continue;
         case 5:
           if (tag !== 41) {
             break;
           }
 
-          message.gte = Long.fromString(reader.sfixed64().toString());
+          message.gte = longToNumber(reader.sfixed64());
           continue;
         case 6:
           if (tag === 49) {
-            message.in.push(Long.fromString(reader.sfixed64().toString()));
+            message.in.push(longToNumber(reader.sfixed64()));
 
             continue;
           }
@@ -3598,7 +3597,7 @@ export const SFixed64Rules = {
           if (tag === 50) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.in.push(Long.fromString(reader.sfixed64().toString()));
+              message.in.push(longToNumber(reader.sfixed64()));
             }
 
             continue;
@@ -3607,7 +3606,7 @@ export const SFixed64Rules = {
           break;
         case 7:
           if (tag === 57) {
-            message.notIn.push(Long.fromString(reader.sfixed64().toString()));
+            message.notIn.push(longToNumber(reader.sfixed64()));
 
             continue;
           }
@@ -3615,7 +3614,7 @@ export const SFixed64Rules = {
           if (tag === 58) {
             const end2 = reader.uint32() + reader.pos;
             while (reader.pos < end2) {
-              message.notIn.push(Long.fromString(reader.sfixed64().toString()));
+              message.notIn.push(longToNumber(reader.sfixed64()));
             }
 
             continue;
@@ -3633,38 +3632,38 @@ export const SFixed64Rules = {
 
   fromJSON(object: any): SFixed64Rules {
     return {
-      const: isSet(object.const) ? Long.fromValue(object.const) : Long.ZERO,
-      lt: isSet(object.lt) ? Long.fromValue(object.lt) : Long.ZERO,
-      lte: isSet(object.lte) ? Long.fromValue(object.lte) : Long.ZERO,
-      gt: isSet(object.gt) ? Long.fromValue(object.gt) : Long.ZERO,
-      gte: isSet(object.gte) ? Long.fromValue(object.gte) : Long.ZERO,
-      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => Long.fromValue(e)) : [],
-      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => Long.fromValue(e)) : [],
+      const: isSet(object.const) ? globalThis.Number(object.const) : 0,
+      lt: isSet(object.lt) ? globalThis.Number(object.lt) : 0,
+      lte: isSet(object.lte) ? globalThis.Number(object.lte) : 0,
+      gt: isSet(object.gt) ? globalThis.Number(object.gt) : 0,
+      gte: isSet(object.gte) ? globalThis.Number(object.gte) : 0,
+      in: globalThis.Array.isArray(object?.in) ? object.in.map((e: any) => globalThis.Number(e)) : [],
+      notIn: globalThis.Array.isArray(object?.notIn) ? object.notIn.map((e: any) => globalThis.Number(e)) : [],
     };
   },
 
   toJSON(message: SFixed64Rules): unknown {
     const obj: any = {};
-    if (message.const !== undefined && !message.const.equals(Long.ZERO)) {
-      obj.const = (message.const || Long.ZERO).toString();
+    if (message.const !== undefined && message.const !== 0) {
+      obj.const = Math.round(message.const);
     }
-    if (message.lt !== undefined && !message.lt.equals(Long.ZERO)) {
-      obj.lt = (message.lt || Long.ZERO).toString();
+    if (message.lt !== undefined && message.lt !== 0) {
+      obj.lt = Math.round(message.lt);
     }
-    if (message.lte !== undefined && !message.lte.equals(Long.ZERO)) {
-      obj.lte = (message.lte || Long.ZERO).toString();
+    if (message.lte !== undefined && message.lte !== 0) {
+      obj.lte = Math.round(message.lte);
     }
-    if (message.gt !== undefined && !message.gt.equals(Long.ZERO)) {
-      obj.gt = (message.gt || Long.ZERO).toString();
+    if (message.gt !== undefined && message.gt !== 0) {
+      obj.gt = Math.round(message.gt);
     }
-    if (message.gte !== undefined && !message.gte.equals(Long.ZERO)) {
-      obj.gte = (message.gte || Long.ZERO).toString();
+    if (message.gte !== undefined && message.gte !== 0) {
+      obj.gte = Math.round(message.gte);
     }
     if (message.in?.length) {
-      obj.in = message.in.map((e) => (e || Long.ZERO).toString());
+      obj.in = message.in.map((e) => Math.round(e));
     }
     if (message.notIn?.length) {
-      obj.notIn = message.notIn.map((e) => (e || Long.ZERO).toString());
+      obj.notIn = message.notIn.map((e) => Math.round(e));
     }
     return obj;
   },
@@ -3674,13 +3673,13 @@ export const SFixed64Rules = {
   },
   fromPartial<I extends Exact<DeepPartial<SFixed64Rules>, I>>(object: I): SFixed64Rules {
     const message = createBaseSFixed64Rules();
-    message.const = (object.const !== undefined && object.const !== null) ? Long.fromValue(object.const) : Long.ZERO;
-    message.lt = (object.lt !== undefined && object.lt !== null) ? Long.fromValue(object.lt) : Long.ZERO;
-    message.lte = (object.lte !== undefined && object.lte !== null) ? Long.fromValue(object.lte) : Long.ZERO;
-    message.gt = (object.gt !== undefined && object.gt !== null) ? Long.fromValue(object.gt) : Long.ZERO;
-    message.gte = (object.gte !== undefined && object.gte !== null) ? Long.fromValue(object.gte) : Long.ZERO;
-    message.in = object.in?.map((e) => Long.fromValue(e)) || [];
-    message.notIn = object.notIn?.map((e) => Long.fromValue(e)) || [];
+    message.const = object.const ?? 0;
+    message.lt = object.lt ?? 0;
+    message.lte = object.lte ?? 0;
+    message.gt = object.gt ?? 0;
+    message.gte = object.gte ?? 0;
+    message.in = object.in?.map((e) => e) || [];
+    message.notIn = object.notIn?.map((e) => e) || [];
     return message;
   },
 };
@@ -3745,12 +3744,12 @@ export const BoolRules = {
 function createBaseStringRules(): StringRules {
   return {
     const: "",
-    len: Long.UZERO,
-    minLen: Long.UZERO,
-    maxLen: Long.UZERO,
-    lenBytes: Long.UZERO,
-    minBytes: Long.UZERO,
-    maxBytes: Long.UZERO,
+    len: 0,
+    minLen: 0,
+    maxLen: 0,
+    lenBytes: 0,
+    minBytes: 0,
+    maxBytes: 0,
     pattern: "",
     prefix: "",
     suffix: "",
@@ -3777,23 +3776,23 @@ export const StringRules = {
     if (message.const !== undefined && message.const !== "") {
       writer.uint32(10).string(message.const);
     }
-    if (message.len !== undefined && !message.len.equals(Long.UZERO)) {
-      writer.uint32(152).uint64(message.len.toString());
+    if (message.len !== undefined && message.len !== 0) {
+      writer.uint32(152).uint64(message.len);
     }
-    if (message.minLen !== undefined && !message.minLen.equals(Long.UZERO)) {
-      writer.uint32(16).uint64(message.minLen.toString());
+    if (message.minLen !== undefined && message.minLen !== 0) {
+      writer.uint32(16).uint64(message.minLen);
     }
-    if (message.maxLen !== undefined && !message.maxLen.equals(Long.UZERO)) {
-      writer.uint32(24).uint64(message.maxLen.toString());
+    if (message.maxLen !== undefined && message.maxLen !== 0) {
+      writer.uint32(24).uint64(message.maxLen);
     }
-    if (message.lenBytes !== undefined && !message.lenBytes.equals(Long.UZERO)) {
-      writer.uint32(160).uint64(message.lenBytes.toString());
+    if (message.lenBytes !== undefined && message.lenBytes !== 0) {
+      writer.uint32(160).uint64(message.lenBytes);
     }
-    if (message.minBytes !== undefined && !message.minBytes.equals(Long.UZERO)) {
-      writer.uint32(32).uint64(message.minBytes.toString());
+    if (message.minBytes !== undefined && message.minBytes !== 0) {
+      writer.uint32(32).uint64(message.minBytes);
     }
-    if (message.maxBytes !== undefined && !message.maxBytes.equals(Long.UZERO)) {
-      writer.uint32(40).uint64(message.maxBytes.toString());
+    if (message.maxBytes !== undefined && message.maxBytes !== 0) {
+      writer.uint32(40).uint64(message.maxBytes);
     }
     if (message.pattern !== undefined && message.pattern !== "") {
       writer.uint32(50).string(message.pattern);
@@ -3871,42 +3870,42 @@ export const StringRules = {
             break;
           }
 
-          message.len = Long.fromString(reader.uint64().toString(), true);
+          message.len = longToNumber(reader.uint64());
           continue;
         case 2:
           if (tag !== 16) {
             break;
           }
 
-          message.minLen = Long.fromString(reader.uint64().toString(), true);
+          message.minLen = longToNumber(reader.uint64());
           continue;
         case 3:
           if (tag !== 24) {
             break;
           }
 
-          message.maxLen = Long.fromString(reader.uint64().toString(), true);
+          message.maxLen = longToNumber(reader.uint64());
           continue;
         case 20:
           if (tag !== 160) {
             break;
           }
 
-          message.lenBytes = Long.fromString(reader.uint64().toString(), true);
+          message.lenBytes = longToNumber(reader.uint64());
           continue;
         case 4:
           if (tag !== 32) {
             break;
           }
 
-          message.minBytes = Long.fromString(reader.uint64().toString(), true);
+          message.minBytes = longToNumber(reader.uint64());
           continue;
         case 5:
           if (tag !== 40) {
             break;
           }
 
-          message.maxBytes = Long.fromString(reader.uint64().toString(), true);
+          message.maxBytes = longToNumber(reader.uint64());
           continue;
         case 6:
           if (tag !== 50) {
@@ -4046,12 +4045,12 @@ export const StringRules = {
   fromJSON(object: any): StringRules {
     return {
       const: isSet(object.const) ? globalThis.String(object.const) : "",
-      len: isSet(object.len) ? Long.fromValue(object.len) : Long.UZERO,
-      minLen: isSet(object.minLen) ? Long.fromValue(object.minLen) : Long.UZERO,
-      maxLen: isSet(object.maxLen) ? Long.fromValue(object.maxLen) : Long.UZERO,
-      lenBytes: isSet(object.lenBytes) ? Long.fromValue(object.lenBytes) : Long.UZERO,
-      minBytes: isSet(object.minBytes) ? Long.fromValue(object.minBytes) : Long.UZERO,
-      maxBytes: isSet(object.maxBytes) ? Long.fromValue(object.maxBytes) : Long.UZERO,
+      len: isSet(object.len) ? globalThis.Number(object.len) : 0,
+      minLen: isSet(object.minLen) ? globalThis.Number(object.minLen) : 0,
+      maxLen: isSet(object.maxLen) ? globalThis.Number(object.maxLen) : 0,
+      lenBytes: isSet(object.lenBytes) ? globalThis.Number(object.lenBytes) : 0,
+      minBytes: isSet(object.minBytes) ? globalThis.Number(object.minBytes) : 0,
+      maxBytes: isSet(object.maxBytes) ? globalThis.Number(object.maxBytes) : 0,
       pattern: isSet(object.pattern) ? globalThis.String(object.pattern) : "",
       prefix: isSet(object.prefix) ? globalThis.String(object.prefix) : "",
       suffix: isSet(object.suffix) ? globalThis.String(object.suffix) : "",
@@ -4078,23 +4077,23 @@ export const StringRules = {
     if (message.const !== undefined && message.const !== "") {
       obj.const = message.const;
     }
-    if (message.len !== undefined && !message.len.equals(Long.UZERO)) {
-      obj.len = (message.len || Long.UZERO).toString();
+    if (message.len !== undefined && message.len !== 0) {
+      obj.len = Math.round(message.len);
     }
-    if (message.minLen !== undefined && !message.minLen.equals(Long.UZERO)) {
-      obj.minLen = (message.minLen || Long.UZERO).toString();
+    if (message.minLen !== undefined && message.minLen !== 0) {
+      obj.minLen = Math.round(message.minLen);
     }
-    if (message.maxLen !== undefined && !message.maxLen.equals(Long.UZERO)) {
-      obj.maxLen = (message.maxLen || Long.UZERO).toString();
+    if (message.maxLen !== undefined && message.maxLen !== 0) {
+      obj.maxLen = Math.round(message.maxLen);
     }
-    if (message.lenBytes !== undefined && !message.lenBytes.equals(Long.UZERO)) {
-      obj.lenBytes = (message.lenBytes || Long.UZERO).toString();
+    if (message.lenBytes !== undefined && message.lenBytes !== 0) {
+      obj.lenBytes = Math.round(message.lenBytes);
     }
-    if (message.minBytes !== undefined && !message.minBytes.equals(Long.UZERO)) {
-      obj.minBytes = (message.minBytes || Long.UZERO).toString();
+    if (message.minBytes !== undefined && message.minBytes !== 0) {
+      obj.minBytes = Math.round(message.minBytes);
     }
-    if (message.maxBytes !== undefined && !message.maxBytes.equals(Long.UZERO)) {
-      obj.maxBytes = (message.maxBytes || Long.UZERO).toString();
+    if (message.maxBytes !== undefined && message.maxBytes !== 0) {
+      obj.maxBytes = Math.round(message.maxBytes);
     }
     if (message.pattern !== undefined && message.pattern !== "") {
       obj.pattern = message.pattern;
@@ -4159,22 +4158,12 @@ export const StringRules = {
   fromPartial<I extends Exact<DeepPartial<StringRules>, I>>(object: I): StringRules {
     const message = createBaseStringRules();
     message.const = object.const ?? "";
-    message.len = (object.len !== undefined && object.len !== null) ? Long.fromValue(object.len) : Long.UZERO;
-    message.minLen = (object.minLen !== undefined && object.minLen !== null)
-      ? Long.fromValue(object.minLen)
-      : Long.UZERO;
-    message.maxLen = (object.maxLen !== undefined && object.maxLen !== null)
-      ? Long.fromValue(object.maxLen)
-      : Long.UZERO;
-    message.lenBytes = (object.lenBytes !== undefined && object.lenBytes !== null)
-      ? Long.fromValue(object.lenBytes)
-      : Long.UZERO;
-    message.minBytes = (object.minBytes !== undefined && object.minBytes !== null)
-      ? Long.fromValue(object.minBytes)
-      : Long.UZERO;
-    message.maxBytes = (object.maxBytes !== undefined && object.maxBytes !== null)
-      ? Long.fromValue(object.maxBytes)
-      : Long.UZERO;
+    message.len = object.len ?? 0;
+    message.minLen = object.minLen ?? 0;
+    message.maxLen = object.maxLen ?? 0;
+    message.lenBytes = object.lenBytes ?? 0;
+    message.minBytes = object.minBytes ?? 0;
+    message.maxBytes = object.maxBytes ?? 0;
     message.pattern = object.pattern ?? "";
     message.prefix = object.prefix ?? "";
     message.suffix = object.suffix ?? "";
@@ -4200,9 +4189,9 @@ export const StringRules = {
 function createBaseBytesRules(): BytesRules {
   return {
     const: new Uint8Array(0),
-    len: Long.UZERO,
-    minLen: Long.UZERO,
-    maxLen: Long.UZERO,
+    len: 0,
+    minLen: 0,
+    maxLen: 0,
     pattern: "",
     prefix: new Uint8Array(0),
     suffix: new Uint8Array(0),
@@ -4220,14 +4209,14 @@ export const BytesRules = {
     if (message.const !== undefined && message.const.length !== 0) {
       writer.uint32(10).bytes(message.const);
     }
-    if (message.len !== undefined && !message.len.equals(Long.UZERO)) {
-      writer.uint32(104).uint64(message.len.toString());
+    if (message.len !== undefined && message.len !== 0) {
+      writer.uint32(104).uint64(message.len);
     }
-    if (message.minLen !== undefined && !message.minLen.equals(Long.UZERO)) {
-      writer.uint32(16).uint64(message.minLen.toString());
+    if (message.minLen !== undefined && message.minLen !== 0) {
+      writer.uint32(16).uint64(message.minLen);
     }
-    if (message.maxLen !== undefined && !message.maxLen.equals(Long.UZERO)) {
-      writer.uint32(24).uint64(message.maxLen.toString());
+    if (message.maxLen !== undefined && message.maxLen !== 0) {
+      writer.uint32(24).uint64(message.maxLen);
     }
     if (message.pattern !== undefined && message.pattern !== "") {
       writer.uint32(34).string(message.pattern);
@@ -4278,21 +4267,21 @@ export const BytesRules = {
             break;
           }
 
-          message.len = Long.fromString(reader.uint64().toString(), true);
+          message.len = longToNumber(reader.uint64());
           continue;
         case 2:
           if (tag !== 16) {
             break;
           }
 
-          message.minLen = Long.fromString(reader.uint64().toString(), true);
+          message.minLen = longToNumber(reader.uint64());
           continue;
         case 3:
           if (tag !== 24) {
             break;
           }
 
-          message.maxLen = Long.fromString(reader.uint64().toString(), true);
+          message.maxLen = longToNumber(reader.uint64());
           continue;
         case 4:
           if (tag !== 34) {
@@ -4369,9 +4358,9 @@ export const BytesRules = {
   fromJSON(object: any): BytesRules {
     return {
       const: isSet(object.const) ? bytesFromBase64(object.const) : new Uint8Array(0),
-      len: isSet(object.len) ? Long.fromValue(object.len) : Long.UZERO,
-      minLen: isSet(object.minLen) ? Long.fromValue(object.minLen) : Long.UZERO,
-      maxLen: isSet(object.maxLen) ? Long.fromValue(object.maxLen) : Long.UZERO,
+      len: isSet(object.len) ? globalThis.Number(object.len) : 0,
+      minLen: isSet(object.minLen) ? globalThis.Number(object.minLen) : 0,
+      maxLen: isSet(object.maxLen) ? globalThis.Number(object.maxLen) : 0,
       pattern: isSet(object.pattern) ? globalThis.String(object.pattern) : "",
       prefix: isSet(object.prefix) ? bytesFromBase64(object.prefix) : new Uint8Array(0),
       suffix: isSet(object.suffix) ? bytesFromBase64(object.suffix) : new Uint8Array(0),
@@ -4389,14 +4378,14 @@ export const BytesRules = {
     if (message.const !== undefined && message.const.length !== 0) {
       obj.const = base64FromBytes(message.const);
     }
-    if (message.len !== undefined && !message.len.equals(Long.UZERO)) {
-      obj.len = (message.len || Long.UZERO).toString();
+    if (message.len !== undefined && message.len !== 0) {
+      obj.len = Math.round(message.len);
     }
-    if (message.minLen !== undefined && !message.minLen.equals(Long.UZERO)) {
-      obj.minLen = (message.minLen || Long.UZERO).toString();
+    if (message.minLen !== undefined && message.minLen !== 0) {
+      obj.minLen = Math.round(message.minLen);
     }
-    if (message.maxLen !== undefined && !message.maxLen.equals(Long.UZERO)) {
-      obj.maxLen = (message.maxLen || Long.UZERO).toString();
+    if (message.maxLen !== undefined && message.maxLen !== 0) {
+      obj.maxLen = Math.round(message.maxLen);
     }
     if (message.pattern !== undefined && message.pattern !== "") {
       obj.pattern = message.pattern;
@@ -4434,13 +4423,9 @@ export const BytesRules = {
   fromPartial<I extends Exact<DeepPartial<BytesRules>, I>>(object: I): BytesRules {
     const message = createBaseBytesRules();
     message.const = object.const ?? new Uint8Array(0);
-    message.len = (object.len !== undefined && object.len !== null) ? Long.fromValue(object.len) : Long.UZERO;
-    message.minLen = (object.minLen !== undefined && object.minLen !== null)
-      ? Long.fromValue(object.minLen)
-      : Long.UZERO;
-    message.maxLen = (object.maxLen !== undefined && object.maxLen !== null)
-      ? Long.fromValue(object.maxLen)
-      : Long.UZERO;
+    message.len = object.len ?? 0;
+    message.minLen = object.minLen ?? 0;
+    message.maxLen = object.maxLen ?? 0;
     message.pattern = object.pattern ?? "";
     message.prefix = object.prefix ?? new Uint8Array(0);
     message.suffix = object.suffix ?? new Uint8Array(0);
@@ -4657,16 +4642,16 @@ export const MessageRules = {
 };
 
 function createBaseRepeatedRules(): RepeatedRules {
-  return { minItems: Long.UZERO, maxItems: Long.UZERO, unique: false, items: undefined };
+  return { minItems: 0, maxItems: 0, unique: false, items: undefined };
 }
 
 export const RepeatedRules = {
   encode(message: RepeatedRules, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.minItems !== undefined && !message.minItems.equals(Long.UZERO)) {
-      writer.uint32(8).uint64(message.minItems.toString());
+    if (message.minItems !== undefined && message.minItems !== 0) {
+      writer.uint32(8).uint64(message.minItems);
     }
-    if (message.maxItems !== undefined && !message.maxItems.equals(Long.UZERO)) {
-      writer.uint32(16).uint64(message.maxItems.toString());
+    if (message.maxItems !== undefined && message.maxItems !== 0) {
+      writer.uint32(16).uint64(message.maxItems);
     }
     if (message.unique !== undefined && message.unique !== false) {
       writer.uint32(24).bool(message.unique);
@@ -4689,14 +4674,14 @@ export const RepeatedRules = {
             break;
           }
 
-          message.minItems = Long.fromString(reader.uint64().toString(), true);
+          message.minItems = longToNumber(reader.uint64());
           continue;
         case 2:
           if (tag !== 16) {
             break;
           }
 
-          message.maxItems = Long.fromString(reader.uint64().toString(), true);
+          message.maxItems = longToNumber(reader.uint64());
           continue;
         case 3:
           if (tag !== 24) {
@@ -4723,8 +4708,8 @@ export const RepeatedRules = {
 
   fromJSON(object: any): RepeatedRules {
     return {
-      minItems: isSet(object.minItems) ? Long.fromValue(object.minItems) : Long.UZERO,
-      maxItems: isSet(object.maxItems) ? Long.fromValue(object.maxItems) : Long.UZERO,
+      minItems: isSet(object.minItems) ? globalThis.Number(object.minItems) : 0,
+      maxItems: isSet(object.maxItems) ? globalThis.Number(object.maxItems) : 0,
       unique: isSet(object.unique) ? globalThis.Boolean(object.unique) : false,
       items: isSet(object.items) ? FieldRules.fromJSON(object.items) : undefined,
     };
@@ -4732,11 +4717,11 @@ export const RepeatedRules = {
 
   toJSON(message: RepeatedRules): unknown {
     const obj: any = {};
-    if (message.minItems !== undefined && !message.minItems.equals(Long.UZERO)) {
-      obj.minItems = (message.minItems || Long.UZERO).toString();
+    if (message.minItems !== undefined && message.minItems !== 0) {
+      obj.minItems = Math.round(message.minItems);
     }
-    if (message.maxItems !== undefined && !message.maxItems.equals(Long.UZERO)) {
-      obj.maxItems = (message.maxItems || Long.UZERO).toString();
+    if (message.maxItems !== undefined && message.maxItems !== 0) {
+      obj.maxItems = Math.round(message.maxItems);
     }
     if (message.unique !== undefined && message.unique !== false) {
       obj.unique = message.unique;
@@ -4752,12 +4737,8 @@ export const RepeatedRules = {
   },
   fromPartial<I extends Exact<DeepPartial<RepeatedRules>, I>>(object: I): RepeatedRules {
     const message = createBaseRepeatedRules();
-    message.minItems = (object.minItems !== undefined && object.minItems !== null)
-      ? Long.fromValue(object.minItems)
-      : Long.UZERO;
-    message.maxItems = (object.maxItems !== undefined && object.maxItems !== null)
-      ? Long.fromValue(object.maxItems)
-      : Long.UZERO;
+    message.minItems = object.minItems ?? 0;
+    message.maxItems = object.maxItems ?? 0;
     message.unique = object.unique ?? false;
     message.items = (object.items !== undefined && object.items !== null)
       ? FieldRules.fromPartial(object.items)
@@ -4767,16 +4748,16 @@ export const RepeatedRules = {
 };
 
 function createBaseMapRules(): MapRules {
-  return { minPairs: Long.UZERO, maxPairs: Long.UZERO, noSparse: false, keys: undefined, values: undefined };
+  return { minPairs: 0, maxPairs: 0, noSparse: false, keys: undefined, values: undefined };
 }
 
 export const MapRules = {
   encode(message: MapRules, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.minPairs !== undefined && !message.minPairs.equals(Long.UZERO)) {
-      writer.uint32(8).uint64(message.minPairs.toString());
+    if (message.minPairs !== undefined && message.minPairs !== 0) {
+      writer.uint32(8).uint64(message.minPairs);
     }
-    if (message.maxPairs !== undefined && !message.maxPairs.equals(Long.UZERO)) {
-      writer.uint32(16).uint64(message.maxPairs.toString());
+    if (message.maxPairs !== undefined && message.maxPairs !== 0) {
+      writer.uint32(16).uint64(message.maxPairs);
     }
     if (message.noSparse !== undefined && message.noSparse !== false) {
       writer.uint32(24).bool(message.noSparse);
@@ -4802,14 +4783,14 @@ export const MapRules = {
             break;
           }
 
-          message.minPairs = Long.fromString(reader.uint64().toString(), true);
+          message.minPairs = longToNumber(reader.uint64());
           continue;
         case 2:
           if (tag !== 16) {
             break;
           }
 
-          message.maxPairs = Long.fromString(reader.uint64().toString(), true);
+          message.maxPairs = longToNumber(reader.uint64());
           continue;
         case 3:
           if (tag !== 24) {
@@ -4843,8 +4824,8 @@ export const MapRules = {
 
   fromJSON(object: any): MapRules {
     return {
-      minPairs: isSet(object.minPairs) ? Long.fromValue(object.minPairs) : Long.UZERO,
-      maxPairs: isSet(object.maxPairs) ? Long.fromValue(object.maxPairs) : Long.UZERO,
+      minPairs: isSet(object.minPairs) ? globalThis.Number(object.minPairs) : 0,
+      maxPairs: isSet(object.maxPairs) ? globalThis.Number(object.maxPairs) : 0,
       noSparse: isSet(object.noSparse) ? globalThis.Boolean(object.noSparse) : false,
       keys: isSet(object.keys) ? FieldRules.fromJSON(object.keys) : undefined,
       values: isSet(object.values) ? FieldRules.fromJSON(object.values) : undefined,
@@ -4853,11 +4834,11 @@ export const MapRules = {
 
   toJSON(message: MapRules): unknown {
     const obj: any = {};
-    if (message.minPairs !== undefined && !message.minPairs.equals(Long.UZERO)) {
-      obj.minPairs = (message.minPairs || Long.UZERO).toString();
+    if (message.minPairs !== undefined && message.minPairs !== 0) {
+      obj.minPairs = Math.round(message.minPairs);
     }
-    if (message.maxPairs !== undefined && !message.maxPairs.equals(Long.UZERO)) {
-      obj.maxPairs = (message.maxPairs || Long.UZERO).toString();
+    if (message.maxPairs !== undefined && message.maxPairs !== 0) {
+      obj.maxPairs = Math.round(message.maxPairs);
     }
     if (message.noSparse !== undefined && message.noSparse !== false) {
       obj.noSparse = message.noSparse;
@@ -4876,12 +4857,8 @@ export const MapRules = {
   },
   fromPartial<I extends Exact<DeepPartial<MapRules>, I>>(object: I): MapRules {
     const message = createBaseMapRules();
-    message.minPairs = (object.minPairs !== undefined && object.minPairs !== null)
-      ? Long.fromValue(object.minPairs)
-      : Long.UZERO;
-    message.maxPairs = (object.maxPairs !== undefined && object.maxPairs !== null)
-      ? Long.fromValue(object.maxPairs)
-      : Long.UZERO;
+    message.minPairs = object.minPairs ?? 0;
+    message.maxPairs = object.maxPairs ?? 0;
     message.noSparse = object.noSparse ?? false;
     message.keys = (object.keys !== undefined && object.keys !== null)
       ? FieldRules.fromPartial(object.keys)
@@ -5376,7 +5353,7 @@ function base64FromBytes(arr: Uint8Array): string {
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin ? T
-  : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
+  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
@@ -5386,13 +5363,13 @@ export type Exact<P, I extends P> = P extends Builtin ? P
   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
 
 function toTimestamp(date: Date): Timestamp {
-  const seconds = numberToLong(Math.trunc(date.getTime() / 1_000));
+  const seconds = Math.trunc(date.getTime() / 1_000);
   const nanos = (date.getTime() % 1_000) * 1_000_000;
   return { seconds, nanos };
 }
 
 function fromTimestamp(t: Timestamp): Date {
-  let millis = (t.seconds.toNumber() || 0) * 1_000;
+  let millis = (t.seconds || 0) * 1_000;
   millis += (t.nanos || 0) / 1_000_000;
   return new globalThis.Date(millis);
 }
@@ -5407,8 +5384,15 @@ function fromJsonTimestamp(o: any): Date {
   }
 }
 
-function numberToLong(number: number) {
-  return Long.fromNumber(number);
+function longToNumber(int64: { toString(): string }): number {
+  const num = globalThis.Number(int64.toString());
+  if (num > globalThis.Number.MAX_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+  }
+  if (num < globalThis.Number.MIN_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
+  }
+  return num;
 }
 
 function isSet(value: any): boolean {

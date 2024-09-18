@@ -1,8 +1,7 @@
-import { BlockBody, BlockHeader, BlockId, FullBlock, LockAddress, Transaction, TransactionConfirmation, TransactionId, TransactionOutput, TransactionOutputReference } from "./models";
-import Long from "long";
+import { BlockBody, BlockHeader, BlockId, FullBlock, LockAddress, Transaction, TransactionConfirmation, TransactionId, TransactionOutput, TransactionOutputReference } from "./models.js";
 
-import { requireDefined } from "./utils";
-import { decodeBlockId, showBlockId, showLockAddress, showTransactionId, showTransactionOutputReference } from "./codecs";
+import { requireDefined } from "./utils.js";
+import { decodeBlockId, showBlockId, showLockAddress, showTransactionId, showTransactionOutputReference } from "./codecs.js";
 
 /**
  * Represents a client for interacting with the Giraffe blockchain. Blockchain and graph data can be queried using this client. Transactions can also be broadcasted.
@@ -52,7 +51,7 @@ export abstract class GiraffeClient {
      * @param height - The height of the block. If `0` is provided, the current chain tip is provided. If a negative value is provided, the block is retrieved by depth.
      * @returns A Promise that resolves to the Block ID, or undefined if the chain hasn't reached the target height.
      */
-    abstract getBlockIdAtHeightOpt(height: Long): Promise<BlockId | undefined>;
+    abstract getBlockIdAtHeightOpt(height: number): Promise<BlockId | undefined>;
     /**
      * Get the Transaction Output References that are currently spendable by the given lock address
      * @param address - The Lock Address
@@ -179,7 +178,7 @@ export abstract class GiraffeClient {
      * @returns A promise that resolves to the block ID.
      * @throws An error if the block does not exist.
      */
-    async getBlockIdAtHeight(height: Long): Promise<BlockId> {
+    async getBlockIdAtHeight(height: number): Promise<BlockId> {
         const t = await this.getBlockIdAtHeightOpt(height);
         return requireDefined(t);
     }
@@ -188,14 +187,14 @@ export abstract class GiraffeClient {
      * @returns A promise that resolves to the canonical head block ID.
      */
     getCanonicalHeadId(): Promise<BlockId> {
-        return this.getBlockIdAtHeight(Long.ZERO);
+        return this.getBlockIdAtHeight(0);
     }
     /**
      * Retrieves the genesis block ID.
      * @returns A promise that resolves to the genesis block ID.
      */
     getGenesisId(): Promise<BlockId> {
-        return this.getBlockIdAtHeight(Long.ONE);
+        return this.getBlockIdAtHeight(0);
     }
 
     /**
@@ -209,6 +208,35 @@ export abstract class GiraffeClient {
             }
         }
         throw new Error("Failed to get next block id");
+    }
+
+    /**
+     * Checks that the requested transaction appears in the blockchain with sufficient depth, within a timeout.
+     * @param id the ID of the transaciton to check
+     */
+    async confirmTransaction(id: TransactionId): Promise<void> {
+        await Promise.race([
+            this.confirmTransactionNoTimeout(id),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 60000))
+        ]);
+    }
+
+    /**
+     * Checks that the requested transaction appears in the blockchain with sufficient depth, without timeout
+     * @param id the ID of the transaciton to check
+     */
+    async confirmTransactionNoTimeout(id: TransactionId): Promise<void> {
+        const c = await this.getTransactionConfirmationOpt(id);
+        if (c != null && c.depth > 2) {
+            return;
+        }
+
+        for await (const _ of this.follow()) {
+            const c = await this.getTransactionConfirmationOpt(id);
+            if (c != null && c.depth > 2) {
+                return;
+            }
+        }
     }
 }
 
@@ -354,36 +382,7 @@ export class RpcGiraffeClient extends GiraffeClient {
         return TransactionConfirmation.fromJSON(await response.json());
     }
 
-    /**
-     * Checks that the requested transaction appears in the blockchain with sufficient depth, within a timeout.
-     * @param id the ID of the transaciton to check
-     */
-    async confirmTransaction(id: TransactionId): Promise<void> {
-        await Promise.race([
-            this.confirmTransactionNoTimeout(id),
-            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 60000))
-        ]);
-    }
-
-    /**
-     * Checks that the requested transaction appears in the blockchain with sufficient depth, without timeout
-     * @param id the ID of the transaciton to check
-     */
-    async confirmTransactionNoTimeout(id: TransactionId): Promise<void> {
-        const c = await this.getTransactionConfirmationOpt(id);
-        if (c != null && c.depth > new Long(2)) {
-            return;
-        }
-
-        for await (const _ of this.follow()) {
-            const c = await this.getTransactionConfirmationOpt(id);
-            if (c != null && c.depth > new Long(2)) {
-                return;
-            }
-        }
-    }
-
-    async getBlockIdAtHeightOpt(height: Long): Promise<BlockId | undefined> {
+    async getBlockIdAtHeightOpt(height: number): Promise<BlockId | undefined> {
         const response = await fetch(`${this.baseAddress}/block-ids/${height}`);
         if (!response.ok) {
             if (response.status === 404) {

@@ -1,9 +1,9 @@
 {
-  "name": "@giraffechain/giraffe-sdk",
-  "version": "0.0.17",
-  "description": "SDK for interacting with the Giraffe blockchain",
-  "exports": "./dist/lib/index.js",
-  "types": "dist/lib/index.d.ts",
+  "name": "@giraffechain/giraffe-faucet",
+  "version": "0.0.1",
+  "description": "Application for distributing testnet funds on Giraffe Chain",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "build": "tsc",
@@ -22,17 +22,13 @@
     "giraffe",
     "sdk",
     "web3",
-    "graph",
-    "database",
-    "wallet"
+    "faucet"
   ],
   "license": "MPL-2.0",
   "dependencies": {
-    "@noble/curves": "^1.5.0",
-    "@scure/bip39": "^1.3.0",
-    "blake2b": "^2.1.4",
+    "@giraffechain/giraffe-sdk": "../sdk",
     "bs58": "^6.0.0",
-    "ts-proto": "^2.0.3"
+    "@octokit/core": "^5.2.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
@@ -43,8 +39,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/GiraffeChain/giraffe.git"
-  },
-  "engines": {
-    "node": ">=18"
   }
 }

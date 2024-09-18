@@ -16,16 +16,16 @@ cd ./tmp/protobuf/external_proto
 protoc \
     --plugin=../../../node_modules/.bin/protoc-gen-ts_proto \
     --ts_proto_out=../../../lib/proto \
-    --ts_proto_opt=forceLong=long \
     --ts_proto_opt=esModuleInterop=true \
+    --ts_proto_opt=importSuffix=.js \
     $(find ./google -name '*.proto')
 
 cd ../proto
 protoc \
     --plugin=../../../node_modules/.bin/protoc-gen-ts_proto \
     --ts_proto_out=../../../lib/proto \
-    --ts_proto_opt=forceLong=long \
     --ts_proto_opt=esModuleInterop=true \
+    --ts_proto_opt=importSuffix=.js \
     -I . \
     -I ../external_proto \
     $(find . -name '*.proto')

@@ -1,5 +1,4 @@
-import { Transaction, transactionSignableBytes } from "../lib/index";
-
+import { Transaction, transactionSignableBytes } from "../lib/index.js";
 
 const vectors: TransactionSignableVector[] = [
     {
@@ -32,4 +31,3 @@ interface TransactionSignableVector {
     txHex: string;
     signableBytesHex: string;
 }
-

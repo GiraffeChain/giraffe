@@ -6,7 +6,6 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import Long from "long";
 
 export const protobufPackage = "google.protobuf";
 
@@ -76,7 +75,7 @@ export interface Duration {
    * to +315,576,000,000 inclusive. Note: these bounds are computed from:
    * 60 sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years
    */
-  seconds: Long;
+  seconds: number;
   /**
    * Signed fractions of a second at nanosecond resolution of the span
    * of time. Durations less than one second are represented with a 0
@@ -89,13 +88,13 @@ export interface Duration {
 }
 
 function createBaseDuration(): Duration {
-  return { seconds: Long.ZERO, nanos: 0 };
+  return { seconds: 0, nanos: 0 };
 }
 
 export const Duration = {
   encode(message: Duration, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (!message.seconds.equals(Long.ZERO)) {
-      writer.uint32(8).int64(message.seconds.toString());
+    if (message.seconds !== 0) {
+      writer.uint32(8).int64(message.seconds);
     }
     if (message.nanos !== 0) {
       writer.uint32(16).int32(message.nanos);
@@ -115,7 +114,7 @@ export const Duration = {
             break;
           }
 
-          message.seconds = Long.fromString(reader.int64().toString());
+          message.seconds = longToNumber(reader.int64());
           continue;
         case 2:
           if (tag !== 16) {
@@ -135,15 +134,15 @@ export const Duration = {
 
   fromJSON(object: any): Duration {
     return {
-      seconds: isSet(object.seconds) ? Long.fromValue(object.seconds) : Long.ZERO,
+      seconds: isSet(object.seconds) ? globalThis.Number(object.seconds) : 0,
       nanos: isSet(object.nanos) ? globalThis.Number(object.nanos) : 0,
     };
   },
 
   toJSON(message: Duration): unknown {
     const obj: any = {};
-    if (!message.seconds.equals(Long.ZERO)) {
-      obj.seconds = (message.seconds || Long.ZERO).toString();
+    if (message.seconds !== 0) {
+      obj.seconds = Math.round(message.seconds);
     }
     if (message.nanos !== 0) {
       obj.nanos = Math.round(message.nanos);
@@ -156,9 +155,7 @@ export const Duration = {
   },
   fromPartial<I extends Exact<DeepPartial<Duration>, I>>(object: I): Duration {
     const message = createBaseDuration();
-    message.seconds = (object.seconds !== undefined && object.seconds !== null)
-      ? Long.fromValue(object.seconds)
-      : Long.ZERO;
+    message.seconds = object.seconds ?? 0;
     message.nanos = object.nanos ?? 0;
     return message;
   },
@@ -167,7 +164,7 @@ export const Duration = {
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin ? T
-  : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
+  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
@@ -175,6 +172,17 @@ export type DeepPartial<T> = T extends Builtin ? T
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Exact<P, I extends P> = P extends Builtin ? P
   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
+
+function longToNumber(int64: { toString(): string }): number {
+  const num = globalThis.Number(int64.toString());
+  if (num > globalThis.Number.MAX_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+  }
+  if (num < globalThis.Number.MIN_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
+  }
+  return num;
+}
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;
