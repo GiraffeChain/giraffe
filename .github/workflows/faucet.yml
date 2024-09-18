@@ -23,8 +23,11 @@ jobs:
         working-directory: typescript/faucet
         run: npm run build
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./documentation/build
+      - name: Run
+        working-directory: typescript/faucet
+        run: node dist/index.js
+        env:
+          GIRAFFE_WALLET_SK: "11111111111111111111111111111111"
+          FAUCET_QUANTITY_PER_USER: "1000"
+          GIRAFFE_API_ADDRESS: "https://testnet.giraffechain.com/api"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
