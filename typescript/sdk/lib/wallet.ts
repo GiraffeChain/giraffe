@@ -1,8 +1,7 @@
-import { Lock, LockAddress, TransactionOutput, TransactionOutputReference, Witness } from "./models";
+import { Lock, LockAddress, TransactionOutput, TransactionOutputReference, Witness } from "./models.js";
 
-import Long from 'long';
-import { isPaymentToken as isLiquidToken, requireDefined } from "./utils";
-import { lockToAddress } from "./codecs";
+import { isPaymentToken as isLiquidToken, requireDefined } from "./utils.js";
+import { lockToAddress } from "./codecs.js";
 import bs58 from 'bs58'
 import { ed25519 } from '@noble/curves/ed25519';
 import * as bip39 from '@scure/bip39';
@@ -164,7 +163,7 @@ export type ReferencedOutput = [TransactionOutputReference, TransactionOutput];
  * Provides contextual information when validating a witness.
  */
 export class WitnessContext {
-    height: Long;
+    height: number;
     messageToSign: Uint8Array;
 
     /**
@@ -172,7 +171,7 @@ export class WitnessContext {
      * @param height - The upcoming height of the chain.
      * @param messageToSign - The message to sign.
      */
-    constructor(height: Long, messageToSign: Uint8Array) {
+    constructor(height: number, messageToSign: Uint8Array) {
         this.height = height;
         this.messageToSign = messageToSign;
     }

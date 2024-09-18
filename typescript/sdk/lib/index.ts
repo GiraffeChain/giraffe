@@ -1,18 +1,16 @@
-import { GiraffeClient, RpcGiraffeClient } from "./client";
-import { embedTransactionId, transactionSignableBytes } from "./codecs";
-import { GiraffeGraph } from "./graph";
-import { Transaction, TransactionInput, TransactionOutput, TransactionOutputReference } from "./proto/models/core";
-import { defaultTransactionTip, isPaymentToken, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils";
-import { GiraffeWallet, WitnessContext } from "./wallet";
+import { GiraffeClient, RpcGiraffeClient } from "./client.js";
+import { embedTransactionId, transactionSignableBytes } from "./codecs.js";
+import { GiraffeGraph } from "./graph.js";
+import { Transaction, TransactionInput, TransactionOutput, TransactionOutputReference } from "./proto/models/core.js";
+import { defaultTransactionTip, isPaymentToken, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils.js";
+import { GiraffeWallet, WitnessContext } from "./wallet.js";
 
-import Long from "long";
-
-export * from "./models";
-export * from "./codecs";
-export * from "./client";
-export * from "./wallet";
-export * from "./graph";
-export * from "./utils";
+export * from "./models.js";
+export * from "./codecs.js";
+export * from "./client.js";
+export * from "./wallet.js";
+export * from "./graph.js";
+export * from "./utils.js";
 
 /**
  * Represents a Giraffe instance that combines wallet functionality with client functionality.
@@ -94,7 +92,7 @@ export class Giraffe {
         const head = await this.client.getHeader(headId);
         const ctx = new WitnessContext(head.height, message);
         const requiredWitnesses = await requiredWitnessesOf(this.client, transaction);
-        for (const address of requiredWitnesses) {
+        for (const address of Array.from(requiredWitnesses)) {
             if (transaction.attestation.findIndex((v, _, __) => v.lockAddress?.value === address.value) === -1) {
                 const signer = this.wallet.getSigner(address);
                 // TODO: Error if undefined?
@@ -116,6 +114,9 @@ export class Giraffe {
      */
     async pay(transaction: Transaction): Promise<Transaction> {
         for (const output of transaction.outputs) {
+            if (!output.lockAddress) {
+                output.lockAddress = this.wallet.address;
+            }
             const minQuantity = requiredMinimumQuantity(output);
             if (output.value!.quantity < minQuantity) {
                 output.value!.quantity = minQuantity;
@@ -127,12 +128,12 @@ export class Giraffe {
         }
         var currentReward = rewardOf(transaction);
         var i = 0;
-        while (!currentReward.eq(defaultTransactionTip)) {
+        while (currentReward != defaultTransactionTip) {
             if (currentReward > defaultTransactionTip) {
                 const output: TransactionOutput = TransactionOutput.fromJSON({
                     lockAddress: this.wallet.address,
                     value: {
-                        quantity: currentReward.sub(defaultTransactionTip),
+                        quantity: currentReward - defaultTransactionTip,
                     },
                 });
                 transaction.outputs.push(output);
@@ -147,7 +148,7 @@ export class Giraffe {
                     value: output.value!
                 });
                 transaction.inputs.push(input);
-                currentReward = currentReward.add(output.value!.quantity);
+                currentReward = currentReward + output.value!.quantity;
             }
         }
         embedTransactionId(transaction);
@@ -196,7 +197,7 @@ export class Giraffe {
      * @param quantity - The quantity of tokens to transfer.
      * @returns A promise that resolves when the transfer is broadcasted.
      */
-    async transferFromGenesisWallet(quantity: number | Long): Promise<void> {
+    async transferFromGenesisWallet(quantity: number): Promise<void> {
         const giraffeGenesis = new Giraffe(this.client, GiraffeWallet.genesis());
         await giraffeGenesis.updateWalletUtxos();
         await giraffeGenesis.paySignBroadcast(Transaction.fromJSON({

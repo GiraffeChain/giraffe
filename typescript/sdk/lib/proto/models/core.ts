@@ -6,9 +6,8 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import Long from "long";
-import { Struct } from "../google/protobuf/struct";
-import { StringValue, UInt32Value } from "../google/protobuf/wrappers";
+import { Struct } from "../google/protobuf/struct.js";
+import { StringValue, UInt32Value } from "../google/protobuf/wrappers.js";
 
 export const protobufPackage = "com.giraffechain.models";
 
@@ -31,18 +30,18 @@ export interface BlockHeader {
     | BlockId
     | undefined;
   /** The slot of the parent block */
-  parentSlot: Long;
+  parentSlot: number;
   /**
    * The commitment/accumulator of the block body
    * length = 32
    */
   txRoot: string;
   /** The UTC UNIX timestamp (ms) when the block was created */
-  timestamp: Long;
+  timestamp: number;
   /** The 1-based index of this block in the blockchain */
-  height: Long;
+  height: number;
   /** The time-slot in which the block producer created the block */
-  slot: Long;
+  slot: number;
   /** A certificate indicating that the block producer was eligible to make this block */
   stakerCertificate:
     | StakerCertificate
@@ -98,7 +97,7 @@ export interface StakerCertificate {
 /** A glorified tuple */
 export interface SlotId {
   /** The slot in which a block was created */
-  slot: Long;
+  slot: number;
   /** The ID of the block */
   blockId: BlockId | undefined;
 }
@@ -161,8 +160,8 @@ export interface Transaction {
 }
 
 export interface TransactionConfirmation {
-  height: Long;
-  depth: Long;
+  height: number;
+  depth: number;
 }
 
 export interface Witness {
@@ -192,7 +191,7 @@ export interface TransactionOutput {
 }
 
 export interface Value {
-  quantity: Long;
+  quantity: number;
   accountRegistration:
     | AccountRegistration
     | undefined;
@@ -249,7 +248,7 @@ export interface ActiveStaker {
     | StakingRegistration
     | undefined;
   /** the quantity of staked tokens for the epoch */
-  quantity: Long;
+  quantity: number;
 }
 
 export interface LockAddress {
@@ -364,11 +363,11 @@ function createBaseBlockHeader(): BlockHeader {
   return {
     headerId: undefined,
     parentHeaderId: undefined,
-    parentSlot: Long.UZERO,
+    parentSlot: 0,
     txRoot: "",
-    timestamp: Long.UZERO,
-    height: Long.UZERO,
-    slot: Long.UZERO,
+    timestamp: 0,
+    height: 0,
+    slot: 0,
     stakerCertificate: undefined,
     account: undefined,
     settings: {},
@@ -383,20 +382,20 @@ export const BlockHeader = {
     if (message.parentHeaderId !== undefined) {
       BlockId.encode(message.parentHeaderId, writer.uint32(10).fork()).join();
     }
-    if (!message.parentSlot.equals(Long.UZERO)) {
-      writer.uint32(16).uint64(message.parentSlot.toString());
+    if (message.parentSlot !== 0) {
+      writer.uint32(16).uint64(message.parentSlot);
     }
     if (message.txRoot !== "") {
       writer.uint32(26).string(message.txRoot);
     }
-    if (!message.timestamp.equals(Long.UZERO)) {
-      writer.uint32(32).uint64(message.timestamp.toString());
+    if (message.timestamp !== 0) {
+      writer.uint32(32).uint64(message.timestamp);
     }
-    if (!message.height.equals(Long.UZERO)) {
-      writer.uint32(40).uint64(message.height.toString());
+    if (message.height !== 0) {
+      writer.uint32(40).uint64(message.height);
     }
-    if (!message.slot.equals(Long.UZERO)) {
-      writer.uint32(48).uint64(message.slot.toString());
+    if (message.slot !== 0) {
+      writer.uint32(48).uint64(message.slot);
     }
     if (message.stakerCertificate !== undefined) {
       StakerCertificate.encode(message.stakerCertificate, writer.uint32(58).fork()).join();
@@ -436,7 +435,7 @@ export const BlockHeader = {
             break;
           }
 
-          message.parentSlot = Long.fromString(reader.uint64().toString(), true);
+          message.parentSlot = longToNumber(reader.uint64());
           continue;
         case 3:
           if (tag !== 26) {
@@ -450,21 +449,21 @@ export const BlockHeader = {
             break;
           }
 
-          message.timestamp = Long.fromString(reader.uint64().toString(), true);
+          message.timestamp = longToNumber(reader.uint64());
           continue;
         case 5:
           if (tag !== 40) {
             break;
           }
 
-          message.height = Long.fromString(reader.uint64().toString(), true);
+          message.height = longToNumber(reader.uint64());
           continue;
         case 6:
           if (tag !== 48) {
             break;
           }
 
-          message.slot = Long.fromString(reader.uint64().toString(), true);
+          message.slot = longToNumber(reader.uint64());
           continue;
         case 7:
           if (tag !== 58) {
@@ -503,11 +502,11 @@ export const BlockHeader = {
     return {
       headerId: isSet(object.headerId) ? BlockId.fromJSON(object.headerId) : undefined,
       parentHeaderId: isSet(object.parentHeaderId) ? BlockId.fromJSON(object.parentHeaderId) : undefined,
-      parentSlot: isSet(object.parentSlot) ? Long.fromValue(object.parentSlot) : Long.UZERO,
+      parentSlot: isSet(object.parentSlot) ? globalThis.Number(object.parentSlot) : 0,
       txRoot: isSet(object.txRoot) ? globalThis.String(object.txRoot) : "",
-      timestamp: isSet(object.timestamp) ? Long.fromValue(object.timestamp) : Long.UZERO,
-      height: isSet(object.height) ? Long.fromValue(object.height) : Long.UZERO,
-      slot: isSet(object.slot) ? Long.fromValue(object.slot) : Long.UZERO,
+      timestamp: isSet(object.timestamp) ? globalThis.Number(object.timestamp) : 0,
+      height: isSet(object.height) ? globalThis.Number(object.height) : 0,
+      slot: isSet(object.slot) ? globalThis.Number(object.slot) : 0,
       stakerCertificate: isSet(object.stakerCertificate)
         ? StakerCertificate.fromJSON(object.stakerCertificate)
         : undefined,
@@ -529,20 +528,20 @@ export const BlockHeader = {
     if (message.parentHeaderId !== undefined) {
       obj.parentHeaderId = BlockId.toJSON(message.parentHeaderId);
     }
-    if (!message.parentSlot.equals(Long.UZERO)) {
-      obj.parentSlot = (message.parentSlot || Long.UZERO).toString();
+    if (message.parentSlot !== 0) {
+      obj.parentSlot = Math.round(message.parentSlot);
     }
     if (message.txRoot !== "") {
       obj.txRoot = message.txRoot;
     }
-    if (!message.timestamp.equals(Long.UZERO)) {
-      obj.timestamp = (message.timestamp || Long.UZERO).toString();
+    if (message.timestamp !== 0) {
+      obj.timestamp = Math.round(message.timestamp);
     }
-    if (!message.height.equals(Long.UZERO)) {
-      obj.height = (message.height || Long.UZERO).toString();
+    if (message.height !== 0) {
+      obj.height = Math.round(message.height);
     }
-    if (!message.slot.equals(Long.UZERO)) {
-      obj.slot = (message.slot || Long.UZERO).toString();
+    if (message.slot !== 0) {
+      obj.slot = Math.round(message.slot);
     }
     if (message.stakerCertificate !== undefined) {
       obj.stakerCertificate = StakerCertificate.toJSON(message.stakerCertificate);
@@ -573,17 +572,11 @@ export const BlockHeader = {
     message.parentHeaderId = (object.parentHeaderId !== undefined && object.parentHeaderId !== null)
       ? BlockId.fromPartial(object.parentHeaderId)
       : undefined;
-    message.parentSlot = (object.parentSlot !== undefined && object.parentSlot !== null)
-      ? Long.fromValue(object.parentSlot)
-      : Long.UZERO;
+    message.parentSlot = object.parentSlot ?? 0;
     message.txRoot = object.txRoot ?? "";
-    message.timestamp = (object.timestamp !== undefined && object.timestamp !== null)
-      ? Long.fromValue(object.timestamp)
-      : Long.UZERO;
-    message.height = (object.height !== undefined && object.height !== null)
-      ? Long.fromValue(object.height)
-      : Long.UZERO;
-    message.slot = (object.slot !== undefined && object.slot !== null) ? Long.fromValue(object.slot) : Long.UZERO;
+    message.timestamp = object.timestamp ?? 0;
+    message.height = object.height ?? 0;
+    message.slot = object.slot ?? 0;
     message.stakerCertificate = (object.stakerCertificate !== undefined && object.stakerCertificate !== null)
       ? StakerCertificate.fromPartial(object.stakerCertificate)
       : undefined;
@@ -794,13 +787,13 @@ export const StakerCertificate = {
 };
 
 function createBaseSlotId(): SlotId {
-  return { slot: Long.UZERO, blockId: undefined };
+  return { slot: 0, blockId: undefined };
 }
 
 export const SlotId = {
   encode(message: SlotId, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (!message.slot.equals(Long.UZERO)) {
-      writer.uint32(8).uint64(message.slot.toString());
+    if (message.slot !== 0) {
+      writer.uint32(8).uint64(message.slot);
     }
     if (message.blockId !== undefined) {
       BlockId.encode(message.blockId, writer.uint32(18).fork()).join();
@@ -820,7 +813,7 @@ export const SlotId = {
             break;
           }
 
-          message.slot = Long.fromString(reader.uint64().toString(), true);
+          message.slot = longToNumber(reader.uint64());
           continue;
         case 2:
           if (tag !== 18) {
@@ -840,15 +833,15 @@ export const SlotId = {
 
   fromJSON(object: any): SlotId {
     return {
-      slot: isSet(object.slot) ? Long.fromValue(object.slot) : Long.UZERO,
+      slot: isSet(object.slot) ? globalThis.Number(object.slot) : 0,
       blockId: isSet(object.blockId) ? BlockId.fromJSON(object.blockId) : undefined,
     };
   },
 
   toJSON(message: SlotId): unknown {
     const obj: any = {};
-    if (!message.slot.equals(Long.UZERO)) {
-      obj.slot = (message.slot || Long.UZERO).toString();
+    if (message.slot !== 0) {
+      obj.slot = Math.round(message.slot);
     }
     if (message.blockId !== undefined) {
       obj.blockId = BlockId.toJSON(message.blockId);
@@ -861,7 +854,7 @@ export const SlotId = {
   },
   fromPartial<I extends Exact<DeepPartial<SlotId>, I>>(object: I): SlotId {
     const message = createBaseSlotId();
-    message.slot = (object.slot !== undefined && object.slot !== null) ? Long.fromValue(object.slot) : Long.UZERO;
+    message.slot = object.slot ?? 0;
     message.blockId = (object.blockId !== undefined && object.blockId !== null)
       ? BlockId.fromPartial(object.blockId)
       : undefined;
@@ -1332,16 +1325,16 @@ export const Transaction = {
 };
 
 function createBaseTransactionConfirmation(): TransactionConfirmation {
-  return { height: Long.UZERO, depth: Long.UZERO };
+  return { height: 0, depth: 0 };
 }
 
 export const TransactionConfirmation = {
   encode(message: TransactionConfirmation, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (!message.height.equals(Long.UZERO)) {
-      writer.uint32(8).uint64(message.height.toString());
+    if (message.height !== 0) {
+      writer.uint32(8).uint64(message.height);
     }
-    if (!message.depth.equals(Long.UZERO)) {
-      writer.uint32(16).uint64(message.depth.toString());
+    if (message.depth !== 0) {
+      writer.uint32(16).uint64(message.depth);
     }
     return writer;
   },
@@ -1358,14 +1351,14 @@ export const TransactionConfirmation = {
             break;
           }
 
-          message.height = Long.fromString(reader.uint64().toString(), true);
+          message.height = longToNumber(reader.uint64());
           continue;
         case 2:
           if (tag !== 16) {
             break;
           }
 
-          message.depth = Long.fromString(reader.uint64().toString(), true);
+          message.depth = longToNumber(reader.uint64());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1378,18 +1371,18 @@ export const TransactionConfirmation = {
 
   fromJSON(object: any): TransactionConfirmation {
     return {
-      height: isSet(object.height) ? Long.fromValue(object.height) : Long.UZERO,
-      depth: isSet(object.depth) ? Long.fromValue(object.depth) : Long.UZERO,
+      height: isSet(object.height) ? globalThis.Number(object.height) : 0,
+      depth: isSet(object.depth) ? globalThis.Number(object.depth) : 0,
     };
   },
 
   toJSON(message: TransactionConfirmation): unknown {
     const obj: any = {};
-    if (!message.height.equals(Long.UZERO)) {
-      obj.height = (message.height || Long.UZERO).toString();
+    if (message.height !== 0) {
+      obj.height = Math.round(message.height);
     }
-    if (!message.depth.equals(Long.UZERO)) {
-      obj.depth = (message.depth || Long.UZERO).toString();
+    if (message.depth !== 0) {
+      obj.depth = Math.round(message.depth);
     }
     return obj;
   },
@@ -1399,10 +1392,8 @@ export const TransactionConfirmation = {
   },
   fromPartial<I extends Exact<DeepPartial<TransactionConfirmation>, I>>(object: I): TransactionConfirmation {
     const message = createBaseTransactionConfirmation();
-    message.height = (object.height !== undefined && object.height !== null)
-      ? Long.fromValue(object.height)
-      : Long.UZERO;
-    message.depth = (object.depth !== undefined && object.depth !== null) ? Long.fromValue(object.depth) : Long.UZERO;
+    message.height = object.height ?? 0;
+    message.depth = object.depth ?? 0;
     return message;
   },
 };
@@ -1744,13 +1735,13 @@ export const TransactionOutput = {
 };
 
 function createBaseValue(): Value {
-  return { quantity: Long.UZERO, accountRegistration: undefined, graphEntry: undefined };
+  return { quantity: 0, accountRegistration: undefined, graphEntry: undefined };
 }
 
 export const Value = {
   encode(message: Value, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (!message.quantity.equals(Long.UZERO)) {
-      writer.uint32(8).uint64(message.quantity.toString());
+    if (message.quantity !== 0) {
+      writer.uint32(8).uint64(message.quantity);
     }
     if (message.accountRegistration !== undefined) {
       AccountRegistration.encode(message.accountRegistration, writer.uint32(18).fork()).join();
@@ -1773,7 +1764,7 @@ export const Value = {
             break;
           }
 
-          message.quantity = Long.fromString(reader.uint64().toString(), true);
+          message.quantity = longToNumber(reader.uint64());
           continue;
         case 2:
           if (tag !== 18) {
@@ -1800,7 +1791,7 @@ export const Value = {
 
   fromJSON(object: any): Value {
     return {
-      quantity: isSet(object.quantity) ? Long.fromValue(object.quantity) : Long.UZERO,
+      quantity: isSet(object.quantity) ? globalThis.Number(object.quantity) : 0,
       accountRegistration: isSet(object.accountRegistration)
         ? AccountRegistration.fromJSON(object.accountRegistration)
         : undefined,
@@ -1810,8 +1801,8 @@ export const Value = {
 
   toJSON(message: Value): unknown {
     const obj: any = {};
-    if (!message.quantity.equals(Long.UZERO)) {
-      obj.quantity = (message.quantity || Long.UZERO).toString();
+    if (message.quantity !== 0) {
+      obj.quantity = Math.round(message.quantity);
     }
     if (message.accountRegistration !== undefined) {
       obj.accountRegistration = AccountRegistration.toJSON(message.accountRegistration);
@@ -1827,9 +1818,7 @@ export const Value = {
   },
   fromPartial<I extends Exact<DeepPartial<Value>, I>>(object: I): Value {
     const message = createBaseValue();
-    message.quantity = (object.quantity !== undefined && object.quantity !== null)
-      ? Long.fromValue(object.quantity)
-      : Long.UZERO;
+    message.quantity = object.quantity ?? 0;
     message.accountRegistration = (object.accountRegistration !== undefined && object.accountRegistration !== null)
       ? AccountRegistration.fromPartial(object.accountRegistration)
       : undefined;
@@ -2270,7 +2259,7 @@ export const Edge = {
 };
 
 function createBaseActiveStaker(): ActiveStaker {
-  return { registration: undefined, quantity: Long.ZERO };
+  return { registration: undefined, quantity: 0 };
 }
 
 export const ActiveStaker = {
@@ -2278,8 +2267,8 @@ export const ActiveStaker = {
     if (message.registration !== undefined) {
       StakingRegistration.encode(message.registration, writer.uint32(10).fork()).join();
     }
-    if (!message.quantity.equals(Long.ZERO)) {
-      writer.uint32(16).int64(message.quantity.toString());
+    if (message.quantity !== 0) {
+      writer.uint32(16).int64(message.quantity);
     }
     return writer;
   },
@@ -2303,7 +2292,7 @@ export const ActiveStaker = {
             break;
           }
 
-          message.quantity = Long.fromString(reader.int64().toString());
+          message.quantity = longToNumber(reader.int64());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -2317,7 +2306,7 @@ export const ActiveStaker = {
   fromJSON(object: any): ActiveStaker {
     return {
       registration: isSet(object.registration) ? StakingRegistration.fromJSON(object.registration) : undefined,
-      quantity: isSet(object.quantity) ? Long.fromValue(object.quantity) : Long.ZERO,
+      quantity: isSet(object.quantity) ? globalThis.Number(object.quantity) : 0,
     };
   },
 
@@ -2326,8 +2315,8 @@ export const ActiveStaker = {
     if (message.registration !== undefined) {
       obj.registration = StakingRegistration.toJSON(message.registration);
     }
-    if (!message.quantity.equals(Long.ZERO)) {
-      obj.quantity = (message.quantity || Long.ZERO).toString();
+    if (message.quantity !== 0) {
+      obj.quantity = Math.round(message.quantity);
     }
     return obj;
   },
@@ -2340,9 +2329,7 @@ export const ActiveStaker = {
     message.registration = (object.registration !== undefined && object.registration !== null)
       ? StakingRegistration.fromPartial(object.registration)
       : undefined;
-    message.quantity = (object.quantity !== undefined && object.quantity !== null)
-      ? Long.fromValue(object.quantity)
-      : Long.ZERO;
+    message.quantity = object.quantity ?? 0;
     return message;
   },
 };
@@ -2863,7 +2850,7 @@ export const ConnectedPeer = {
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin ? T
-  : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
+  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
   : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
@@ -2871,6 +2858,17 @@ export type DeepPartial<T> = T extends Builtin ? T
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Exact<P, I extends P> = P extends Builtin ? P
   : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
+
+function longToNumber(int64: { toString(): string }): number {
+  const num = globalThis.Number(int64.toString());
+  if (num > globalThis.Number.MAX_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+  }
+  if (num < globalThis.Number.MIN_SAFE_INTEGER) {
+    throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
+  }
+  return num;
+}
 
 function isObject(value: any): boolean {
   return typeof value === "object" && value !== null;

@@ -1,9 +1,8 @@
-import { AccountRegistration, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Value, Vertex } from "./models";
+import { AccountRegistration, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Value, Vertex } from "./models.js";
 import bs58 from 'bs58'
-import Long from "long";
 
 import blake2b from 'blake2b';
-import { requireDefined } from "./utils";
+import { requireDefined } from "./utils.js";
 
 /**
  * Converts a BlockId to its corresponding string representation.
@@ -130,9 +129,14 @@ function encodeInt32(value: number): Uint8Array {
     return bytes;
 }
 
-function encodeInt64(value: Long): Uint8Array {
-    const be = value.toBytesBE();
-    return new Uint8Array(be);
+function encodeInt64(value: number): Uint8Array {
+    let bytes = new Uint8Array(8);
+    var v = value;
+    for (let i = 7; i >= 0; i--) {
+        bytes[i] = (v & 0xff);
+        v = v >> 8;
+    }
+    return bytes;
 }
 
 function encodeList<T>(encodeT: (t: T) => Uint8Array, list: T[]): Uint8Array {

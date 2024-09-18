@@ -1,7 +1,6 @@
-import { GiraffeClient } from "./client";
-import { GraphEntry, LockAddress, Transaction, TransactionId, TransactionOutput, TransactionOutputReference } from "./models";
+import { GiraffeClient } from "./client.js";
+import { GraphEntry, LockAddress, Transaction, TransactionId, TransactionOutput, TransactionOutputReference } from "./models.js";
 
-import Long from "long";
 import bs58 from 'bs58'
 
 export function requireDefined<T>(t: T | undefined): T {
@@ -17,6 +16,18 @@ export function requireDefined<T>(t: T | undefined): T {
  * @returns A Promise that resolves to a Set of LockAddress objects representing the required witnesses.
  */
 export async function requiredWitnessesOf(client: GiraffeClient, transaction: Transaction): Promise<Set<LockAddress>> {
+    async function handleEdge(ref: TransactionOutputReference) {
+        let aTxO: TransactionOutput;
+        if (ref.transactionId === undefined) {
+            aTxO = await client.getTransactionOutput(ref);
+        } else {
+            aTxO = transaction.outputs[ref.index];
+        }
+        const aVertex = aTxO!.value?.graphEntry?.vertex;
+        if (aVertex?.edgeLockAddress !== undefined) {
+            result.add(aVertex.edgeLockAddress);
+        }
+    }
 
     const result: Set<LockAddress> = new Set();
     for (const input of transaction.inputs) {
@@ -25,18 +36,6 @@ export async function requiredWitnessesOf(client: GiraffeClient, transaction: Tr
     }
     for (const output of transaction.outputs) {
         if (output?.value?.graphEntry !== undefined && output.value.graphEntry.edge !== undefined) {
-            async function handleEdge(ref: TransactionOutputReference) {
-                let aTxO: TransactionOutput;
-                if (ref.transactionId === undefined) {
-                    aTxO = await client.getTransactionOutput(ref);
-                } else {
-                    aTxO = transaction.outputs[ref.index];
-                }
-                const aVertex = aTxO!.value?.graphEntry?.vertex;
-                if (aVertex?.edgeLockAddress !== undefined) {
-                    result.add(aVertex.edgeLockAddress);
-                }
-            }
             const edge = output.value.graphEntry.edge;
             await handleEdge(edge.a!);
             await handleEdge(edge.b!);
@@ -75,62 +74,64 @@ export function withoutSelfReference(output: TransactionOutputReference, selfTra
  * @param output - The transaction output.
  * @returns The required minimum quantity.
  */
-export function requiredMinimumQuantity(output: TransactionOutput): Long {
-    var result = Long.ZERO;
-    result.add(100);
+export function requiredMinimumQuantity(output: TransactionOutput): number {
+    var result = 0;
+    result += 100;
     if (output.account !== undefined) {
-        result.add(100);
+        ;
+        result += 100;
     }
     if (output.value?.accountRegistration !== undefined) {
-        result.add(1000);
+        ;
+        result += 1000;
     }
     if (output.value?.graphEntry !== undefined) {
-        result.add(graphEntryMinimumQuantity(output.value.graphEntry));
+        result += graphEntryMinimumQuantity(output.value.graphEntry);
     }
     return result;
 }
 
-function graphEntryMinimumQuantity(entry: GraphEntry): Long {
-    var result = Long.ZERO;
+function graphEntryMinimumQuantity(entry: GraphEntry): number {
+    var result = 0;
     if (entry.vertex !== undefined) {
-        result.add(entry.vertex!.label.length * 10);
+        result += entry.vertex!.label.length * 10;
         if (entry.vertex!.data !== undefined) {
-            result.add(protoStructMinimumQuantity(entry.vertex.data));
+            result += protoStructMinimumQuantity(entry.vertex.data);
         }
     } else if (entry.edge !== undefined) {
-        result.add(entry.vertex!.label.length * 10);
-        result.add(100);
+        result += entry.vertex!.label.length * 10;
+        result += 100;
         if (entry.edge!.data !== undefined) {
-            result.add(protoStructMinimumQuantity(entry.edge.data));
+            result += protoStructMinimumQuantity(entry.edge.data);
         }
     }
     return result;
 }
 
-function protoValueMinimumQuantity(value: any): Long {
+function protoValueMinimumQuantity(value: any): number {
     if (typeof (value) === "number") {
-        return new Long(value.toString().length * 10);
+        return value.toString().length * 10;
     } else if (typeof (value) === "string") {
-        return new Long(value.length * 10);
+        return value.length * 10;
     } else if (typeof (value) === "boolean") {
-        return new Long(10);
+        return 10;
     } else if (Array.isArray(value)) {
-        var result = Long.ZERO;
+        var result = 0;
         for (const v of value) {
-            result.add(protoValueMinimumQuantity(v));
+            result += protoValueMinimumQuantity(v);
         }
         return result;
     } else if (typeof (value) === "object") {
         return protoStructMinimumQuantity(value);
     }
-    return new Long(10);
+    return 10;
 }
 
-function protoStructMinimumQuantity(struct: { [key: string]: any }): Long {
-    var result = Long.ZERO;
+function protoStructMinimumQuantity(struct: { [key: string]: any }): number {
+    var result = 0;
     for (const k in Object.keys(struct)) {
-        result.add(k.length * 10)
-        result.add(protoValueMinimumQuantity(struct[k]));
+        result += (k.length * 10)
+        result += protoValueMinimumQuantity(struct[k]);
     }
     return result;
 }
@@ -141,13 +142,13 @@ function protoStructMinimumQuantity(struct: { [key: string]: any }): Long {
  * @param transaction - The transaction object.
  * @returns The reward of the transaction.
  */
-export function rewardOf(transaction: Transaction): Long {
-    var result = Long.fromInt(0, false);
+export function rewardOf(transaction: Transaction): number {
+    var result = 0;
     for (const input of transaction.inputs) {
-        result = result.add(input.value!.quantity);
+        result += input.value!.quantity;
     }
     for (const output of transaction.outputs) {
-        result = result.sub(output.value!.quantity);
+        result -= output.value!.quantity;
     }
     return result;
 }
@@ -155,7 +156,7 @@ export function rewardOf(transaction: Transaction): Long {
 /**
  * The default quantity to be provided as a tip/reward to the block producer.
  */
-export const defaultTransactionTip = Long.fromInt(1000);
+export const defaultTransactionTip = 1000;
 
 /**
  * Checks if a transaction output is a liquid token, meaning it is not used for staking, is not an account registration, and contains no graph data.

@@ -1,6 +1,6 @@
-import { GiraffeWallet } from "./wallet";
-import { GiraffeClient } from "./client";
-import { Edge, TransactionId, TransactionOutput, TransactionOutputReference, Vertex } from "./models";
+import { GiraffeWallet } from "./wallet.js";
+import { GiraffeClient } from "./client.js";
+import { Edge, TransactionId, TransactionOutput, TransactionOutputReference, Vertex } from "./models.js";
 
 /**
  * Provides functionality for interacting with the Giraffe graph using the local wallet.
