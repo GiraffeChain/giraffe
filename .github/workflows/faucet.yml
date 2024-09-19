@@ -1,7 +1,7 @@
 name: Faucet
 on:
   schedule:
-    - cron: "50 0/1 * * *"
+    - cron: "50 0/6 * * *"
 
 jobs:
   faucet:
