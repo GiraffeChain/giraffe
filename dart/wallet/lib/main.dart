@@ -56,7 +56,7 @@ final _theme = ThemeData.from(
     colorScheme: ColorScheme.fromSeed(
   seedColor: Colors.brown,
   brightness: Brightness.light,
-  surface: Colors.brown[100],
+  error: Colors.red,
 ));
 
 final _router = GoRouter(routes: [

@@ -65,12 +65,16 @@ class TransactionOutputPage extends StatelessWidget {
       );
 
   _body(BuildContext context) => GiraffeCard(
-        child: ListView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             TransactionOutputIdCard(reference: reference, scale: 1.25).pad16,
-            _quantity().pad16,
-            if (output.value.hasAccountRegistration()) _registration().pad16,
-            if (output.value.hasGraphEntry()) _graphEntry().pad16,
+            Wrap(spacing: 10, children: [
+              _quantity().pad16,
+              if (output.value.hasAccountRegistration()) _registration().pad16,
+              if (output.value.hasGraphEntry()) _graphEntry(context).pad16,
+            ]),
           ],
         ),
       );
@@ -114,35 +118,33 @@ class TransactionOutputPage extends StatelessWidget {
     return OverUnder(
         over: const Text("Registration",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        under:
-            Wrap(children: body.intersperse(const VerticalDivider()).toList()));
+        under: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, children: body));
   }
 
-  Widget _graphEntry() {
+  Widget _graphEntry(BuildContext context) {
     final graphEntry = output.value.graphEntry;
     if (graphEntry.hasVertex()) {
       final vertex = graphEntry.vertex;
       return OverUnder(
-        over: const Text("Vertex",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        under: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+        over: Text("Vertex", style: Theme.of(context).textTheme.titleLarge),
+        under: Wrap(
+          spacing: 10,
           children: [
             OverUnder(
-                over: const Text("Label",
-                    style:
-                        TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                over: Text("Label",
+                    style: Theme.of(context).textTheme.titleMedium),
                 under: Text(vertex.label,
-                    style:
-                        const TextStyle(fontSize: 14, color: Colors.blueGrey))),
+                    style: Theme.of(context).textTheme.bodyMedium)),
             if (vertex.hasData()) const Divider(),
             if (vertex.hasData())
               OverUnder(
-                over: const Text("Data",
-                    style:
-                        TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                under: DataRenderer(data: vertex.data.toProto3Json()),
+                over: Text("Data",
+                    style: Theme.of(context).textTheme.titleMedium),
+                under: ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(maxHeight: 300, maxWidth: 300),
+                    child: DataRenderer(data: vertex.data.toProto3Json())),
               ),
           ],
         ),
@@ -172,7 +174,8 @@ class TransactionOutputPage extends StatelessWidget {
                 under: DataRenderer(data: edge.data.toProto3Json()),
               ),
             if (edge.hasData()) const Divider(),
-            Wrap(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 OverUnder(
                     over: const Text("Vertex A",

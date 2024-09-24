@@ -12,3 +12,7 @@ extension WidgetsPadOps on Iterable<Widget> {
   List<Widget> get padAll16 => map((e) => e.pad16).toList();
   List<Widget> padAll(double amount) => map((e) => e.pad(amount)).toList();
 }
+
+extension BuildContextScaleOps on BuildContext {
+  double get scale => MediaQuery.of(this).textScaleFactor;
+}

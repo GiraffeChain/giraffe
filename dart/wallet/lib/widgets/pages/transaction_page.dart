@@ -56,7 +56,7 @@ class TransactionPage extends StatelessWidget {
       );
 
   _body(BuildContext context) => GiraffeCard(
-        child: ListView(
+        child: Column(
           children: [
             TransactionIdCard(transaction: transaction, scale: 1.25).pad16,
             _transactionMetadataCard().pad16,
@@ -82,6 +82,8 @@ class TransactionPage extends StatelessWidget {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
+            dataRowMinHeight: 96,
+            dataRowMaxHeight: 96,
             columns: const [
               DataColumn(label: Text("UTxO Reference")),
               DataColumn(label: Text("Quantity")),
