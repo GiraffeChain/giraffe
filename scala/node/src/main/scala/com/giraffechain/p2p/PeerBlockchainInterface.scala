@@ -64,17 +64,17 @@ class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
     for {
       localHeadId <- core.consensus.localChain.currentHead
       localHeader <- core.dataStores.headers.getOrRaise(localHeadId)
-      intersection <- OptionT(
-        narySearch[BlockId](
-          height =>
-            OptionT(core.consensus.localChain.blockIdAtHeight(height))
-              .getOrRaise(new IllegalStateException("Local height not found"))
-              .localTimeout("BlockIdAtHeight.CommonAncestor"),
-          blockIdAtHeight,
-          Ratio(2, 3)
-        )(1L, localHeader.height)
+      getLocalBlockIdAtHeight = (height: Height) =>
+        OptionT(core.consensus.localChain.blockIdAtHeight(height))
+          .getOrRaise(new IllegalStateException("Local height not found"))
+          .localTimeout("BlockIdAtHeight.CommonAncestor")
+      intersection <-
+        OptionT(quickSearch[BlockId](getLocalBlockIdAtHeight, blockIdAtHeight, 5, localHeader.height))
+          .orElse(
+            OptionT(narySearch[BlockId](getLocalBlockIdAtHeight, blockIdAtHeight, Ratio(2, 3))(1L, localHeader.height))
+          )
+          .getOrRaise(new IllegalStateException("Common ancestor not found"))
           .timeoutWithMessage(30.seconds, "Common ancestor trace")
-      ).getOrRaise(new IllegalStateException("Common ancestor not found"))
     } yield intersection
 
   def background: Stream[F, Unit] =
@@ -267,6 +267,19 @@ class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
   private def onPeerRequestedTransactionNotification() =
     cache.localTransactionAdoptions.take
       .flatMap(writeResponse(MultiplexerIds.TransactionNotificationRequest, _))
+
+  private def quickSearch[T](
+      getLocal: Long => F[T],
+      getRemote: Long => F[Option[T]],
+      count: Long,
+      max: Long
+  ): F[Option[T]] =
+    if (count <= 0 || max <= 0) none.pure[F]
+    else
+      (getLocal(max), getRemote(max)).parTupled.flatMap((localValue, remoteValue) =>
+        if (remoteValue.contains(localValue)) remoteValue.pure[F]
+        else quickSearch[T](getLocal, getRemote, count - 1, max - 1)
+      )
 
   private def narySearch[T](
       getLocal: Long => F[T],

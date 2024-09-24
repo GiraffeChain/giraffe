@@ -16,7 +16,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 class SharedSync[F[_]: Async: Random](
     core: BlockchainCore[F],
     clientsF: F[Map[PeerId, PeerBlockchainInterface[F]]],
-    targetRef: Ref[F, Option[SharedSyncState[F]]],
+    stateRef: Ref[F, Option[SharedSyncState[F]]],
     mutex: Mutex[F]
 ):
 
@@ -24,16 +24,16 @@ class SharedSync[F[_]: Async: Random](
     Slf4jLogger.getLoggerFromName("SharedSync")
 
   def compare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId): F[Unit] =
-    OptionT(targetRef.get).foldF(
+    OptionT(stateRef.get).foldF(
       localCompare(commonAncestorHeader, target, peerId)
     )(state =>
       if (state.target.id == target.id || state.target.id == target.parentHeaderId)
-        updateTarget(commonAncestorHeader, target, peerId).void // .flatMap(_.fiber.joinWithUnit)
+        updateTarget(commonAncestorHeader, target, peerId).void
       else remoteCompare(commonAncestorHeader, target, peerId)(state.target, state.providers)
     )
 
   def omitPeer(peerId: PeerId): F[Unit] =
-    targetRef.modify {
+    stateRef.modify {
       case Some(state) if state.providers == Set(peerId) =>
         (none, state.fiber.cancel)
       case Some(state) if state.providers.contains(peerId) =>
@@ -110,7 +110,7 @@ class SharedSync[F[_]: Async: Random](
     }
 
   private def updateTarget(commonAncestor: BlockHeader, target: BlockHeader, provider: PeerId): F[SharedSyncState[F]] =
-    targetRef.get
+    stateRef.get
       .flatMap {
         case Some(s @ SharedSyncState(current, providers, _)) if current.id == target.id =>
           s.copy(providers = providers + provider).pure[F]
@@ -120,12 +120,12 @@ class SharedSync[F[_]: Async: Random](
           sync(commonAncestor).start
             .map(fiber => SharedSyncState(target, Set(provider), fiber))
       }
-      .flatTap(state => targetRef.set(state.some))
+      .flatTap(state => stateRef.set(state.some))
 
   private def sync(commonAncestor: BlockHeader): F[Unit] =
     Stream
       .unfoldEval(commonAncestor.height + 1)(h =>
-        OptionT(targetRef.get)
+        OptionT(stateRef.get)
           .map(_.target)
           .filter(_.height >= h)
           .as((h, h + 1))
@@ -136,11 +136,11 @@ class SharedSync[F[_]: Async: Random](
         for {
           clients <- clientsF
           lastHeight = heights.last.get
-          SharedSyncState(_, providers, _) <- OptionT(targetRef.get).getOrRaise(
+          SharedSyncState(_, providers, _) <- OptionT(stateRef.get).getOrRaise(
             new IllegalStateException("Target not set")
           )
           providerInterfaces = providers.map(clients).toList
-          providersInterface = new MultiPeerInterface[F](providerInterfaces)
+          providersInterface = MultiPeerInterface[F](providerInterfaces)
           batchTargetId <- OptionT(providersInterface.blockIdAtHeight(lastHeight)).getOrRaise(
             new IllegalStateException("Target not found")
           )
@@ -167,7 +167,7 @@ class SharedSync[F[_]: Async: Random](
       )
       .through(adoptSparsely)
       .compile
-      .drain
+      .drain >> stateRef.set(none)
 
   private def fetchVerifyPersistPipe(interface: PeerBlockchainInterface[F]): Pipe[F, BlockHeader, FullBlock] =
     _.evalTap(PeerBlockchainHandler.checkHeader(core))
