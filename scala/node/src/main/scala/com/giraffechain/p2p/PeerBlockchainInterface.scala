@@ -1,17 +1,17 @@
 package com.giraffechain.p2p
 
 import cats.MonadThrow
-import com.giraffechain.codecs.{Codecs, P2PEncodable, given}
-import com.giraffechain.ledger.MempoolChange
-import com.giraffechain.models.*
-import com.giraffechain.utility.Ratio
-import com.giraffechain.{BlockchainCore, Bytes, Height}
 import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.implicits.*
 import cats.effect.kernel.Resource
 import cats.effect.std.{Queue, Random}
 import cats.implicits.*
+import com.giraffechain.codecs.{Codecs, P2PEncodable, given}
+import com.giraffechain.ledger.MempoolChange
+import com.giraffechain.models.*
+import com.giraffechain.utility.Ratio
+import com.giraffechain.{BlockchainCore, Bytes, Height}
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 
@@ -329,3 +329,7 @@ class MultiPeerInterface[F[_]: MonadThrow: Random](interfaces: Iterable[PeerBloc
   def commonAncestor: F[BlockId] = interface.flatMap(_.commonAncestor)
   def background: Stream[F, Unit] =
     Stream.raiseError(new IllegalAccessException("MultiPeerInterface does not support background"))
+
+object MultiPeerInterface:
+  def apply[F[_]: MonadThrow: Random](interfaces: Iterable[PeerBlockchainInterface[F]]): PeerBlockchainInterface[F] =
+    if (interfaces.size == 1) interfaces.head else new MultiPeerInterface(interfaces)

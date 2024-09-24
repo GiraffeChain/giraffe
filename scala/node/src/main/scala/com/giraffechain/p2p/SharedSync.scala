@@ -23,13 +23,13 @@ class SharedSync[F[_]: Async: Random](
   private given logger: Logger[F] =
     Slf4jLogger.getLoggerFromName("SharedSync")
 
-  def compareAndSync(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId): F[Unit] =
+  def compare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId): F[Unit] =
     OptionT(targetRef.get).foldF(
-      localCompareAndSync(commonAncestorHeader, target, peerId)
+      localCompare(commonAncestorHeader, target, peerId)
     )(state =>
       if (state.target.id == target.id || state.target.id == target.parentHeaderId)
         updateTarget(commonAncestorHeader, target, peerId).void // .flatMap(_.fiber.joinWithUnit)
-      else remoteCompareAndSync(commonAncestorHeader, target, peerId)(state.target, state.providers)
+      else remoteCompare(commonAncestorHeader, target, peerId)(state.target, state.providers)
     )
 
   def omitPeer(peerId: PeerId): F[Unit] =
@@ -42,7 +42,7 @@ class SharedSync[F[_]: Async: Random](
         (s, ().pure[F])
     }
 
-  private def localCompareAndSync(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId) =
+  private def localCompare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId) =
     mutex.lock
       .surround(
         for {
@@ -66,10 +66,9 @@ class SharedSync[F[_]: Async: Random](
             .value
         } yield newStateOpt
       )
-//      .flatTap(_.traverse(_.fiber.joinWithUnit))
       .void
 
-  private def remoteCompareAndSync(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId)(
+  private def remoteCompare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId)(
       currentTarget: BlockHeader,
       providers: Set[PeerId]
   ) =
@@ -80,7 +79,7 @@ class SharedSync[F[_]: Async: Random](
           interface = clients(peerId)
           remoteHeaderAtHeightF = (height: Height) =>
             OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
-          localInterface = new MultiPeerInterface[F](providers.map(clients).toList)
+          localInterface = MultiPeerInterface[F](providers.map(clients).toList)
           localHeaderAtHeightF = (height: Height) =>
             OptionT(localInterface.blockIdAtHeight(height)).flatMapF(localInterface.fetchHeader).value
           chainSelectionResult <- core.consensus.chainSelection.compare(
@@ -96,7 +95,6 @@ class SharedSync[F[_]: Async: Random](
             .value
         } yield newStateOpt
       )
-//      .flatTap(_.traverse(_.fiber.joinWithUnit))
       .void
 
   private def logResult(chainSelectionResult: ChainSelectionOutcome) =
@@ -149,18 +147,18 @@ class SharedSync[F[_]: Async: Random](
           alternativeClients <- (clients -- providers).values.toList.traverseFilter(client =>
             OptionT(client.blockIdAtHeight(lastHeight)).filter(_ == batchTargetId).as(client).value
           )
-          interface = new MultiPeerInterface[F](providerInterfaces ++ alternativeClients)
+          interface = MultiPeerInterface[F](providerInterfaces ++ alternativeClients)
         } yield (heights, interface)
       )
       .flatMap((heights, interface) =>
         Stream
           .chunk(heights)
-          .parEvalMap(256)(height =>
+          .parEvalMap(32)(height =>
             OptionT(interface.blockIdAtHeight(height)).getOrRaise(
               new IllegalStateException("Block at Height not found")
             )
           )
-          .parEvalMap(256)(id =>
+          .parEvalMap(128)(id =>
             OptionT(interface.fetchHeader(id))
               .getOrRaise(new IllegalArgumentException("Remote header not found"))
           )
@@ -173,7 +171,7 @@ class SharedSync[F[_]: Async: Random](
 
   private def fetchVerifyPersistPipe(interface: PeerBlockchainInterface[F]): Pipe[F, BlockHeader, FullBlock] =
     _.evalTap(PeerBlockchainHandler.checkHeader(core))
-      .parEvalMap(256)(PeerBlockchainHandler.fetchFullBlock(core, interface))
+      .parEvalMap(16)(PeerBlockchainHandler.fetchFullBlock(core, interface))
       .evalTap(PeerBlockchainHandler.checkBody(core))
 
   private def noForks: Pipe[F, BlockHeader, BlockHeader] = {
