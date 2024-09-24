@@ -29,6 +29,27 @@ trait PeerBlockchainInterface[F[_]]:
   def commonAncestor: F[BlockId]
   def background: Stream[F, Unit]
 
+  def remoteCommonAncestor(altInterface: PeerBlockchainInterface[F])(using Async[F]): F[BlockId] =
+    for {
+      _ <- ().pure[F]
+      getLocalBlockIdAtHeight = (height: Height) =>
+        OptionT(altInterface.blockIdAtHeight(height))
+          .getOrRaise(new IllegalStateException("Pseudo-local height not found"))
+          .localTimeout("BlockIdAtHeight.CommonAncestor")
+      localHeadId <- getLocalBlockIdAtHeight(0)
+      localHeader <-
+        OptionT(altInterface.fetchHeader(localHeadId))
+          .getOrRaise(new IllegalStateException("Pseudo-local header not found"))
+          .localTimeout("BlockIdAtHeight.CommonAncestor")
+      intersection <-
+        OptionT(quickSearch(getLocalBlockIdAtHeight, blockIdAtHeight, 5, localHeader.height))
+          .orElse(
+            OptionT(narySearch(getLocalBlockIdAtHeight, blockIdAtHeight, Ratio(2, 3))(1L, localHeader.height))
+          )
+          .getOrRaise(new IllegalStateException("Common ancestor not found"))
+          .timeoutWithMessage(30.seconds, "Common ancestor trace")
+    } yield intersection
+
 class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
     core: BlockchainCore[F],
     manager: PeersManager[F],
@@ -60,6 +81,7 @@ class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
     writeRequest(MultiplexerIds.PingRequest, message, allPortQueues.pingPong).ensure(
       new IllegalArgumentException("Invalid PingPong Response")
     )(_ == message)
+
   def commonAncestor: F[BlockId] =
     for {
       localHeadId <- core.consensus.localChain.currentHead
@@ -69,9 +91,9 @@ class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
           .getOrRaise(new IllegalStateException("Local height not found"))
           .localTimeout("BlockIdAtHeight.CommonAncestor")
       intersection <-
-        OptionT(quickSearch[BlockId](getLocalBlockIdAtHeight, blockIdAtHeight, 5, localHeader.height))
+        OptionT(quickSearch(getLocalBlockIdAtHeight, blockIdAtHeight, 5, localHeader.height))
           .orElse(
-            OptionT(narySearch[BlockId](getLocalBlockIdAtHeight, blockIdAtHeight, Ratio(2, 3))(1L, localHeader.height))
+            OptionT(narySearch(getLocalBlockIdAtHeight, blockIdAtHeight, Ratio(2, 3))(1L, localHeader.height))
           )
           .getOrRaise(new IllegalStateException("Common ancestor not found"))
           .timeoutWithMessage(30.seconds, "Common ancestor trace")
@@ -222,10 +244,6 @@ class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
   ): F[Unit] =
     readerWriter.write(port, Codecs.OneBS.concat(P2PEncodable[Message].encodeP2P(message)))
 
-  extension [A](fa: F[A])
-    def localTimeout(name: String): F[A] =
-      fa.timeoutWithMessage(DefaultLocalOperationTimeout, s"Local operation '$name' timeout'")
-
   private def onPeerRequestedBlockIdAtHeight(height: Height) =
     core.consensus.localChain
       .blockIdAtHeight(height)
@@ -267,49 +285,6 @@ class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
   private def onPeerRequestedTransactionNotification() =
     cache.localTransactionAdoptions.take
       .flatMap(writeResponse(MultiplexerIds.TransactionNotificationRequest, _))
-
-  private def quickSearch[T](
-      getLocal: Long => F[T],
-      getRemote: Long => F[Option[T]],
-      count: Long,
-      max: Long
-  ): F[Option[T]] =
-    if (count <= 0 || max <= 0) none.pure[F]
-    else
-      (getLocal(max), getRemote(max)).parTupled.flatMap((localValue, remoteValue) =>
-        if (remoteValue.contains(localValue)) remoteValue.pure[F]
-        else quickSearch[T](getLocal, getRemote, count - 1, max - 1)
-      )
-
-  private def narySearch[T](
-      getLocal: Long => F[T],
-      getRemote: Long => F[Option[T]],
-      searchSpaceTarget: Ratio
-  ): (Long, Long) => F[Option[T]] = {
-    def f(min: Long, max: Long, ifNone: Option[T]): F[Option[T]] =
-      (min === max)
-        .pure[F]
-        .ifM(
-          ifTrue = getLocal(min)
-            .flatMap(localValue =>
-              OptionT(getRemote(min))
-                .filter(_ == localValue)
-                .orElse(OptionT.fromOption[F](ifNone))
-                .value
-            ),
-          ifFalse = for {
-            targetHeight <-
-              (min + ((max - min) * searchSpaceTarget.toDouble).floor.round)
-                .pure[F]
-            localValue <- getLocal(targetHeight)
-            remoteValue <- getRemote(targetHeight)
-            result <- remoteValue
-              .filter(_ == localValue)
-              .fold(f(min, targetHeight, ifNone))(remoteValue => f(targetHeight + 1, max, remoteValue.some))
-          } yield result
-        )
-    (min, max) => f(min, max, None)
-  }
 
 class PeerCache[F[_]](
     val localBlockAdoptions: Queue[F, BlockId],

@@ -23,15 +23,31 @@ class SharedSync[F[_]: Async: Random](
   private given logger: Logger[F] =
     Slf4jLogger.getLoggerFromName("SharedSync")
 
+  /** Compares the new target against the current target. If better than the current target, syncing will begin against
+    * the new target
+    * @param commonAncestorHeader
+    *   The local common ancestor
+    * @param target
+    *   The block adopted by the remote peer
+    * @param peerId
+    *   The peer that adopted the block
+    * @return
+    *   Unit, once the comparison is complete. Does not wait for synchronization.
+    */
   def compare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId): F[Unit] =
     OptionT(stateRef.get).foldF(
       localCompare(commonAncestorHeader, target, peerId)
     )(state =>
       if (state.target.id == target.id || state.target.id == target.parentHeaderId)
         updateTarget(commonAncestorHeader, target, peerId).void
-      else remoteCompare(commonAncestorHeader, target, peerId)(state.target, state.providers)
+      else remoteCompare(target, peerId)(state.target, state.providers)
     )
 
+  /** Removes the peer from any sync processes. If the peer was the only provider, syncing stops until a new comparison
+    * is made.
+    * @param peerId
+    *   The peer to omit
+    */
   def omitPeer(peerId: PeerId): F[Unit] =
     stateRef.modify {
       case Some(state) if state.providers == Set(peerId) =>
@@ -68,7 +84,7 @@ class SharedSync[F[_]: Async: Random](
       )
       .void
 
-  private def remoteCompare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId)(
+  private def remoteCompare(target: BlockHeader, peerId: PeerId)(
       currentTarget: BlockHeader,
       providers: Set[PeerId]
   ) =
@@ -79,9 +95,12 @@ class SharedSync[F[_]: Async: Random](
           interface = clients(peerId)
           remoteHeaderAtHeightF = (height: Height) =>
             OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
-          localInterface = MultiPeerInterface[F](providers.map(clients).toList)
+          pseudoLocalInterface = MultiPeerInterface[F](providers.map(clients).toList)
           localHeaderAtHeightF = (height: Height) =>
-            OptionT(localInterface.blockIdAtHeight(height)).flatMapF(localInterface.fetchHeader).value
+            OptionT(pseudoLocalInterface.blockIdAtHeight(height)).flatMapF(pseudoLocalInterface.fetchHeader).value
+          commonAncestor <- interface.remoteCommonAncestor(pseudoLocalInterface)
+          commonAncestorHeader <- OptionT(pseudoLocalInterface.fetchHeader(commonAncestor))
+            .getOrRaise(new IllegalArgumentException("Remote header not found"))
           chainSelectionResult <- core.consensus.chainSelection.compare(
             currentTarget,
             target,
@@ -117,48 +136,63 @@ class SharedSync[F[_]: Async: Random](
         case Some(s @ SharedSyncState(current, _, _)) if current.id == target.parentHeaderId =>
           s.copy(target = target, providers = Set(provider)).pure[F]
         case Some(SharedSyncState(_, _, fiber)) =>
-          fiber.cancel >> sync(commonAncestor, target, provider).start
+          fiber.cancel >> sync(commonAncestor, target).start
             .map(fiber => SharedSyncState(target, Set(provider), fiber))
         case _ =>
-          sync(commonAncestor, target, provider).start
+          sync(commonAncestor, target).start
             .map(fiber => SharedSyncState(target, Set(provider), fiber))
       }
       .flatTap(state => stateRef.set(state.some))
 
-  private def sync(commonAncestor: BlockHeader, initialTarget: BlockHeader, initialProvider: PeerId): F[Unit] =
-    Stream
-      .eval(
-        stateRef.get
-          .map(_.fold(Set(initialProvider))(_.providers))
-          .flatMap(providers => clientsF.map(m => providers.toList.map(m)))
-          .map(MultiPeerInterface(_))
+  private def sync(commonAncestor: BlockHeader, initialTarget: BlockHeader): F[Unit] =
+    (Stream.range(commonAncestor.height + 1, initialTarget.height + 1) ++ Stream
+      .eval(OptionT(stateRef.get).map(_.target.height).value)
+      .flatMap(Stream.fromOption[F](_))
+      .flatMap(max => Stream.range(initialTarget.height + 1, max + 1)))
+      .chunkN(512)
+      .flatMap(heights =>
+        Stream
+          .eval(interfaceForHeight(heights.last.get))
+          .flatMap(interface =>
+            Stream
+              .chunk(heights)
+              .parEvalMap(32)(height =>
+                OptionT(interface.blockIdAtHeight(height)).getOrRaise(
+                  new IllegalStateException("Block at Height not found")
+                )
+              )
+              .parEvalMap(128)(id =>
+                OptionT(interface.fetchHeader(id))
+                  .getOrRaise(new IllegalArgumentException("Remote header not found"))
+              )
+              .through(noForks)
+              .through(fetchVerifyPersistPipe(interface))
+          )
       )
-      .flatMap(interface =>
-        (Stream.range(commonAncestor.height + 1, initialTarget.height + 1) ++ Stream
-          .eval(
-            OptionT(stateRef.get).map(_.target.height).value
-          )
-          .flatMap(Stream.fromOption[F](_))
-          .flatMap(max => Stream.range(initialTarget.height + 1, max + 1)))
-          .parEvalMap(32)(height =>
-            OptionT(interface.blockIdAtHeight(height)).getOrRaise(
-              new IllegalStateException("Block at Height not found")
-            )
-          )
-          .parEvalMap(128)(id =>
-            OptionT(interface.fetchHeader(id))
-              .getOrRaise(new IllegalArgumentException("Remote header not found"))
-          )
-          .through(noForks)
-          .through(fetchVerifyPersistPipe(interface))
-          .through(adoptSparsely)
-      )
+      .through(adoptSparsely)
       .compile
       .drain >> stateRef.set(none)
 
+  private def interfaceForHeight(height: Height) =
+    for {
+      clients <- clientsF
+      SharedSyncState(_, providers, _) <- OptionT(stateRef.get).getOrRaise(
+        new IllegalStateException("Target not set")
+      )
+      providerInterfaces = providers.map(clients).toList
+      providersInterface = MultiPeerInterface[F](providerInterfaces)
+      batchTargetId <- OptionT(providersInterface.blockIdAtHeight(height)).getOrRaise(
+        new IllegalStateException("Target not found")
+      )
+      alternativeClients <- (clients -- providers).values.toList.traverseFilter(client =>
+        OptionT(client.blockIdAtHeight(height)).filter(_ == batchTargetId).as(client).value
+      )
+      interface = MultiPeerInterface[F](providerInterfaces ++ alternativeClients)
+    } yield interface
+
   private def fetchVerifyPersistPipe(interface: PeerBlockchainInterface[F]): Pipe[F, BlockHeader, FullBlock] =
     _.evalTap(PeerBlockchainHandler.checkHeader(core))
-      .parEvalMap(16)(PeerBlockchainHandler.fetchFullBlock(core, interface))
+      .parEvalMap(128)(PeerBlockchainHandler.fetchFullBlock(core, interface))
       .evalTap(PeerBlockchainHandler.checkBody(core))
 
   private def noForks: Pipe[F, BlockHeader, BlockHeader] = {
