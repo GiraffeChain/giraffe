@@ -22,19 +22,10 @@ final BoxDecoration _giraffeBackgroundDecoration = BoxDecoration(
       "assets/images/giraffe_bottom_right.svg",
       scale: 9,
       color: const Color.fromARGB(255, 235, 224, 208),
-      // gradient: const LinearGradient(
-      //   colors: <Color>[
-      //     Color.fromARGB(36, 255, 237, 251),
-      //     Color.fromARGB(36, 219, 206, 221)
-      //   ],
-      //   begin: Alignment.topLeft,
-      //   end: Alignment.bottomRight,
-      // ),
     ),
     alignment: Alignment.bottomRight,
     fit: BoxFit.scaleDown,
   ),
-  // color: const Color(0xFFe9e1cb),
   gradient: const LinearGradient(
     colors: <Color>[
       Color.fromARGB(255, 255, 241, 219),
