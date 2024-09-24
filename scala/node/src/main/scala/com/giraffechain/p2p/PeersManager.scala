@@ -1,14 +1,14 @@
 package com.giraffechain.p2p
 
-import com.giraffechain.BlockchainCore
-import com.giraffechain.codecs.given
-import com.giraffechain.crypto.CryptoResources
-import com.giraffechain.models.*
 import cats.effect.implicits.*
 import cats.effect.std.Random
 import cats.effect.{Async, Ref, Resource}
 import cats.implicits.*
 import com.comcast.ip4s.{Host, Port, SocketAddress}
+import com.giraffechain.BlockchainCore
+import com.giraffechain.codecs.given
+import com.giraffechain.crypto.CryptoResources
+import com.giraffechain.models.*
 import fs2.Stream
 import fs2.io.net.Socket
 import org.typelevel.log4cats.Logger
@@ -18,6 +18,7 @@ import scala.concurrent.duration.*
 
 class PeersManager[F[_]: Async: Random: CryptoResources](
     core: BlockchainCore[F],
+    sharedSync: SharedSync[F],
     localPeer: LocalPeer,
     magicBytes: Array[Byte],
     connectOutbound: SocketAddress[?] => F[Unit],
@@ -65,27 +66,30 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
     val resource = for {
       _ <- Resource.onFinalize(socket.endOfInput *> socket.endOfOutput)
       remotePeerId <- Handshake.run(socket, magicBytes, localPeer.sk, localPeer.vk).timeout(5.seconds).toResource
-      given Logger[F] <- Slf4jLogger.fromName(show"Peer($remotePeerId)").toResource
-      _ <- Resource.make(Logger[F].info("Connected"))(_ => Logger[F].info("Disconnected"))
-      peerState <- PeerState.make(socket, PublicP2PState(localPeer = ConnectedPeer(remotePeerId)), outboundAddress)
       _ <- Async[F]
         .raiseWhen(remotePeerId == localPeer.connectedPeer.peerId)(
           new IllegalStateException("Self-Connection")
         )
         .toResource
-      isNewPeer <- Resource.make(
-        stateRef.modify(s =>
-          if (s.connectedPeers.contains(remotePeerId)) (s, false)
-          else (s.withConnectedPeer(remotePeerId, peerState), true)
-        )
-      )(_ => stateRef.update(_.withDisconnectedPeer(remotePeerId, peerState)))
-      _ <- Async[F].raiseWhen(!isNewPeer)(new IllegalStateException("Duplicate Connection")).toResource
-      portQueues <- AllPortQueues.make[F]
-      readerWriter <- MultiplexedReaderWriter.forSocket(socket)
-      peerCache <- PeerCache.make[F]
-      interface = new PeerBlockchainInterface[F](core, this, portQueues, readerWriter, peerCache)
-      handler = new PeerBlockchainHandler[F](core, interface, peerState)
-      _ <- interface.background.merge(handler.handle).compile.drain.toResource
+      given Logger[F] <- Slf4jLogger.fromName(show"Peer($remotePeerId)").toResource
+      isDuplicateConnection <- stateRef.get.map(_.connectedPeers.contains(remotePeerId)).toResource
+      _ <- Async[F]
+        .raiseWhen(isDuplicateConnection)(new IllegalStateException(show"Duplicate Connection id=$remotePeerId"))
+        .toResource
+      _ <- Resource.make(Logger[F].info("Connected"))(_ => Logger[F].info("Disconnected"))
+      peerState <- PeerState.make(
+        socket,
+        core,
+        this,
+        PublicP2PState(localPeer = ConnectedPeer(remotePeerId)),
+        outboundAddress
+      )
+      _ <- Resource.make(stateRef.update(_.withConnectedPeer(remotePeerId, peerState)))(_ =>
+        stateRef.update(_.withDisconnectedPeer(remotePeerId, peerState))
+      )
+      _ <- Resource.onFinalize(sharedSync.omitPeer(remotePeerId))
+      handler = new PeerBlockchainHandler[F](core, peerState, sharedSync)
+      _ <- peerState.interface.background.merge(handler.handle).compile.drain.toResource
     } yield ()
 
     resource.use_.handleErrorWith(e => logger.warn(e)("Connection error"))
@@ -110,16 +114,21 @@ object PeersManager:
   ): Resource[F, PeersManager[F]] =
     Ref
       .of(State[F](Map.empty, Map.empty, knownPeers))
-      .map(
-        new PeersManager(
-          core,
-          localPeer,
-          magicBytes,
-          connectOutbound,
-          _
-        )
-      )
       .toResource
+      .flatMap(stateRef =>
+        SharedSync
+          .make(core, stateRef.get.map(_.connectedPeers.view.mapValues(_.interface).toMap))
+          .map(
+            new PeersManager(
+              core,
+              _,
+              localPeer,
+              magicBytes,
+              connectOutbound,
+              stateRef
+            )
+          )
+      )
       .flatTap(manager => Resource.onFinalize(Async[F].defer(manager.close())))
       .flatTap(manager =>
         Stream

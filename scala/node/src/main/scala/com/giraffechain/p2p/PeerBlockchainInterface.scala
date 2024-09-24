@@ -1,5 +1,6 @@
 package com.giraffechain.p2p
 
+import cats.MonadThrow
 import com.giraffechain.codecs.{Codecs, P2PEncodable, given}
 import com.giraffechain.ledger.MempoolChange
 import com.giraffechain.models.*
@@ -9,20 +10,32 @@ import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.implicits.*
 import cats.effect.kernel.Resource
-import cats.effect.std.Queue
+import cats.effect.std.{Queue, Random}
 import cats.implicits.*
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration.*
 
-class PeerBlockchainInterface[F[_]: Async: Logger](
+trait PeerBlockchainInterface[F[_]]:
+  def publicState: F[PublicP2PState]
+  def nextBlockAdoption: F[BlockId]
+  def nextTransactionNotification: F[TransactionId]
+  def fetchHeader(id: BlockId): F[Option[BlockHeader]]
+  def fetchBody(id: BlockId): F[Option[BlockBody]]
+  def fetchTransaction(id: TransactionId): F[Option[Transaction]]
+  def blockIdAtHeight(height: Height): F[Option[BlockId]]
+  def ping(message: Bytes): F[Bytes]
+  def commonAncestor: F[BlockId]
+  def background: Stream[F, Unit]
+
+class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
     core: BlockchainCore[F],
     manager: PeersManager[F],
     allPortQueues: AllPortQueues[F],
     readerWriter: MultiplexedReaderWriter[F],
     cache: PeerCache[F]
-):
+) extends PeerBlockchainInterface[F]:
   def publicState: F[PublicP2PState] =
     writeRequest(MultiplexerIds.PeerStateRequest, (), allPortQueues.p2pState)
   def nextBlockAdoption: F[BlockId] =
@@ -301,3 +314,18 @@ object PeerCache:
     )
       .mapN(new PeerCache[F](_, _, _, _))
       .toResource
+
+class MultiPeerInterface[F[_]: MonadThrow: Random](interfaces: Iterable[PeerBlockchainInterface[F]])
+    extends PeerBlockchainInterface[F]:
+  private def interface = Random[F].elementOf(interfaces)
+  def publicState: F[PublicP2PState] = interface.flatMap(_.publicState)
+  def nextBlockAdoption: F[BlockId] = interface.flatMap(_.nextBlockAdoption)
+  def nextTransactionNotification: F[TransactionId] = interface.flatMap(_.nextTransactionNotification)
+  def fetchHeader(id: BlockId): F[Option[BlockHeader]] = interface.flatMap(_.fetchHeader(id))
+  def fetchBody(id: BlockId): F[Option[BlockBody]] = interface.flatMap(_.fetchBody(id))
+  def fetchTransaction(id: TransactionId): F[Option[Transaction]] = interface.flatMap(_.fetchTransaction(id))
+  def blockIdAtHeight(height: Height): F[Option[BlockId]] = interface.flatMap(_.blockIdAtHeight(height))
+  def ping(message: Bytes): F[Bytes] = interface.flatMap(_.ping(message))
+  def commonAncestor: F[BlockId] = interface.flatMap(_.commonAncestor)
+  def background: Stream[F, Unit] =
+    Stream.raiseError(new IllegalAccessException("MultiPeerInterface does not support background"))

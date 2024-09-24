@@ -1,19 +1,19 @@
 package com.giraffechain.consensus
 
+import cats.data.{EitherT, NonEmptyChain}
+import cats.effect.{Resource, Async}
+import cats.implicits.*
 import com.giraffechain.codecs.{*, given}
 import com.giraffechain.crypto.CryptoResources
 import com.giraffechain.models.{ActiveStaker, BlockHeader, BlockId, SlotId}
 import com.giraffechain.utility.*
 import com.giraffechain.{*, given}
-import cats.data.{EitherT, NonEmptyChain}
-import cats.effect.{Resource, Sync}
-import cats.implicits.*
 
 trait HeaderValidation[F[_]]:
   def validate(blockHeader: BlockHeader): ValidationResult[F]
 
 object HeaderValidation:
-  def make[F[_]: Sync: CryptoResources](
+  def make[F[_]: Async: CryptoResources](
       genesisId: BlockId,
       etaCalculation: EtaCalculation[F],
       stakerTracker: StakerTracker[F],
@@ -31,7 +31,7 @@ object HeaderValidation:
     )
   )
 
-class HeaderValidationImpl[F[_]: Sync: CryptoResources](
+class HeaderValidationImpl[F[_]: Async: CryptoResources](
     genesisId: BlockId,
     etaCalculation: EtaCalculation[F],
     stakerTracker: StakerTracker[F],
@@ -41,25 +41,27 @@ class HeaderValidationImpl[F[_]: Sync: CryptoResources](
 ) extends HeaderValidation[F]:
   override def validate(header: BlockHeader): ValidationResult[F] =
     if (header.id == genesisId) EitherT.pure(())
-    else
-      for {
-        parent <- EitherT.liftF(fetchHeader(header.parentHeaderId))
-        _ <- statelessVerification(header, parent)
-        _ <- timeSlotVerification(header)
-        _ <- vrfVerification(header)
-        staker <- registrationVerification(header)
-        _ <- blockSignatureVerification(header)(staker)
-        threshold <- vrfThresholdFor(header, parent)
-        _ <- vrfThresholdVerification(header, threshold)
-        _ <- eligibilityVerification(header, threshold)
-      } yield ()
+    else {
+      List(
+        timeSlotVerification(header),
+        vrfVerification(header),
+        (EitherT.liftF(fetchHeader(header.parentHeaderId)), registrationVerification(header)).parTupled.flatMap(
+          (parent, staker) =>
+            statelessVerification(header, parent) &>
+              blockSignatureVerification(header)(staker) &> vrfThresholdFor(header, parent)
+                .flatMap(threshold =>
+                  vrfThresholdVerification(header, threshold) &> eligibilityVerification(header, threshold)
+                )
+        )
+      ).parSequence.map(_.void)
+    }
 
-  private[consensus] def statelessVerification(child: BlockHeader, parent: BlockHeader) =
+  private[consensus] def statelessVerification(child: BlockHeader, parent: BlockHeader): ValidationResult[F] =
     for {
       _ <- EitherT.cond[F](child.slot > parent.slot, (), NonEmptyChain("Non-Forward Slot"))
       _ <- EitherT.cond[F](child.timestamp > parent.timestamp, (), NonEmptyChain("Non-Forward Timestamp"))
       _ <- EitherT.cond[F](child.height === parent.height + 1, (), NonEmptyChain("Non-Forward Height"))
-    } yield child
+    } yield ()
 
   private[consensus] def timeSlotVerification(header: BlockHeader): ValidationResult[F] =
     EitherT
