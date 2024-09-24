@@ -59,7 +59,7 @@ class BlockPage extends StatelessWidget {
       );
 
   _body(BuildContext context) => GiraffeCard(
-        child: ListView(
+        child: Column(
           children: [
             BlockIdCard(block: block, scale: 1.25).pad16,
             _blockMetadataCard(context).pad16,

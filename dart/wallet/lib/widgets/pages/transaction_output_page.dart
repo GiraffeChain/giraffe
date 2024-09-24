@@ -65,7 +65,7 @@ class TransactionOutputPage extends StatelessWidget {
       );
 
   _body(BuildContext context) => GiraffeCard(
-        child: ListView(
+        child: Column(
           children: [
             TransactionOutputIdCard(reference: reference, scale: 1.25).pad16,
             _quantity().pad16,

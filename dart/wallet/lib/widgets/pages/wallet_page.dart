@@ -23,11 +23,8 @@ class StreamedTransactView extends ConsumerWidget {
       title: "Wallet",
       body: Align(
         alignment: Alignment.topLeft,
-        child: SizedBox(
-          width: 600,
-          child: GiraffeCard(
-            child: body(context, ref),
-          ),
+        child: GiraffeCard(
+          child: SizedBox(width: 600, height: 500, child: body(context, ref)),
         ),
       ),
     );

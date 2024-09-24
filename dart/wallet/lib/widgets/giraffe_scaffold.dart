@@ -9,6 +9,15 @@ class GiraffeScaffold extends StatelessWidget {
   const GiraffeScaffold({super.key, this.title, required this.body});
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    Widget c = SingleChildScrollView(child: body);
+    if (size.shortestSide > 600) {
+      c = FittedBox(
+          fit: BoxFit.contain,
+          child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 600),
+              child: SingleChildScrollView(child: body)));
+    }
     return SelectionArea(
       child: Scaffold(
         extendBodyBehindAppBar: true,
@@ -18,7 +27,7 @@ class GiraffeScaffold extends StatelessWidget {
           child: Padding(
             padding:
                 const EdgeInsets.only(left: 32, right: 32, top: 8, bottom: 32),
-            child: body,
+            child: c,
           ),
         )),
       ),

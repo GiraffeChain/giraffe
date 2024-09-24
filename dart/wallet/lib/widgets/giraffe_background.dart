@@ -18,24 +18,27 @@ class GiraffeBackground extends StatelessWidget {
 
 final BoxDecoration _giraffeBackgroundDecoration = BoxDecoration(
   image: DecorationImage(
-    image: AVSSVGProvider("assets/images/giraffe_bottom_right.svg",
-        scale: 9,
-        gradient: const LinearGradient(
-          colors: <Color>[
-            Color.fromARGB(255, 102, 62, 3),
-            Color.fromARGB(255, 66, 4, 75)
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        )),
+    image: AVSSVGProvider(
+      "assets/images/giraffe_bottom_right.svg",
+      scale: 9,
+      color: const Color.fromARGB(255, 235, 224, 208),
+      // gradient: const LinearGradient(
+      //   colors: <Color>[
+      //     Color.fromARGB(36, 255, 237, 251),
+      //     Color.fromARGB(36, 219, 206, 221)
+      //   ],
+      //   begin: Alignment.topLeft,
+      //   end: Alignment.bottomRight,
+      // ),
+    ),
     alignment: Alignment.bottomRight,
     fit: BoxFit.scaleDown,
   ),
   // color: const Color(0xFFe9e1cb),
   gradient: const LinearGradient(
     colors: <Color>[
-      Color.fromARGB(255, 255, 192, 97),
-      Color.fromARGB(255, 204, 130, 19),
+      Color.fromARGB(255, 255, 241, 219),
+      Color.fromARGB(255, 235, 224, 208),
     ],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,

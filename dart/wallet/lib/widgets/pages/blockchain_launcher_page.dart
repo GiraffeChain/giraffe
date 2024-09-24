@@ -85,10 +85,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
         child: Align(
           alignment: Alignment.topLeft,
           child: GiraffeCard(
-            child: SizedBox(
-              width: 500,
-              child: settingsForm(context),
-            ),
+            child: settingsForm(context),
           ),
         ),
       ));
@@ -98,13 +95,17 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Image(image: AssetImage("assets/images/logo_with_border.png")),
-        const Text("Giraffe Chain",
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+        Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+          const Image(image: AssetImage("assets/images/logo_with_border.png")),
+          Text("Giraffe Chain",
+              style: Theme.of(context).textTheme.displayLarge),
+        ]),
         addressField(context),
         walletForm(context),
-        connectButton(context),
-        advancedButton(context),
+        Wrap(children: [
+          connectButton(context),
+          advancedButton(context),
+        ]),
       ].padAll8,
     );
   }
@@ -116,15 +117,22 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
       checkAddress(updated);
     }
 
-    final textField = TextField(
-      onChanged: onChanged,
-      controller: addressController,
-      decoration: InputDecoration(
-          hintText: apiAddress ?? "http://localhost:2024/api", label: prompt),
+    final textField = ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 480),
+      child: TextField(
+        onChanged: onChanged,
+        controller: addressController,
+        decoration: InputDecoration(
+            hintText: apiAddress ?? "http://localhost:2024/api", label: prompt),
+      ),
     );
     final errorField = error == null
         ? null
-        : Text(error!, style: const TextStyle(color: Colors.red));
+        : Text(error!,
+            style: Theme.of(context)
+                .textTheme
+                .labelLarge!
+                .merge(TextStyle(color: Theme.of(context).colorScheme.error)));
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,9 +204,9 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
         Icons.warning,
         size: 18,
       ),
-      label: const Text(
+      label: Text(
         "Advanced",
-        style: TextStyle(fontSize: 11),
+        style: Theme.of(context).textTheme.bodySmall!,
       ),
     );
   }
@@ -227,23 +235,28 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
   Widget uninitialized(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Select a wallet",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          TextButton.icon(
-            label: const Text("Public"),
-            onPressed: () async =>
-                onSelected(await PrivateTestnet.defaultKeyPair),
-            icon: const Icon(Icons.people),
-          ),
-          TextButton.icon(
-            label: const Text("Create"),
-            onPressed: () => _create(context),
-            icon: const Icon(Icons.add),
-          ),
-          TextButton.icon(
-            label: const Text("Import"),
-            onPressed: () => _import(context),
-            icon: const Icon(Icons.text_format),
+          Text("Select a wallet",
+              style: Theme.of(context).textTheme.titleLarge),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              TextButton.icon(
+                label: const Text("Public"),
+                onPressed: () async =>
+                    onSelected(await PrivateTestnet.defaultKeyPair),
+                icon: const Icon(Icons.people),
+              ),
+              TextButton.icon(
+                label: const Text("Create"),
+                onPressed: () => _create(context),
+                icon: const Icon(Icons.add),
+              ),
+              TextButton.icon(
+                label: const Text("Import"),
+                onPressed: () => _import(context),
+                icon: const Icon(Icons.text_format),
+              ),
+            ],
           ),
           loadOrResetButtons(context),
         ].padAll8,
@@ -252,8 +265,8 @@ class WalletSelectionFormState extends ConsumerState<WalletSelectionForm> {
   Widget initialized(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Wallet is loaded",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))
+          Text("Wallet is loaded",
+                  style: Theme.of(context).textTheme.titleLarge)
               .pad8,
           const ClipboardAddressButton().pad8,
           TextButton.icon(
@@ -372,7 +385,8 @@ class CreateWalletModalState extends State<CreateWalletModal> {
       ];
 
   List<Widget> done(BuildContext context) => [
-        const Text("Your mnemonic is:", style: TextStyle(fontSize: 18)),
+        Text("Your mnemonic is:",
+            style: Theme.of(context).textTheme.titleLarge),
         TextButton.icon(
           icon: const Icon(Icons.copy),
           label: Text(result!.$1),
@@ -464,8 +478,8 @@ class ImportWalletModalState extends State<ImportWalletModal> {
   }
 
   List<Widget> done(BuildContext context) => [
-        const Text("Your wallet was imported successfully.",
-            style: TextStyle(fontSize: 18)),
+        Text("Your wallet was imported successfully.",
+            style: Theme.of(context).textTheme.titleLarge),
         TextButton(
           child: const Text("Close"),
           onPressed: () => Navigator.pop(context, result!.$2),

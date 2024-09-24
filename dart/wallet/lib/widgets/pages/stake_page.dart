@@ -23,15 +23,9 @@ class StakeView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return GiraffeScaffold(
       title: "Stake",
-      body: Align(
-        alignment: Alignment.topLeft,
-        child: SizedBox(
-          width: 600,
-          child: GiraffeCard(
-            child: body(context, ref),
-          ).pad16,
-        ),
-      ),
+      body: GiraffeCard(
+        child: body(context, ref),
+      ).pad16,
     );
   }
 
@@ -76,7 +70,7 @@ class StakingNotConfigured extends ConsumerStatefulWidget {
 class StakingNotConfiguredState extends ConsumerState<StakingNotConfigured> {
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    return Column(
       children: [
         const Text(
           "Staking and Block Production",
@@ -131,7 +125,8 @@ class ImportStakerState extends State<ImportStaker> {
       children: [
         Row(
           children: [
-            Expanded(
+            SizedBox(
+              width: 250,
               child: TextFormField(
                   obscureText: true,
                   enableSuggestions: false,
@@ -187,16 +182,22 @@ class RunMinting extends ConsumerWidget {
           const Text("Staking is active.",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
               .pad8,
-          const Text(
-            "Your device is making blocks in the background. Network and power consumption may be higher than normal.",
-            style: TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
-          ).pad8,
-          const Text(
-            "If you recently registered, the network will place you into a delay period before you can make new blocks. This is to prevent abuse. Block production will automatically begin when it can.",
-            style: TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
-          ).pad8,
+          SizedBox(
+            width: 400,
+            child: const Text(
+              "Your device is making blocks in the background. Network and power consumption may be higher than normal.",
+              style: TextStyle(fontSize: 12),
+              textAlign: TextAlign.center,
+            ).pad8,
+          ),
+          SizedBox(
+            width: 400,
+            child: const Text(
+              "If you recently registered, the network will place you into a delay period before you can make new blocks. This is to prevent abuse. Block production will automatically begin when it can.",
+              style: TextStyle(fontSize: 12),
+              textAlign: TextAlign.center,
+            ).pad8,
+          ),
           const Divider(),
           editStakeSlider(ref),
           TextButton.icon(

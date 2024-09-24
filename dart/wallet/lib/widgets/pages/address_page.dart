@@ -70,7 +70,7 @@ class AddressPage extends StatelessWidget {
       );
 
   _body(BuildContext context) => GiraffeCard(
-        child: ListView(
+        child: Column(
           children: [
             AddressCard(address: address, scale: 1.25).pad16,
             _outputsCard().pad16,
