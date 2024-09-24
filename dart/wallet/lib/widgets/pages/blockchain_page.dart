@@ -35,29 +35,31 @@ class BlockchainPage extends ConsumerWidget {
 
   Widget navigationBlock(BuildContext context, WidgetRef ref) {
     return Wrap(
+        runAlignment: WrapAlignment.center,
+        alignment: WrapAlignment.center,
         children: [
-      ElevatedButton.icon(
-          // style: buttonStyle,
-          label: const Text("Wallet"),
-          icon: const Icon(Icons.wallet),
-          onPressed: () {
-            context.push("/wallet");
-          }),
-      ElevatedButton.icon(
-          // style: buttonStyle,
-          label: const Text("Social"),
-          icon: const Icon(Icons.people),
-          onPressed: () {
-            context.push("/social");
-          }),
-      ElevatedButton.icon(
-          // style: buttonStyle,
-          label: const Text("Stake"),
-          icon: const Icon(Icons.publish),
-          onPressed: () {
-            context.push("/stake");
-          }),
-    ].padAll8);
+          ElevatedButton.icon(
+              // style: buttonStyle,
+              label: const Text("Wallet"),
+              icon: const Icon(Icons.wallet),
+              onPressed: () {
+                context.push("/wallet");
+              }),
+          ElevatedButton.icon(
+              // style: buttonStyle,
+              label: const Text("Social"),
+              icon: const Icon(Icons.people),
+              onPressed: () {
+                context.push("/social");
+              }),
+          ElevatedButton.icon(
+              // style: buttonStyle,
+              label: const Text("Stake"),
+              icon: const Icon(Icons.publish),
+              onPressed: () {
+                context.push("/stake");
+              }),
+        ].padAll8);
   }
 
   Widget headInfo(BuildContext context, WidgetRef ref) {

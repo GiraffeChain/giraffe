@@ -45,6 +45,7 @@ dependencies:
   avs_svg_provider: ^1.0.1
   args: ^2.5.0
   flutter_json_view: ^1.1.5
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:

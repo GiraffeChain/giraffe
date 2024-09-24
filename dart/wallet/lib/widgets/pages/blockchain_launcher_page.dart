@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:avs_svg_provider/avs_svg_provider.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/clipboard_address_button.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
@@ -95,10 +97,15 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
-          const Image(image: AssetImage("assets/images/logo_with_border.png")),
-          Text("Giraffe Chain",
-              style: Theme.of(context).textTheme.displayLarge),
+        Row(children: [
+          logo(context).pad8,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Giraffe", style: Theme.of(context).textTheme.displayLarge),
+              Text("Chain", style: Theme.of(context).textTheme.displayLarge),
+            ],
+          ),
         ]),
         addressField(context),
         walletForm(context),
@@ -108,6 +115,10 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
         ]),
       ].padAll8,
     );
+  }
+
+  Widget logo(BuildContext context) {
+    return SvgPicture.asset("assets/images/logo.svg", height: 128);
   }
 
   Widget addressField(BuildContext context) {
