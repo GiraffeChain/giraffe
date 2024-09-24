@@ -1,61 +1,53 @@
 package com.giraffechain.p2p
 
-import com.giraffechain.models.*
-import com.giraffechain.{Bytes, Height}
-import cats.{Monad, MonadThrow}
+import cats.MonadThrow
 import cats.data.OptionT
 import cats.effect.implicits.*
 import cats.effect.std.{Mutex, Queue}
 import cats.effect.{Async, Deferred, Resource}
 import cats.implicits.*
+import com.giraffechain.models.*
+import com.giraffechain.{Bytes, Height}
 import com.google.common.primitives.Ints
 import com.google.protobuf.ByteString
 import fs2.io.net.Socket
 import fs2.{Chunk, Stream, *}
 
 object MultiplexedFraming:
-  def apply[F[_]: Async](socket: Socket[F]): Stream[F, (Int, Chunk[Byte])] =
-    Stream
-      .repeatEval(
-        OptionT(readExactly(socket)(8))
-          .map(prefix =>
-            (
-              Ints.fromBytes(prefix(0), prefix(1), prefix(2), prefix(3)),
-              Ints.fromBytes(prefix(4), prefix(5), prefix(6), prefix(7))
-            )
-          )
-          .flatMap((port, length) =>
-            if (length == 0) OptionT.some[F]((port, Chunk.empty[Byte]))
-            else
-              OptionT(readExactly(socket)(length))
-                .timeoutWithMessage(DefaultWriteTimeout, s"Read timeout in port=$port")
-                .ensureOr(chunk =>
-                  new IllegalArgumentException(s"Expected $length bytes. Received ${chunk.size} bytes.")
-                )(_.size == length)
-                .tupleLeft(port)
-          )
-          .value
-      )
-      .unNoneTerminate
+  def apply[F[_]: Async](socket: Socket[F]): Stream[F, (Int, Chunk[Byte])] = {
+    def readPrefix(s: Stream[F, Byte]): Pull[F, (Int, Chunk[Byte]), Unit] =
+      s.pull
+        .unconsN(8)
+        .flatMap {
+          case Some((prefix, tail)) =>
+            val port = Ints.fromBytes(prefix(0), prefix(1), prefix(2), prefix(3))
+            val length = Ints.fromBytes(prefix(4), prefix(5), prefix(6), prefix(7))
+            readData(tail)(port, length)
+          case _ =>
+            Pull.done
+        }
+    def readData(s: Stream[F, Byte])(port: Int, length: Int): Pull[F, (Int, Chunk[Byte]), Unit] =
+      s.pull
+        .unconsN(length)
+        .flatMap {
+          case Some((data, tail)) =>
+            Pull.output1((port, data)) >> readPrefix(tail)
+          case _ =>
+            Pull.raiseError(new IllegalArgumentException(s"Expected $length bytes."))
+        }
+    readPrefix(socket.reads).stream
+  }
 
   def writer[F[_]: Async](socket: Socket[F]): (Int, Chunk[Byte]) => F[Unit] =
     (port, data) =>
-      socket
-        .write(
+      Async[F]
+        .delay(
           Chunk.array(Ints.toByteArray(port)) ++
             Chunk.array(Ints.toByteArray(data.size)) ++
             data
         )
+        .flatMap(socket.write)
         .timeoutWithMessage(DefaultWriteTimeout, s"Write timeout in port=$port")
-
-  private def readExactly[F[_]: Monad](socket: Socket[F])(length: Int): F[Option[Chunk[Byte]]] =
-    (length, Chunk.empty[Byte]).tailRecM((remaining, acc) =>
-      OptionT(socket.read(remaining))
-        .fold(none[Chunk[Byte]].asRight)(bytes =>
-          if (bytes.size < remaining) Left((remaining - bytes.size, acc ++ bytes))
-          else Right(Some(acc ++ bytes))
-        )
-    )
 
 case class MultiplexedReaderWriter[F[_]](
     read: Stream[F, (Int, Bytes)],
@@ -63,33 +55,13 @@ case class MultiplexedReaderWriter[F[_]](
 )
 
 object MultiplexedReaderWriter:
-  def forSocket[F[_]: Async](socket: Socket[F]): Resource[F, MultiplexedReaderWriter[F]] = {
-    Queue
-      .unbounded[F, (Int, Bytes)]
-      .toResource
-      .flatTap(
-        Stream
-          .fromQueueUnterminated(_)
-          .evalMap((port, data) =>
-            Async[F].delay(
-              Chunk.array(Ints.toByteArray(port)) ++
-                Chunk.array(Ints.toByteArray(data.size)) ++
-                Chunk.array(data.toByteArray)
-            )
-          )
-          .unchunks
-          .through(socket.writes)
-          .compile
-          .drain
-          .background
+  def forSocket[F[_]: Async](socket: Socket[F]): Resource[F, MultiplexedReaderWriter[F]] =
+    Resource.pure(
+      MultiplexedReaderWriter[F](
+        MultiplexedFraming(socket).map((port, chunk) => (port, ByteString.copyFrom(chunk.toByteBuffer))),
+        (port, data) => MultiplexedFraming.writer[F](socket).apply(port, Chunk.byteBuffer(data.asReadOnlyByteBuffer()))
       )
-      .map(queue =>
-        MultiplexedReaderWriter[F](
-          MultiplexedFraming(socket).map((port, chunk) => (port, ByteString.copyFrom(chunk.toArray))),
-          (port, data) => queue.offer(port, data)
-        )
-      )
-  }
+    )
 
 case class PortQueues[F[_], Request, Response](
     requests: Queue[F, Request],
@@ -110,7 +82,7 @@ case class PortQueues[F[_], Request, Response](
       .fromQueueUnterminated(requests)
       .evalMap(subProcessor)
   def expectResponse(innerEffect: F[Unit])(using Async[F]): F[Response] =
-    mutex.lock.surround(Deferred[F, Response].flatTap(responses.offer).map(_.get) <* innerEffect).flatten
+    mutex.lock.surround(Deferred[F, Response].flatTap(responses.offer).map(_.get) <& innerEffect).flatten
 
 object PortQueues:
   def make[F[_]: Async, Request, Response]: Resource[F, PortQueues[F, Request, Response]] =

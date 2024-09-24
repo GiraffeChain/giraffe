@@ -107,7 +107,7 @@ object DataStores:
           makeCachedStore[F, BlockId, (Long, BlockId)](
             factory,
             basePath / "block-id-tree",
-            8192
+            131072
           ),
           makeCachedStore[F, Byte, BlockId](
             factory,
@@ -132,7 +132,7 @@ object DataStores:
           makeCachedStore[F, TransactionId, BitVector](
             factory,
             basePath / "transaction-output-state",
-            8192
+            16384
           ),
           makeCachedStore[F, TransactionOutputReference, List[
             TransactionOutputReference
@@ -158,12 +158,12 @@ object DataStores:
           makeCachedStore[F, TransactionOutputReference, ActiveStaker](
             factory,
             basePath / "stakers",
-            256
+            512
           ),
           makeCachedStore[F, Long, BlockId](
             factory,
             basePath / "block-height-index",
-            4096
+            131072
           ),
           makeCachedStore[F, String, Array[Byte]](
             factory,
@@ -173,7 +173,7 @@ object DataStores:
           makeCachedStore[F, TransactionId, Height](
             factory,
             basePath / "transaction-heights",
-            4096
+            32768
           ),
           Sqlite.connection[F]((basePath / "sqlite.db").toString)
         ).mapN(

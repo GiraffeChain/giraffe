@@ -1,28 +1,62 @@
 package com.giraffechain.p2p
 
+import cats.MonadThrow
+import cats.data.OptionT
+import cats.effect.Async
+import cats.effect.implicits.*
+import cats.effect.kernel.Resource
+import cats.effect.std.{Queue, Random}
+import cats.implicits.*
 import com.giraffechain.codecs.{Codecs, P2PEncodable, given}
 import com.giraffechain.ledger.MempoolChange
 import com.giraffechain.models.*
 import com.giraffechain.utility.Ratio
 import com.giraffechain.{BlockchainCore, Bytes, Height}
-import cats.data.OptionT
-import cats.effect.Async
-import cats.effect.implicits.*
-import cats.effect.kernel.Resource
-import cats.effect.std.Queue
-import cats.implicits.*
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration.*
 
-class PeerBlockchainInterface[F[_]: Async: Logger](
+trait PeerBlockchainInterface[F[_]]:
+  def publicState: F[PublicP2PState]
+  def nextBlockAdoption: F[BlockId]
+  def nextTransactionNotification: F[TransactionId]
+  def fetchHeader(id: BlockId): F[Option[BlockHeader]]
+  def fetchBody(id: BlockId): F[Option[BlockBody]]
+  def fetchTransaction(id: TransactionId): F[Option[Transaction]]
+  def blockIdAtHeight(height: Height): F[Option[BlockId]]
+  def ping(message: Bytes): F[Bytes]
+  def commonAncestor: F[BlockId]
+  def background: Stream[F, Unit]
+
+  def remoteCommonAncestor(altInterface: PeerBlockchainInterface[F])(using Async[F]): F[BlockId] =
+    for {
+      _ <- ().pure[F]
+      getLocalBlockIdAtHeight = (height: Height) =>
+        OptionT(altInterface.blockIdAtHeight(height))
+          .getOrRaise(new IllegalStateException("Pseudo-local height not found"))
+          .localTimeout("BlockIdAtHeight.CommonAncestor")
+      localHeadId <- getLocalBlockIdAtHeight(0)
+      localHeader <-
+        OptionT(altInterface.fetchHeader(localHeadId))
+          .getOrRaise(new IllegalStateException("Pseudo-local header not found"))
+          .localTimeout("BlockIdAtHeight.CommonAncestor")
+      intersection <-
+        OptionT(quickSearch(getLocalBlockIdAtHeight, blockIdAtHeight, 5, localHeader.height))
+          .orElse(
+            OptionT(narySearch(getLocalBlockIdAtHeight, blockIdAtHeight, Ratio(2, 3))(1L, localHeader.height))
+          )
+          .getOrRaise(new IllegalStateException("Common ancestor not found"))
+          .timeoutWithMessage(30.seconds, "Common ancestor trace")
+    } yield intersection
+
+class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
     core: BlockchainCore[F],
     manager: PeersManager[F],
     allPortQueues: AllPortQueues[F],
     readerWriter: MultiplexedReaderWriter[F],
     cache: PeerCache[F]
-):
+) extends PeerBlockchainInterface[F]:
   def publicState: F[PublicP2PState] =
     writeRequest(MultiplexerIds.PeerStateRequest, (), allPortQueues.p2pState)
   def nextBlockAdoption: F[BlockId] =
@@ -47,21 +81,22 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
     writeRequest(MultiplexerIds.PingRequest, message, allPortQueues.pingPong).ensure(
       new IllegalArgumentException("Invalid PingPong Response")
     )(_ == message)
+
   def commonAncestor: F[BlockId] =
     for {
       localHeadId <- core.consensus.localChain.currentHead
       localHeader <- core.dataStores.headers.getOrRaise(localHeadId)
-      intersection <- OptionT(
-        narySearch[BlockId](
-          height =>
-            OptionT(core.consensus.localChain.blockIdAtHeight(height))
-              .getOrRaise(new IllegalStateException("Local height not found"))
-              .localTimeout("BlockIdAtHeight.CommonAncestor"),
-          blockIdAtHeight,
-          Ratio(2, 3)
-        )(1L, localHeader.height)
+      getLocalBlockIdAtHeight = (height: Height) =>
+        OptionT(core.consensus.localChain.blockIdAtHeight(height))
+          .getOrRaise(new IllegalStateException("Local height not found"))
+          .localTimeout("BlockIdAtHeight.CommonAncestor")
+      intersection <-
+        OptionT(quickSearch(getLocalBlockIdAtHeight, blockIdAtHeight, 5, localHeader.height))
+          .orElse(
+            OptionT(narySearch(getLocalBlockIdAtHeight, blockIdAtHeight, Ratio(2, 3))(1L, localHeader.height))
+          )
+          .getOrRaise(new IllegalStateException("Common ancestor not found"))
           .timeoutWithMessage(30.seconds, "Common ancestor trace")
-      ).getOrRaise(new IllegalStateException("Common ancestor not found"))
     } yield intersection
 
   def background: Stream[F, Unit] =
@@ -209,10 +244,6 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
   ): F[Unit] =
     readerWriter.write(port, Codecs.OneBS.concat(P2PEncodable[Message].encodeP2P(message)))
 
-  extension [A](fa: F[A])
-    def localTimeout(name: String): F[A] =
-      fa.timeoutWithMessage(DefaultLocalOperationTimeout, s"Local operation '$name' timeout'")
-
   private def onPeerRequestedBlockIdAtHeight(height: Height) =
     core.consensus.localChain
       .blockIdAtHeight(height)
@@ -255,36 +286,6 @@ class PeerBlockchainInterface[F[_]: Async: Logger](
     cache.localTransactionAdoptions.take
       .flatMap(writeResponse(MultiplexerIds.TransactionNotificationRequest, _))
 
-  private def narySearch[T](
-      getLocal: Long => F[T],
-      getRemote: Long => F[Option[T]],
-      searchSpaceTarget: Ratio
-  ): (Long, Long) => F[Option[T]] = {
-    def f(min: Long, max: Long, ifNone: Option[T]): F[Option[T]] =
-      (min === max)
-        .pure[F]
-        .ifM(
-          ifTrue = getLocal(min)
-            .flatMap(localValue =>
-              OptionT(getRemote(min))
-                .filter(_ == localValue)
-                .orElse(OptionT.fromOption[F](ifNone))
-                .value
-            ),
-          ifFalse = for {
-            targetHeight <-
-              (min + ((max - min) * searchSpaceTarget.toDouble).floor.round)
-                .pure[F]
-            localValue <- getLocal(targetHeight)
-            remoteValue <- getRemote(targetHeight)
-            result <- remoteValue
-              .filter(_ == localValue)
-              .fold(f(min, targetHeight, ifNone))(remoteValue => f(targetHeight + 1, max, remoteValue.some))
-          } yield result
-        )
-    (min, max) => f(min, max, None)
-  }
-
 class PeerCache[F[_]](
     val localBlockAdoptions: Queue[F, BlockId],
     val localTransactionAdoptions: Queue[F, TransactionId],
@@ -301,3 +302,22 @@ object PeerCache:
     )
       .mapN(new PeerCache[F](_, _, _, _))
       .toResource
+
+class MultiPeerInterface[F[_]: MonadThrow: Random](interfaces: Iterable[PeerBlockchainInterface[F]])
+    extends PeerBlockchainInterface[F]:
+  private def interface = Random[F].elementOf(interfaces)
+  def publicState: F[PublicP2PState] = interface.flatMap(_.publicState)
+  def nextBlockAdoption: F[BlockId] = interface.flatMap(_.nextBlockAdoption)
+  def nextTransactionNotification: F[TransactionId] = interface.flatMap(_.nextTransactionNotification)
+  def fetchHeader(id: BlockId): F[Option[BlockHeader]] = interface.flatMap(_.fetchHeader(id))
+  def fetchBody(id: BlockId): F[Option[BlockBody]] = interface.flatMap(_.fetchBody(id))
+  def fetchTransaction(id: TransactionId): F[Option[Transaction]] = interface.flatMap(_.fetchTransaction(id))
+  def blockIdAtHeight(height: Height): F[Option[BlockId]] = interface.flatMap(_.blockIdAtHeight(height))
+  def ping(message: Bytes): F[Bytes] = interface.flatMap(_.ping(message))
+  def commonAncestor: F[BlockId] = interface.flatMap(_.commonAncestor)
+  def background: Stream[F, Unit] =
+    Stream.raiseError(new IllegalAccessException("MultiPeerInterface does not support background"))
+
+object MultiPeerInterface:
+  def apply[F[_]: MonadThrow: Random](interfaces: Iterable[PeerBlockchainInterface[F]]): PeerBlockchainInterface[F] =
+    if (interfaces.size == 1) interfaces.head else new MultiPeerInterface(interfaces)
