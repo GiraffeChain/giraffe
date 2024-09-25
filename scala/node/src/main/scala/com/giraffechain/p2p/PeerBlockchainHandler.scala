@@ -71,11 +71,11 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
   private def awaitBetterBlock: F[Unit] =
     interface.nextBlockAdoption
       .flatMap(blockId =>
-        Logger[F].info(show"Received block notification id=$blockId") >>
+        Logger[F].debug(show"Received block notification id=$blockId") >>
           core.dataStores.headers
             .contains(blockId)
             .ifM(
-              Logger[F].info(show"Ignoring known block id=$blockId").as(true),
+              Logger[F].debug(show"Ignoring known block id=$blockId").as(true),
               OptionT(interface.fetchHeader(blockId))
                 .getOrRaise(new IllegalArgumentException("Remote header not found"))
                 .flatMap(remoteHeader =>
@@ -87,7 +87,9 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
                         .flatTap(PeerBlockchainHandler.adoptAndLog(core))
                         .as(true)
                     else
-                      Logger[F].info(show"Block id=$blockId is not a direct local extension.  Checking sync.").as(false)
+                      Logger[F]
+                        .debug(show"Block id=$blockId is not a direct local extension.  Checking sync.")
+                        .as(false)
                   )
                 )
             )

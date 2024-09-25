@@ -56,7 +56,7 @@ class SharedSync[F[_]: Async: Random](
         (state.copy(providers = state.providers - peerId).some, ().pure[F])
       case s =>
         (s, ().pure[F])
-    }
+    }.flatten
 
   private def localCompare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId) =
     mutex.lock
@@ -171,7 +171,9 @@ class SharedSync[F[_]: Async: Random](
       )
       .through(adoptSparsely)
       .compile
-      .drain >> stateRef.set(none)
+      .drain
+      .onError(e => Logger[F].error(e)("Sync failed"))
+      .guaranteeCase(o => Async[F].unlessA(o.isCanceled)(stateRef.set(none)))
 
   private def interfaceForHeight(height: Height) =
     for {
