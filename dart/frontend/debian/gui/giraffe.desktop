@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0.0
+Name=giraffe
+GenericName=giraffe
+Comment=Giraffe Chain Frontend
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=Flutter;
+Icon=giraffe.png
