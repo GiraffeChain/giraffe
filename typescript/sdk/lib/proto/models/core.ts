@@ -29,8 +29,6 @@ export interface BlockHeader {
   parentHeaderId:
     | BlockId
     | undefined;
-  /** The slot of the parent block */
-  parentSlot: number;
   /**
    * The commitment/accumulator of the block body
    * length = 32
@@ -79,13 +77,6 @@ export interface StakerCertificate {
    * length = 32
    */
   vrfVK: string;
-  /**
-   * Hash of the operator's `threshold`
-   * routine = blake2b256
-   * Base58 encoded
-   * length = 32
-   */
-  thresholdEvidence: string;
   /**
    * The epoch's randomness
    * Base58 encoded
@@ -352,7 +343,6 @@ function createBaseBlockHeader(): BlockHeader {
   return {
     headerId: undefined,
     parentHeaderId: undefined,
-    parentSlot: 0,
     txRoot: "",
     timestamp: 0,
     height: 0,
@@ -370,9 +360,6 @@ export const BlockHeader = {
     }
     if (message.parentHeaderId !== undefined) {
       BlockId.encode(message.parentHeaderId, writer.uint32(10).fork()).join();
-    }
-    if (message.parentSlot !== 0) {
-      writer.uint32(16).uint64(message.parentSlot);
     }
     if (message.txRoot !== "") {
       writer.uint32(26).string(message.txRoot);
@@ -418,13 +405,6 @@ export const BlockHeader = {
           }
 
           message.parentHeaderId = BlockId.decode(reader, reader.uint32());
-          continue;
-        case 2:
-          if (tag !== 16) {
-            break;
-          }
-
-          message.parentSlot = longToNumber(reader.uint64());
           continue;
         case 3:
           if (tag !== 26) {
@@ -491,7 +471,6 @@ export const BlockHeader = {
     return {
       headerId: isSet(object.headerId) ? BlockId.fromJSON(object.headerId) : undefined,
       parentHeaderId: isSet(object.parentHeaderId) ? BlockId.fromJSON(object.parentHeaderId) : undefined,
-      parentSlot: isSet(object.parentSlot) ? globalThis.Number(object.parentSlot) : 0,
       txRoot: isSet(object.txRoot) ? globalThis.String(object.txRoot) : "",
       timestamp: isSet(object.timestamp) ? globalThis.Number(object.timestamp) : 0,
       height: isSet(object.height) ? globalThis.Number(object.height) : 0,
@@ -516,9 +495,6 @@ export const BlockHeader = {
     }
     if (message.parentHeaderId !== undefined) {
       obj.parentHeaderId = BlockId.toJSON(message.parentHeaderId);
-    }
-    if (message.parentSlot !== 0) {
-      obj.parentSlot = Math.round(message.parentSlot);
     }
     if (message.txRoot !== "") {
       obj.txRoot = message.txRoot;
@@ -561,7 +537,6 @@ export const BlockHeader = {
     message.parentHeaderId = (object.parentHeaderId !== undefined && object.parentHeaderId !== null)
       ? BlockId.fromPartial(object.parentHeaderId)
       : undefined;
-    message.parentSlot = object.parentSlot ?? 0;
     message.txRoot = object.txRoot ?? "";
     message.timestamp = object.timestamp ?? 0;
     message.height = object.height ?? 0;
@@ -657,7 +632,7 @@ export const BlockHeader_SettingsEntry = {
 };
 
 function createBaseStakerCertificate(): StakerCertificate {
-  return { blockSignature: "", vrfSignature: "", vrfVK: "", thresholdEvidence: "", eta: "" };
+  return { blockSignature: "", vrfSignature: "", vrfVK: "", eta: "" };
 }
 
 export const StakerCertificate = {
@@ -670,9 +645,6 @@ export const StakerCertificate = {
     }
     if (message.vrfVK !== "") {
       writer.uint32(26).string(message.vrfVK);
-    }
-    if (message.thresholdEvidence !== "") {
-      writer.uint32(34).string(message.thresholdEvidence);
     }
     if (message.eta !== "") {
       writer.uint32(42).string(message.eta);
@@ -708,13 +680,6 @@ export const StakerCertificate = {
 
           message.vrfVK = reader.string();
           continue;
-        case 4:
-          if (tag !== 34) {
-            break;
-          }
-
-          message.thresholdEvidence = reader.string();
-          continue;
         case 5:
           if (tag !== 42) {
             break;
@@ -736,7 +701,6 @@ export const StakerCertificate = {
       blockSignature: isSet(object.blockSignature) ? globalThis.String(object.blockSignature) : "",
       vrfSignature: isSet(object.vrfSignature) ? globalThis.String(object.vrfSignature) : "",
       vrfVK: isSet(object.vrfVK) ? globalThis.String(object.vrfVK) : "",
-      thresholdEvidence: isSet(object.thresholdEvidence) ? globalThis.String(object.thresholdEvidence) : "",
       eta: isSet(object.eta) ? globalThis.String(object.eta) : "",
     };
   },
@@ -752,9 +716,6 @@ export const StakerCertificate = {
     if (message.vrfVK !== "") {
       obj.vrfVK = message.vrfVK;
     }
-    if (message.thresholdEvidence !== "") {
-      obj.thresholdEvidence = message.thresholdEvidence;
-    }
     if (message.eta !== "") {
       obj.eta = message.eta;
     }
@@ -769,7 +730,6 @@ export const StakerCertificate = {
     message.blockSignature = object.blockSignature ?? "";
     message.vrfSignature = object.vrfSignature ?? "";
     message.vrfVK = object.vrfVK ?? "";
-    message.thresholdEvidence = object.thresholdEvidence ?? "";
     message.eta = object.eta ?? "";
     return message;
   },

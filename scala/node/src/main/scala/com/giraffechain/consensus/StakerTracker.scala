@@ -289,15 +289,17 @@ object EpochBoundaries:
       unapplyEvent = (state, blockId) =>
         fetchHeader(blockId)
           .flatMap(header =>
-            (
-              clock.epochOf(header.slot),
-              clock.epochOf(header.parentSlot)
-            ).tupled
-              .flatMap((epoch, parentEpoch) =>
-                if (epoch == parentEpoch)
-                  state.put(epoch, header.parentHeaderId)
-                else state.remove(epoch)
-              )
+            fetchHeader(header.parentHeaderId).flatMap(parentHeader =>
+              (
+                clock.epochOf(header.slot),
+                clock.epochOf(parentHeader.slot)
+              ).tupled
+                .flatMap((epoch, parentEpoch) =>
+                  if (epoch == parentEpoch)
+                    state.put(epoch, header.parentHeaderId)
+                  else state.remove(epoch)
+                )
+            )
           )
           .as(state),
       parentChildTree = blockIdTree,

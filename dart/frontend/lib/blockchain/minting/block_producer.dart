@@ -86,7 +86,6 @@ class BlockProducerImpl extends BlockProducer {
         .base58;
     final unsignedHeader = UnsignedBlockHeader(
       parentHeader.id,
-      parentHeader.slot,
       txRoot,
       timestamp,
       parentHeader.height + 1,

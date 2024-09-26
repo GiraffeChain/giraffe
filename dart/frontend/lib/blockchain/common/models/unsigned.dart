@@ -5,7 +5,6 @@ import 'package:fixnum/fixnum.dart';
 
 class UnsignedBlockHeader {
   final BlockId parentHeaderId;
-  final Int64 parentSlot;
   final String txRoot;
   final Int64 timestamp;
   final Int64 height;
@@ -15,7 +14,6 @@ class UnsignedBlockHeader {
 
   UnsignedBlockHeader(
     this.parentHeaderId,
-    this.parentSlot,
     this.txRoot,
     this.timestamp,
     this.height,
@@ -28,20 +26,17 @@ class UnsignedBlockHeader {
 class PartialStakerCertificate {
   final String vrfSignature;
   final String vrfVK;
-  final String thresholdEvidence;
   final String eta;
 
   PartialStakerCertificate(
       {required this.vrfSignature,
       required this.vrfVK,
-      required this.thresholdEvidence,
       required this.eta});
 }
 
 extension BlockHeaderOps on BlockHeader {
   UnsignedBlockHeader get unsigned => UnsignedBlockHeader(
         parentHeaderId,
-        parentSlot,
         txRoot,
         timestamp,
         height,
@@ -49,7 +44,6 @@ extension BlockHeaderOps on BlockHeader {
         PartialStakerCertificate(
           vrfSignature: stakerCertificate.vrfSignature,
           vrfVK: stakerCertificate.vrfVK,
-          thresholdEvidence: stakerCertificate.thresholdEvidence,
           eta: stakerCertificate.eta,
         ),
         account,

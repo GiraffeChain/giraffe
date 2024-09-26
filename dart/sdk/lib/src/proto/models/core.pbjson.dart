@@ -31,7 +31,6 @@ const BlockHeader$json = {
   '2': [
     {'1': 'headerId', '3': 12, '4': 1, '5': 11, '6': '.com.giraffechain.models.BlockId', '10': 'headerId'},
     {'1': 'parentHeaderId', '3': 1, '4': 1, '5': 11, '6': '.com.giraffechain.models.BlockId', '8': {}, '10': 'parentHeaderId'},
-    {'1': 'parentSlot', '3': 2, '4': 1, '5': 4, '10': 'parentSlot'},
     {'1': 'txRoot', '3': 3, '4': 1, '5': 9, '10': 'txRoot'},
     {'1': 'timestamp', '3': 4, '4': 1, '5': 4, '10': 'timestamp'},
     {'1': 'height', '3': 5, '4': 1, '5': 4, '10': 'height'},
@@ -57,16 +56,15 @@ const BlockHeader_SettingsEntry$json = {
 final $typed_data.Uint8List blockHeaderDescriptor = $convert.base64Decode(
     'CgtCbG9ja0hlYWRlchI8CghoZWFkZXJJZBgMIAEoCzIgLmNvbS5naXJhZmZlY2hhaW4ubW9kZW'
     'xzLkJsb2NrSWRSCGhlYWRlcklkElIKDnBhcmVudEhlYWRlcklkGAEgASgLMiAuY29tLmdpcmFm'
-    'ZmVjaGFpbi5tb2RlbHMuQmxvY2tJZEII+kIFigECEAFSDnBhcmVudEhlYWRlcklkEh4KCnBhcm'
-    'VudFNsb3QYAiABKARSCnBhcmVudFNsb3QSFgoGdHhSb290GAMgASgJUgZ0eFJvb3QSHAoJdGlt'
-    'ZXN0YW1wGAQgASgEUgl0aW1lc3RhbXASFgoGaGVpZ2h0GAUgASgEUgZoZWlnaHQSEgoEc2xvdB'
-    'gGIAEoBFIEc2xvdBJiChFzdGFrZXJDZXJ0aWZpY2F0ZRgHIAEoCzIqLmNvbS5naXJhZmZlY2hh'
-    'aW4ubW9kZWxzLlN0YWtlckNlcnRpZmljYXRlQgj6QgWKAQIQAVIRc3Rha2VyQ2VydGlmaWNhdG'
-    'USVwoHYWNjb3VudBgIIAEoCzIzLmNvbS5naXJhZmZlY2hhaW4ubW9kZWxzLlRyYW5zYWN0aW9u'
-    'T3V0cHV0UmVmZXJlbmNlQgj6QgWKAQIQAVIHYWNjb3VudBJOCghzZXR0aW5ncxgJIAMoCzIyLm'
-    'NvbS5naXJhZmZlY2hhaW4ubW9kZWxzLkJsb2NrSGVhZGVyLlNldHRpbmdzRW50cnlSCHNldHRp'
-    'bmdzGjsKDVNldHRpbmdzRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSFAoFdmFsdWUYAiABKAlSBX'
-    'ZhbHVlOgI4AQ==');
+    'ZmVjaGFpbi5tb2RlbHMuQmxvY2tJZEII+kIFigECEAFSDnBhcmVudEhlYWRlcklkEhYKBnR4Um'
+    '9vdBgDIAEoCVIGdHhSb290EhwKCXRpbWVzdGFtcBgEIAEoBFIJdGltZXN0YW1wEhYKBmhlaWdo'
+    'dBgFIAEoBFIGaGVpZ2h0EhIKBHNsb3QYBiABKARSBHNsb3QSYgoRc3Rha2VyQ2VydGlmaWNhdG'
+    'UYByABKAsyKi5jb20uZ2lyYWZmZWNoYWluLm1vZGVscy5TdGFrZXJDZXJ0aWZpY2F0ZUII+kIF'
+    'igECEAFSEXN0YWtlckNlcnRpZmljYXRlElcKB2FjY291bnQYCCABKAsyMy5jb20uZ2lyYWZmZW'
+    'NoYWluLm1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZUII+kIFigECEAFSB2FjY291'
+    'bnQSTgoIc2V0dGluZ3MYCSADKAsyMi5jb20uZ2lyYWZmZWNoYWluLm1vZGVscy5CbG9ja0hlYW'
+    'Rlci5TZXR0aW5nc0VudHJ5UghzZXR0aW5ncxo7Cg1TZXR0aW5nc0VudHJ5EhAKA2tleRgBIAEo'
+    'CVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAE=');
 
 @$core.Deprecated('Use stakerCertificateDescriptor instead')
 const StakerCertificate$json = {
@@ -75,7 +73,6 @@ const StakerCertificate$json = {
     {'1': 'blockSignature', '3': 1, '4': 1, '5': 9, '10': 'blockSignature'},
     {'1': 'vrfSignature', '3': 2, '4': 1, '5': 9, '10': 'vrfSignature'},
     {'1': 'vrfVK', '3': 3, '4': 1, '5': 9, '10': 'vrfVK'},
-    {'1': 'thresholdEvidence', '3': 4, '4': 1, '5': 9, '10': 'thresholdEvidence'},
     {'1': 'eta', '3': 5, '4': 1, '5': 9, '10': 'eta'},
   ],
 };
@@ -84,8 +81,7 @@ const StakerCertificate$json = {
 final $typed_data.Uint8List stakerCertificateDescriptor = $convert.base64Decode(
     'ChFTdGFrZXJDZXJ0aWZpY2F0ZRImCg5ibG9ja1NpZ25hdHVyZRgBIAEoCVIOYmxvY2tTaWduYX'
     'R1cmUSIgoMdnJmU2lnbmF0dXJlGAIgASgJUgx2cmZTaWduYXR1cmUSFAoFdnJmVksYAyABKAlS'
-    'BXZyZlZLEiwKEXRocmVzaG9sZEV2aWRlbmNlGAQgASgJUhF0aHJlc2hvbGRFdmlkZW5jZRIQCg'
-    'NldGEYBSABKAlSA2V0YQ==');
+    'BXZyZlZLEhAKA2V0YRgFIAEoCVIDZXRh');
 
 @$core.Deprecated('Use slotIdDescriptor instead')
 const SlotId$json = {

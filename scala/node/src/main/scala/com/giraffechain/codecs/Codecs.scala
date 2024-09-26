@@ -74,7 +74,6 @@ trait Codecs {
         header.copy(headerId = computedId.some)
       def immutableBytes: Bytes =
         header.parentHeaderId.immutableBytes
-          .concat(header.parentSlot.immutableBytes)
           .concat(header.txRoot.decodeBase58)
           .concat(header.timestamp.immutableBytes)
           .concat(header.height.immutableBytes)
@@ -86,7 +85,6 @@ trait Codecs {
     extension (header: UnsignedBlockHeader)
       def signableBytes: Bytes =
         header.parentHeaderId.immutableBytes
-          .concat(header.parentSlot.immutableBytes)
           .concat(header.txRoot.decodeBase58)
           .concat(header.timestamp.immutableBytes)
           .concat(header.height.immutableBytes)
@@ -100,7 +98,6 @@ trait Codecs {
         certificate.blockSignature.decodeBase58.immutableBytes
           .concat(certificate.vrfSignature.decodeBase58.immutableBytes)
           .concat(certificate.vrfVK.decodeBase58.immutableBytes)
-          .concat(certificate.thresholdEvidence.decodeBase58.immutableBytes)
           .concat(certificate.eta.decodeBase58.immutableBytes)
 
   given ImmutableBytes[UnsignedBlockHeader.PartialStakerCertificate] with
@@ -108,7 +105,6 @@ trait Codecs {
       def immutableBytes: Bytes =
         certificate.vrfSignature.decodeBase58.immutableBytes
           .concat(certificate.vrfVK.decodeBase58.immutableBytes)
-          .concat(certificate.thresholdEvidence.decodeBase58.immutableBytes)
           .concat(certificate.eta.decodeBase58.immutableBytes)
 
   given [T: ImmutableBytes]: ImmutableBytes[Seq[T]] with

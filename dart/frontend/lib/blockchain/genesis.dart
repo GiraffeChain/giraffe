@@ -35,7 +35,6 @@ class Genesis {
     ..blockSignature = _emptyBytes64
     ..vrfSignature = _emptyBytes80
     ..vrfVK = _emptyBytes32
-    ..thresholdEvidence = _emptyBytes32
     ..eta = eta.base58;
 
   static Future<void> save(Directory directory, FullBlock block) async {
@@ -66,7 +65,6 @@ class GenesisConfig {
     final transactionIds = transactions.map((tx) => tx.id);
     final header = BlockHeader()
       ..parentHeaderId = Genesis.parentId
-      ..parentSlot = Genesis.parentSlot
       ..txRoot =
           TxRoot.calculateFromTransactionIds(Uint8List(32), transactionIds)
               .base58

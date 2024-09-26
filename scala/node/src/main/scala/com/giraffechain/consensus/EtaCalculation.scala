@@ -1,14 +1,14 @@
 package com.giraffechain.consensus
 
+import cats.*
+import cats.data.*
+import cats.effect.{Clock as _, *}
+import cats.implicits.*
 import com.giraffechain.*
 import com.giraffechain.codecs.{*, given}
 import com.giraffechain.crypto.*
 import com.giraffechain.models.{BlockHeader, BlockId, SlotId}
 import com.giraffechain.utility.*
-import cats.*
-import cats.data.*
-import cats.effect.{Clock as _, *}
-import cats.implicits.*
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.google.protobuf.ByteString
 import org.typelevel.log4cats.Logger
@@ -97,9 +97,12 @@ private[consensus] class EtaCalculationImpl[F[_]: Async: Parallel: CryptoResourc
         for {
           epoch <- clock.epochOf(twoThirdsBest.slot)
           epochRange <- clock.epochRange(epoch)
-          epochData <- NonEmptyChain(twoThirdsBest).iterateUntilM(items =>
-            fetchHeader(items.head.parentHeaderId).map(items.prepend)
-          )(items => items.head.parentSlot < epochRange.start)
+          epochData <- NonEmptyChain(twoThirdsBest).tailRecM(items =>
+            fetchHeader(items.head.parentHeaderId).map(parent =>
+              if (parent.slot >= epochRange.start) Left(items.prepend(parent))
+              else Right(items)
+            )
+          )
           rhoValues <- epochData.parTraverse(header => CryptoResources[F].ed25519VRF.useSync(e => header.rho(using e)))
           nextEta <- calculate(
             previousEta = twoThirdsBest.stakerCertificate.eta.decodeBase58,

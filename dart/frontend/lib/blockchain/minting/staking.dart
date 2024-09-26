@@ -3,7 +3,6 @@ import '../common/models/unsigned.dart';
 import '../consensus/staker_tracker.dart';
 import '../consensus/eta_calculation.dart';
 import '../consensus/leader_election_validation.dart';
-import '../consensus/utils.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'models/vrf_hit.dart';
 import 'vrf_calculator.dart';
@@ -49,13 +48,10 @@ class StakingImpl extends Staking {
       blockSignature: signature.base58,
       vrfSignature: unsignedHeader.partialStakerCertificate.vrfSignature,
       vrfVK: unsignedHeader.partialStakerCertificate.vrfVK,
-      thresholdEvidence:
-          unsignedHeader.partialStakerCertificate.thresholdEvidence,
       eta: unsignedHeader.partialStakerCertificate.eta,
     );
     final header = BlockHeader()
       ..parentHeaderId = unsignedHeader.parentHeaderId
-      ..parentSlot = unsignedHeader.parentSlot
       ..txRoot = unsignedHeader.txRoot
       ..timestamp = unsignedHeader.timestamp
       ..height = unsignedHeader.height
@@ -77,12 +73,10 @@ class StakingImpl extends Staking {
     final isLeader = await leaderElection.isEligible(threshold, rho);
     log.fine("Staking leader election test result=$isLeader slot=$slot");
     if (isLeader) {
-      final evidence = threshold.thresholdEvidence;
       final testProof = await vrfCalculator.proofForSlot(slot, eta);
       final cert = PartialStakerCertificate(
           vrfSignature: testProof.base58,
           vrfVK: vkVrf.base58,
-          thresholdEvidence: evidence.base58,
           eta: eta.base58);
       return VrfHit(cert, slot, threshold);
     }

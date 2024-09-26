@@ -18,14 +18,11 @@ dependencies:
   rxdart: ^0.28.0
   fast_base58: ^0.2.1
   integral_isolates: ^0.5.1
-  flutter_background: ^1.2.0
   intl: ^0.19.0
-  get_time_ago: ^1.2.5
+  get_time_ago: ^2.0.0
   bit_array: ^2.2.0
-  provider: ^6.0.5
   go_router: ^14.2.7
   path_provider: ^2.1.2
-  file_picker: ^8.0.6
   riverpod: ^2.5.1
   flutter_riverpod: ^2.5.1
   freezed_annotation: ^2.4.4
@@ -33,12 +30,9 @@ dependencies:
     path: ../sdk
   flutter:
     sdk: flutter
-  hooks_riverpod: ^2.5.1
-  flutter_hooks: ^0.20.5
   riverpod_annotation: ^2.3.5
   bip39: ^1.0.6
   flutter_secure_storage: ^9.2.2
-  quiver: ^3.2.1
   rational: ^2.2.3
   hashlib: ^1.19.2
   collection: ^1.18.0
@@ -46,11 +40,12 @@ dependencies:
   args: ^2.5.0
   flutter_json_view: ^1.1.5
   flutter_svg: ^2.0.10+1
+  quiver: ^3.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
   build_runner: ^2.4.11
   freezed: ^2.5.2
   riverpod_generator: ^2.4.0

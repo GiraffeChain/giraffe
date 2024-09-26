@@ -6,7 +6,8 @@ rm -r ./lib/proto || true
 mkdir -p ./tmp/protobuf || true
 
 cd ../..
-cp --parents `find -name \*.proto*` typescript/sdk/tmp/protobuf
+cp --parents `find proto -type f -name "*.proto"` typescript/sdk/tmp/protobuf
+cp --parents `find external_proto -type f -name "*.proto"` typescript/sdk/tmp/protobuf
 cd typescript/sdk
 
 mkdir -p ./lib/proto || true

@@ -72,7 +72,6 @@ class BlockId extends $pb.GeneratedMessage {
 class BlockHeader extends $pb.GeneratedMessage {
   factory BlockHeader({
     BlockId? parentHeaderId,
-    $fixnum.Int64? parentSlot,
     $core.String? txRoot,
     $fixnum.Int64? timestamp,
     $fixnum.Int64? height,
@@ -85,9 +84,6 @@ class BlockHeader extends $pb.GeneratedMessage {
     final $result = create();
     if (parentHeaderId != null) {
       $result.parentHeaderId = parentHeaderId;
-    }
-    if (parentSlot != null) {
-      $result.parentSlot = parentSlot;
     }
     if (txRoot != null) {
       $result.txRoot = txRoot;
@@ -121,7 +117,6 @@ class BlockHeader extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockHeader', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.giraffechain.models'), createEmptyInstance: create)
     ..aOM<BlockId>(1, _omitFieldNames ? '' : 'parentHeaderId', protoName: 'parentHeaderId', subBuilder: BlockId.create)
-    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'parentSlot', $pb.PbFieldType.OU6, protoName: 'parentSlot', defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(3, _omitFieldNames ? '' : 'txRoot', protoName: 'txRoot')
     ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'timestamp', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
@@ -166,97 +161,87 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   BlockId ensureParentHeaderId() => $_ensure(0);
 
-  /// The slot of the parent block
-  @$pb.TagNumber(2)
-  $fixnum.Int64 get parentSlot => $_getI64(1);
-  @$pb.TagNumber(2)
-  set parentSlot($fixnum.Int64 v) { $_setInt64(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasParentSlot() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearParentSlot() => clearField(2);
-
   /// The commitment/accumulator of the block body
   /// length = 32
   @$pb.TagNumber(3)
-  $core.String get txRoot => $_getSZ(2);
+  $core.String get txRoot => $_getSZ(1);
   @$pb.TagNumber(3)
-  set txRoot($core.String v) { $_setString(2, v); }
+  set txRoot($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(3)
-  $core.bool hasTxRoot() => $_has(2);
+  $core.bool hasTxRoot() => $_has(1);
   @$pb.TagNumber(3)
   void clearTxRoot() => clearField(3);
 
   /// The UTC UNIX timestamp (ms) when the block was created
   @$pb.TagNumber(4)
-  $fixnum.Int64 get timestamp => $_getI64(3);
+  $fixnum.Int64 get timestamp => $_getI64(2);
   @$pb.TagNumber(4)
-  set timestamp($fixnum.Int64 v) { $_setInt64(3, v); }
+  set timestamp($fixnum.Int64 v) { $_setInt64(2, v); }
   @$pb.TagNumber(4)
-  $core.bool hasTimestamp() => $_has(3);
+  $core.bool hasTimestamp() => $_has(2);
   @$pb.TagNumber(4)
   void clearTimestamp() => clearField(4);
 
   /// The 1-based index of this block in the blockchain
   @$pb.TagNumber(5)
-  $fixnum.Int64 get height => $_getI64(4);
+  $fixnum.Int64 get height => $_getI64(3);
   @$pb.TagNumber(5)
-  set height($fixnum.Int64 v) { $_setInt64(4, v); }
+  set height($fixnum.Int64 v) { $_setInt64(3, v); }
   @$pb.TagNumber(5)
-  $core.bool hasHeight() => $_has(4);
+  $core.bool hasHeight() => $_has(3);
   @$pb.TagNumber(5)
   void clearHeight() => clearField(5);
 
   /// The time-slot in which the block producer created the block
   @$pb.TagNumber(6)
-  $fixnum.Int64 get slot => $_getI64(5);
+  $fixnum.Int64 get slot => $_getI64(4);
   @$pb.TagNumber(6)
-  set slot($fixnum.Int64 v) { $_setInt64(5, v); }
+  set slot($fixnum.Int64 v) { $_setInt64(4, v); }
   @$pb.TagNumber(6)
-  $core.bool hasSlot() => $_has(5);
+  $core.bool hasSlot() => $_has(4);
   @$pb.TagNumber(6)
   void clearSlot() => clearField(6);
 
   /// A certificate indicating that the block producer was eligible to make this block
   @$pb.TagNumber(7)
-  StakerCertificate get stakerCertificate => $_getN(6);
+  StakerCertificate get stakerCertificate => $_getN(5);
   @$pb.TagNumber(7)
   set stakerCertificate(StakerCertificate v) { setField(7, v); }
   @$pb.TagNumber(7)
-  $core.bool hasStakerCertificate() => $_has(6);
+  $core.bool hasStakerCertificate() => $_has(5);
   @$pb.TagNumber(7)
   void clearStakerCertificate() => clearField(7);
   @$pb.TagNumber(7)
-  StakerCertificate ensureStakerCertificate() => $_ensure(6);
+  StakerCertificate ensureStakerCertificate() => $_ensure(5);
 
   /// The operator's staking account location
   @$pb.TagNumber(8)
-  TransactionOutputReference get account => $_getN(7);
+  TransactionOutputReference get account => $_getN(6);
   @$pb.TagNumber(8)
   set account(TransactionOutputReference v) { setField(8, v); }
   @$pb.TagNumber(8)
-  $core.bool hasAccount() => $_has(7);
+  $core.bool hasAccount() => $_has(6);
   @$pb.TagNumber(8)
   void clearAccount() => clearField(8);
   @$pb.TagNumber(8)
-  TransactionOutputReference ensureAccount() => $_ensure(7);
+  TransactionOutputReference ensureAccount() => $_ensure(6);
 
   /// Configuration or protocol changes
   @$pb.TagNumber(9)
-  $core.Map<$core.String, $core.String> get settings => $_getMap(8);
+  $core.Map<$core.String, $core.String> get settings => $_getMap(7);
 
   /// The ID of _this_ block header.  This value is optional and its contents are not included in the signable or identifiable data.  Clients which _can_ verify
   /// this value should verify this value, but some clients may not be able to or need to, in which case this field acts as a convenience.
   @$pb.TagNumber(12)
-  BlockId get headerId => $_getN(9);
+  BlockId get headerId => $_getN(8);
   @$pb.TagNumber(12)
   set headerId(BlockId v) { setField(12, v); }
   @$pb.TagNumber(12)
-  $core.bool hasHeaderId() => $_has(9);
+  $core.bool hasHeaderId() => $_has(8);
   @$pb.TagNumber(12)
   void clearHeaderId() => clearField(12);
   @$pb.TagNumber(12)
-  BlockId ensureHeaderId() => $_ensure(9);
+  BlockId ensureHeaderId() => $_ensure(8);
 }
 
 /// A certificate proving the operator's election
@@ -265,7 +250,6 @@ class StakerCertificate extends $pb.GeneratedMessage {
     $core.String? blockSignature,
     $core.String? vrfSignature,
     $core.String? vrfVK,
-    $core.String? thresholdEvidence,
     $core.String? eta,
   }) {
     final $result = create();
@@ -277,9 +261,6 @@ class StakerCertificate extends $pb.GeneratedMessage {
     }
     if (vrfVK != null) {
       $result.vrfVK = vrfVK;
-    }
-    if (thresholdEvidence != null) {
-      $result.thresholdEvidence = thresholdEvidence;
     }
     if (eta != null) {
       $result.eta = eta;
@@ -294,7 +275,6 @@ class StakerCertificate extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'blockSignature', protoName: 'blockSignature')
     ..aOS(2, _omitFieldNames ? '' : 'vrfSignature', protoName: 'vrfSignature')
     ..aOS(3, _omitFieldNames ? '' : 'vrfVK', protoName: 'vrfVK')
-    ..aOS(4, _omitFieldNames ? '' : 'thresholdEvidence', protoName: 'thresholdEvidence')
     ..aOS(5, _omitFieldNames ? '' : 'eta')
     ..hasRequiredFields = false
   ;
@@ -356,28 +336,15 @@ class StakerCertificate extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearVrfVK() => clearField(3);
 
-  /// Hash of the operator's `threshold`
-  /// routine = blake2b256
-  /// Base58 encoded
-  /// length = 32
-  @$pb.TagNumber(4)
-  $core.String get thresholdEvidence => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set thresholdEvidence($core.String v) { $_setString(3, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasThresholdEvidence() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearThresholdEvidence() => clearField(4);
-
   /// The epoch's randomness
   /// Base58 encoded
   /// length = 32
   @$pb.TagNumber(5)
-  $core.String get eta => $_getSZ(4);
+  $core.String get eta => $_getSZ(3);
   @$pb.TagNumber(5)
-  set eta($core.String v) { $_setString(4, v); }
+  set eta($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(5)
-  $core.bool hasEta() => $_has(4);
+  $core.bool hasEta() => $_has(3);
   @$pb.TagNumber(5)
   void clearEta() => clearField(5);
 }
