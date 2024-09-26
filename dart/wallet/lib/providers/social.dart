@@ -17,8 +17,8 @@ class PodSocial extends _$PodSocial {
     ({TransactionOutputReference userRef, Vertex userVertex})? user;
     ({TransactionOutputReference profileRef, Vertex profileVertex})? profile;
     for (final entry in wallet.spendableOutputs.entries) {
-      if (entry.value.value.hasGraphEntry()) {
-        final graphEntry = entry.value.value.graphEntry;
+      if (entry.value.hasGraphEntry()) {
+        final graphEntry = entry.value.graphEntry;
         if (graphEntry.hasVertex()) {
           final vertex = graphEntry.vertex;
           if (vertex.label == "user") {
@@ -199,10 +199,9 @@ class ProfileData with _$ProfileData {
 
   factory ProfileData.fromTransactionOutput(TransactionOutput output) =>
       ProfileData(
-        firstName: output
-            .value.graphEntry.vertex.data.fields["firstName"]?.stringValue,
-        lastName:
-            output.value.graphEntry.vertex.data.fields["lastName"]?.stringValue,
+        firstName:
+            output.graphEntry.vertex.data.fields["firstName"]?.stringValue,
+        lastName: output.graphEntry.vertex.data.fields["lastName"]?.stringValue,
       );
 }
 

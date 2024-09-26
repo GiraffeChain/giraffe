@@ -97,7 +97,7 @@ class AccountStateBSSImpl[F[_]: Async](
           .void
           .orElse(
             OptionT
-              .fromOption[F](output.value.accountRegistration)
+              .fromOption[F](output.accountRegistration)
               .semiflatTap(_ => state.remove(input.reference))
               .void
           )
@@ -121,7 +121,7 @@ class AccountStateBSSImpl[F[_]: Async](
       .void
       .orElse(
         OptionT
-          .fromOption[F](output.value.accountRegistration)
+          .fromOption[F](output.accountRegistration)
           .semiflatTap(_ => state.put(outputReference, Nil))
           .void
       )
@@ -162,7 +162,7 @@ class AccountStateBSSImpl[F[_]: Async](
           .void
           .orElse(
             OptionT
-              .fromOption[F](output.value.accountRegistration)
+              .fromOption[F](output.accountRegistration)
               .semiflatTap(_ => state.put(input.reference, Nil))
               .void
           )
@@ -186,7 +186,7 @@ class AccountStateBSSImpl[F[_]: Async](
       .void
       .orElse(
         OptionT
-          .fromOption[F](output.value.accountRegistration)
+          .fromOption[F](output.accountRegistration)
           .semiflatTap(_ => state.remove(outputReference))
           .void
       )

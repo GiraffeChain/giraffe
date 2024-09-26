@@ -332,7 +332,7 @@ class GraphStateBSSImpl[F[_]: Async](
               transaction.inputs
                 .traverse(input =>
                   fetchTransactionOutput(input.reference).map(output =>
-                    output.value.graphEntry.map(_.entry).collect {
+                    output.graphEntry.map(_.entry).collect {
                       case GraphEntry.Entry.Vertex(_) =>
                         RemoveVertex(input.reference.encoded)
                       case GraphEntry.Entry.Edge(_) =>
@@ -343,7 +343,7 @@ class GraphStateBSSImpl[F[_]: Async](
                 .map(_.flatten),
               Async[F].delay(
                 transaction.referencedOutputs.flatMap((ref, output) =>
-                  output.value.graphEntry.map(_.entry).collect {
+                  output.graphEntry.map(_.entry).collect {
                     case GraphEntry.Entry.Vertex(v) =>
                       AddVertex(ref.encoded, v.label, v.data.map(_.encoded))
                     case GraphEntry.Entry.Edge(e) =>
@@ -374,7 +374,7 @@ class GraphStateBSSImpl[F[_]: Async](
             (
               Async[F].delay(
                 transaction.referencedOutputs.reverse.flatMap((ref, output) =>
-                  output.value.graphEntry.map(_.entry).collect {
+                  output.graphEntry.map(_.entry).collect {
                     case GraphEntry.Entry.Edge(_) =>
                       RemoveEdge(ref.encoded)
                     case GraphEntry.Entry.Vertex(_) =>
@@ -385,7 +385,7 @@ class GraphStateBSSImpl[F[_]: Async](
               transaction.inputs.reverse
                 .traverse(input =>
                   fetchTransactionOutput(input.reference).map(output =>
-                    output.value.graphEntry.map(_.entry).collect {
+                    output.graphEntry.map(_.entry).collect {
                       case GraphEntry.Entry.Vertex(v) =>
                         AddVertex(input.reference.encoded, v.label, v.data.map(_.encoded))
                       case GraphEntry.Entry.Edge(e) =>

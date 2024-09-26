@@ -243,7 +243,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
             IO(transactionId.decodeTransactionId)
               .flatMap(transactionId =>
                 OptionT(core.dataStores.transactionOutputs.get(TransactionOutputReference(transactionId.some, index)))
-                  .subflatMap(_.value.graphEntry.flatMap(_.entry.edge).map(_.a.withoutSelfReference(transactionId)))
+                  .subflatMap(_.graphEntry.flatMap(_.entry.edge).map(_.a.withoutSelfReference(transactionId)))
                   .fold(Response().withStatus(Status.NotFound))(Response().withEntity)
               )
           )
@@ -254,7 +254,7 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
             IO(transactionId.decodeTransactionId)
               .flatMap(transactionId =>
                 OptionT(core.dataStores.transactionOutputs.get(TransactionOutputReference(transactionId.some, index)))
-                  .subflatMap(_.value.graphEntry.flatMap(_.entry.edge).map(_.b.withoutSelfReference(transactionId)))
+                  .subflatMap(_.graphEntry.flatMap(_.entry.edge).map(_.b.withoutSelfReference(transactionId)))
                   .fold(Response().withStatus(Status.NotFound))(Response().withEntity)
               )
           )

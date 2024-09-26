@@ -44,7 +44,7 @@ class PrivateTestnet {
                       .vk
                       .base58))
               .address
-          ..value = (Value()..quantity = Int64(10000000))),
+          ..quantity = Int64(10000000)),
     ];
     for (int i = 0; i < stakers.length; i++) {
       final staker = stakers[i];

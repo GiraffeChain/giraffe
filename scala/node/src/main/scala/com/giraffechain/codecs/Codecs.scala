@@ -128,13 +128,6 @@ trait Codecs {
           reference.index.immutableBytes
         )
 
-  given blockchainValueImmutableBytes: ImmutableBytes[Value] with
-    extension (value: Value)
-      def immutableBytes: Bytes =
-        value.quantity.immutableBytes
-          .concat(value.accountRegistration.immutableBytes)
-          .concat(value.graphEntry.immutableBytes)
-
   given ImmutableBytes[TransactionInput] with
     extension (input: TransactionInput)
       def immutableBytes: Bytes =
@@ -144,8 +137,10 @@ trait Codecs {
     extension (output: TransactionOutput)
       def immutableBytes: Bytes =
         output.lockAddress.immutableBytes
-          .concat(output.value.immutableBytes)
+          .concat(output.quantity.immutableBytes)
           .concat(output.account.immutableBytes)
+          .concat(output.graphEntry.immutableBytes)
+          .concat(output.accountRegistration.immutableBytes)
 
   given ImmutableBytes[AccountRegistration] with
     extension (registration: AccountRegistration)

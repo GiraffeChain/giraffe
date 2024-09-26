@@ -139,16 +139,16 @@ object StakerData:
           .fromOption(output.account)
           .flatMapF(state.stakers.get)
           .foldF(
-            state.modifyTotalInactiveStake(_ - output.value.quantity)
+            state.modifyTotalInactiveStake(_ - output.quantity)
           )(staker =>
-            (if (output.value.accountRegistration.isEmpty)
+            (if (output.accountRegistration.isEmpty)
                state.stakers.put(
                  input.reference,
                  staker
-                   .copy(quantity = staker.quantity - output.value.quantity)
+                   .copy(quantity = staker.quantity - output.quantity)
                )
              else state.stakers.remove(input.reference)) *>
-              state.modifyTotalActiveStake(_ - output.value.quantity)
+              state.modifyTotalActiveStake(_ - output.quantity)
           )
       )
 
@@ -164,18 +164,18 @@ object StakerData:
         .orElse(
           OptionT
             .fromOption[F](
-              output.value.accountRegistration
+              output.accountRegistration
                 .flatMap(_.stakingRegistration)
                 .map(ActiveStaker(_))
                 .tupleLeft(outputReference)
             )
         )
-        .foldF(state.modifyTotalInactiveStake(_ + output.value.quantity))((account, staker) =>
-          state.modifyTotalActiveStake(_ + output.value.quantity) *>
+        .foldF(state.modifyTotalInactiveStake(_ + output.quantity))((account, staker) =>
+          state.modifyTotalActiveStake(_ + output.quantity) *>
             state.stakers.put(
               account,
               staker
-                .copy(quantity = staker.quantity + output.value.quantity)
+                .copy(quantity = staker.quantity + output.quantity)
             )
         )
 
@@ -205,11 +205,11 @@ object StakerData:
     )(outputReference: TransactionOutputReference, output: TransactionOutput) =
       OptionT
         .fromOption[F](
-          output.value.accountRegistration.flatMap(_.stakingRegistration)
+          output.accountRegistration.flatMap(_.stakingRegistration)
         )
         .semiflatTap(_ =>
           state.stakers.remove(outputReference) *> state.modifyTotalActiveStake(
-            _ - output.value.quantity
+            _ - output.quantity
           )
         )
         .void
@@ -220,17 +220,17 @@ object StakerData:
               OptionT(state.stakers.get(accountReference))
                 .map(staker =>
                   staker
-                    .copy(quantity = staker.quantity - output.value.quantity)
+                    .copy(quantity = staker.quantity - output.quantity)
                 )
                 .semiflatTap(updatedStaker =>
                   state.stakers.put(accountReference, updatedStaker) *> state
-                    .modifyTotalActiveStake(_ - output.value.quantity)
+                    .modifyTotalActiveStake(_ - output.quantity)
                 )
             )
             .void
         )
         .getOrElseF(
-          state.modifyTotalInactiveStake(_ - output.value.quantity)
+          state.modifyTotalInactiveStake(_ - output.quantity)
         )
 
     private def unapplyInput(state: State[F])(input: TransactionInput) =
@@ -238,14 +238,14 @@ object StakerData:
         .flatMap(output =>
           OptionT
             .fromOption(
-              output.value.accountRegistration.flatMap(_.stakingRegistration)
+              output.accountRegistration.flatMap(_.stakingRegistration)
             )
             .semiflatTap(stakingRegistration =>
               state.stakers.put(
                 input.reference,
-                ActiveStaker(stakingRegistration, output.value.quantity)
+                ActiveStaker(stakingRegistration, output.quantity)
               ) *>
-                state.modifyTotalActiveStake(_ + output.value.quantity)
+                state.modifyTotalActiveStake(_ + output.quantity)
             )
             .void
             .orElse(
@@ -254,14 +254,14 @@ object StakerData:
                 .semiflatMap(account =>
                   state.stakers
                     .getOrRaise(account)
-                    .map(staker => staker.copy(quantity = staker.quantity + output.value.quantity))
+                    .map(staker => staker.copy(quantity = staker.quantity + output.quantity))
                     .flatMap(newStaker => state.stakers.put(input.reference, newStaker)) *>
-                    state.modifyTotalActiveStake(_ + output.value.quantity)
+                    state.modifyTotalActiveStake(_ + output.quantity)
                 )
                 .void
             )
             .getOrElseF(
-              state.modifyTotalInactiveStake(_ + output.value.quantity)
+              state.modifyTotalInactiveStake(_ + output.quantity)
             )
         )
 

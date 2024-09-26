@@ -182,20 +182,10 @@ export interface TransactionOutputReference {
 
 export interface TransactionOutput {
   lockAddress: LockAddress | undefined;
-  value:
-    | Value
-    | undefined;
-  /** Optional */
-  account: TransactionOutputReference | undefined;
-}
-
-export interface Value {
   quantity: number;
-  accountRegistration:
-    | AccountRegistration
-    | undefined;
-  /** Optional */
+  account: TransactionOutputReference | undefined;
   graphEntry: GraphEntry | undefined;
+  accountRegistration: AccountRegistration | undefined;
 }
 
 export interface AccountRegistration {
@@ -1624,7 +1614,13 @@ export const TransactionOutputReference = {
 };
 
 function createBaseTransactionOutput(): TransactionOutput {
-  return { lockAddress: undefined, value: undefined, account: undefined };
+  return {
+    lockAddress: undefined,
+    quantity: 0,
+    account: undefined,
+    graphEntry: undefined,
+    accountRegistration: undefined,
+  };
 }
 
 export const TransactionOutput = {
@@ -1632,11 +1628,17 @@ export const TransactionOutput = {
     if (message.lockAddress !== undefined) {
       LockAddress.encode(message.lockAddress, writer.uint32(10).fork()).join();
     }
-    if (message.value !== undefined) {
-      Value.encode(message.value, writer.uint32(18).fork()).join();
+    if (message.quantity !== 0) {
+      writer.uint32(16).uint64(message.quantity);
     }
     if (message.account !== undefined) {
       TransactionOutputReference.encode(message.account, writer.uint32(26).fork()).join();
+    }
+    if (message.graphEntry !== undefined) {
+      GraphEntry.encode(message.graphEntry, writer.uint32(42).fork()).join();
+    }
+    if (message.accountRegistration !== undefined) {
+      AccountRegistration.encode(message.accountRegistration, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -1656,11 +1658,11 @@ export const TransactionOutput = {
           message.lockAddress = LockAddress.decode(reader, reader.uint32());
           continue;
         case 2:
-          if (tag !== 18) {
+          if (tag !== 16) {
             break;
           }
 
-          message.value = Value.decode(reader, reader.uint32());
+          message.quantity = longToNumber(reader.uint64());
           continue;
         case 3:
           if (tag !== 26) {
@@ -1668,6 +1670,20 @@ export const TransactionOutput = {
           }
 
           message.account = TransactionOutputReference.decode(reader, reader.uint32());
+          continue;
+        case 5:
+          if (tag !== 42) {
+            break;
+          }
+
+          message.graphEntry = GraphEntry.decode(reader, reader.uint32());
+          continue;
+        case 6:
+          if (tag !== 50) {
+            break;
+          }
+
+          message.accountRegistration = AccountRegistration.decode(reader, reader.uint32());
           continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
@@ -1681,8 +1697,12 @@ export const TransactionOutput = {
   fromJSON(object: any): TransactionOutput {
     return {
       lockAddress: isSet(object.lockAddress) ? LockAddress.fromJSON(object.lockAddress) : undefined,
-      value: isSet(object.value) ? Value.fromJSON(object.value) : undefined,
+      quantity: isSet(object.quantity) ? globalThis.Number(object.quantity) : 0,
       account: isSet(object.account) ? TransactionOutputReference.fromJSON(object.account) : undefined,
+      graphEntry: isSet(object.graphEntry) ? GraphEntry.fromJSON(object.graphEntry) : undefined,
+      accountRegistration: isSet(object.accountRegistration)
+        ? AccountRegistration.fromJSON(object.accountRegistration)
+        : undefined,
     };
   },
 
@@ -1691,11 +1711,17 @@ export const TransactionOutput = {
     if (message.lockAddress !== undefined) {
       obj.lockAddress = LockAddress.toJSON(message.lockAddress);
     }
-    if (message.value !== undefined) {
-      obj.value = Value.toJSON(message.value);
+    if (message.quantity !== 0) {
+      obj.quantity = Math.round(message.quantity);
     }
     if (message.account !== undefined) {
       obj.account = TransactionOutputReference.toJSON(message.account);
+    }
+    if (message.graphEntry !== undefined) {
+      obj.graphEntry = GraphEntry.toJSON(message.graphEntry);
+    }
+    if (message.accountRegistration !== undefined) {
+      obj.accountRegistration = AccountRegistration.toJSON(message.accountRegistration);
     }
     return obj;
   },
@@ -1708,104 +1734,15 @@ export const TransactionOutput = {
     message.lockAddress = (object.lockAddress !== undefined && object.lockAddress !== null)
       ? LockAddress.fromPartial(object.lockAddress)
       : undefined;
-    message.value = (object.value !== undefined && object.value !== null) ? Value.fromPartial(object.value) : undefined;
+    message.quantity = object.quantity ?? 0;
     message.account = (object.account !== undefined && object.account !== null)
       ? TransactionOutputReference.fromPartial(object.account)
       : undefined;
-    return message;
-  },
-};
-
-function createBaseValue(): Value {
-  return { quantity: 0, accountRegistration: undefined, graphEntry: undefined };
-}
-
-export const Value = {
-  encode(message: Value, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.quantity !== 0) {
-      writer.uint32(8).uint64(message.quantity);
-    }
-    if (message.accountRegistration !== undefined) {
-      AccountRegistration.encode(message.accountRegistration, writer.uint32(18).fork()).join();
-    }
-    if (message.graphEntry !== undefined) {
-      GraphEntry.encode(message.graphEntry, writer.uint32(26).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): Value {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseValue();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          if (tag !== 8) {
-            break;
-          }
-
-          message.quantity = longToNumber(reader.uint64());
-          continue;
-        case 2:
-          if (tag !== 18) {
-            break;
-          }
-
-          message.accountRegistration = AccountRegistration.decode(reader, reader.uint32());
-          continue;
-        case 3:
-          if (tag !== 26) {
-            break;
-          }
-
-          message.graphEntry = GraphEntry.decode(reader, reader.uint32());
-          continue;
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): Value {
-    return {
-      quantity: isSet(object.quantity) ? globalThis.Number(object.quantity) : 0,
-      accountRegistration: isSet(object.accountRegistration)
-        ? AccountRegistration.fromJSON(object.accountRegistration)
-        : undefined,
-      graphEntry: isSet(object.graphEntry) ? GraphEntry.fromJSON(object.graphEntry) : undefined,
-    };
-  },
-
-  toJSON(message: Value): unknown {
-    const obj: any = {};
-    if (message.quantity !== 0) {
-      obj.quantity = Math.round(message.quantity);
-    }
-    if (message.accountRegistration !== undefined) {
-      obj.accountRegistration = AccountRegistration.toJSON(message.accountRegistration);
-    }
-    if (message.graphEntry !== undefined) {
-      obj.graphEntry = GraphEntry.toJSON(message.graphEntry);
-    }
-    return obj;
-  },
-
-  create<I extends Exact<DeepPartial<Value>, I>>(base?: I): Value {
-    return Value.fromPartial(base ?? ({} as any));
-  },
-  fromPartial<I extends Exact<DeepPartial<Value>, I>>(object: I): Value {
-    const message = createBaseValue();
-    message.quantity = object.quantity ?? 0;
-    message.accountRegistration = (object.accountRegistration !== undefined && object.accountRegistration !== null)
-      ? AccountRegistration.fromPartial(object.accountRegistration)
-      : undefined;
     message.graphEntry = (object.graphEntry !== undefined && object.graphEntry !== null)
       ? GraphEntry.fromPartial(object.graphEntry)
+      : undefined;
+    message.accountRegistration = (object.accountRegistration !== undefined && object.accountRegistration !== null)
+      ? AccountRegistration.fromPartial(object.accountRegistration)
       : undefined;
     return message;
   },

@@ -15,9 +15,8 @@ class Graph {
           {required String label, GraphData? data}) =>
       TransactionOutput(
           lockAddress: wallet.defaultLockAddress,
-          value: Value(
-              graphEntry: GraphEntry(
-                  vertex: Vertex(label: label, data: _convertData(data)))));
+          graphEntry: GraphEntry(
+              vertex: Vertex(label: label, data: _convertData(data))));
 
   Future<TransactionOutputReference> createVertex(
       {required String label, GraphData? data}) async {
@@ -38,10 +37,8 @@ class Graph {
           GraphData? data}) =>
       TransactionOutput(
           lockAddress: wallet.defaultLockAddress,
-          value: Value(
-              graphEntry: GraphEntry(
-                  edge: Edge(
-                      a: a, b: b, label: label, data: _convertData(data)))));
+          graphEntry: GraphEntry(
+              edge: Edge(a: a, b: b, label: label, data: _convertData(data))));
 
   Future<TransactionOutputReference> createEdge(
       {required String label,
@@ -60,17 +57,15 @@ class Graph {
 
   List<TransactionOutputReference> get localVertices => wallet
       .spendableOutputs.entries
-      .where((e) =>
-          e.value.value.hasGraphEntry() && e.value.value.graphEntry.hasVertex())
+      .where((e) => e.value.hasGraphEntry() && e.value.graphEntry.hasVertex())
       .map((e) => e.key)
       .toList();
 
-  List<TransactionOutputReference> get localEdges => wallet
-      .spendableOutputs.entries
-      .where((e) =>
-          e.value.value.hasGraphEntry() && e.value.value.graphEntry.hasEdge())
-      .map((e) => e.key)
-      .toList();
+  List<TransactionOutputReference> get localEdges =>
+      wallet.spendableOutputs.entries
+          .where((e) => e.value.hasGraphEntry() && e.value.graphEntry.hasEdge())
+          .map((e) => e.key)
+          .toList();
 
   struct.Struct? _convertData(GraphData? data) {
     if (data == null) {

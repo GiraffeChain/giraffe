@@ -255,35 +255,22 @@ const TransactionOutput$json = {
   '1': 'TransactionOutput',
   '2': [
     {'1': 'lockAddress', '3': 1, '4': 1, '5': 11, '6': '.com.giraffechain.models.LockAddress', '8': {}, '10': 'lockAddress'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.com.giraffechain.models.Value', '8': {}, '10': 'value'},
+    {'1': 'quantity', '3': 2, '4': 1, '5': 4, '10': 'quantity'},
     {'1': 'account', '3': 3, '4': 1, '5': 11, '6': '.com.giraffechain.models.TransactionOutputReference', '10': 'account'},
+    {'1': 'graphEntry', '3': 5, '4': 1, '5': 11, '6': '.com.giraffechain.models.GraphEntry', '10': 'graphEntry'},
+    {'1': 'accountRegistration', '3': 6, '4': 1, '5': 11, '6': '.com.giraffechain.models.AccountRegistration', '10': 'accountRegistration'},
   ],
 };
 
 /// Descriptor for `TransactionOutput`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionOutputDescriptor = $convert.base64Decode(
     'ChFUcmFuc2FjdGlvbk91dHB1dBJQCgtsb2NrQWRkcmVzcxgBIAEoCzIkLmNvbS5naXJhZmZlY2'
-    'hhaW4ubW9kZWxzLkxvY2tBZGRyZXNzQgj6QgWKAQIQAVILbG9ja0FkZHJlc3MSPgoFdmFsdWUY'
-    'AiABKAsyHi5jb20uZ2lyYWZmZWNoYWluLm1vZGVscy5WYWx1ZUII+kIFigECEAFSBXZhbHVlEk'
-    '0KB2FjY291bnQYAyABKAsyMy5jb20uZ2lyYWZmZWNoYWluLm1vZGVscy5UcmFuc2FjdGlvbk91'
-    'dHB1dFJlZmVyZW5jZVIHYWNjb3VudA==');
-
-@$core.Deprecated('Use valueDescriptor instead')
-const Value$json = {
-  '1': 'Value',
-  '2': [
-    {'1': 'quantity', '3': 1, '4': 1, '5': 4, '10': 'quantity'},
-    {'1': 'accountRegistration', '3': 2, '4': 1, '5': 11, '6': '.com.giraffechain.models.AccountRegistration', '10': 'accountRegistration'},
-    {'1': 'graphEntry', '3': 3, '4': 1, '5': 11, '6': '.com.giraffechain.models.GraphEntry', '10': 'graphEntry'},
-  ],
-};
-
-/// Descriptor for `Value`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List valueDescriptor = $convert.base64Decode(
-    'CgVWYWx1ZRIaCghxdWFudGl0eRgBIAEoBFIIcXVhbnRpdHkSXgoTYWNjb3VudFJlZ2lzdHJhdG'
-    'lvbhgCIAEoCzIsLmNvbS5naXJhZmZlY2hhaW4ubW9kZWxzLkFjY291bnRSZWdpc3RyYXRpb25S'
-    'E2FjY291bnRSZWdpc3RyYXRpb24SQwoKZ3JhcGhFbnRyeRgDIAEoCzIjLmNvbS5naXJhZmZlY2'
-    'hhaW4ubW9kZWxzLkdyYXBoRW50cnlSCmdyYXBoRW50cnk=');
+    'hhaW4ubW9kZWxzLkxvY2tBZGRyZXNzQgj6QgWKAQIQAVILbG9ja0FkZHJlc3MSGgoIcXVhbnRp'
+    'dHkYAiABKARSCHF1YW50aXR5Ek0KB2FjY291bnQYAyABKAsyMy5jb20uZ2lyYWZmZWNoYWluLm'
+    '1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZVIHYWNjb3VudBJDCgpncmFwaEVudHJ5'
+    'GAUgASgLMiMuY29tLmdpcmFmZmVjaGFpbi5tb2RlbHMuR3JhcGhFbnRyeVIKZ3JhcGhFbnRyeR'
+    'JeChNhY2NvdW50UmVnaXN0cmF0aW9uGAYgASgLMiwuY29tLmdpcmFmZmVjaGFpbi5tb2RlbHMu'
+    'QWNjb3VudFJlZ2lzdHJhdGlvblITYWNjb3VudFJlZ2lzdHJhdGlvbg==');
 
 @$core.Deprecated('Use accountRegistrationDescriptor instead')
 const AccountRegistration$json = {

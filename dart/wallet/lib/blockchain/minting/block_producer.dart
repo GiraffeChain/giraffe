@@ -131,16 +131,15 @@ class BlockProducerImpl extends BlockProducer {
       for (final tx in base.transactions) {
         for (final input in tx.inputs) {
           final output = (await client.getTransactionOutput(input.reference))!;
-          maximumQuantity += output.value.quantity;
+          maximumQuantity += output.quantity;
         }
         for (final output in tx.outputs) {
-          maximumQuantity -= output.value.quantity;
+          maximumQuantity -= output.quantity;
         }
       }
       if (maximumQuantity > Int64.ZERO) {
         final output = TransactionOutput(
-            lockAddress: rewardAddress,
-            value: Value(quantity: maximumQuantity));
+            lockAddress: rewardAddress, quantity: maximumQuantity);
         final rewardTx =
             Transaction(outputs: [output], rewardParentBlockId: parentId);
         return FullBlockBody(transactions: [...base.transactions, rewardTx]);

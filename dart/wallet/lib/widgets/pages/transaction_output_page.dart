@@ -1,5 +1,4 @@
 import 'package:flutter_json_view/flutter_json_view.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:giraffe_wallet/utils.dart';
 import 'package:giraffe_wallet/widgets/giraffe_card.dart';
 import 'package:giraffe_wallet/widgets/giraffe_scaffold.dart';
@@ -72,8 +71,8 @@ class TransactionOutputPage extends StatelessWidget {
             TransactionOutputIdCard(reference: reference, scale: 1.25).pad16,
             Wrap(spacing: 10, children: [
               _quantity().pad16,
-              if (output.value.hasAccountRegistration()) _registration().pad16,
-              if (output.value.hasGraphEntry()) _graphEntry(context).pad16,
+              if (output.hasAccountRegistration()) _registration().pad16,
+              if (output.hasGraphEntry()) _graphEntry(context).pad16,
             ]),
           ],
         ),
@@ -83,12 +82,12 @@ class TransactionOutputPage extends StatelessWidget {
     return OverUnder(
         over: const Text("Quantity",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        under: Text(output.value.quantity.toString(),
+        under: Text(output.quantity.toString(),
             style: const TextStyle(fontSize: 14, color: Colors.blueGrey)));
   }
 
   Widget _registration() {
-    final registration = output.value.accountRegistration;
+    final registration = output.accountRegistration;
     final body = <Widget>[];
     if (registration.hasAssociationLock()) {
       body.add(OverUnder(
@@ -123,7 +122,7 @@ class TransactionOutputPage extends StatelessWidget {
   }
 
   Widget _graphEntry(BuildContext context) {
-    final graphEntry = output.value.graphEntry;
+    final graphEntry = output.graphEntry;
     if (graphEntry.hasVertex()) {
       final vertex = graphEntry.vertex;
       return OverUnder(

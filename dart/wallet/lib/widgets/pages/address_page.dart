@@ -102,13 +102,13 @@ class AddressPage extends StatelessWidget {
                     route:
                         "/transactions/${rec.$1.transactionId.show}/${rec.$1.index}",
                     child: TransactionOutputIdCard(reference: rec.$1))),
-                DataCell(Text(t.value.quantity.toString())),
-                DataCell(t.value.hasGraphEntry()
-                    ? (t.value.graphEntry.hasVertex()
+                DataCell(Text(t.quantity.toString())),
+                DataCell(t.hasGraphEntry()
+                    ? (t.graphEntry.hasVertex()
                         ? const Icon(Icons.circle)
                         : const Icon(Icons.compare_arrows_outlined))
                     : Container()),
-                DataCell(t.value.hasAccountRegistration()
+                DataCell(t.hasAccountRegistration()
                     ? const Icon(Icons.account_box)
                     : Container()),
               ]);

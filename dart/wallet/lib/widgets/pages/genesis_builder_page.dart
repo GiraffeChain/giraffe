@@ -241,8 +241,8 @@ class GenesisBuilderState extends State<GenesisBuilderPage> {
           e.$2, e.$1, utf8.encode(seed + index.toString()));
     }).toList());
     final unstakedTransaction = Transaction(
-        outputs: unstaked.map((t) => TransactionOutput(
-            lockAddress: t.$1, value: Value(quantity: t.$2))));
+        outputs: unstaked
+            .map((t) => TransactionOutput(lockAddress: t.$1, quantity: t.$2)));
     final genesisTransactions = [
       unstakedTransaction,
       ...stakerEntries.map((s) => s.transaction)

@@ -208,8 +208,7 @@ class TransferFundsState extends ConsumerState<TransferFunds> {
             final tx = await wallet.payAndAttest(
                 client,
                 Transaction(outputs: [
-                  TransactionOutput(
-                      lockAddress: to, value: Value(quantity: amount))
+                  TransactionOutput(lockAddress: to, quantity: amount)
                 ]));
             setState(() {
               broadcastedTransaction = tx;

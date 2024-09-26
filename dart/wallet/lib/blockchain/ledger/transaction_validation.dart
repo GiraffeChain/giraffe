@@ -1,6 +1,5 @@
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:collection/collection.dart';
-import 'package:fixnum/fixnum.dart';
 
 abstract class TransactionSyntaxValidation {
   List<String> validate(Transaction transaction);
@@ -25,7 +24,6 @@ class TransactionSyntaxValidationImpl extends TransactionSyntaxValidation {
     maximumOutputsCountValidation,
     dataLengthValidation,
     positiveOutputValuesValidation,
-    // sufficientFundsValidation,
     attestationValidation,
   ];
 
@@ -64,25 +62,10 @@ class TransactionSyntaxValidationImpl extends TransactionSyntaxValidation {
 
   static List<String> positiveOutputValuesValidation(Transaction transaction) {
     for (final output in transaction.outputs) {
-      final value = output.value;
-      if (value.quantity <= 0) return ["NonPositiveOutputValue"];
+      if (output.quantity <= 0) return ["NonPositiveOutputValue"];
     }
     return [];
   }
-
-  // static List<String> sufficientFundsValidation(Transaction transaction) {
-  //   Int64 paymentTokenBalance = Int64.ZERO;
-  //   for (final input in transaction.inputs) {
-  //     paymentTokenBalance += input.value.quantity;
-  //   }
-  //   for (final output in transaction.outputs) {
-  //     paymentTokenBalance -= output.value.quantity;
-  //   }
-  //   if (paymentTokenBalance < Int64.ZERO) {
-  //     return ["InsufficientFunds"];
-  //   }
-  //   return [];
-  // }
 
   static List<String> attestationValidation(Transaction transaction) {
     List<String> verifyLockKeyType(Lock lock, Key key) {

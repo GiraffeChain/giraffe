@@ -57,17 +57,17 @@ class _$SocialCopyWithImpl<$Res, $Val extends Social>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? user = null,
-    Object? profile = null,
+    Object? user = freezed,
+    Object? profile = freezed,
     Object? profileData = null,
     Object? friendData = null,
   }) {
     return _then(_value.copyWith(
-      user: null == user
+      user: freezed == user
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
               as TransactionOutputReference,
-      profile: null == profile
+      profile: freezed == profile
           ? _value.profile
           : profile // ignore: cast_nullable_to_non_nullable
               as TransactionOutputReference,
@@ -135,17 +135,17 @@ class __$$SocialImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? user = null,
-    Object? profile = null,
+    Object? user = freezed,
+    Object? profile = freezed,
     Object? profileData = null,
     Object? friendData = null,
   }) {
     return _then(_$SocialImpl(
-      user: null == user
+      user: freezed == user
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
               as TransactionOutputReference,
-      profile: null == profile
+      profile: freezed == profile
           ? _value.profile
           : profile // ignore: cast_nullable_to_non_nullable
               as TransactionOutputReference,
@@ -189,8 +189,8 @@ class _$SocialImpl implements _Social {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SocialImpl &&
-            (identical(other.user, user) || other.user == user) &&
-            (identical(other.profile, profile) || other.profile == profile) &&
+            const DeepCollectionEquality().equals(other.user, user) &&
+            const DeepCollectionEquality().equals(other.profile, profile) &&
             (identical(other.profileData, profileData) ||
                 other.profileData == profileData) &&
             (identical(other.friendData, friendData) ||
@@ -198,8 +198,12 @@ class _$SocialImpl implements _Social {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, user, profile, profileData, friendData);
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(user),
+      const DeepCollectionEquality().hash(profile),
+      profileData,
+      friendData);
 
   /// Create a copy of Social
   /// with the given fields replaced by the non-null parameter values.

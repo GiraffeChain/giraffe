@@ -92,7 +92,7 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
       NonEmptyChain("EmptyInputs")
     ) >>
       Either.cond(
-        transaction.outputs.forall(_.value.quantity >= 0),
+        transaction.outputs.forall(_.quantity >= 0),
         (),
         NonEmptyChain("NonPositiveOutputQuantity")
       ) >>
@@ -101,8 +101,8 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
   private def valueCheck(transaction: Transaction): ValidationResult[F] = {
     EitherT(
       transaction.inputs
-        .foldMapM(input => fetchTransactionOutput(input.reference).map(_.value.quantity))
-        .map(_ - transaction.outputs.foldMap(_.value.quantity))
+        .foldMapM(input => fetchTransactionOutput(input.reference).map(_.quantity))
+        .map(_ - transaction.outputs.foldMap(_.quantity))
         .map(reward => Either.cond(reward >= 0, (), NonEmptyChain("InsufficientFunds")))
     ) >>
       transaction.outputs
@@ -112,9 +112,9 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
               .requiredMinimumQuantity(output)
               .map(required =>
                 Either.cond(
-                  output.value.quantity >= required,
+                  output.quantity >= required,
                   (),
-                  NonEmptyChain(s"InsufficientValue(${output.value.quantity} < $required)")
+                  NonEmptyChain(s"InsufficientValue(${output.quantity} < $required)")
                 )
               )
           )
@@ -147,7 +147,7 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
       EitherT
         .liftF(
           transaction.inputs
-            .filterA(i => fetchTransactionOutput(i.reference).map(_.value.accountRegistration.nonEmpty))
+            .filterA(i => fetchTransactionOutput(i.reference).map(_.accountRegistration.nonEmpty))
         )
         .flatMap(
           _.traverse(input =>
@@ -238,36 +238,34 @@ class BodyValidationImpl[F[_]: Sync](
         .map((nonRewards, rewards) =>
           Either.cond(rewards.length <= 1, (nonRewards, rewards.headOption), NonEmptyChain("Duplicate Rewards"))
         )
-    )
-      .flatMap {
-        case (_, None) => EitherT.rightT(())
-        case (nonRewards, Some(reward)) =>
+    ).flatMap {
+      case (_, None) => EitherT.rightT(())
+      case (nonRewards, Some(reward)) =>
+        EitherT.cond(
+          reward.rewardParentBlockId.contains(context.parentBlockId),
+          (),
+          NonEmptyChain("RewardHeaderMismatch")
+        ) >>
+          EitherT.cond(reward.inputs.isEmpty, (), NonEmptyChain("RewardContainsInputs")) >>
+          EitherT.cond(reward.outputs.length == 1, (), NonEmptyChain("RewardContainsMultipleOutputs")) >>
           EitherT.cond(
-            reward.rewardParentBlockId.contains(context.parentBlockId),
+            reward.outputs.head.accountRegistration.isEmpty,
             (),
-            NonEmptyChain("RewardHeaderMismatch")
+            NonEmptyChain("RewardContainsRegistration")
           ) >>
-            EitherT.cond(reward.inputs.isEmpty, (), NonEmptyChain("RewardContainsInputs")) >>
-            EitherT.cond(reward.outputs.length == 1, (), NonEmptyChain("RewardContainsMultipleOutputs")) >>
-            EitherT.cond(
-              reward.outputs.head.value.accountRegistration.isEmpty,
-              (),
-              NonEmptyChain("RewardContainsRegistration")
-            ) >>
-            EitherT.cond(
-              reward.outputs.head.value.graphEntry.isEmpty,
-              (),
-              NonEmptyChain("RewardContainsGraphEntry")
-            ) >> EitherT(
+          EitherT.cond(
+            reward.outputs.head.graphEntry.isEmpty,
+            (),
+            NonEmptyChain("RewardContainsGraphEntry")
+          ) >> EitherT(
             nonRewards
               .foldMapM(_.reward(fetchTransactionOutput))
               .map(providedReward =>
                 Either.cond(
-                  providedReward >= reward.outputs.head.value.quantity,
+                  providedReward >= reward.outputs.head.quantity,
                   (),
                   NonEmptyChain("ExcessiveReward")
                 )
               )
           )
-      }
-      .void
+    }.void

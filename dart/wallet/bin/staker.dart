@@ -43,7 +43,7 @@ void main(List<String> args) async {
   if (accountOutput == null) {
     throw Exception("Account not found on the chain");
   }
-  assert(accountOutput.value.hasAccountRegistration(),
+  assert(accountOutput.hasAccountRegistration(),
       "Specified UTxO is not an account registration");
 
   final canonicalHeadId = await client.canonicalHeadId;

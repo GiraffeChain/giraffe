@@ -141,16 +141,10 @@ message TransactionOutputReference {
 
 message TransactionOutput {
     LockAddress lockAddress = 1 [(validate.rules).message.required = true];
-    Value value = 2 [(validate.rules).message.required = true];
-    // Optional
+    uint64 quantity = 2;
     TransactionOutputReference account = 3;
-}
-
-message Value {
-    uint64 quantity = 1;
-    AccountRegistration accountRegistration = 2;
-    // Optional
-    GraphEntry graphEntry = 3;
+    GraphEntry graphEntry = 5;
+    AccountRegistration accountRegistration = 6;
 }
 
 message AccountRegistration {

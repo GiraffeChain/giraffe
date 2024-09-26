@@ -158,19 +158,19 @@ class TransferPage extends ConsumerWidget {
             ],
             rows: transaction.outputs
                 .mapWithIndex((t, index) => DataRow(cells: [
-                      DataCell(Text(t.value.quantity.toString())),
+                      DataCell(Text(t.quantity.toString())),
                       DataCell(TappableLink(
                         route: "/addresses/${t.lockAddress.show}",
                         child: SizedBox.square(
                             dimension: 32,
                             child: BitMapViewer.forLockAddress(t.lockAddress)),
                       )),
-                      DataCell(t.value.hasGraphEntry()
-                          ? (t.value.graphEntry.hasVertex()
+                      DataCell(t.hasGraphEntry()
+                          ? (t.graphEntry.hasVertex()
                               ? const Icon(Icons.circle)
                               : const Icon(Icons.compare_arrows_outlined))
                           : Container()),
-                      DataCell(t.value.hasAccountRegistration()
+                      DataCell(t.hasAccountRegistration()
                           ? const Icon(Icons.account_box)
                           : Container()),
                     ]))

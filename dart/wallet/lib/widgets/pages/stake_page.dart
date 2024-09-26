@@ -307,7 +307,7 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
             .map((e) => TransactionInput(reference: e.key))
             .toList();
         final accountEntry = widget.wallet.spendableOutputs.entries
-            .firstWhere((e) => e.value.value.hasAccountRegistration());
+            .firstWhere((e) => e.value.hasAccountRegistration());
         final client = ref.read(podBlockchainClientProvider)!;
 
         final transaction = await widget.wallet.payAndAttest(
@@ -316,9 +316,8 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
             inputs: inputs,
             outputs: [
               TransactionOutput(
-                value: Value(
-                    quantity: Int64(desiredStake.round()) -
-                        accountEntry.value.value.quantity),
+                quantity:
+                    Int64(desiredStake.round()) - accountEntry.value.quantity,
                 lockAddress: widget.wallet.defaultLockAddress,
                 account: accountEntry.key,
               ),

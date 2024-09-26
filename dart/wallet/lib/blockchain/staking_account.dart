@@ -27,11 +27,10 @@ class StakingAccount {
   Transaction get transaction => Transaction(outputs: [
         TransactionOutput(
             lockAddress: lockAddress,
-            value: Value(
-                quantity: quantity,
-                accountRegistration: AccountRegistration(
-                    associationLock: lockAddress,
-                    stakingRegistration: stakingRegistration)))
+            quantity: quantity,
+            accountRegistration: AccountRegistration(
+                associationLock: lockAddress,
+                stakingRegistration: stakingRegistration))
       ]);
 
   TransactionOutputReference get account =>
