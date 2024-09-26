@@ -13,15 +13,15 @@ extension TransactionOps on Transaction {
       result.add(out.lockAddress);
     }
     for (final output in outputs) {
-      if (output.value.hasGraphEntry() && output.value.graphEntry.hasEdge()) {
-        final edge = output.value.graphEntry.edge;
+      if (output.hasGraphEntry() && output.graphEntry.hasEdge()) {
+        final edge = output.graphEntry.edge;
         final TransactionOutput aTxO;
         if (edge.a.hasTransactionId()) {
           aTxO = await fetchTransactionOutput(edge.a);
         } else {
           aTxO = outputs[edge.a.index];
         }
-        final aVertex = aTxO.value.ensureGraphEntry().vertex;
+        final aVertex = aTxO.ensureGraphEntry().vertex;
         if (aVertex.hasEdgeLockAddress()) {
           result.add(aVertex.edgeLockAddress);
         }
@@ -32,7 +32,7 @@ extension TransactionOps on Transaction {
         } else {
           bTxO = outputs[edge.b.index];
         }
-        final bVertex = bTxO.value.ensureGraphEntry().vertex;
+        final bVertex = bTxO.ensureGraphEntry().vertex;
         if (bVertex.hasEdgeLockAddress()) {
           result.add(bVertex.edgeLockAddress);
         }
@@ -49,19 +49,11 @@ extension TransactionOps on Transaction {
     }
     return result;
   }
-
-  Int64 get inputSum =>
-      inputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
-  Int64 get outputSum =>
-      outputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
-  Int64 get reward => inputSum - outputSum;
 }
 
 extension TransactionOutputOps on TransactionOutput {
   bool get isPaymentToken =>
-      !value.hasGraphEntry() &&
-      !hasAccount() &&
-      !value.hasAccountRegistration();
+      !hasGraphEntry() && !hasAccount() && !hasAccountRegistration();
 
   Int64 get requiredMinimumQuantity {
     Int64 result = Int64.ZERO;
@@ -69,11 +61,11 @@ extension TransactionOutputOps on TransactionOutput {
     if (hasAccount()) {
       result += 50; // Adding to existing staking account
     }
-    if (value.hasAccountRegistration()) {
+    if (hasAccountRegistration()) {
       result += minimumRegistrationQuantity; // Creating a new staking account
     }
-    if (value.hasGraphEntry()) {
-      result += graphEntryMinimumQuantity(value.graphEntry);
+    if (hasGraphEntry()) {
+      result += graphEntryMinimumQuantity(graphEntry);
     }
     return result;
   }

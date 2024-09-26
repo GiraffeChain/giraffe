@@ -47,7 +47,7 @@ object Testnet:
         Transaction()
           .withOutputs(
             List(
-              TransactionOutput(lockAddress, Value(1_000_000_000L))
+              TransactionOutput(lockAddress, 1_000_000_000L)
             )
           )
       )
@@ -79,7 +79,10 @@ class TestnetAccount(
       outputs = List(
         TransactionOutput(
           Testnet.lockAddress,
-          Value(quantity, AccountRegistration(Testnet.lockAddress, stakingRegistration.some).some)
+          quantity,
+          none,
+          none,
+          AccountRegistration(Testnet.lockAddress, stakingRegistration.some).some
         )
       )
     )

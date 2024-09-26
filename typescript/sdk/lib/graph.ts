@@ -29,13 +29,11 @@ export class GiraffeGraph {
     createVertexOutput(label: string, data: { [key: string]: any } | undefined): TransactionOutput {
         return TransactionOutput.fromJSON({
             lockAddress: this.wallet.address,
-            value: {
-                graphEntry: {
-                    vertex: {
-                        label: label,
-                        data: data
-                    }
-                },
+            graphEntry: {
+                vertex: {
+                    label: label,
+                    data: data
+                }
             },
         });
     }
@@ -52,15 +50,13 @@ export class GiraffeGraph {
     createEdgeOutput(label: string, a: TransactionOutputReference, b: TransactionOutputReference, data: { [key: string]: any } | undefined): TransactionOutput {
         return TransactionOutput.fromJSON({
             lockAddress: this.wallet.address,
-            value: {
-                graphEntry: {
-                    edge: {
-                        label: label,
-                        data: data,
-                        a: a,
-                        b: b
-                    }
-                },
+            graphEntry: {
+                edge: {
+                    label: label,
+                    data: data,
+                    a: a,
+                    b: b
+                }
             },
         });
     }
@@ -71,7 +67,7 @@ export class GiraffeGraph {
      * @returns An array of TransactionOutputReference representing the local vertices.
      */
     localVertices(): TransactionOutputReference[] {
-        return this.wallet.spendableOutputs.filter(([_, output]) => output.value?.graphEntry?.vertex !== undefined).map(([ref, _]) => ref);
+        return this.wallet.spendableOutputs.filter(([_, output]) => output.graphEntry?.vertex !== undefined).map(([ref, _]) => ref);
     }
 
     /**
@@ -80,7 +76,7 @@ export class GiraffeGraph {
      * @returns An array of TransactionOutputReference objects representing the local edges.
      */
     localEdges(): TransactionOutputReference[] {
-        return this.wallet.spendableOutputs.filter(([_, output]) => output.value?.graphEntry?.edge !== undefined).map(([ref, _]) => ref);
+        return this.wallet.spendableOutputs.filter(([_, output]) => output.graphEntry?.edge !== undefined).map(([ref, _]) => ref);
     }
 
     /**
@@ -92,7 +88,7 @@ export class GiraffeGraph {
         const edgeRefs = await this.client.getEdges(vertexReference);
         for (const edgeRef of edgeRefs) {
             const output = await this.client.getTransactionOutput(edgeRef);
-            const edge = output.value?.graphEntry?.edge!;
+            const edge = output.graphEntry?.edge!;
             yield this.backfillTransactionId(edge, vertexReference.transactionId!);
         }
     }
@@ -107,7 +103,7 @@ export class GiraffeGraph {
         const edgeRefs = await this.client.getInEdges(vertexReference);
         for (const edgeRef of edgeRefs) {
             const output = await this.client.getTransactionOutput(edgeRef);
-            yield output.value?.graphEntry?.edge!;
+            yield output.graphEntry?.edge!;
         }
     }
 
@@ -121,7 +117,7 @@ export class GiraffeGraph {
         const edgeRefs = await this.client.getOutEdges(vertexReference);
         for (const edgeRef of edgeRefs) {
             const output = await this.client.getTransactionOutput(edgeRef);
-            yield output.value?.graphEntry?.edge!;
+            yield output.graphEntry?.edge!;
         }
     }
 
@@ -133,7 +129,7 @@ export class GiraffeGraph {
      */
     async inV(edge: Edge): Promise<Vertex> {
         const output = await this.client.getTransactionOutput(edge.a!);
-        return output.value?.graphEntry?.vertex!;
+        return output.graphEntry?.vertex!;
     }
 
     /**
@@ -144,7 +140,7 @@ export class GiraffeGraph {
      */
     async outV(edge: Edge): Promise<Vertex> {
         const output = await this.client.getTransactionOutput(edge.b!);
-        return output.value?.graphEntry?.vertex!;
+        return output.graphEntry?.vertex!;
     }
 
     /**
@@ -159,7 +155,7 @@ export class GiraffeGraph {
         const edgeRefs = await this.client.queryEdges(label, a, b, where);
         for (const edgeRef of edgeRefs) {
             const output = await this.client.getTransactionOutput(edgeRef);
-            const edge = output.value?.graphEntry?.edge!;
+            const edge = output.graphEntry?.edge!;
             yield this.backfillTransactionId(edge, edgeRef.transactionId!);
         }
     }
@@ -176,7 +172,7 @@ export class GiraffeGraph {
             const output = await this.client.getTransactionOutput(vertexRef);
             yield {
                 ref: vertexRef,
-                vertex: output.value?.graphEntry?.vertex!
+                vertex: output.graphEntry?.vertex!
             };
         }
     }

@@ -40,10 +40,10 @@ jobs:
             !**/test-results/**
           key: ${{ format('{0}-project-{1}-{2}', runner.os, github.base_ref, github.run_number) }}
 
-      - name: Download Web Wallet Dist
+      - name: Download Web Frontend Dist
         uses: actions/download-artifact@v4
         with:
-          name: web-wallet-dist
+          name: web-frontend-dist
           path: "scala/node/src/main/resources/web"
 
       - name: Print Static Web Files
@@ -59,10 +59,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: cli-staker
-          path: dart/wallet/build/bin
+          path: dart/frontend/build/bin
       
       - name: Build Staker Image
-        working-directory: dart/wallet
+        working-directory: dart/frontend
         run: |
           docker build -t giraffechain/staker:${{ inputs.latest_tag && 'latest' || 'dev'}} .
           docker push giraffechain/staker:${{ inputs.latest_tag && 'latest' || 'dev'}}

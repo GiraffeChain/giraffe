@@ -1,4 +1,4 @@
-import { AccountRegistration, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Value, Vertex } from "./models.js";
+import { AccountRegistration, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Vertex } from "./models.js";
 import bs58 from 'bs58'
 
 import blake2b from 'blake2b';
@@ -136,7 +136,7 @@ function encodeInt64(value: number): Uint8Array {
     let bytes = new Uint8Array(8);
     var v = value;
     for (let i = 7; i >= 0; i--) {
-        bytes[i] = (v & 0xff);
+        bytes[i] = v & 0xff;
         v = v >> 8;
     }
     return bytes;
@@ -164,7 +164,7 @@ function encodeTransactionId(value: TransactionId): Uint8Array {
 }
 
 function encodeTransactionInput(input: TransactionInput): Uint8Array {
-    return mergeArrays([encodeTransactionOutputReference(requireDefined(input.reference)), encodeValue(requireDefined(input.value))])
+    return mergeArrays([encodeTransactionOutputReference(requireDefined(input.reference))])
 }
 
 function encodeTransactionOutputReference(value: TransactionOutputReference): Uint8Array {
@@ -172,15 +172,17 @@ function encodeTransactionOutputReference(value: TransactionOutputReference): Ui
 }
 
 function encodeTransactionOutput(value: TransactionOutput): Uint8Array {
-    return mergeArrays([encodeLockAddress(requireDefined(value.lockAddress)), encodeValue(requireDefined(value.value)), optCodec(value.account, encodeTransactionOutputReference)]);
+    return mergeArrays([
+        encodeLockAddress(requireDefined(value.lockAddress)),
+        encodeInt64(requireDefined(value.quantity)),
+        optCodec(value.account, encodeTransactionOutputReference),
+        optCodec(value.graphEntry, encodeGraphEntry),
+        optCodec(value.accountRegistration, encodeAccountRegistration)
+    ]);
 }
 
 function encodeLockAddress(value: LockAddress): Uint8Array {
     return bs58.decode(value.value);
-}
-
-function encodeValue(value: Value): Uint8Array {
-    return mergeArrays([encodeInt64(requireDefined(value.quantity)), optCodec(value.accountRegistration, encodeAccountRegistration), optCodec(value.graphEntry, encodeGraphEntry)]);
 }
 
 function encodeAccountRegistration(value: AccountRegistration): Uint8Array {

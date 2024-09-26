@@ -15,8 +15,8 @@ class ValueCalculatorImpl[F[_]: Sync] extends ValueCalculator[F] {
     List(
       Sync[F].delay(100L), // dust prevention
       Sync[F].delay(output.account.as(50L).getOrElse(0L)), // association with an existing staking account
-      Sync[F].delay(output.value.accountRegistration.as(1000L).getOrElse(0L)), // new staker registration
-      Sync[F].delay(output.value.graphEntry.fold(0L)(graphEntryMinimumQuantity)) // graph data
+      Sync[F].delay(output.accountRegistration.as(1000L).getOrElse(0L)), // new staker registration
+      Sync[F].delay(output.graphEntry.fold(0L)(graphEntryMinimumQuantity)) // graph data
     ).sequence.map(_.sum)
 
   def graphEntryMinimumQuantity(graphEntry: GraphEntry): Long =

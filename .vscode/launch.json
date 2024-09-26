@@ -6,21 +6,21 @@
     "configurations": [
         {
             "name": "Frontend (debug mode)",
-            "cwd": "dart/wallet",
+            "cwd": "dart/frontend",
             "request": "launch",
             "type": "dart",
             "flutterMode": "debug"
         },
         {
             "name": "Frontend (profile mode)",
-            "cwd": "dart/wallet",
+            "cwd": "dart/frontend",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
             "name": "Frontend (release mode)",
-            "cwd": "dart/wallet",
+            "cwd": "dart/frontend",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

@@ -1,8 +1,8 @@
 import { GiraffeClient, RpcGiraffeClient } from "./client.js";
 import { embedTransactionId, transactionSignableBytes } from "./codecs.js";
 import { GiraffeGraph } from "./graph.js";
-import { Transaction, TransactionInput, TransactionOutput, TransactionOutputReference } from "./proto/models/core.js";
-import { defaultTransactionTip, isPaymentToken, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils.js";
+import { Transaction, TransactionInput, TransactionOutput, TransactionOutputReference } from "./models.js";
+import { defaultTransactionTip, isPaymentToken, requiredMinimumQuantity, requiredWitnessesOf } from "./utils.js";
 import { GiraffeWallet, WitnessContext } from "./wallet.js";
 
 export * from "./models.js";
@@ -113,23 +113,28 @@ export class Giraffe {
                 output.lockAddress = this.wallet.address;
             }
             const minQuantity = requiredMinimumQuantity(output);
-            if (output.value!.quantity < minQuantity) {
-                output.value!.quantity = minQuantity;
+            if (output.quantity < minQuantity) {
+                output.quantity = minQuantity;
             }
         }
         const remainingSpendableOutputs = [...this.wallet.spendableOutputs.filter(([_, out]) => isPaymentToken(out))];
         if (remainingSpendableOutputs.length === 0) {
             throw new Error("No spendable funds");
         }
-        var currentReward = rewardOf(transaction);
+        var currentReward = 0;
+        for (const input of transaction.inputs) {
+            let output: TransactionOutput = this.wallet.getSpendableOutput(input.reference!) || await this.client.getTransactionOutput(input.reference!);
+            currentReward += output.quantity;
+        }
+        for (const output of transaction.outputs) {
+            currentReward -= output.quantity;
+        }
         var i = 0;
         while (currentReward != defaultTransactionTip) {
             if (currentReward > defaultTransactionTip) {
                 const output: TransactionOutput = TransactionOutput.fromJSON({
                     lockAddress: this.wallet.address,
-                    value: {
-                        quantity: currentReward - defaultTransactionTip,
-                    },
+                    quantity: currentReward - defaultTransactionTip,
                 });
                 transaction.outputs.push(output);
                 currentReward = defaultTransactionTip;
@@ -138,12 +143,9 @@ export class Giraffe {
             } else {
                 const [ref, output] = remainingSpendableOutputs[i];
                 i++;
-                const input: TransactionInput = TransactionInput.fromJSON({
-                    reference: ref,
-                    value: output.value!
-                });
+                const input: TransactionInput = TransactionInput.fromJSON({ reference: ref });
                 transaction.inputs.push(input);
-                currentReward = currentReward + output.value!.quantity;
+                currentReward = currentReward + output.quantity;
             }
         }
         embedTransactionId(transaction);
@@ -199,9 +201,7 @@ export class Giraffe {
             outputs: [
                 {
                     lockAddress: this.wallet.address,
-                    value: {
-                        quantity: quantity,
-                    },
+                    quantity: quantity,
                 }
             ]
         }));
@@ -217,7 +217,7 @@ export class Giraffe {
         const inputs: TransactionInput[] = [];
         for (const ref of outputs) {
             const output = await this.client.getTransactionOutput(ref);
-            inputs.push(TransactionInput.fromJSON({ reference: ref, value: output.value! }));
+            inputs.push(TransactionInput.fromJSON({ reference: ref }));
         }
         await this.paySignBroadcast(Transaction.fromJSON({ inputs: inputs }));
     }

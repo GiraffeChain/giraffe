@@ -153,32 +153,42 @@ class Wallet {
         output.lockAddress = defaultLockAddress;
       }
       final minQuantity = output.requiredMinimumQuantity;
-      if (output.value.quantity < minQuantity) {
-        output.value.quantity = minQuantity;
+      if (output.quantity < minQuantity) {
+        output.quantity = minQuantity;
       }
     }
-    var currentReward = transaction.reward;
+    var currentReward = Int64.ZERO;
+    for (final input in transaction.inputs) {
+      final TransactionOutput output;
+      if (spendableOutputs.containsKey(input.reference)) {
+        output = spendableOutputs[input.reference]!;
+      } else {
+        output = (await view.getTransactionOutput(input.reference))!;
+      }
+      currentReward += output.quantity;
+    }
+    for (final output in transaction.outputs) {
+      currentReward -= output.quantity;
+    }
     final remainingSpendableOutputs = QueueList.from(Map.of(spendableOutputs)
         .entries
         .where((e) => transaction.inputs.every((i) => i.reference != e.key))
         .where((e) => e.value.isPaymentToken)
-        .sortedByCompare(
-            (e) => e.value.value.quantity, (a, b) => a.compareTo(b)));
+        .sortedByCompare((e) => e.value.quantity, (a, b) => a.compareTo(b)));
     while (currentReward != defaultTransactionTip) {
       if (currentReward > defaultTransactionTip) {
         final output = TransactionOutput(
             lockAddress: defaultLockAddress,
-            value: Value(quantity: currentReward - defaultTransactionTip));
+            quantity: currentReward - defaultTransactionTip);
         transaction.outputs.add(output);
         currentReward = defaultTransactionTip;
       } else if (remainingSpendableOutputs.isEmpty) {
         throw Exception('Insufficient funds');
       } else {
         final out = remainingSpendableOutputs.removeFirst();
-        final input =
-            TransactionInput(reference: out.key, value: out.value.value);
+        final input = TransactionInput(reference: out.key);
         transaction.inputs.add(input);
-        currentReward += out.value.value.quantity;
+        currentReward += out.value.quantity;
       }
     }
     transaction.embedId();
@@ -204,23 +214,23 @@ class Wallet {
       attest(view, await pay(view, transaction));
 
   Int64 get totalFunds => spendableOutputs.values
-      .map((v) => v.value.quantity)
+      .map((v) => v.quantity)
       .fold(Int64.ZERO, (a, b) => a + b);
 
   Int64 get stakedFunds => spendableOutputs.values
-      .where((v) => v.hasAccount() || v.value.hasAccountRegistration())
-      .map((v) => v.value.quantity)
+      .where((v) => v.hasAccount() || v.hasAccountRegistration())
+      .map((v) => v.quantity)
       .fold(Int64.ZERO, (a, b) => a + b);
 
   Int64 get liquidFunds => spendableOutputs.values
       .where((o) => o.isPaymentToken)
-      .map((v) => v.value.quantity)
+      .map((v) => v.quantity)
       .fold(Int64.ZERO, (a, b) => a + b);
 
   TransactionOutputReference? get stakingAccountReference =>
       spendableOutputs.entries
           .firstWhereOrNull(
-            (e) => e.value.value.hasAccountRegistration(),
+            (e) => e.value.hasAccountRegistration(),
           )
           ?.key;
 }

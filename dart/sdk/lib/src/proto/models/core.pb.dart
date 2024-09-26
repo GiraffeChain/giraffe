@@ -72,7 +72,6 @@ class BlockId extends $pb.GeneratedMessage {
 class BlockHeader extends $pb.GeneratedMessage {
   factory BlockHeader({
     BlockId? parentHeaderId,
-    $fixnum.Int64? parentSlot,
     $core.String? txRoot,
     $fixnum.Int64? timestamp,
     $fixnum.Int64? height,
@@ -85,9 +84,6 @@ class BlockHeader extends $pb.GeneratedMessage {
     final $result = create();
     if (parentHeaderId != null) {
       $result.parentHeaderId = parentHeaderId;
-    }
-    if (parentSlot != null) {
-      $result.parentSlot = parentSlot;
     }
     if (txRoot != null) {
       $result.txRoot = txRoot;
@@ -121,7 +117,6 @@ class BlockHeader extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BlockHeader', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.giraffechain.models'), createEmptyInstance: create)
     ..aOM<BlockId>(1, _omitFieldNames ? '' : 'parentHeaderId', protoName: 'parentHeaderId', subBuilder: BlockId.create)
-    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'parentSlot', $pb.PbFieldType.OU6, protoName: 'parentSlot', defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(3, _omitFieldNames ? '' : 'txRoot', protoName: 'txRoot')
     ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'timestamp', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'height', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
@@ -166,97 +161,87 @@ class BlockHeader extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   BlockId ensureParentHeaderId() => $_ensure(0);
 
-  /// The slot of the parent block
-  @$pb.TagNumber(2)
-  $fixnum.Int64 get parentSlot => $_getI64(1);
-  @$pb.TagNumber(2)
-  set parentSlot($fixnum.Int64 v) { $_setInt64(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasParentSlot() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearParentSlot() => clearField(2);
-
   /// The commitment/accumulator of the block body
   /// length = 32
   @$pb.TagNumber(3)
-  $core.String get txRoot => $_getSZ(2);
+  $core.String get txRoot => $_getSZ(1);
   @$pb.TagNumber(3)
-  set txRoot($core.String v) { $_setString(2, v); }
+  set txRoot($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(3)
-  $core.bool hasTxRoot() => $_has(2);
+  $core.bool hasTxRoot() => $_has(1);
   @$pb.TagNumber(3)
   void clearTxRoot() => clearField(3);
 
   /// The UTC UNIX timestamp (ms) when the block was created
   @$pb.TagNumber(4)
-  $fixnum.Int64 get timestamp => $_getI64(3);
+  $fixnum.Int64 get timestamp => $_getI64(2);
   @$pb.TagNumber(4)
-  set timestamp($fixnum.Int64 v) { $_setInt64(3, v); }
+  set timestamp($fixnum.Int64 v) { $_setInt64(2, v); }
   @$pb.TagNumber(4)
-  $core.bool hasTimestamp() => $_has(3);
+  $core.bool hasTimestamp() => $_has(2);
   @$pb.TagNumber(4)
   void clearTimestamp() => clearField(4);
 
   /// The 1-based index of this block in the blockchain
   @$pb.TagNumber(5)
-  $fixnum.Int64 get height => $_getI64(4);
+  $fixnum.Int64 get height => $_getI64(3);
   @$pb.TagNumber(5)
-  set height($fixnum.Int64 v) { $_setInt64(4, v); }
+  set height($fixnum.Int64 v) { $_setInt64(3, v); }
   @$pb.TagNumber(5)
-  $core.bool hasHeight() => $_has(4);
+  $core.bool hasHeight() => $_has(3);
   @$pb.TagNumber(5)
   void clearHeight() => clearField(5);
 
   /// The time-slot in which the block producer created the block
   @$pb.TagNumber(6)
-  $fixnum.Int64 get slot => $_getI64(5);
+  $fixnum.Int64 get slot => $_getI64(4);
   @$pb.TagNumber(6)
-  set slot($fixnum.Int64 v) { $_setInt64(5, v); }
+  set slot($fixnum.Int64 v) { $_setInt64(4, v); }
   @$pb.TagNumber(6)
-  $core.bool hasSlot() => $_has(5);
+  $core.bool hasSlot() => $_has(4);
   @$pb.TagNumber(6)
   void clearSlot() => clearField(6);
 
   /// A certificate indicating that the block producer was eligible to make this block
   @$pb.TagNumber(7)
-  StakerCertificate get stakerCertificate => $_getN(6);
+  StakerCertificate get stakerCertificate => $_getN(5);
   @$pb.TagNumber(7)
   set stakerCertificate(StakerCertificate v) { setField(7, v); }
   @$pb.TagNumber(7)
-  $core.bool hasStakerCertificate() => $_has(6);
+  $core.bool hasStakerCertificate() => $_has(5);
   @$pb.TagNumber(7)
   void clearStakerCertificate() => clearField(7);
   @$pb.TagNumber(7)
-  StakerCertificate ensureStakerCertificate() => $_ensure(6);
+  StakerCertificate ensureStakerCertificate() => $_ensure(5);
 
   /// The operator's staking account location
   @$pb.TagNumber(8)
-  TransactionOutputReference get account => $_getN(7);
+  TransactionOutputReference get account => $_getN(6);
   @$pb.TagNumber(8)
   set account(TransactionOutputReference v) { setField(8, v); }
   @$pb.TagNumber(8)
-  $core.bool hasAccount() => $_has(7);
+  $core.bool hasAccount() => $_has(6);
   @$pb.TagNumber(8)
   void clearAccount() => clearField(8);
   @$pb.TagNumber(8)
-  TransactionOutputReference ensureAccount() => $_ensure(7);
+  TransactionOutputReference ensureAccount() => $_ensure(6);
 
   /// Configuration or protocol changes
   @$pb.TagNumber(9)
-  $core.Map<$core.String, $core.String> get settings => $_getMap(8);
+  $core.Map<$core.String, $core.String> get settings => $_getMap(7);
 
   /// The ID of _this_ block header.  This value is optional and its contents are not included in the signable or identifiable data.  Clients which _can_ verify
   /// this value should verify this value, but some clients may not be able to or need to, in which case this field acts as a convenience.
   @$pb.TagNumber(12)
-  BlockId get headerId => $_getN(9);
+  BlockId get headerId => $_getN(8);
   @$pb.TagNumber(12)
   set headerId(BlockId v) { setField(12, v); }
   @$pb.TagNumber(12)
-  $core.bool hasHeaderId() => $_has(9);
+  $core.bool hasHeaderId() => $_has(8);
   @$pb.TagNumber(12)
   void clearHeaderId() => clearField(12);
   @$pb.TagNumber(12)
-  BlockId ensureHeaderId() => $_ensure(9);
+  BlockId ensureHeaderId() => $_ensure(8);
 }
 
 /// A certificate proving the operator's election
@@ -265,7 +250,6 @@ class StakerCertificate extends $pb.GeneratedMessage {
     $core.String? blockSignature,
     $core.String? vrfSignature,
     $core.String? vrfVK,
-    $core.String? thresholdEvidence,
     $core.String? eta,
   }) {
     final $result = create();
@@ -277,9 +261,6 @@ class StakerCertificate extends $pb.GeneratedMessage {
     }
     if (vrfVK != null) {
       $result.vrfVK = vrfVK;
-    }
-    if (thresholdEvidence != null) {
-      $result.thresholdEvidence = thresholdEvidence;
     }
     if (eta != null) {
       $result.eta = eta;
@@ -294,7 +275,6 @@ class StakerCertificate extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'blockSignature', protoName: 'blockSignature')
     ..aOS(2, _omitFieldNames ? '' : 'vrfSignature', protoName: 'vrfSignature')
     ..aOS(3, _omitFieldNames ? '' : 'vrfVK', protoName: 'vrfVK')
-    ..aOS(4, _omitFieldNames ? '' : 'thresholdEvidence', protoName: 'thresholdEvidence')
     ..aOS(5, _omitFieldNames ? '' : 'eta')
     ..hasRequiredFields = false
   ;
@@ -356,28 +336,15 @@ class StakerCertificate extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearVrfVK() => clearField(3);
 
-  /// Hash of the operator's `threshold`
-  /// routine = blake2b256
-  /// Base58 encoded
-  /// length = 32
-  @$pb.TagNumber(4)
-  $core.String get thresholdEvidence => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set thresholdEvidence($core.String v) { $_setString(3, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasThresholdEvidence() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearThresholdEvidence() => clearField(4);
-
   /// The epoch's randomness
   /// Base58 encoded
   /// length = 32
   @$pb.TagNumber(5)
-  $core.String get eta => $_getSZ(4);
+  $core.String get eta => $_getSZ(3);
   @$pb.TagNumber(5)
-  set eta($core.String v) { $_setString(4, v); }
+  set eta($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(5)
-  $core.bool hasEta() => $_has(4);
+  $core.bool hasEta() => $_has(3);
   @$pb.TagNumber(5)
   void clearEta() => clearField(5);
 }
@@ -985,14 +952,10 @@ class Witness extends $pb.GeneratedMessage {
 class TransactionInput extends $pb.GeneratedMessage {
   factory TransactionInput({
     TransactionOutputReference? reference,
-    Value? value,
   }) {
     final $result = create();
     if (reference != null) {
       $result.reference = reference;
-    }
-    if (value != null) {
-      $result.value = value;
     }
     return $result;
   }
@@ -1002,7 +965,6 @@ class TransactionInput extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionInput', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.giraffechain.models'), createEmptyInstance: create)
     ..aOM<TransactionOutputReference>(1, _omitFieldNames ? '' : 'reference', subBuilder: TransactionOutputReference.create)
-    ..aOM<Value>(2, _omitFieldNames ? '' : 'value', subBuilder: Value.create)
     ..hasRequiredFields = false
   ;
 
@@ -1037,17 +999,6 @@ class TransactionInput extends $pb.GeneratedMessage {
   void clearReference() => clearField(1);
   @$pb.TagNumber(1)
   TransactionOutputReference ensureReference() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  Value get value => $_getN(1);
-  @$pb.TagNumber(2)
-  set value(Value v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasValue() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearValue() => clearField(2);
-  @$pb.TagNumber(2)
-  Value ensureValue() => $_ensure(1);
 }
 
 class TransactionOutputReference extends $pb.GeneratedMessage {
@@ -1120,18 +1071,26 @@ class TransactionOutputReference extends $pb.GeneratedMessage {
 class TransactionOutput extends $pb.GeneratedMessage {
   factory TransactionOutput({
     LockAddress? lockAddress,
-    Value? value,
+    $fixnum.Int64? quantity,
     TransactionOutputReference? account,
+    GraphEntry? graphEntry,
+    AccountRegistration? accountRegistration,
   }) {
     final $result = create();
     if (lockAddress != null) {
       $result.lockAddress = lockAddress;
     }
-    if (value != null) {
-      $result.value = value;
+    if (quantity != null) {
+      $result.quantity = quantity;
     }
     if (account != null) {
       $result.account = account;
+    }
+    if (graphEntry != null) {
+      $result.graphEntry = graphEntry;
+    }
+    if (accountRegistration != null) {
+      $result.accountRegistration = accountRegistration;
     }
     return $result;
   }
@@ -1141,8 +1100,10 @@ class TransactionOutput extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionOutput', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.giraffechain.models'), createEmptyInstance: create)
     ..aOM<LockAddress>(1, _omitFieldNames ? '' : 'lockAddress', protoName: 'lockAddress', subBuilder: LockAddress.create)
-    ..aOM<Value>(2, _omitFieldNames ? '' : 'value', subBuilder: Value.create)
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'quantity', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOM<TransactionOutputReference>(3, _omitFieldNames ? '' : 'account', subBuilder: TransactionOutputReference.create)
+    ..aOM<GraphEntry>(5, _omitFieldNames ? '' : 'graphEntry', protoName: 'graphEntry', subBuilder: GraphEntry.create)
+    ..aOM<AccountRegistration>(6, _omitFieldNames ? '' : 'accountRegistration', protoName: 'accountRegistration', subBuilder: AccountRegistration.create)
     ..hasRequiredFields = false
   ;
 
@@ -1179,17 +1140,14 @@ class TransactionOutput extends $pb.GeneratedMessage {
   LockAddress ensureLockAddress() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  Value get value => $_getN(1);
+  $fixnum.Int64 get quantity => $_getI64(1);
   @$pb.TagNumber(2)
-  set value(Value v) { setField(2, v); }
+  set quantity($fixnum.Int64 v) { $_setInt64(1, v); }
   @$pb.TagNumber(2)
-  $core.bool hasValue() => $_has(1);
+  $core.bool hasQuantity() => $_has(1);
   @$pb.TagNumber(2)
-  void clearValue() => clearField(2);
-  @$pb.TagNumber(2)
-  Value ensureValue() => $_ensure(1);
+  void clearQuantity() => clearField(2);
 
-  /// Optional
   @$pb.TagNumber(3)
   TransactionOutputReference get account => $_getN(2);
   @$pb.TagNumber(3)
@@ -1200,89 +1158,28 @@ class TransactionOutput extends $pb.GeneratedMessage {
   void clearAccount() => clearField(3);
   @$pb.TagNumber(3)
   TransactionOutputReference ensureAccount() => $_ensure(2);
-}
 
-class Value extends $pb.GeneratedMessage {
-  factory Value({
-    $fixnum.Int64? quantity,
-    AccountRegistration? accountRegistration,
-    GraphEntry? graphEntry,
-  }) {
-    final $result = create();
-    if (quantity != null) {
-      $result.quantity = quantity;
-    }
-    if (accountRegistration != null) {
-      $result.accountRegistration = accountRegistration;
-    }
-    if (graphEntry != null) {
-      $result.graphEntry = graphEntry;
-    }
-    return $result;
-  }
-  Value._() : super();
-  factory Value.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Value.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$pb.TagNumber(5)
+  GraphEntry get graphEntry => $_getN(3);
+  @$pb.TagNumber(5)
+  set graphEntry(GraphEntry v) { setField(5, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasGraphEntry() => $_has(3);
+  @$pb.TagNumber(5)
+  void clearGraphEntry() => clearField(5);
+  @$pb.TagNumber(5)
+  GraphEntry ensureGraphEntry() => $_ensure(3);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Value', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.giraffechain.models'), createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'quantity', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOM<AccountRegistration>(2, _omitFieldNames ? '' : 'accountRegistration', protoName: 'accountRegistration', subBuilder: AccountRegistration.create)
-    ..aOM<GraphEntry>(3, _omitFieldNames ? '' : 'graphEntry', protoName: 'graphEntry', subBuilder: GraphEntry.create)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  Value clone() => Value()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Value copyWith(void Function(Value) updates) => super.copyWith((message) => updates(message as Value)) as Value;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Value create() => Value._();
-  Value createEmptyInstance() => create();
-  static $pb.PbList<Value> createRepeated() => $pb.PbList<Value>();
-  @$core.pragma('dart2js:noInline')
-  static Value getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Value>(create);
-  static Value? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $fixnum.Int64 get quantity => $_getI64(0);
-  @$pb.TagNumber(1)
-  set quantity($fixnum.Int64 v) { $_setInt64(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasQuantity() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearQuantity() => clearField(1);
-
-  @$pb.TagNumber(2)
-  AccountRegistration get accountRegistration => $_getN(1);
-  @$pb.TagNumber(2)
-  set accountRegistration(AccountRegistration v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasAccountRegistration() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearAccountRegistration() => clearField(2);
-  @$pb.TagNumber(2)
-  AccountRegistration ensureAccountRegistration() => $_ensure(1);
-
-  /// Optional
-  @$pb.TagNumber(3)
-  GraphEntry get graphEntry => $_getN(2);
-  @$pb.TagNumber(3)
-  set graphEntry(GraphEntry v) { setField(3, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasGraphEntry() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearGraphEntry() => clearField(3);
-  @$pb.TagNumber(3)
-  GraphEntry ensureGraphEntry() => $_ensure(2);
+  @$pb.TagNumber(6)
+  AccountRegistration get accountRegistration => $_getN(4);
+  @$pb.TagNumber(6)
+  set accountRegistration(AccountRegistration v) { setField(6, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasAccountRegistration() => $_has(4);
+  @$pb.TagNumber(6)
+  void clearAccountRegistration() => clearField(6);
+  @$pb.TagNumber(6)
+  AccountRegistration ensureAccountRegistration() => $_ensure(4);
 }
 
 class AccountRegistration extends $pb.GeneratedMessage {

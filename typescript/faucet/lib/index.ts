@@ -43,7 +43,7 @@ async function main() {
             outputs.push(
                 g.TransactionOutput.fromJSON({
                     lockAddress: address,
-                    value: { quantity: quantityPerUser }
+                    quantity: quantityPerUser
                 })
             )
         }

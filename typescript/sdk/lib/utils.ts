@@ -23,7 +23,7 @@ export async function requiredWitnessesOf(client: GiraffeClient, transaction: Tr
         } else {
             aTxO = transaction.outputs[ref.index];
         }
-        const aVertex = aTxO!.value?.graphEntry?.vertex;
+        const aVertex = aTxO!.graphEntry?.vertex;
         if (aVertex?.edgeLockAddress !== undefined) {
             result.add(aVertex.edgeLockAddress);
         }
@@ -35,8 +35,8 @@ export async function requiredWitnessesOf(client: GiraffeClient, transaction: Tr
         result.add(out.lockAddress!);
     }
     for (const output of transaction.outputs) {
-        if (output?.value?.graphEntry !== undefined && output.value.graphEntry.edge !== undefined) {
-            const edge = output.value.graphEntry.edge;
+        if (output?.graphEntry !== undefined && output.graphEntry.edge !== undefined) {
+            const edge = output.graphEntry.edge;
             await handleEdge(edge.a!);
             await handleEdge(edge.b!);
         }
@@ -81,12 +81,11 @@ export function requiredMinimumQuantity(output: TransactionOutput): number {
         ;
         result += 100;
     }
-    if (output.value?.accountRegistration !== undefined) {
-        ;
+    if (output.accountRegistration !== undefined) {
         result += 1000;
     }
-    if (output.value?.graphEntry !== undefined) {
-        result += graphEntryMinimumQuantity(output.value.graphEntry);
+    if (output.graphEntry !== undefined) {
+        result += graphEntryMinimumQuantity(output.graphEntry);
     }
     return result;
 }
@@ -137,23 +136,6 @@ function protoStructMinimumQuantity(struct: { [key: string]: any }): number {
 }
 
 /**
- * Calculates the current reward of a transaction. The reward is defined as: sum(inputs) - sum(outputs)
- * 
- * @param transaction - The transaction object.
- * @returns The reward of the transaction.
- */
-export function rewardOf(transaction: Transaction): number {
-    var result = 0;
-    for (const input of transaction.inputs) {
-        result += input.value!.quantity;
-    }
-    for (const output of transaction.outputs) {
-        result -= output.value!.quantity;
-    }
-    return result;
-}
-
-/**
  * The default quantity to be provided as a tip/reward to the block producer.
  */
 export const defaultTransactionTip = 1000;
@@ -165,7 +147,7 @@ export const defaultTransactionTip = 1000;
  * @returns `true` if the transaction output is a liquid token, `false` otherwise.
  */
 export function isPaymentToken(transactionOutput: TransactionOutput): boolean {
-    return transactionOutput.account === undefined && transactionOutput.value?.accountRegistration === undefined && transactionOutput.value?.graphEntry === undefined;
+    return transactionOutput.account === undefined && transactionOutput.accountRegistration === undefined && transactionOutput.graphEntry === undefined;
 }
 
 /**

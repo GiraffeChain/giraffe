@@ -1,11 +1,11 @@
 package com.giraffechain
 
-import com.giraffechain.codecs.{*, given}
-import com.giraffechain.crypto.Blake2b256
-import com.giraffechain.models.*
 import cats.data.OptionT
 import cats.implicits.*
 import cats.{Applicative, Monad}
+import com.giraffechain.codecs.{*, given}
+import com.giraffechain.crypto.Blake2b256
+import com.giraffechain.models.*
 import com.google.protobuf.ByteString
 
 package object ledger {
@@ -15,7 +15,7 @@ package object ledger {
       (transaction.inputs.map(_.reference) ++
         transaction.outputs.flatMap(_.account) ++
         transaction.outputs
-          .flatMap(_.value.graphEntry.flatMap(_.entry.edge))
+          .flatMap(_.graphEntry.flatMap(_.entry.edge))
           .flatMap(edge => List(edge.a, edge.b))).filter(_.transactionId.nonEmpty).toSet
 
     def referencedOutputs: Seq[(TransactionOutputReference, TransactionOutput)] = {
@@ -30,26 +30,26 @@ package object ledger {
           .map(_.toSet)
         outputResults <- transaction.outputs
           .traverse(output =>
-            output.value.graphEntry
+            output.graphEntry
               .flatMap(_.entry.edge)
               .fold(Set.empty[TransactionOutputReference])(edge => Set(edge.a, edge.b))
               .toList
               .traverse(fetchTransactionOutputOrLocal(fetchTransactionOutput, transaction))
-              .map(_.flatMap(_.value.graphEntry).flatMap(_.entry.vertex).flatMap(_.edgeLockAddress))
+              .map(_.flatMap(_.graphEntry).flatMap(_.entry.vertex).flatMap(_.edgeLockAddress))
               .flatMap(graphLockAddresses =>
                 OptionT(output.account.traverse(fetchTransactionOutputOrLocal(fetchTransactionOutput, transaction)))
-                  .subflatMap(_.value.accountRegistration.map(_.associationLock))
+                  .subflatMap(_.accountRegistration.map(_.associationLock))
                   .fold(graphLockAddresses)(graphLockAddresses :+ _)
               )
           )
           .map(_.flatten.toSet)
       } yield inputResults ++ outputResults
 
-    def reward: Long =
-      transaction.inputs.foldMap(_.value.quantity) - transaction.outputs.foldMap(_.value.quantity)
-
-    def fee: Long =
-      100 // TODO
+    def reward[F[_]: Monad](fetchTransactionOutput: FetchTransactionOutput[F]): F[Long] =
+      (
+        transaction.inputs.foldMapM(i => fetchTransactionOutput(i.reference).map(_.quantity)),
+        transaction.outputs.foldMap(_.quantity).pure[F]
+      ).mapN(_ - _)
 
   extension (transactionIds: Seq[TransactionId])
     def txRoot(parentTxRoot: Bytes): Bytes =

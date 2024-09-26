@@ -1,14 +1,14 @@
 package com.giraffechain
 
+import cats.effect.std.Random
+import cats.effect.{Async, Sync}
+import cats.implicits.*
 import com.giraffechain.codecs.{*, given}
 import com.giraffechain.consensus.{Eta, ProtocolSettings}
 import com.giraffechain.crypto.{Blake2b256, CryptoResources}
 import com.giraffechain.ledger.*
 import com.giraffechain.models.*
 import com.giraffechain.utility.BlockLoading
-import cats.effect.std.Random
-import cats.effect.{Async, Sync}
-import cats.implicits.*
 import com.google.common.primitives.Longs
 import com.google.protobuf.ByteString
 import fs2.io.file.{Files, Path}
@@ -34,7 +34,6 @@ object Genesis:
     byteStringZero64,
     byteStringZero80,
     byteStringZero32,
-    byteStringZero32,
     eta = ByteVector(eta.toByteArray).toBase58
   )
 
@@ -51,7 +50,6 @@ object Genesis:
       val header =
         BlockHeader(
           parentHeaderId = ParentId,
-          parentSlot = ParentSlot,
           txRoot =
             ByteVector(transactions.map(_.id).txRoot(ParentTxRoot.decodeBase58.toByteArray).toByteArray).toBase58,
           timestamp = timestamp,

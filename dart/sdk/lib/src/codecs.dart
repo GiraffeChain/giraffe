@@ -93,17 +93,18 @@ extension TransactionOutputReferenceCodecs on TransactionOutputReference {
 }
 
 extension TransactionInputCodecs on TransactionInput {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(reference.immutableBytes)
-    ..addAll(value.immutableBytes);
+  List<int> get immutableBytes => [...reference.immutableBytes];
 }
 
 extension TransactionOutputCodecs on TransactionOutput {
   List<int> get immutableBytes => [
         ...lockAddress.immutableBytes,
-        ...value.immutableBytes,
+        ...quantity.immutableBytes,
         ...condOptCodec(
             hasAccount(), account, (accout) => account.immutableBytes),
+        ...condOptCodec(hasGraphEntry(), graphEntry, (v) => v.immutableBytes),
+        ...condOptCodec(hasAccountRegistration(), accountRegistration,
+            (v) => v.immutableBytes),
       ];
 }
 
@@ -127,15 +128,6 @@ List<int> optCodec<T>(T? t, List<int> Function(T) encode) =>
 
 List<int> condOptCodec<T>(bool cond, T t, List<int> Function(T) encode) =>
     optCodec(cond ? t : null, encode);
-
-extension ValueCodecs on Value {
-  List<int> get immutableBytes => [
-        ...quantity.immutableBytes,
-        ...condOptCodec(hasAccountRegistration(), accountRegistration,
-            (v) => v.immutableBytes),
-        ...condOptCodec(hasGraphEntry(), graphEntry, (v) => v.immutableBytes),
-      ];
-}
 
 extension AccountRegistrationCodecs on AccountRegistration {
   List<int> get immutableBytes => [

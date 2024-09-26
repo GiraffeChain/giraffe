@@ -6,7 +6,8 @@ rm -r ./lib/src/proto || true
 mkdir -p ./tmp/protobuf || true
 
 cd ../..
-cp --parents `find -name \*.proto*` dart/sdk/tmp/protobuf
+cp --parents `find proto -type f -name "*.proto"` dart/sdk/tmp/protobuf
+cp --parents `find external_proto -type f -name "*.proto"` dart/sdk/tmp/protobuf
 cd dart/sdk
 
 mkdir -p ./lib/src/proto || true

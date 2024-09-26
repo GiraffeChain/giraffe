@@ -1,0 +1,60 @@
+name: giraffe_frontend
+description: Giraffe blockchain frontend
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.22.2"
+
+dependencies:
+  convert: ^3.1.1
+  cryptography: ^2.5.0
+  cryptography_flutter: ^2.3.0
+  logging: ^1.2.0
+  fixnum: ^1.1.0
+  async: ^2.11.0
+  fpdart: ^1.1.0
+  rxdart: ^0.28.0
+  fast_base58: ^0.2.1
+  integral_isolates: ^0.5.1
+  intl: ^0.19.0
+  get_time_ago: ^2.0.0
+  bit_array: ^2.2.0
+  go_router: ^14.2.7
+  path_provider: ^2.1.2
+  riverpod: ^2.5.1
+  flutter_riverpod: ^2.5.1
+  freezed_annotation: ^2.4.4
+  giraffe_sdk:
+    path: ../sdk
+  flutter:
+    sdk: flutter
+  riverpod_annotation: ^2.3.5
+  bip39: ^1.0.6
+  flutter_secure_storage: ^9.2.2
+  rational: ^2.2.3
+  hashlib: ^1.19.2
+  collection: ^1.18.0
+  avs_svg_provider: ^1.0.1
+  args: ^2.5.0
+  flutter_json_view: ^1.1.5
+  flutter_svg: ^2.0.10+1
+  quiver: ^3.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.11
+  freezed: ^2.5.2
+  riverpod_generator: ^2.4.0
+  custom_lint:
+  analyzer: ^6.7.0
+  mockito: ^5.4.4
+  test: ^1.25.7
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/

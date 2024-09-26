@@ -54,7 +54,6 @@ package object consensus:
     def unsigned: UnsignedBlockHeader =
       UnsignedBlockHeader(
         header.parentHeaderId,
-        header.parentSlot,
         header.txRoot,
         header.timestamp,
         header.height,
@@ -65,7 +64,6 @@ package object consensus:
 
   case class UnsignedBlockHeader(
       parentHeaderId: BlockId,
-      parentSlot: Slot,
       txRoot: String,
       timestamp: Timestamp,
       height: Height,
@@ -78,13 +76,11 @@ package object consensus:
     case class PartialStakerCertificate(
         vrfSignature: String,
         vrfVK: String,
-        thresholdEvidence: String,
         eta: String
     )
     object PartialStakerCertificate:
       def apply(stakerCertificate: StakerCertificate): PartialStakerCertificate = PartialStakerCertificate(
         stakerCertificate.vrfSignature,
         stakerCertificate.vrfVK,
-        stakerCertificate.thresholdEvidence,
         stakerCertificate.eta
       )

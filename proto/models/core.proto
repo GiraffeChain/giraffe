@@ -18,8 +18,6 @@ message BlockHeader {
   BlockId headerId = 12;
   // The parent block's ID.  Each header builds from a single parent.
   BlockId parentHeaderId = 1 [(validate.rules).message.required = true];
-  // The slot of the parent block
-  uint64 parentSlot = 2;
   // The commitment/accumulator of the block body
   // length = 32
   string txRoot = 3;
@@ -51,11 +49,6 @@ message StakerCertificate {
     // Base58 encoded
     // length = 32
     string vrfVK = 3;
-    // Hash of the operator's `threshold`
-    // routine = blake2b256
-    // Base58 encoded
-    // length = 32
-    string thresholdEvidence = 4;
     // The epoch's randomness
     // Base58 encoded
     // length = 32
@@ -131,7 +124,6 @@ message Witness {
 
 message TransactionInput {
     TransactionOutputReference reference = 1 [(validate.rules).message.required = true];
-    Value value = 2 [(validate.rules).message.required = true];
 }
 
 message TransactionOutputReference {
@@ -142,16 +134,10 @@ message TransactionOutputReference {
 
 message TransactionOutput {
     LockAddress lockAddress = 1 [(validate.rules).message.required = true];
-    Value value = 2 [(validate.rules).message.required = true];
-    // Optional
+    uint64 quantity = 2;
     TransactionOutputReference account = 3;
-}
-
-message Value {
-    uint64 quantity = 1;
-    AccountRegistration accountRegistration = 2;
-    // Optional
-    GraphEntry graphEntry = 3;
+    GraphEntry graphEntry = 5;
+    AccountRegistration accountRegistration = 6;
 }
 
 message AccountRegistration {

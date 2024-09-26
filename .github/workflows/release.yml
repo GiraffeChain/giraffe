@@ -23,24 +23,24 @@ jobs:
           path: cli-staker
       - uses: actions/download-artifact@v4
         with:
-          name: web-wallet-dist
-          path: web-wallet
-      - run: zip -r web-wallet.zip web-wallet/
+          name: web-frontend-dist
+          path: web-frontend
+      - run: zip -r web-frontend.zip web-frontend/
       - uses: actions/download-artifact@v4
         with:
-          name: android-arm64-v8a-wallet-dist
+          name: android-arm64-v8a-frontend-dist
           path: android-arm64-v8a
       - uses: actions/download-artifact@v4
         with:
-          name: android-armeabi-v7a-wallet-dist
+          name: android-armeabi-v7a-frontend-dist
           path: android-armeabi-v7a
       - uses: actions/download-artifact@v4
         with:
-          name: android-x86_64-wallet-dist
+          name: android-x86_64-frontend-dist
           path: android-x86_64
       - uses: actions/download-artifact@v4
         with:
-          name: linux-deb-wallet-dist
+          name: linux-deb-frontend-dist
           path: linux-deb
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -50,7 +50,7 @@ jobs:
           files: |
             ts-sdk.zip
             cli-staker/staker
-            web-wallet.zip
+            web-frontend.zip
             android-arm64-v8a/app-arm64-v8a-release.apk
             android-armeabi-v7a/app-armeabi-v7a-release.apk
             android-x86_64/app-x86_64-release.apk

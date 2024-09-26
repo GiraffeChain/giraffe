@@ -1,14 +1,14 @@
 package com.giraffechain.consensus
 
+import cats.data.OptionT
+import cats.effect.{Async, Resource}
+import cats.implicits.*
+import cats.{Monad, MonadThrow}
 import com.giraffechain.*
 import com.giraffechain.codecs.given
 import com.giraffechain.ledger.*
 import com.giraffechain.models.*
 import com.giraffechain.utility.Ratio
-import cats.data.OptionT
-import cats.effect.{Async, Resource}
-import cats.implicits.*
-import cats.{Monad, MonadThrow}
 
 trait StakerTracker[F[_]]:
   def totalActiveStake(currentBlockId: BlockId, slot: Long): F[Long]
@@ -84,13 +84,14 @@ object StakerData:
       parentChildTree: BlockIdTree[F],
       currentEventChanged: BlockId => F[Unit],
       fetchBlockBody: FetchBody[F],
-      fetchTransaction: FetchTransaction[F]
+      fetchTransaction: FetchTransaction[F],
+      fetchTransactionOutput: FetchTransactionOutput[F]
   ): Resource[F, BSS[F]] =
     BlockSourcedState.make(
       initialState = initialState,
       initialEventId = currentBlockId,
-      applyEvent = new ApplyBlock(fetchBlockBody, fetchTransaction),
-      unapplyEvent = new UnapplyBlock(fetchBlockBody, fetchTransaction),
+      applyEvent = new ApplyBlock(fetchBlockBody, fetchTransaction, fetchTransactionOutput),
+      unapplyEvent = new UnapplyBlock(fetchBlockBody, fetchTransaction, fetchTransactionOutput),
       parentChildTree = parentChildTree,
       currentEventChanged
     )
@@ -112,8 +113,9 @@ object StakerData:
         .void
 
   private class ApplyBlock[F[_]: MonadThrow](
-      fetchBlockBody: BlockId => F[BlockBody],
-      fetchTransaction: TransactionId => F[Transaction]
+      fetchBlockBody: FetchBody[F],
+      fetchTransaction: FetchTransaction[F],
+      fetchTransactionOutput: FetchTransactionOutput[F]
   ) extends ((State[F], BlockId) => F[State[F]]):
 
     def apply(state: State[F], blockId: BlockId): F[State[F]] =
@@ -132,22 +134,23 @@ object StakerData:
       } yield state
 
     private def applyInput(state: State[F])(input: TransactionInput) =
-      OptionT(
-        fetchTransaction(input.reference.transactionId.get)
-          .map(_.outputs(input.reference.index).account)
-      ).flatMapF(state.stakers.get)
-        .foldF(
-          state.modifyTotalInactiveStake(_ - input.value.quantity)
-        )(staker =>
-          (if (input.value.accountRegistration.isEmpty)
-             state.stakers.put(
-               input.reference,
-               staker
-                 .copy(quantity = staker.quantity - input.value.quantity)
-             )
-           else state.stakers.remove(input.reference)) *>
-            state.modifyTotalActiveStake(_ - input.value.quantity)
-        )
+      fetchTransactionOutput(input.reference).flatMap(output =>
+        OptionT
+          .fromOption(output.account)
+          .flatMapF(state.stakers.get)
+          .foldF(
+            state.modifyTotalInactiveStake(_ - output.quantity)
+          )(staker =>
+            (if (output.accountRegistration.isEmpty)
+               state.stakers.put(
+                 input.reference,
+                 staker
+                   .copy(quantity = staker.quantity - output.quantity)
+               )
+             else state.stakers.remove(input.reference)) *>
+              state.modifyTotalActiveStake(_ - output.quantity)
+          )
+      )
 
     private def applyOutput(
         state: State[F]
@@ -161,24 +164,25 @@ object StakerData:
         .orElse(
           OptionT
             .fromOption[F](
-              output.value.accountRegistration
+              output.accountRegistration
                 .flatMap(_.stakingRegistration)
                 .map(ActiveStaker(_))
                 .tupleLeft(outputReference)
             )
         )
-        .foldF(state.modifyTotalInactiveStake(_ + output.value.quantity))((account, staker) =>
-          state.modifyTotalActiveStake(_ + output.value.quantity) *>
+        .foldF(state.modifyTotalInactiveStake(_ + output.quantity))((account, staker) =>
+          state.modifyTotalActiveStake(_ + output.quantity) *>
             state.stakers.put(
               account,
               staker
-                .copy(quantity = staker.quantity + output.value.quantity)
+                .copy(quantity = staker.quantity + output.quantity)
             )
         )
 
   private class UnapplyBlock[F[_]: MonadThrow](
-      fetchBlockBody: BlockId => F[BlockBody],
-      fetchTransaction: TransactionId => F[Transaction]
+      fetchBlockBody: FetchBody[F],
+      fetchTransaction: FetchTransaction[F],
+      fetchTransactionOutput: FetchTransactionOutput[F]
   ) extends ((State[F], BlockId) => F[State[F]]):
 
     def apply(state: State[F], blockId: BlockId): F[State[F]] =
@@ -201,11 +205,11 @@ object StakerData:
     )(outputReference: TransactionOutputReference, output: TransactionOutput) =
       OptionT
         .fromOption[F](
-          output.value.accountRegistration.flatMap(_.stakingRegistration)
+          output.accountRegistration.flatMap(_.stakingRegistration)
         )
         .semiflatTap(_ =>
           state.stakers.remove(outputReference) *> state.modifyTotalActiveStake(
-            _ - output.value.quantity
+            _ - output.quantity
           )
         )
         .void
@@ -216,48 +220,49 @@ object StakerData:
               OptionT(state.stakers.get(accountReference))
                 .map(staker =>
                   staker
-                    .copy(quantity = staker.quantity - output.value.quantity)
+                    .copy(quantity = staker.quantity - output.quantity)
                 )
                 .semiflatTap(updatedStaker =>
                   state.stakers.put(accountReference, updatedStaker) *> state
-                    .modifyTotalActiveStake(_ - output.value.quantity)
+                    .modifyTotalActiveStake(_ - output.quantity)
                 )
             )
             .void
         )
         .getOrElseF(
-          state.modifyTotalInactiveStake(_ - output.value.quantity)
+          state.modifyTotalInactiveStake(_ - output.quantity)
         )
 
     private def unapplyInput(state: State[F])(input: TransactionInput) =
-      OptionT
-        .fromOption(
-          input.value.accountRegistration.flatMap(_.stakingRegistration)
-        )
-        .semiflatTap(stakingRegistration =>
-          state.stakers.put(
-            input.reference,
-            ActiveStaker(stakingRegistration, input.value.quantity)
-          ) *>
-            state.modifyTotalActiveStake(_ + input.value.quantity)
-        )
-        .void
-        .orElse(
+      fetchTransactionOutput(input.reference)
+        .flatMap(output =>
           OptionT
-            .liftF(fetchTransaction(input.reference.transactionId.get))
-            .map(_.outputs(input.reference.index))
-            .subflatMap(_.account)
-            .semiflatMap(account =>
-              state.stakers
-                .getOrRaise(account)
-                .map(staker => staker.copy(quantity = staker.quantity + input.value.quantity))
-                .flatMap(newStaker => state.stakers.put(input.reference, newStaker)) *>
-                state.modifyTotalActiveStake(_ + input.value.quantity)
+            .fromOption(
+              output.accountRegistration.flatMap(_.stakingRegistration)
+            )
+            .semiflatTap(stakingRegistration =>
+              state.stakers.put(
+                input.reference,
+                ActiveStaker(stakingRegistration, output.quantity)
+              ) *>
+                state.modifyTotalActiveStake(_ + output.quantity)
             )
             .void
-        )
-        .getOrElseF(
-          state.modifyTotalInactiveStake(_ + input.value.quantity)
+            .orElse(
+              OptionT
+                .fromOption(output.account)
+                .semiflatMap(account =>
+                  state.stakers
+                    .getOrRaise(account)
+                    .map(staker => staker.copy(quantity = staker.quantity + output.quantity))
+                    .flatMap(newStaker => state.stakers.put(input.reference, newStaker)) *>
+                    state.modifyTotalActiveStake(_ + output.quantity)
+                )
+                .void
+            )
+            .getOrElseF(
+              state.modifyTotalInactiveStake(_ + output.quantity)
+            )
         )
 
 object EpochBoundaries:
@@ -284,15 +289,17 @@ object EpochBoundaries:
       unapplyEvent = (state, blockId) =>
         fetchHeader(blockId)
           .flatMap(header =>
-            (
-              clock.epochOf(header.slot),
-              clock.epochOf(header.parentSlot)
-            ).tupled
-              .flatMap((epoch, parentEpoch) =>
-                if (epoch == parentEpoch)
-                  state.put(epoch, header.parentHeaderId)
-                else state.remove(epoch)
-              )
+            fetchHeader(header.parentHeaderId).flatMap(parentHeader =>
+              (
+                clock.epochOf(header.slot),
+                clock.epochOf(parentHeader.slot)
+              ).tupled
+                .flatMap((epoch, parentEpoch) =>
+                  if (epoch == parentEpoch)
+                    state.put(epoch, header.parentHeaderId)
+                  else state.remove(epoch)
+                )
+            )
           )
           .as(state),
       parentChildTree = blockIdTree,

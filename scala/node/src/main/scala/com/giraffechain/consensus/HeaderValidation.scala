@@ -44,14 +44,12 @@ class HeaderValidationImpl[F[_]: Async: CryptoResources](
     else {
       List(
         timeSlotVerification(header),
-        vrfVerification(header),
         (EitherT.liftF(fetchHeader(header.parentHeaderId)), registrationVerification(header)).parTupled.flatMap(
           (parent, staker) =>
-            statelessVerification(header, parent) &>
-              blockSignatureVerification(header)(staker) &> vrfThresholdFor(header, parent)
-                .flatMap(threshold =>
-                  vrfThresholdVerification(header, threshold) &> eligibilityVerification(header, threshold)
-                )
+            vrfVerification(header, parent) &>
+              statelessVerification(header, parent) &>
+              blockSignatureVerification(header)(staker) &>
+              vrfThresholdFor(header, parent).flatMap(eligibilityVerification(header, _))
         )
       ).parSequence.map(_.void)
     }
@@ -74,26 +72,26 @@ class HeaderValidationImpl[F[_]: Async: CryptoResources](
 
   /** Verifies the given block's VRF certificate syntactic integrity for a particular stateful nonce
     */
-  private[consensus] def vrfVerification(header: BlockHeader): ValidationResult[F] =
+  private[consensus] def vrfVerification(child: BlockHeader, parent: BlockHeader): ValidationResult[F] =
     for {
       expectedEta <- EitherT.liftF(
         etaCalculation.etaToBe(
-          SlotId(header.parentSlot, header.parentHeaderId),
-          header.slot
+          SlotId(parent.slot, child.parentHeaderId),
+          child.slot
         )
       )
-      eta = header.stakerCertificate.eta.decodeBase58
+      eta = child.stakerCertificate.eta.decodeBase58
       _ <- EitherT.cond[F](eta == expectedEta, (), NonEmptyChain("Invalid Eta"))
       signatureVerificationResult <- EitherT.liftF(
         CryptoResources[F].ed25519VRF
           .useSync(
             _.verify(
-              header.stakerCertificate.vrfSignature.decodeBase58,
+              child.stakerCertificate.vrfSignature.decodeBase58,
               VrfArgument(
                 expectedEta,
-                header.slot
+                child.slot
               ).signableBytes.toByteArray,
-              header.stakerCertificate.vrfVK.decodeBase58
+              child.stakerCertificate.vrfVK.decodeBase58
             )
           )
       )
@@ -131,26 +129,6 @@ class HeaderValidationImpl[F[_]: Async: CryptoResources](
         NonEmptyChain("UnregisteredStaker")
       )
       .semiflatMap(leaderElection.getThreshold(_, child.slot - parent.slot))
-
-  /** Verify that the threshold evidence stamped on the block matches the threshold generated using local state
-    */
-  private[consensus] def vrfThresholdVerification(
-      header: BlockHeader,
-      threshold: Ratio
-  ): ValidationResult[F] =
-    for {
-      evidence <-
-        EitherT
-          .liftF[F, NonEmptyChain[String], Bytes](
-            CryptoResources[F].blake2b256.useSync(implicit b => thresholdEvidence(threshold))
-          )
-      _ <-
-        EitherT.cond[F](
-          header.stakerCertificate.thresholdEvidence.decodeBase58 == evidence,
-          (),
-          NonEmptyChain("InvalidVRFThreshold")
-        )
-    } yield ()
 
   /** Verify that the block's staker is eligible using their relative stake distribution
     */

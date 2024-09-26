@@ -61,13 +61,12 @@ object Ledger:
       valueCalculator <- ValueCalculatorImpl.make[F]
       transactionValidation <- TransactionValidation
         .make[F](
-          dataStores.transactions.getOrRaise,
           dataStores.transactionOutputs.getOrRaise,
           transactionOutputState,
           accountState,
           valueCalculator
         )
-      bodyValidation <- BodyValidation.make[F](transactionValidation)
+      bodyValidation <- BodyValidation.make[F](dataStores.transactionOutputs.getOrRaise, transactionValidation)
       mempoolBSS <- Mempool.makeBSS[F](
         Mempool.State.default.pure[F],
         localChain.currentHead,

@@ -77,8 +77,8 @@ object ProtocolSettings:
     vrfLddCutoff = 18,
     vrfPrecision = 40,
     vrfBaselineDifficulty = Ratio(1, 20),
-    vrfAmplitude = Ratio(1, 2),
-    vrfSlotGap = 1,
+    vrfAmplitude = Ratio(6, 15),
+    vrfSlotGap = 2,
     chainSelectionKLookback = 576,
     slotDuration = 1000.milli
   )
