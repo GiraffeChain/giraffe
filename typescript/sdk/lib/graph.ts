@@ -29,13 +29,11 @@ export class GiraffeGraph {
     createVertexOutput(label: string, data: { [key: string]: any } | undefined): TransactionOutput {
         return TransactionOutput.fromJSON({
             lockAddress: this.wallet.address,
-            value: {
-                graphEntry: {
-                    vertex: {
-                        label: label,
-                        data: data
-                    }
-                },
+            graphEntry: {
+                vertex: {
+                    label: label,
+                    data: data
+                }
             },
         });
     }
@@ -52,15 +50,13 @@ export class GiraffeGraph {
     createEdgeOutput(label: string, a: TransactionOutputReference, b: TransactionOutputReference, data: { [key: string]: any } | undefined): TransactionOutput {
         return TransactionOutput.fromJSON({
             lockAddress: this.wallet.address,
-            value: {
-                graphEntry: {
-                    edge: {
-                        label: label,
-                        data: data,
-                        a: a,
-                        b: b
-                    }
-                },
+            graphEntry: {
+                edge: {
+                    label: label,
+                    data: data,
+                    a: a,
+                    b: b
+                }
             },
         });
     }

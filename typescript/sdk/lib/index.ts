@@ -134,9 +134,7 @@ export class Giraffe {
             if (currentReward > defaultTransactionTip) {
                 const output: TransactionOutput = TransactionOutput.fromJSON({
                     lockAddress: this.wallet.address,
-                    value: {
-                        quantity: currentReward - defaultTransactionTip,
-                    },
+                    quantity: currentReward - defaultTransactionTip,
                 });
                 transaction.outputs.push(output);
                 currentReward = defaultTransactionTip;
@@ -203,9 +201,7 @@ export class Giraffe {
             outputs: [
                 {
                     lockAddress: this.wallet.address,
-                    value: {
-                        quantity: quantity,
-                    },
+                    quantity: quantity,
                 }
             ]
         }));
