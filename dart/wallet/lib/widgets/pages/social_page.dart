@@ -195,7 +195,7 @@ class ActiveSocialView extends ConsumerWidget {
   }
 
   Widget rightColumn() {
-    return Column(children: [
+    return const Column(children: [
       UserSearch(),
     ]);
   }
