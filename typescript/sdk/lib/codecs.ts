@@ -136,7 +136,7 @@ function encodeInt64(value: number): Uint8Array {
     let bytes = new Uint8Array(8);
     var v = value;
     for (let i = 7; i >= 0; i--) {
-        bytes[i] = (v & 0xff);
+        bytes[i] = v & 0xff;
         v = v >> 8;
     }
     return bytes;
