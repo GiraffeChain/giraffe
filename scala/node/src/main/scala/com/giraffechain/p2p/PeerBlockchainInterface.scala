@@ -1,11 +1,10 @@
 package com.giraffechain.p2p
 
-import cats.MonadThrow
 import cats.data.OptionT
-import cats.effect.Async
 import cats.effect.implicits.*
 import cats.effect.kernel.Resource
-import cats.effect.std.{Queue, Random}
+import cats.effect.std.Queue
+import cats.effect.{Async, Ref}
 import cats.implicits.*
 import com.giraffechain.codecs.{Codecs, P2PEncodable, given}
 import com.giraffechain.ledger.MempoolChange
@@ -15,6 +14,7 @@ import com.giraffechain.{BlockchainCore, Bytes, Height}
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 
+import scala.collection.immutable.SortedSet
 import scala.concurrent.duration.*
 
 trait PeerBlockchainInterface[F[_]]:
@@ -303,21 +303,34 @@ object PeerCache:
       .mapN(new PeerCache[F](_, _, _, _))
       .toResource
 
-class MultiPeerInterface[F[_]: MonadThrow: Random](interfaces: Iterable[PeerBlockchainInterface[F]])
+class SortedPeerInterface[F[_]: Async](interfacesRef: Ref[F, SortedSet[(Int, PeerBlockchainInterface[F])]])
     extends PeerBlockchainInterface[F]:
-  private def interface = Random[F].elementOf(interfaces)
-  def publicState: F[PublicP2PState] = interface.flatMap(_.publicState)
-  def nextBlockAdoption: F[BlockId] = interface.flatMap(_.nextBlockAdoption)
-  def nextTransactionNotification: F[TransactionId] = interface.flatMap(_.nextTransactionNotification)
-  def fetchHeader(id: BlockId): F[Option[BlockHeader]] = interface.flatMap(_.fetchHeader(id))
-  def fetchBody(id: BlockId): F[Option[BlockBody]] = interface.flatMap(_.fetchBody(id))
-  def fetchTransaction(id: TransactionId): F[Option[Transaction]] = interface.flatMap(_.fetchTransaction(id))
-  def blockIdAtHeight(height: Height): F[Option[BlockId]] = interface.flatMap(_.blockIdAtHeight(height))
-  def ping(message: Bytes): F[Bytes] = interface.flatMap(_.ping(message))
-  def commonAncestor: F[BlockId] = interface.flatMap(_.commonAncestor)
+  import SortedPeerInterface.*
+  // Increments the "pending request counter" of the interface with the least pending requests
+  // Upon completion, decrements that interfaces request counter
+  private def interface = Resource.make(interfacesRef.modify { s =>
+    val (count, interface) = s.head
+    (SortedSet.from(s.tail) + ((count + 1, interface)), interface)
+  })(interface =>
+    interfacesRef.update { s =>
+      val (x, y) = s.partition(_._2 == interface)
+      SortedSet.from(x.map(t => (t._1 - 1, t._2))) ++ y
+    }
+  )
+  def publicState: F[PublicP2PState] = interface.use(_.publicState)
+  def nextBlockAdoption: F[BlockId] = interface.use(_.nextBlockAdoption)
+  def nextTransactionNotification: F[TransactionId] = interface.use(_.nextTransactionNotification)
+  def fetchHeader(id: BlockId): F[Option[BlockHeader]] = interface.use(_.fetchHeader(id))
+  def fetchBody(id: BlockId): F[Option[BlockBody]] = interface.use(_.fetchBody(id))
+  def fetchTransaction(id: TransactionId): F[Option[Transaction]] = interface.use(_.fetchTransaction(id))
+  def blockIdAtHeight(height: Height): F[Option[BlockId]] = interface.use(_.blockIdAtHeight(height))
+  def ping(message: Bytes): F[Bytes] = interface.use(_.ping(message))
+  def commonAncestor: F[BlockId] = interface.use(_.commonAncestor)
   def background: Stream[F, Unit] =
     Stream.raiseError(new IllegalAccessException("MultiPeerInterface does not support background"))
 
-object MultiPeerInterface:
-  def apply[F[_]: MonadThrow: Random](interfaces: Iterable[PeerBlockchainInterface[F]]): PeerBlockchainInterface[F] =
-    if (interfaces.size == 1) interfaces.head else new MultiPeerInterface(interfaces)
+object SortedPeerInterface:
+  def make[F[_]: Async](interfaces: Iterable[PeerBlockchainInterface[F]]): F[PeerBlockchainInterface[F]] =
+    if (interfaces.size == 1) interfaces.head.pure[F]
+    else Ref.of(SortedSet.from(interfaces.toList.tupleLeft(0))).map(new SortedPeerInterface(_))
+  implicit def interfacesOrdering[F[_]]: Ordering[(Int, PeerBlockchainInterface[F])] = Ordering.by(_._1)

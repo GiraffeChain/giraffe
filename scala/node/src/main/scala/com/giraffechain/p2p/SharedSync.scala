@@ -95,7 +95,7 @@ class SharedSync[F[_]: Async: Random](
           interface = clients(peerId)
           remoteHeaderAtHeightF = (height: Height) =>
             OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
-          pseudoLocalInterface = MultiPeerInterface[F](providers.map(clients).toList)
+          pseudoLocalInterface <- SortedPeerInterface.make(providers.map(clients).toList)
           localHeaderAtHeightF = (height: Height) =>
             OptionT(pseudoLocalInterface.blockIdAtHeight(height)).flatMapF(pseudoLocalInterface.fetchHeader).value
           commonAncestor <- interface.remoteCommonAncestor(pseudoLocalInterface)
@@ -182,14 +182,14 @@ class SharedSync[F[_]: Async: Random](
         new IllegalStateException("Target not set")
       )
       providerInterfaces = providers.map(clients).toList
-      providersInterface = MultiPeerInterface[F](providerInterfaces)
+      providersInterface <- SortedPeerInterface.make[F](providerInterfaces)
       batchTargetId <- OptionT(providersInterface.blockIdAtHeight(height)).getOrRaise(
         new IllegalStateException("Target not found")
       )
       alternativeClients <- (clients -- providers).values.toList.traverseFilter(client =>
         OptionT(client.blockIdAtHeight(height)).filter(_ == batchTargetId).as(client).value
       )
-      interface = MultiPeerInterface[F](providerInterfaces ++ alternativeClients)
+      interface <- SortedPeerInterface.make(providerInterfaces ++ alternativeClients)
     } yield interface
 
   private def fetchVerifyPersistPipe(interface: PeerBlockchainInterface[F]): Pipe[F, BlockHeader, FullBlock] =
