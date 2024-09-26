@@ -131,7 +131,6 @@ message Witness {
 
 message TransactionInput {
     TransactionOutputReference reference = 1 [(validate.rules).message.required = true];
-    Value value = 2 [(validate.rules).message.required = true];
 }
 
 message TransactionOutputReference {

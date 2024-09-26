@@ -78,6 +78,7 @@ void main(List<String> args) async {
   );
 
   final blockProducer = BlockProducerImpl(
+    client,
     staking,
     clock,
     BlockPackerForStakerSupportRpc(client: client),

@@ -2,7 +2,7 @@ import { GiraffeClient, RpcGiraffeClient } from "./client.js";
 import { embedTransactionId, transactionSignableBytes } from "./codecs.js";
 import { GiraffeGraph } from "./graph.js";
 import { Transaction, TransactionInput, TransactionOutput, TransactionOutputReference } from "./proto/models/core.js";
-import { defaultTransactionTip, isPaymentToken, requiredMinimumQuantity, requiredWitnessesOf, rewardOf } from "./utils.js";
+import { defaultTransactionTip, isPaymentToken, requiredMinimumQuantity, requiredWitnessesOf } from "./utils.js";
 import { GiraffeWallet, WitnessContext } from "./wallet.js";
 
 export * from "./models.js";
@@ -121,7 +121,14 @@ export class Giraffe {
         if (remainingSpendableOutputs.length === 0) {
             throw new Error("No spendable funds");
         }
-        var currentReward = rewardOf(transaction);
+        var currentReward = 0;
+        for (const input of transaction.inputs) {
+            let output: TransactionOutput = this.wallet.getSpendableOutput(input.reference!) || await this.client.getTransactionOutput(input.reference!);
+            currentReward += output.value!.quantity;
+        }
+        for (const output of transaction.outputs) {
+            currentReward -= output.value!.quantity;
+        }
         var i = 0;
         while (currentReward != defaultTransactionTip) {
             if (currentReward > defaultTransactionTip) {

@@ -157,7 +157,19 @@ class Wallet {
         output.value.quantity = minQuantity;
       }
     }
-    var currentReward = transaction.reward;
+    var currentReward = Int64.ZERO;
+    for (final input in transaction.inputs) {
+      final TransactionOutput output;
+      if (spendableOutputs.containsKey(input.reference)) {
+        output = spendableOutputs[input.reference]!;
+      } else {
+        output = (await view.getTransactionOutput(input.reference))!;
+      }
+      currentReward += output.value.quantity;
+    }
+    for (final output in transaction.outputs) {
+      currentReward -= output.value.quantity;
+    }
     final remainingSpendableOutputs = QueueList.from(Map.of(spendableOutputs)
         .entries
         .where((e) => transaction.inputs.every((i) => i.reference != e.key))
@@ -175,8 +187,7 @@ class Wallet {
         throw Exception('Insufficient funds');
       } else {
         final out = remainingSpendableOutputs.removeFirst();
-        final input =
-            TransactionInput(reference: out.key, value: out.value.value);
+        final input = TransactionInput(reference: out.key);
         transaction.inputs.add(input);
         currentReward += out.value.value.quantity;
       }

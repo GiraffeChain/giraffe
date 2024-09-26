@@ -227,16 +227,13 @@ const TransactionInput$json = {
   '1': 'TransactionInput',
   '2': [
     {'1': 'reference', '3': 1, '4': 1, '5': 11, '6': '.com.giraffechain.models.TransactionOutputReference', '8': {}, '10': 'reference'},
-    {'1': 'value', '3': 2, '4': 1, '5': 11, '6': '.com.giraffechain.models.Value', '8': {}, '10': 'value'},
   ],
 };
 
 /// Descriptor for `TransactionInput`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List transactionInputDescriptor = $convert.base64Decode(
     'ChBUcmFuc2FjdGlvbklucHV0ElsKCXJlZmVyZW5jZRgBIAEoCzIzLmNvbS5naXJhZmZlY2hhaW'
-    '4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UmVmZXJlbmNlQgj6QgWKAQIQAVIJcmVmZXJlbmNl'
-    'Ej4KBXZhbHVlGAIgASgLMh4uY29tLmdpcmFmZmVjaGFpbi5tb2RlbHMuVmFsdWVCCPpCBYoBAh'
-    'ABUgV2YWx1ZQ==');
+    '4ubW9kZWxzLlRyYW5zYWN0aW9uT3V0cHV0UmVmZXJlbmNlQgj6QgWKAQIQAVIJcmVmZXJlbmNl');
 
 @$core.Deprecated('Use transactionOutputReferenceDescriptor instead')
 const TransactionOutputReference$json = {

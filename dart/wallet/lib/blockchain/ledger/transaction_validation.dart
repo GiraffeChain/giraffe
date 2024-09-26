@@ -25,7 +25,7 @@ class TransactionSyntaxValidationImpl extends TransactionSyntaxValidation {
     maximumOutputsCountValidation,
     dataLengthValidation,
     positiveOutputValuesValidation,
-    sufficientFundsValidation,
+    // sufficientFundsValidation,
     attestationValidation,
   ];
 
@@ -70,19 +70,19 @@ class TransactionSyntaxValidationImpl extends TransactionSyntaxValidation {
     return [];
   }
 
-  static List<String> sufficientFundsValidation(Transaction transaction) {
-    Int64 paymentTokenBalance = Int64.ZERO;
-    for (final input in transaction.inputs) {
-      paymentTokenBalance += input.value.quantity;
-    }
-    for (final output in transaction.outputs) {
-      paymentTokenBalance -= output.value.quantity;
-    }
-    if (paymentTokenBalance < Int64.ZERO) {
-      return ["InsufficientFunds"];
-    }
-    return [];
-  }
+  // static List<String> sufficientFundsValidation(Transaction transaction) {
+  //   Int64 paymentTokenBalance = Int64.ZERO;
+  //   for (final input in transaction.inputs) {
+  //     paymentTokenBalance += input.value.quantity;
+  //   }
+  //   for (final output in transaction.outputs) {
+  //     paymentTokenBalance -= output.value.quantity;
+  //   }
+  //   if (paymentTokenBalance < Int64.ZERO) {
+  //     return ["InsufficientFunds"];
+  //   }
+  //   return [];
+  // }
 
   static List<String> attestationValidation(Transaction transaction) {
     List<String> verifyLockKeyType(Lock lock, Key key) {

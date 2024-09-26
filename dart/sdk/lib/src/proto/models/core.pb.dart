@@ -985,14 +985,10 @@ class Witness extends $pb.GeneratedMessage {
 class TransactionInput extends $pb.GeneratedMessage {
   factory TransactionInput({
     TransactionOutputReference? reference,
-    Value? value,
   }) {
     final $result = create();
     if (reference != null) {
       $result.reference = reference;
-    }
-    if (value != null) {
-      $result.value = value;
     }
     return $result;
   }
@@ -1002,7 +998,6 @@ class TransactionInput extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionInput', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.giraffechain.models'), createEmptyInstance: create)
     ..aOM<TransactionOutputReference>(1, _omitFieldNames ? '' : 'reference', subBuilder: TransactionOutputReference.create)
-    ..aOM<Value>(2, _omitFieldNames ? '' : 'value', subBuilder: Value.create)
     ..hasRequiredFields = false
   ;
 
@@ -1037,17 +1032,6 @@ class TransactionInput extends $pb.GeneratedMessage {
   void clearReference() => clearField(1);
   @$pb.TagNumber(1)
   TransactionOutputReference ensureReference() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  Value get value => $_getN(1);
-  @$pb.TagNumber(2)
-  set value(Value v) { setField(2, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasValue() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearValue() => clearField(2);
-  @$pb.TagNumber(2)
-  Value ensureValue() => $_ensure(1);
 }
 
 class TransactionOutputReference extends $pb.GeneratedMessage {

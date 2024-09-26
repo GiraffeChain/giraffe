@@ -65,6 +65,7 @@ class PodBlockProduction extends _$PodBlockProduction {
     );
 
     final blockProducer = BlockProducerImpl(
+      client,
       staking,
       clock,
       BlockPackerForStakerSupportRpc(client: client),

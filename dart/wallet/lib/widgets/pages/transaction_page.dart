@@ -59,44 +59,30 @@ class TransactionPage extends StatelessWidget {
         child: Column(
           children: [
             TransactionIdCard(transaction: transaction, scale: 1.25).pad16,
-            _transactionMetadataCard().pad16,
             _inputsCard().pad16,
             _outputsCard().pad16,
           ],
         ),
       );
 
-  Widget _transactionMetadataCard() {
-    return _overUnder(
-      "Reward",
-      transaction.reward.toString(),
-    );
-  }
-
   Widget _inputsCard() {
-    return _overUnderWidgets(
-        const Text(
+    return OverUnder(
+        over: const Text(
           "Inputs",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        SingleChildScrollView(
+        under: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
             dataRowMinHeight: 96,
             dataRowMaxHeight: 96,
             columns: const [
-              DataColumn(label: Text("UTxO Reference")),
-              DataColumn(label: Text("Quantity")),
-              DataColumn(label: Text("Registration")),
+              DataColumn(label: Text("Reference")),
             ],
             rows: transaction.inputs
                 .map((t) => DataRow(cells: [
                       DataCell(TransactionOutputIdCard(
                           reference: t.reference, tappable: true)),
-                      DataCell(Text(t.value.quantity.toString())),
-                      DataCell(t.value.hasAccountRegistration()
-                          ? const Icon(Icons.app_registration_rounded)
-                          : Container()),
                     ]))
                 .toList(),
           ),
@@ -104,12 +90,12 @@ class TransactionPage extends StatelessWidget {
   }
 
   Widget _outputsCard() {
-    return _overUnderWidgets(
-        const Text(
+    return OverUnder(
+        over: const Text(
           "Outputs",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        SingleChildScrollView(
+        under: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
             columns: const [
@@ -144,17 +130,6 @@ class TransactionPage extends StatelessWidget {
           ),
         ));
   }
-
-  Widget _overUnder(String overText, String underText) => _overUnderWidgets(
-        Text(
-          overText,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        Text(underText, style: const TextStyle(color: Colors.blueGrey)),
-      );
-
-  Widget _overUnderWidgets(Widget over, Widget under) =>
-      OverUnder(over: over, under: under);
 }
 
 class TransactionIdCard extends StatelessWidget {

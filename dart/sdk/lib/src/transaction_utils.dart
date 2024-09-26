@@ -49,12 +49,6 @@ extension TransactionOps on Transaction {
     }
     return result;
   }
-
-  Int64 get inputSum =>
-      inputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
-  Int64 get outputSum =>
-      outputs.fold(Int64.ZERO, (a, input) => a + input.value.quantity);
-  Int64 get reward => inputSum - outputSum;
 }
 
 extension TransactionOutputOps on TransactionOutput {

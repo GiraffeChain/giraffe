@@ -304,8 +304,7 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
       onPressed = () async {
         final inputs = widget.wallet.spendableOutputs.entries
             .where((e) => e.value.hasAccount())
-            .map(
-                (e) => TransactionInput(reference: e.key, value: e.value.value))
+            .map((e) => TransactionInput(reference: e.key))
             .toList();
         final accountEntry = widget.wallet.spendableOutputs.entries
             .firstWhere((e) => e.value.value.hasAccountRegistration());

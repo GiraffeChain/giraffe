@@ -172,7 +172,6 @@ export interface Witness {
 
 export interface TransactionInput {
   reference: TransactionOutputReference | undefined;
-  value: Value | undefined;
 }
 
 export interface TransactionOutputReference {
@@ -1490,16 +1489,13 @@ export const Witness = {
 };
 
 function createBaseTransactionInput(): TransactionInput {
-  return { reference: undefined, value: undefined };
+  return { reference: undefined };
 }
 
 export const TransactionInput = {
   encode(message: TransactionInput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.reference !== undefined) {
       TransactionOutputReference.encode(message.reference, writer.uint32(10).fork()).join();
-    }
-    if (message.value !== undefined) {
-      Value.encode(message.value, writer.uint32(18).fork()).join();
     }
     return writer;
   },
@@ -1518,13 +1514,6 @@ export const TransactionInput = {
 
           message.reference = TransactionOutputReference.decode(reader, reader.uint32());
           continue;
-        case 2:
-          if (tag !== 18) {
-            break;
-          }
-
-          message.value = Value.decode(reader, reader.uint32());
-          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1535,19 +1524,13 @@ export const TransactionInput = {
   },
 
   fromJSON(object: any): TransactionInput {
-    return {
-      reference: isSet(object.reference) ? TransactionOutputReference.fromJSON(object.reference) : undefined,
-      value: isSet(object.value) ? Value.fromJSON(object.value) : undefined,
-    };
+    return { reference: isSet(object.reference) ? TransactionOutputReference.fromJSON(object.reference) : undefined };
   },
 
   toJSON(message: TransactionInput): unknown {
     const obj: any = {};
     if (message.reference !== undefined) {
       obj.reference = TransactionOutputReference.toJSON(message.reference);
-    }
-    if (message.value !== undefined) {
-      obj.value = Value.toJSON(message.value);
     }
     return obj;
   },
@@ -1560,7 +1543,6 @@ export const TransactionInput = {
     message.reference = (object.reference !== undefined && object.reference !== null)
       ? TransactionOutputReference.fromPartial(object.reference)
       : undefined;
-    message.value = (object.value !== undefined && object.value !== null) ? Value.fromPartial(object.value) : undefined;
     return message;
   },
 };

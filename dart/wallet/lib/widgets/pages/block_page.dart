@@ -129,9 +129,6 @@ class BlockPage extends StatelessWidget {
               columnSpacing: 24,
               columns: const [
                 DataColumn(label: Text("ID")),
-                DataColumn(label: Text("In")),
-                DataColumn(label: Text("Out")),
-                DataColumn(label: Text("Tip")),
               ],
               rows: block.fullBody.transactions
                   .map((t) => DataRow(cells: [
@@ -142,9 +139,6 @@ class BlockPage extends StatelessWidget {
                           onPressed: () =>
                               context.push("/transactions/${t.id.show}"),
                         )),
-                        DataCell(Text(t.inputSum.toString())),
-                        DataCell(Text(t.outputSum.toString())),
-                        DataCell(Text(t.reward.toString())),
                       ]))
                   .toList(),
             ),

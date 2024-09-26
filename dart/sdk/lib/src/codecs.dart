@@ -93,9 +93,7 @@ extension TransactionOutputReferenceCodecs on TransactionOutputReference {
 }
 
 extension TransactionInputCodecs on TransactionInput {
-  List<int> get immutableBytes => <int>[]
-    ..addAll(reference.immutableBytes)
-    ..addAll(value.immutableBytes);
+  List<int> get immutableBytes => [...reference.immutableBytes];
 }
 
 extension TransactionOutputCodecs on TransactionOutput {

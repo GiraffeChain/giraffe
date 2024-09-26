@@ -137,23 +137,6 @@ function protoStructMinimumQuantity(struct: { [key: string]: any }): number {
 }
 
 /**
- * Calculates the current reward of a transaction. The reward is defined as: sum(inputs) - sum(outputs)
- * 
- * @param transaction - The transaction object.
- * @returns The reward of the transaction.
- */
-export function rewardOf(transaction: Transaction): number {
-    var result = 0;
-    for (const input of transaction.inputs) {
-        result += input.value!.quantity;
-    }
-    for (const output of transaction.outputs) {
-        result -= output.value!.quantity;
-    }
-    return result;
-}
-
-/**
  * The default quantity to be provided as a tip/reward to the block producer.
  */
 export const defaultTransactionTip = 1000;

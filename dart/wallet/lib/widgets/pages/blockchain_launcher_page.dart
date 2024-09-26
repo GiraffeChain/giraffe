@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:avs_svg_provider/avs_svg_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:giraffe_wallet/utils.dart';

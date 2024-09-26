@@ -59,7 +59,7 @@ class PodStaking extends _$PodStaking {
     final inputs = wallet.spendableOutputs.entries
         .where((e) =>
             e.value.hasAccount() || e.value.value.hasAccountRegistration())
-        .map((e) => TransactionInput(reference: e.key, value: e.value.value))
+        .map((e) => TransactionInput(reference: e.key))
         .toList();
     final outputs = List.of(stakerInitializer.transaction.outputs);
     final transaction = await wallet.payAndAttest(

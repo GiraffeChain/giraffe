@@ -19,6 +19,7 @@ abstract class BlockProducer {
 }
 
 class BlockProducerImpl extends BlockProducer {
+  final BlockchainClient client;
   final Staking staker;
   final Clock clock;
   final BlockPacker blockPacker;
@@ -26,6 +27,7 @@ class BlockProducerImpl extends BlockProducer {
   Int64 _nextSlotMinimum = Int64.ZERO;
 
   BlockProducerImpl(
+    this.client,
     this.staker,
     this.clock,
     this.blockPacker,
@@ -74,7 +76,7 @@ class BlockProducerImpl extends BlockProducer {
       return;
     }
     log.info("Constructing block for slot=${nextHit.slot}");
-    final body = insertReward(bodyWithoutReward, parentHeader.id);
+    final body = await insertReward(bodyWithoutReward, parentHeader.id);
     final now = clock.localTimestamp;
     final (slotStart, slotEnd) = clock.slotToTimestamps(nextHit.slot);
     final timestamp =
@@ -120,13 +122,20 @@ class BlockProducerImpl extends BlockProducer {
     return null;
   }
 
-  FullBlockBody insertReward(FullBlockBody base, BlockId parentId) {
+  Future<FullBlockBody> insertReward(
+      FullBlockBody base, BlockId parentId) async {
     if (rewardAddress != null) {
       assert(base.transactions.where((t) => t.hasRewardParentBlockId()).isEmpty,
           "Block already contains reward");
       Int64 maximumQuantity = Int64.ZERO;
       for (final tx in base.transactions) {
-        maximumQuantity += tx.reward;
+        for (final input in tx.inputs) {
+          final output = (await client.getTransactionOutput(input.reference))!;
+          maximumQuantity += output.value.quantity;
+        }
+        for (final output in tx.outputs) {
+          maximumQuantity -= output.value.quantity;
+        }
       }
       if (maximumQuantity > Int64.ZERO) {
         final output = TransactionOutput(

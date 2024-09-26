@@ -1,11 +1,11 @@
 package com.giraffechain
 
-import com.giraffechain.codecs.{*, given}
-import com.giraffechain.crypto.Blake2b256
-import com.giraffechain.models.*
 import cats.data.OptionT
 import cats.implicits.*
 import cats.{Applicative, Monad}
+import com.giraffechain.codecs.{*, given}
+import com.giraffechain.crypto.Blake2b256
+import com.giraffechain.models.*
 import com.google.protobuf.ByteString
 
 package object ledger {
@@ -45,11 +45,11 @@ package object ledger {
           .map(_.flatten.toSet)
       } yield inputResults ++ outputResults
 
-    def reward: Long =
-      transaction.inputs.foldMap(_.value.quantity) - transaction.outputs.foldMap(_.value.quantity)
-
-    def fee: Long =
-      100 // TODO
+    def reward[F[_]: Monad](fetchTransactionOutput: FetchTransactionOutput[F]): F[Long] =
+      (
+        transaction.inputs.foldMapM(i => fetchTransactionOutput(i.reference).map(_.value.quantity)),
+        transaction.outputs.foldMap(_.value.quantity).pure[F]
+      ).mapN(_ - _)
 
   extension (transactionIds: Seq[TransactionId])
     def txRoot(parentTxRoot: Bytes): Bytes =

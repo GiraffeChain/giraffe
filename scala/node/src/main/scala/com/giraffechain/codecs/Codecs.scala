@@ -138,7 +138,7 @@ trait Codecs {
   given ImmutableBytes[TransactionInput] with
     extension (input: TransactionInput)
       def immutableBytes: Bytes =
-        input.reference.immutableBytes.concat(input.value.immutableBytes)
+        input.reference.immutableBytes
 
   given ImmutableBytes[TransactionOutput] with
     extension (output: TransactionOutput)

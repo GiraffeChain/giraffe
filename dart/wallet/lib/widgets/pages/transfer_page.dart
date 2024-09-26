@@ -129,18 +129,12 @@ class TransferPage extends ConsumerWidget {
           scrollDirection: Axis.horizontal,
           child: DataTable(
             columns: const [
-              DataColumn(label: Text("UTxO Reference")),
-              DataColumn(label: Text("Quantity")),
-              DataColumn(label: Text("Registration")),
+              DataColumn(label: Text("Reference")),
             ],
             rows: transaction.inputs
                 .map((t) => DataRow(cells: [
                       DataCell(TransactionOutputIdCard(
                           reference: t.reference, tappable: true)),
-                      DataCell(Text(t.value.quantity.toString())),
-                      DataCell(t.value.hasAccountRegistration()
-                          ? const Icon(Icons.app_registration_rounded)
-                          : Container()),
                     ]))
                 .toList(),
           ),

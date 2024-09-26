@@ -47,7 +47,8 @@ object Consensus:
         blockIdTree,
         eventIdGetterSetters.stakerData.set,
         dataStores.bodies.getOrRaise,
-        dataStores.transactions.getOrRaise
+        dataStores.transactions.getOrRaise,
+        dataStores.transactionOutputs.getOrRaise
       )
       stakerTracker <- StakerTracker.make[F](clock, genesis.header.id, stakerDataBSS, epochBoundariesBSS)
       canonicalHeadId <- eventIdGetterSetters.canonicalHead.get().toResource

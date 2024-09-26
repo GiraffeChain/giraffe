@@ -1,12 +1,12 @@
 package com.giraffechain.ledger
 
-import com.giraffechain.*
-import com.giraffechain.models.*
-import com.giraffechain.codecs.given
 import cats.data.OptionT
 import cats.effect.kernel.MonadCancelThrow
 import cats.effect.{Async, Resource}
 import cats.implicits.*
+import com.giraffechain.*
+import com.giraffechain.codecs.given
+import com.giraffechain.models.*
 
 trait AccountState[F[_]] {
 
@@ -84,21 +84,25 @@ class AccountStateBSSImpl[F[_]: Async](
       state: AccountState.State[F],
       input: TransactionInput
   ) =
-    OptionT(fetchTransactionOutput(input.reference).map(_.account))
-      .semiflatTap(account =>
-        state
-          .getOrRaise(account)
-          .map(_.filterNot(_ == input.reference))
-          .flatMap(state.put(account, _))
-      )
-      .void
-      .orElse(
+    fetchTransactionOutput(input.reference)
+      .flatMap(output =>
         OptionT
-          .fromOption[F](input.value.accountRegistration)
-          .semiflatTap(_ => state.remove(input.reference))
+          .fromOption(output.account)
+          .semiflatTap(account =>
+            state
+              .getOrRaise(account)
+              .map(_.filterNot(_ == input.reference))
+              .flatMap(state.put(account, _))
+          )
           .void
+          .orElse(
+            OptionT
+              .fromOption[F](output.value.accountRegistration)
+              .semiflatTap(_ => state.remove(input.reference))
+              .void
+          )
+          .value
       )
-      .value
       .as(state)
 
   private def applyReferencedOutput(
@@ -145,21 +149,25 @@ class AccountStateBSSImpl[F[_]: Async](
       state: AccountState.State[F],
       input: TransactionInput
   ) =
-    OptionT(fetchTransactionOutput(input.reference).map(_.account))
-      .semiflatTap(account =>
-        state
-          .getOrRaise(account)
-          .map(_ :+ input.reference)
-          .flatMap(state.put(account, _))
-      )
-      .void
-      .orElse(
+    fetchTransactionOutput(input.reference)
+      .flatMap(output =>
         OptionT
-          .fromOption[F](input.value.accountRegistration)
-          .semiflatTap(_ => state.put(input.reference, Nil))
+          .fromOption(output.account)
+          .semiflatTap(account =>
+            state
+              .getOrRaise(account)
+              .map(_ :+ input.reference)
+              .flatMap(state.put(account, _))
+          )
           .void
+          .orElse(
+            OptionT
+              .fromOption[F](output.value.accountRegistration)
+              .semiflatTap(_ => state.put(input.reference, Nil))
+              .void
+          )
+          .value
       )
-      .value
       .as(state)
 
   private def unapplyReferencedOutput(

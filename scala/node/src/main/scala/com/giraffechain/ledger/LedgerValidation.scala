@@ -14,7 +14,6 @@ trait TransactionValidation[F[_]]:
 
 object TransactionValidation:
   def make[F[_]: Sync: CryptoResources](
-      fetchTransaction: FetchTransaction[F],
       fetchTransactionOutput: FetchTransactionOutput[F],
       transactionOutputState: TransactionOutputState[F],
       accountState: AccountState[F],
@@ -22,7 +21,6 @@ object TransactionValidation:
   ): Resource[F, TransactionValidation[F]] =
     Resource.pure(
       new TransactionValidationImpl[F](
-        fetchTransaction,
         fetchTransactionOutput,
         transactionOutputState,
         accountState,
@@ -34,8 +32,11 @@ trait BodyValidation[F[_]]:
   def validate(body: FullBlockBody, context: TransactionValidationContext): ValidationResult[F]
 
 object BodyValidation:
-  def make[F[_]: Sync](transactionValidation: TransactionValidation[F]): Resource[F, BodyValidation[F]] =
-    Resource.pure(new BodyValidationImpl[F](transactionValidation))
+  def make[F[_]: Sync](
+      fetchTransactionOutput: FetchTransactionOutput[F],
+      transactionValidation: TransactionValidation[F]
+  ): Resource[F, BodyValidation[F]] =
+    Resource.pure(new BodyValidationImpl[F](fetchTransactionOutput, transactionValidation))
 
 trait HeaderToBodyValidation[F[_]]:
   def validate(block: Block): ValidationResult[F]
@@ -71,7 +72,6 @@ case class TransactionValidationContext(
 )
 
 class TransactionValidationImpl[F[_]: Sync: CryptoResources](
-    fetchTransaction: FetchTransaction[F],
     fetchTransactionOutput: FetchTransactionOutput[F],
     transactionOutputState: TransactionOutputState[F],
     accountState: AccountState[F],
@@ -96,30 +96,31 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
         (),
         NonEmptyChain("NonPositiveOutputQuantity")
       ) >>
-      Either.cond(
-        transaction.inputs.foldMap(_.value.quantity) >= transaction.outputs
-          .foldMap(_.value.quantity),
-        (),
-        NonEmptyChain("InsufficientFunds")
-      ) >>
       transaction.attestation.traverse(witnessTypeValidation).void
 
-  private def valueCheck(transaction: Transaction): ValidationResult[F] =
-    transaction.outputs
-      .traverse(output =>
-        EitherT(
-          valueCalculator
-            .requiredMinimumQuantity(output)
-            .map(required =>
-              Either.cond(
-                output.value.quantity >= required,
-                (),
-                NonEmptyChain(s"InsufficientValue(${output.value.quantity} < $required)")
+  private def valueCheck(transaction: Transaction): ValidationResult[F] = {
+    EitherT(
+      transaction.inputs
+        .foldMapM(input => fetchTransactionOutput(input.reference).map(_.value.quantity))
+        .map(_ - transaction.outputs.foldMap(_.value.quantity))
+        .map(reward => Either.cond(reward >= 0, (), NonEmptyChain("InsufficientFunds")))
+    ) >>
+      transaction.outputs
+        .traverse(output =>
+          EitherT(
+            valueCalculator
+              .requiredMinimumQuantity(output)
+              .map(required =>
+                Either.cond(
+                  output.value.quantity >= required,
+                  (),
+                  NonEmptyChain(s"InsufficientValue(${output.value.quantity} < $required)")
+                )
               )
-            )
+          )
         )
-      )
-      .void
+        .void
+  }
 
   private def witnessTypeValidation(witness: Witness): Either[NonEmptyChain[String], Unit] =
     (witness.lock.value, witness.key.value) match {
@@ -132,19 +133,6 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
       .traverse(input =>
         EitherT
           .fromEither[F](input.reference.transactionId.toRight(NonEmptyChain("SelfSpend")))
-          .flatMap(transactionId =>
-            EitherT(
-              fetchTransaction(transactionId)
-                .map(_.outputs(input.reference.index))
-                .map(output =>
-                  Either.cond(
-                    output.value.immutableBytes == input.value.immutableBytes,
-                    (),
-                    NonEmptyChain("InputOutputDataMismatch")
-                  )
-                )
-            )
-          )
       )
       .void
 
@@ -156,19 +144,24 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
           .map(Either.cond(_, (), NonEmptyChain("UnspendableUtxoReference")))
       )
     ) >>
-      transaction.inputs
-        .filter(_.value.accountRegistration.nonEmpty)
-        .traverse(input =>
-          EitherT(
-            accountState
-              .accountUtxos(parentBlockId, input.reference)
-              .map(utxos =>
-                Either.cond(
-                  utxos.exists(_.isEmpty),
-                  (),
-                  NonEmptyChain("NonEmptyAccount")
+      EitherT
+        .liftF(
+          transaction.inputs
+            .filterA(i => fetchTransactionOutput(i.reference).map(_.value.accountRegistration.nonEmpty))
+        )
+        .flatMap(
+          _.traverse(input =>
+            EitherT(
+              accountState
+                .accountUtxos(parentBlockId, input.reference)
+                .map(utxos =>
+                  Either.cond(
+                    utxos.exists(_.isEmpty),
+                    (),
+                    NonEmptyChain("NonEmptyAccount")
+                  )
                 )
-              )
+            )
           )
         ) >>
       transaction.outputs
@@ -219,7 +212,10 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
       }
     } yield ()
 
-class BodyValidationImpl[F[_]: Sync](transactionValidation: TransactionValidation[F]) extends BodyValidation[F]:
+class BodyValidationImpl[F[_]: Sync](
+    fetchTransactionOutput: FetchTransactionOutput[F],
+    transactionValidation: TransactionValidation[F]
+) extends BodyValidation[F]:
   override def validate(body: FullBlockBody, context: TransactionValidationContext): ValidationResult[F] =
     body.transactions
       .filter(_.rewardParentBlockId.isEmpty)
@@ -243,31 +239,35 @@ class BodyValidationImpl[F[_]: Sync](transactionValidation: TransactionValidatio
           Either.cond(rewards.length <= 1, (nonRewards, rewards.headOption), NonEmptyChain("Duplicate Rewards"))
         )
     )
-      .subflatMap((nonRewards, rewardOpt) =>
-        rewardOpt
-          .fold(().asRight[NonEmptyChain[String]])(reward =>
-            Either.cond(
-              reward.rewardParentBlockId.contains(context.parentBlockId),
+      .flatMap {
+        case (_, None) => EitherT.rightT(())
+        case (nonRewards, Some(reward)) =>
+          EitherT.cond(
+            reward.rewardParentBlockId.contains(context.parentBlockId),
+            (),
+            NonEmptyChain("RewardHeaderMismatch")
+          ) >>
+            EitherT.cond(reward.inputs.isEmpty, (), NonEmptyChain("RewardContainsInputs")) >>
+            EitherT.cond(reward.outputs.length == 1, (), NonEmptyChain("RewardContainsMultipleOutputs")) >>
+            EitherT.cond(
+              reward.outputs.head.value.accountRegistration.isEmpty,
               (),
-              NonEmptyChain("RewardHeaderMismatch")
+              NonEmptyChain("RewardContainsRegistration")
             ) >>
-              Either.cond(reward.inputs.isEmpty, (), NonEmptyChain("RewardContainsInputs")) >>
-              Either.cond(reward.outputs.length == 1, (), NonEmptyChain("RewardContainsMultipleOutputs")) >>
-              Either.cond(
-                reward.outputs.head.value.accountRegistration.isEmpty,
-                (),
-                NonEmptyChain("RewardContainsRegistration")
-              ) >>
-              Either.cond(
-                reward.outputs.head.value.graphEntry.isEmpty,
-                (),
-                NonEmptyChain("RewardContainsGraphEntry")
-              ) >>
-              Either.cond(
-                nonRewards.foldMap(_.reward) >= reward.outputs.head.value.quantity,
-                (),
-                NonEmptyChain("ExcessiveReward")
+            EitherT.cond(
+              reward.outputs.head.value.graphEntry.isEmpty,
+              (),
+              NonEmptyChain("RewardContainsGraphEntry")
+            ) >> EitherT(
+            nonRewards
+              .foldMapM(_.reward(fetchTransactionOutput))
+              .map(providedReward =>
+                Either.cond(
+                  providedReward >= reward.outputs.head.value.quantity,
+                  (),
+                  NonEmptyChain("ExcessiveReward")
+                )
               )
           )
-      )
+      }
       .void
