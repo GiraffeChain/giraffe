@@ -99,7 +99,7 @@ void main(List<String> args) async {
               ),
               b.fullBody.rewardTransaction,
             ))
-        .listen(null);
+        .listen(null, cancelOnError: true);
     cancel = () => sub.cancel();
   }
 
