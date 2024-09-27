@@ -16,7 +16,8 @@ case class PeerState[F[_]](
     publicStateRef: Ref[F, PublicP2PState],
     finalizers: Ref[F, List[F[Unit]]],
     outboundAddress: Option[SocketAddress[?]],
-    interface: PeerBlockchainInterface[F]
+    interface: PeerBlockchainInterface[F],
+    abort: F[Unit]
 ):
   def close()(using Monad[F]): F[Unit] =
     finalizers.getAndSet(Nil).flatMap(_.sequence).void
@@ -27,7 +28,8 @@ object PeerState:
       core: BlockchainCore[F],
       manager: PeersManager[F],
       publicP2PState: PublicP2PState,
-      outboundAddress: Option[SocketAddress[?]]
+      outboundAddress: Option[SocketAddress[?]],
+      abort: F[Unit]
   ): Resource[F, PeerState[F]] =
     for {
       publicStateRef <- Ref.of(publicP2PState).toResource
@@ -42,7 +44,8 @@ object PeerState:
         publicStateRef,
         finalizersRef,
         outboundAddress,
-        interface
+        interface,
+        abort
       )
       _ <- Resource.onFinalize(state.close())
     } yield state

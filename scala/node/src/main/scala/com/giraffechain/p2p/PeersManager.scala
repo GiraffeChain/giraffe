@@ -1,8 +1,9 @@
 package com.giraffechain.p2p
 
+import cats.data.OptionT
 import cats.effect.implicits.*
 import cats.effect.std.Random
-import cats.effect.{Async, Ref, Resource}
+import cats.effect.{Async, Deferred, Ref, Resource}
 import cats.implicits.*
 import com.comcast.ip4s.{Host, Port, SocketAddress}
 import com.giraffechain.BlockchainCore
@@ -73,24 +74,39 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
         )
         .toResource
       given Logger[F] <- Slf4jLogger.fromName(show"Peer($remotePeerId)").toResource
-      isDuplicateConnection <- stateRef.get.map(_.connectedPeers.contains(remotePeerId)).toResource
-      _ <- Async[F]
-        .raiseWhen(isDuplicateConnection)(new IllegalStateException(show"Duplicate Connection id=$remotePeerId"))
+      previousConnection <- stateRef.get.map(_.connectedPeers.get(remotePeerId)).toResource
+      _ <- previousConnection
+        .traverse(c => Logger[F].warn(show"Duplicate Connection id=$remotePeerId. Closing previous.") *> c.abort)
         .toResource
       _ <- Resource.make(Logger[F].info("Connected"))(_ => Logger[F].info("Disconnected"))
+      // TODO: This is only expected to be used in the case of duplicate connections, but it's available so could
+      // be accidentally abused
+      abortSwitch <- Deferred[F, Unit].toResource
       peerState <- PeerState.make(
         socket,
         core,
         this,
         PublicP2PState(localPeer = ConnectedPeer(remotePeerId)),
-        outboundAddress
+        outboundAddress,
+        Async[F].defer(abortSwitch.complete(()).void)
       )
-      _ <- Resource.make(stateRef.update(_.withConnectedPeer(remotePeerId, peerState)))(_ =>
-        stateRef.update(_.withDisconnectedPeer(remotePeerId, peerState))
+      _ <- stateRef.update(_.withConnectedPeer(remotePeerId, peerState)).toResource
+      _ <- Resource.onFinalize(
+        sharedSync.omitPeer(remotePeerId) *>
+          OptionT(abortSwitch.tryGet)
+            .flatTapNone(
+              stateRef.update(_.withDisconnectedPeer(remotePeerId, peerState))
+            )
+            .value
+            .void
       )
-      _ <- Resource.onFinalize(sharedSync.omitPeer(remotePeerId))
       handler = new PeerBlockchainHandler[F](core, peerState, sharedSync)
-      _ <- peerState.interface.background.merge(handler.handle).compile.drain.toResource
+      _ <- peerState.interface.background
+        .mergeHaltBoth(handler.handle)
+        .mergeHaltBoth(Stream.exec(abortSwitch.get))
+        .compile
+        .drain
+        .toResource
     } yield ()
 
     resource.use_.handleErrorWith(e => logger.warn(e)("Connection error"))
