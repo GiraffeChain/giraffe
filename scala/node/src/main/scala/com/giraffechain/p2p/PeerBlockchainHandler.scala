@@ -28,14 +28,14 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
 
   private def pingPong =
     Stream
-      .fixedRate(5.seconds)
-      .evalMap(_ => Random[F].nextBytes(1024).map(ByteString.copyFrom))
+      .fixedRateStartImmediately(1.seconds)
+      .as(ByteString.EMPTY)
       .evalMap(interface.ping)
       .void
 
   private def peerState =
     Stream
-      .fixedRate(30.seconds)
+      .fixedRateStartImmediately(20.seconds)
       .evalMap(_ => interface.publicState)
       .evalMap(remotePeerState.publicStateRef.set)
       .void
@@ -89,7 +89,7 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
                         PeerBlockchainHandler
                           .fetchFullBlock(core, interface, 1)(remoteHeader)
                           .flatTap(PeerBlockchainHandler.checkBody(core))
-                          .flatTap(PeerBlockchainHandler.adoptAndLog(core))
+                          .flatTap(block => core.consensus.localChain.adopt(block.header.id))
                           .as(true)
                     else
                       Logger[F]
@@ -181,13 +181,3 @@ object PeerBlockchainHandler:
           .ifM(().pure[F], core.dataStores.transactions.put(transaction.id, transaction))
       )
     } yield ()
-
-  def adoptAndLog[F[_]: MonadThrow: Logger](core: BlockchainCore[F])(fullBlock: FullBlock): F[Unit] =
-    core.consensus.localChain.adopt(fullBlock.header.id) >>
-      Logger[F].info(
-        show"Adopted block" +
-          show" id=${fullBlock.header.id}" +
-          show" height=${fullBlock.header.height}" +
-          show" slot=${fullBlock.header.slot}" +
-          show" transactions=${fullBlock.fullBody.transactions.map(_.id)}"
-      )

@@ -264,7 +264,10 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
           .as[Json]
           .flatMap(json => IO.fromEither(json.as[Transaction]))
           .flatMap(core.ledger.mempool.add)
-          .as(Response())
+          .as(Response[F]())
+          .recover[Response[F]] { case e: IllegalArgumentException =>
+            Response().withStatus(Status.BadRequest).withEntity(List(e.getMessage).asJson)
+          }
           .logError
       case request @ POST -> Root / "blocks" =>
         request
@@ -274,8 +277,10 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
               (json.hcursor.get[Block]("block"), json.hcursor.get[Option[Transaction]]("reward")).tupled
             )
           )
-          .flatMap(broadcastBlockImpl(core))
-          .as(Response())
+          .flatMap((block, rewardOpt) =>
+            broadcastBlockImpl(core)(block, rewardOpt)
+              .fold(e => Response().withStatus(Status.BadRequest).withEntity(e.toList.asJson), _ => Response())
+          )
           .logError
       case GET -> Root / "stakers" / parentBlockId / slot / accountTransactionId / accountTransactionIndex =>
         (

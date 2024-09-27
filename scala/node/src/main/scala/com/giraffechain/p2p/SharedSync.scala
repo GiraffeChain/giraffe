@@ -9,7 +9,7 @@ import com.giraffechain.codecs.given
 import com.giraffechain.consensus.ChainSelectionOutcome
 import com.giraffechain.models.*
 import com.giraffechain.{BlockchainCore, Height}
-import fs2.{Pipe, Pull, Stream}
+import fs2.{Chunk, Pipe, Pull, Stream}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
@@ -35,13 +35,16 @@ class SharedSync[F[_]: Async: Random](
     *   Unit, once the comparison is complete. Does not wait for synchronization.
     */
   def compare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId): F[Unit] =
-    OptionT(stateRef.get).foldF(
-      localCompare(commonAncestorHeader, target, peerId)
-    )(state =>
-      if (state.target.id == target.id || state.target.id == target.parentHeaderId)
-        updateTarget(commonAncestorHeader, target, peerId).void
-      else remoteCompare(target, peerId)(state.target, state.providers)
-    )
+    mutex.lock
+      .surround(
+        OptionT(stateRef.get).foldF(
+          localCompare(commonAncestorHeader, target, peerId)
+        )(state =>
+          if (state.target.id == target.id || state.target.id == target.parentHeaderId)
+            updateTarget(commonAncestorHeader, target, peerId).void
+          else remoteCompare(target, peerId)(state.target, state.providers)
+        )
+      )
 
   /** Removes the peer from any sync processes. If the peer was the only provider, syncing stops until a new comparison
     * is made.
@@ -51,7 +54,7 @@ class SharedSync[F[_]: Async: Random](
   def omitPeer(peerId: PeerId): F[Unit] =
     stateRef.modify {
       case Some(state) if state.providers == Set(peerId) =>
-        (none, state.fiber.cancel)
+        (none, Logger[F].info("Canceling sync due to no remaining peers.") >> state.fiber.cancel)
       case Some(state) if state.providers.contains(peerId) =>
         (state.copy(providers = state.providers - peerId).some, ().pure[F])
       case s =>
@@ -62,62 +65,50 @@ class SharedSync[F[_]: Async: Random](
     OptionT(stateRef.get).foldF(().pure[F])(_.fiber.joinWithUnit)
 
   private def localCompare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId) =
-    mutex.lock
-      .surround(
-        for {
-          interface <- clientsF.map(_.apply(peerId))
-          remoteHeaderAtHeightF = (height: Height) =>
-            OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
-          localHeadId <- core.consensus.localChain.currentHead
-          localHeader <- core.dataStores.headers.getOrRaise(localHeadId)
-          localHeaderAtHeightF = (height: Height) =>
-            OptionT(core.consensus.localChain.blockIdAtHeight(height)).flatMapF(core.dataStores.headers.get).value
-          chainSelectionResult <- core.consensus.chainSelection.compare(
-            localHeader,
-            target,
-            commonAncestorHeader,
-            localHeaderAtHeightF,
-            remoteHeaderAtHeightF
-          )
-          _ <- logResult(chainSelectionResult)
-          newStateOpt <- OptionT
-            .whenF(chainSelectionResult.isY)(updateTarget(commonAncestorHeader, target, peerId))
-            .value
-        } yield newStateOpt
+    for {
+      interface <- clientsF.map(_.apply(peerId))
+      remoteHeaderAtHeightF = (height: Height) =>
+        OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
+      localHeadId <- core.consensus.localChain.currentHead
+      localHeader <- core.dataStores.headers.getOrRaise(localHeadId)
+      localHeaderAtHeightF = (height: Height) =>
+        OptionT(core.consensus.localChain.blockIdAtHeight(height)).flatMapF(core.dataStores.headers.get).value
+      chainSelectionResult <- core.consensus.chainSelection.compare(
+        localHeader,
+        target,
+        commonAncestorHeader,
+        localHeaderAtHeightF,
+        remoteHeaderAtHeightF
       )
-      .void
+      _ <- logResult(chainSelectionResult)
+      _ <- Async[F].whenA(chainSelectionResult.isY)(updateTarget(commonAncestorHeader, target, peerId))
+    } yield ()
 
   private def remoteCompare(target: BlockHeader, peerId: PeerId)(
       currentTarget: BlockHeader,
       providers: Set[PeerId]
   ) =
-    mutex.lock
-      .surround(
-        for {
-          clients <- clientsF
-          interface = clients(peerId)
-          remoteHeaderAtHeightF = (height: Height) =>
-            OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
-          pseudoLocalInterface <- SortedPeerInterface.make(providers.map(clients).toList)
-          localHeaderAtHeightF = (height: Height) =>
-            OptionT(pseudoLocalInterface.blockIdAtHeight(height)).flatMapF(pseudoLocalInterface.fetchHeader).value
-          commonAncestor <- interface.remoteCommonAncestor(pseudoLocalInterface)
-          commonAncestorHeader <- OptionT(pseudoLocalInterface.fetchHeader(commonAncestor))
-            .getOrRaise(new IllegalArgumentException("Remote header not found"))
-          chainSelectionResult <- core.consensus.chainSelection.compare(
-            currentTarget,
-            target,
-            commonAncestorHeader,
-            localHeaderAtHeightF,
-            remoteHeaderAtHeightF
-          )
-          _ <- logResult(chainSelectionResult)
-          newStateOpt <- OptionT
-            .whenF(chainSelectionResult.isY)(updateTarget(commonAncestorHeader, target, peerId))
-            .value
-        } yield newStateOpt
+    for {
+      clients <- clientsF
+      interface = clients(peerId)
+      remoteHeaderAtHeightF = (height: Height) =>
+        OptionT(interface.blockIdAtHeight(height)).flatMapF(interface.fetchHeader).value
+      pseudoLocalInterface <- SortedPeerInterface.make(providers.map(clients).toList)
+      localHeaderAtHeightF = (height: Height) =>
+        OptionT(pseudoLocalInterface.blockIdAtHeight(height)).flatMapF(pseudoLocalInterface.fetchHeader).value
+      commonAncestor <- interface.remoteCommonAncestor(pseudoLocalInterface)
+      commonAncestorHeader <- OptionT(pseudoLocalInterface.fetchHeader(commonAncestor))
+        .getOrRaise(new IllegalArgumentException("Remote header not found"))
+      chainSelectionResult <- core.consensus.chainSelection.compare(
+        currentTarget,
+        target,
+        commonAncestorHeader,
+        localHeaderAtHeightF,
+        remoteHeaderAtHeightF
       )
-      .void
+      _ <- logResult(chainSelectionResult)
+      _ <- Async[F].whenA(chainSelectionResult.isY)(updateTarget(commonAncestorHeader, target, peerId))
+    } yield ()
 
   private def logResult(chainSelectionResult: ChainSelectionOutcome) =
     chainSelectionResult match {
@@ -139,8 +130,8 @@ class SharedSync[F[_]: Async: Random](
         case Some(s @ SharedSyncState(current, _, _)) if current.id == target.parentHeaderId =>
           s.copy(target = target, providers = Set(provider)).pure[F]
         case Some(SharedSyncState(_, _, fiber)) =>
-          fiber.cancel >> sync(commonAncestor, target).start
-            .map(fiber => SharedSyncState(target, Set(provider), fiber))
+          fiber.cancel >>
+            sync(commonAncestor, target).start.map(fiber => SharedSyncState(target, Set(provider), fiber))
         case _ =>
           sync(commonAncestor, target).start
             .map(fiber => SharedSyncState(target, Set(provider), fiber))
@@ -153,30 +144,36 @@ class SharedSync[F[_]: Async: Random](
       .flatMap(Stream.fromOption[F](_))
       .flatMap(max => Stream.range(initialTarget.height + 1, max + 1)))
       .chunkN(512)
-      .flatMap(heights =>
-        Stream
-          .eval(interfaceForHeight(heights.last.get))
-          .flatMap((interface, parallelismScale) =>
-            Stream
-              .chunk(heights)
-              .parEvalMap(16 * parallelismScale)(height =>
-                OptionT(interface.blockIdAtHeight(height)).getOrRaise(
-                  new IllegalStateException("Block at Height not found")
-                )
-              )
-              .parEvalMap(32 * parallelismScale)(id =>
-                OptionT(interface.fetchHeader(id))
-                  .getOrRaise(new IllegalArgumentException("Remote header not found"))
-              )
-              .through(noForks)
-              .through(fetchVerifyPersistPipe(interface, parallelismScale))
-          )
-      )
+      .flatMap(syncHeights(_))
       .through(adoptSparsely)
       .compile
       .drain
       .onError(e => Logger[F].error(e)("Sync failed"))
       .guaranteeCase(o => Async[F].unlessA(o.isCanceled)(stateRef.set(none)))
+
+  private def syncHeights(heights: Chunk[Long], retries: Int = 3): Stream[F, FullBlock] =
+    Stream
+      .eval(interfaceForHeight(heights.last.get))
+      .flatMap((interface, parallelismScale) =>
+        Stream
+          .chunk(heights)
+          .parEvalMap(16 * parallelismScale)(height =>
+            OptionT(interface.blockIdAtHeight(height)).getOrRaise(
+              new IllegalStateException("Block at Height not found")
+            )
+          )
+          .parEvalMap(32 * parallelismScale)(id =>
+            OptionT(core.dataStores.headers.get(id))
+              .orElseF(interface.fetchHeader(id))
+              .getOrRaise(new IllegalArgumentException("Remote header not found"))
+          )
+          .through(noForks)
+          .through(fetchVerifyPersistPipe(interface, parallelismScale))
+      )
+      .recoverWith {
+        case e if retries > 0 =>
+          Stream.eval(Logger[F].warn(e)("Sync failed. Retrying partial.")) >> syncHeights(heights, retries - 1)
+      }
 
   private def interfaceForHeight(height: Height) =
     for {
@@ -249,13 +246,13 @@ class SharedSync[F[_]: Async: Random](
         case Some((head, tail)) =>
           val third = head.header.slot / epochThirdLength
           if (third != lastAdoptedThird)
-            Pull.eval(PeerBlockchainHandler.adoptAndLog(core)(head)) >> Pull
-              .output1(head) >> go(tail, head, true, third)
+            Pull.eval(core.consensus.localChain.adopt(head.header.id)) >>
+              Pull.output1(head) >> go(tail, head, true, third)
           else
             Pull.output1(head) >> go(tail, head, false, lastAdoptedThird)
         case None =>
           if (previousWasAdopted) Pull.done
-          else Pull.eval(PeerBlockchainHandler.adoptAndLog(core)(previous)) >> Pull.done
+          else Pull.eval(core.consensus.localChain.adopt(previous.header.id)) >> Pull.done
       }
 
     start(_).stream

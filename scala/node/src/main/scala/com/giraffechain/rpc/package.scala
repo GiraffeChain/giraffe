@@ -1,11 +1,12 @@
 package com.giraffechain
 
-import com.giraffechain.codecs.given
-import com.giraffechain.ledger.TransactionValidationContext
-import com.giraffechain.models.*
+import cats.data.{EitherT, NonEmptyChain}
 import cats.effect.Async
 import cats.implicits.*
 import cats.{ApplicativeThrow, MonadThrow}
+import com.giraffechain.codecs.given
+import com.giraffechain.ledger.TransactionValidationContext
+import com.giraffechain.models.*
 import fs2.{RaiseThrowable, Stream}
 import io.grpc.{Status, StatusException}
 import org.typelevel.log4cats.Logger
@@ -42,42 +43,33 @@ package object rpc:
 
   def broadcastBlockImpl[F[_]: Async: Logger](
       core: BlockchainCore[F]
-  )(block: Block, reward: Option[Transaction]): F[Unit] =
+  )(block: Block, reward: Option[Transaction]): ValidationResult[F] =
     for {
-      header <- block.header.withEmbeddedId.pure[F]
+      header <- EitherT.rightT(block.header.withEmbeddedId)
       rewardTransaction = reward.map(_.withEmbeddedId)
       rewardTransactionId = rewardTransaction.map(_.id)
-      _ <- Logger[F].info(show"Received block id=${header.id}")
-      canonicalHeadId <- core.consensus.localChain.currentHead
-      _ <- MonadThrow[F].raiseWhen(header.parentHeaderId != canonicalHeadId)(
-        new IllegalArgumentException("Block does not extend local tip")
+      _ <- EitherT.liftF(Logger[F].info(show"Received block id=${header.id}"))
+      canonicalHeadId <- EitherT.liftF(core.consensus.localChain.currentHead)
+      _ <- EitherT.cond(header.parentHeaderId == canonicalHeadId, (), NonEmptyChain("Block does not extend local tip"))
+      _ <- core.consensus.headerValidation.validate(header)
+      _ <- EitherT.liftF(
+        core.blockIdTree.associate(header.id, header.parentHeaderId) *>
+          core.dataStores.headers.put(header.id, header) *>
+          core.dataStores.bodies.put(header.id, block.body) *>
+          rewardTransaction.traverse(t => core.dataStores.transactions.put(t.id, t))
       )
-      _ <- core.consensus.headerValidation
-        .validate(header)
-        .leftSemiflatTap(errors => Logger[F].warn(show"Block id=${header.id} contains errors=$errors"))
-        .leftMap(errors => new IllegalArgumentException(errors.head))
-        .rethrowT
-      _ <- core.blockIdTree.associate(header.id, header.parentHeaderId)
-      _ <- core.dataStores.headers.put(header.id, header)
-      _ <- core.dataStores.bodies.put(header.id, block.body)
-      _ <- rewardTransaction.traverse(t => core.dataStores.transactions.put(t.id, t))
-      transactions <- block.body.transactionIds.traverse(id =>
-        if (rewardTransactionId.contains(id)) rewardTransaction.get.pure[F]
-        else core.dataStores.transactions.getOrRaise(id)
+      transactions <- EitherT.liftF(
+        block.body.transactionIds.traverse(id =>
+          if (rewardTransactionId.contains(id)) rewardTransaction.get.pure[F]
+          else core.dataStores.transactions.getOrRaise(id)
+        )
       )
       _ <- core.ledger.bodyValidation
         .validate(
           FullBlockBody(transactions),
           TransactionValidationContext(header.parentHeaderId, header.height, header.slot)
         )
-        .leftSemiflatTap(errors => Logger[F].warn(show"Block id=${header.id} contains errors=$errors"))
-        .leftMap(errors => new IllegalArgumentException(errors.head))
-        .rethrowT
-      _ <- MonadThrow[F].raiseWhen(header.parentHeaderId != canonicalHeadId)(
-        new IllegalArgumentException("Block does not extend local tip")
-      )
-      _ <- core.consensus.localChain.adopt(header.id)
-      _ <- Logger[F].info(
-        show"Adopted block id=${header.id} height=${header.height} slot=${header.slot} transactions=${block.body.transactionIds}"
-      )
+      // Duplicate check, right before adoption
+      _ <- EitherT.cond(header.parentHeaderId == canonicalHeadId, (), NonEmptyChain("Block does not extend local tip"))
+      _ <- EitherT.liftF(core.consensus.localChain.adopt(header.id))
     } yield ()
