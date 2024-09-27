@@ -66,8 +66,8 @@ class ProtocolSettings {
     "vrf-ldd-cutoff": "18",
     "vrf-precision": "40",
     "vrf-baseline-difficulty": "1/20",
-    "vrf-amplitude": "1/2",
-    "vrf-slot-gap": "1",
+    "vrf-amplitude": "6/15",
+    "vrf-slot-gap": "2",
     "chain-selection-k-lookback": "576",
     "slot-duration-ms": "1000",
   };
