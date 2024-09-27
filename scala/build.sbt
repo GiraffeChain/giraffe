@@ -39,8 +39,8 @@ lazy val node = project
     ),
     dockerExposedPorts := Seq(2023, 2024),
     dockerEnvVars ++= Map(
-      "BLOCKCHAIN_DATA_DIR" -> "/giraffe/data",
-      "_JAVA_OPTIONS" -> "-XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:+UseParallelGC"
+      "GIRAFFE_DATA_DIR" -> "/giraffe/data",
+      "_JAVA_OPTIONS" -> "-XX:MaxRAMPercentage=70.0"
     ),
     Docker / packageName := "node",
     dockerExposedVolumes += "/giraffe",

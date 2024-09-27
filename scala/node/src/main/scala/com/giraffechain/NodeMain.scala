@@ -1,15 +1,15 @@
 package com.giraffechain
 
-import com.giraffechain.codecs.given
-import com.giraffechain.crypto.CryptoResources
-import com.giraffechain.p2p.P2PServer
-import com.giraffechain.rpc.*
 import caseapp.*
 import cats.MonadThrow
 import cats.effect.std.{Random, SecureRandom}
 import cats.effect.{IO, Resource, ResourceApp}
 import cats.implicits.*
 import com.comcast.ip4s.SocketAddress
+import com.giraffechain.codecs.given
+import com.giraffechain.crypto.CryptoResources
+import com.giraffechain.p2p.P2PServer
+import com.giraffechain.rpc.*
 import fs2.io.file.{Files, Path}
 import org.typelevel.log4cats.LoggerFactory
 import org.typelevel.log4cats.slf4j.{Slf4jFactory, Slf4jLogger}
@@ -57,7 +57,7 @@ object NodeMain extends ResourceApp.Forever:
 @AppName("Blockchain")
 case class RelayArgs(
     @HelpMessage("Path to data storage (will be suffixed with the block ID)")
-    dataDir: String = Option(System.getenv("BLOCKCHAIN_DATA_DIR")).getOrElse("/tmp/blockchain/data"),
+    dataDir: String = Option(System.getenv("GIRAFFE_DATA_DIR")).getOrElse("/tmp/giraffe/data"),
     apiBindHost: String = "0.0.0.0",
     apiBindPort: Int = 2024,
     p2pBindHost: String = "0.0.0.0",
