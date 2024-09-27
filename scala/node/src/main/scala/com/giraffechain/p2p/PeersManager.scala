@@ -57,10 +57,21 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
       _ <-
         if (candidates.nonEmpty)
           Random[F].elementOf(candidates).flatMap(connectOutbound)
-        else if (state.connectedPeers.isEmpty && state.knownPeers.nonEmpty)
-          Random[F].elementOf(state.knownPeers).flatMap(connectOutbound)
         else
-          ().pure[F]
+          state.knownPeers
+            .findM(a =>
+              state.connectedPeers.values.toList
+                .findM(cp =>
+                  if (cp.outboundAddress.contains(a))
+                    false.pure[F]
+                  else
+                    cp.publicStateRef.get
+                      .map(p => p.localPeer.host.contains(a.host.toString) && p.localPeer.port.contains(a.port))
+                )
+                .map(_.isEmpty)
+            )
+            .flatMap(_.traverse(connectOutbound))
+            .void
     } yield ()
   ).handleError(e => Logger[F].warn(e)("Failed to connect to new peer"))
 

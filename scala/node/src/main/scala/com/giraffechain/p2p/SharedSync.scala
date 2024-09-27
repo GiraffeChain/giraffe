@@ -159,7 +159,7 @@ class SharedSync[F[_]: Async: Random](
           .chunk(heights)
           .parEvalMap(16 * parallelismScale)(height =>
             OptionT(interface.blockIdAtHeight(height)).getOrRaise(
-              new IllegalStateException("Block at Height not found")
+              new IllegalStateException("Block at height not found")
             )
           )
           .parEvalMap(32 * parallelismScale)(id =>

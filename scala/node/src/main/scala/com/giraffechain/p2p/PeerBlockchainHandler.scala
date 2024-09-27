@@ -123,7 +123,7 @@ object PeerBlockchainHandler:
       _ <- Logger[F].info(show"Processing remote block id=${header.id}")
       _ <- core.consensus.headerValidation
         .validate(header)
-        .leftMap(errors => new IllegalArgumentException(errors.head))
+        .leftMap(errors => new IllegalArgumentException(show"Invalid block header id=${header.id} errors=$errors"))
         .rethrowT
       _ <- core.dataStores.headers
         .put(header.id, header) &> core.blockIdTree.associate(header.id, header.parentHeaderId)
@@ -145,13 +145,13 @@ object PeerBlockchainHandler:
               body.transactionIds.txRoot(parentHeader.txRoot.decodeBase58) == header.txRoot.decodeBase58
             )
         )
-        .getOrRaise(new IllegalArgumentException("Remote body not found"))
+        .getOrRaise(new IllegalArgumentException(show"Remote body not found id=${header.id}"))
       transactions <- Stream
         .emits(body.transactionIds)
         .parEvalMap(2 * parallelismScale)(id =>
           OptionT(core.dataStores.transactions.get(id))
             .orElse(OptionT(interface.fetchTransaction(id)))
-            .getOrRaise(new IllegalArgumentException("Remote transaction not found"))
+            .getOrRaise(new IllegalArgumentException(show"Remote transaction id=$id not found"))
         )
         .compile
         .toList
@@ -169,7 +169,9 @@ object PeerBlockchainHandler:
             fullBlock.header.slot
           )
         )
-        .leftMap(errors => new IllegalArgumentException(errors.head))
+        .leftMap(errors =>
+          new IllegalArgumentException(show"Invalid block body id=${fullBlock.header.id} errors=$errors")
+        )
         .rethrowT
       body = BlockBody(fullBlock.fullBody.transactions.map(_.id))
       _ <- core.dataStores.bodies

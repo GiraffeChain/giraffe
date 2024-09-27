@@ -1,15 +1,12 @@
 package com.giraffechain.consensus
 
-import com.giraffechain.{FetchHeader, Genesis}
-import com.giraffechain.models.*
-import com.giraffechain.codecs.given
 import cats.data.EitherT
+import cats.effect.implicits.*
 import cats.effect.{Async, Ref, Resource}
 import cats.implicits.*
-import cats.effect.implicits.*
+import com.giraffechain.models.*
+import com.giraffechain.{FetchHeader, Genesis}
 import fs2.concurrent.Topic
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.slf4j.{Slf4jFactory, given}
 
 trait LocalChain[F[_]]:
   def adopt(blockId: BlockId): F[Unit]
@@ -39,15 +36,12 @@ class LocalChainImpl[F[_]: Async](
     fetchHeader: FetchHeader[F]
 ) extends LocalChain[F]:
 
-  private given Logger[F] =
-    Slf4jFactory.getLoggerFromName[F]("Consensus.LocalChain")
   override def adopt(blockId: BlockId): F[Unit] =
     Async[F].uncancelable(_ =>
       headRef.set(blockId) *>
         EitherT(adoptionsTopic.publish1(blockId))
           .leftMap(_ => new IllegalStateException("LocalChain topic unexpectedly closed"))
-          .rethrowT *>
-        Logger[F].info(show"Adopted head block id=$blockId")
+          .rethrowT
     )
 
   override def currentHead: F[BlockId] = headRef.get
