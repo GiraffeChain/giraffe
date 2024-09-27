@@ -77,6 +77,7 @@ class BlockProducerImpl extends BlockProducer {
     }
     log.info("Constructing block for slot=${nextHit.slot}");
     final body = await insertReward(bodyWithoutReward, parentHeader.id);
+    if (cancelCheck()) return;
     final now = clock.localTimestamp;
     final (slotStart, slotEnd) = clock.slotToTimestamps(nextHit.slot);
     final timestamp =
