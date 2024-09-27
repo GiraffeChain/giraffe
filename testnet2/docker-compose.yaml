@@ -1,0 +1,20 @@
+services:
+  node:
+    image: "giraffechain/node:dev"
+    pull_policy: "always"
+    restart: "unless-stopped"
+    ports:
+      - "2023:2023"
+      - "2024:2024"
+    command:
+      - "--genesis"
+      - "https://github.com/GiraffeChain/giraffe/raw/genesis/testnet2/b_B6HJB5v9wzpeYDUeBJA1UXmza9rxyd4MxYxvC4hRak9B.pbuf"
+      - "--p2p-public-host"
+      - "auto"
+      - "--peer"
+      - "testnet.giraffechain.com:2023"
+    volumes:
+      - "giraffe:/giraffe"
+
+volumes:
+  giraffe:
