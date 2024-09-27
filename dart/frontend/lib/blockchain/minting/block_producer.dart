@@ -51,15 +51,15 @@ class BlockProducerImpl extends BlockProducer {
     if (fromSlot < _nextSlotMinimum) fromSlot = _nextSlotMinimum;
     log.info(
         "Calculating eligibility for parentId=${parentHeader.id.show} parentSlot=${parentHeader.slot}");
-    final nextHit = await _nextEligibility(parentSlotId, fromSlot);
+    final nextHit = await _nextEligibility(parentSlotId, fromSlot, cancelCheck);
     if (cancelCheck()) return;
     if (nextHit == null) {
       log.warning("No eligibilities found");
       return;
     }
+    log.info("Delaying until eligibile slot=${nextHit.slot}.");
     await clock.delayedUntilSlot(nextHit.slot);
     if (cancelCheck()) return;
-    log.info("Packing block for slot=${nextHit.slot}");
     final FullBlockBody bodyWithoutReward;
     try {
       bodyWithoutReward = await RaceStream([
@@ -107,11 +107,11 @@ class BlockProducerImpl extends BlockProducer {
       ..fullBody = body;
   }
 
-  Future<VrfHit?> _nextEligibility(SlotId parentSlotId, Int64 fromSlot) async {
+  Future<VrfHit?> _nextEligibility(SlotId parentSlotId, Int64 fromSlot, bool Function() cancelCheck) async {
     var exitSlot =
         clock.epochRange(clock.epochOfSlot(parentSlotId.slot) + 1).$2;
     var test = fromSlot;
-    while (test < exitSlot) {
+    while (test < exitSlot && !cancelCheck()) {
       final h = await staker.elect(parentSlotId, test);
       if (h != null) {
         return h;

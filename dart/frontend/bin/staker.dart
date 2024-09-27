@@ -88,7 +88,8 @@ void main(List<String> args) async {
   Future<void> Function() cancel = () => Future.value();
 
   void handle(BlockHeader h) async {
-    await cancel();
+    // TODO: Should this await?
+    cancel();
     final sub = blockProducer
         .makeChild(h)
         .asyncMap((b) => client.broadcastBlock(
