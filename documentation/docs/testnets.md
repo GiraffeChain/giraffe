@@ -16,9 +16,9 @@ Because this chain is still in development, it is extremely likely that a public
 
 My goal is to make it as easy as possible to _use_ the testnets. At the moment, I simply fund the public wallet and invite you to transfer _some_ tokens from it as needed. That will most likely be abused at some point, so I'll come up with a different faucet approach soon.
 
-The 0th testnet has already been wiped, Giraffe is now on the 1st testnet.
+Testnets 0 and 1 have already concluded.
 
-## Testnet 1
+## Testnet 2
 Open the [Wallet/App](https://testnet.giraffechain.com) to see the current state of the chain, access your funds, stake, and more.
 
 If you want to help with relay operations, you can do so using Docker.
