@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">Testnets | Giraffe Chain</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://docs.giraffechain.com/docs/testnets"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Testnets | Giraffe Chain"><meta data-rh="true" name="description" content="Information about the Giraffe Chain public testnets."><meta data-rh="true" property="og:description" content="Information about the Giraffe Chain public testnets."><link data-rh="true" rel="icon" href="/img/favicon.png"><link data-rh="true" rel="canonical" href="https://docs.giraffechain.com/docs/testnets"><link data-rh="true" rel="alternate" href="https://docs.giraffechain.com/docs/testnets" hreflang="en"><link data-rh="true" rel="alternate" href="https://docs.giraffechain.com/docs/testnets" hreflang="x-default"><link rel="stylesheet" href="/assets/css/styles.803600f4.css">
-<script src="/assets/js/runtime~main.0aa57c45.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.7f70ba45.js" defer="defer"></script>
 <script src="/assets/js/main.7c6867b9.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -20,7 +20,7 @@
 <p>If you want to help with relay operations, you can do so using Docker.</p>
 <ol>
 <li><code>docker volume create giraffe</code></li>
-<li><code>docker run -d --name giraffe --restart=always -p 2023:2023 -p 2024:2024 -v giraffe:/giraffe giraffechain/node:dev --genesis https://github.com/GiraffeChain/giraffe/raw/genesis/b_9JabitnBvokxRXfsoCGMrahsub3FpTCwKsUXY9XHW22M.pbuf --peer testnet.giraffechain.com:2023</code>
+<li><code>docker run -d --name giraffe --restart=always -p 2023:2023 -p 2024:2024 -v giraffe:/giraffe giraffechain/node:dev --genesis https://github.com/GiraffeChain/giraffe/raw/genesis/testnet2/b_B6HJB5v9wzpeYDUeBJA1UXmza9rxyd4MxYxvC4hRak9B.pbuf --peer testnet.giraffechain.com:2023</code>
 <ul>
 <li>Note: If you are able to open your firewall for public access on port 2023, you can add the <code>--p2p-public-host auto</code> argument</li>
 </ul>
