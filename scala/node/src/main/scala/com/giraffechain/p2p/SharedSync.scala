@@ -58,6 +58,9 @@ class SharedSync[F[_]: Async: Random](
         (s, ().pure[F])
     }.flatten
 
+  def syncCompletion: F[Unit] =
+    OptionT(stateRef.get).foldF(().pure[F])(_.fiber.joinWithUnit)
+
   private def localCompare(commonAncestorHeader: BlockHeader, target: BlockHeader, peerId: PeerId) =
     mutex.lock
       .surround(
@@ -153,20 +156,20 @@ class SharedSync[F[_]: Async: Random](
       .flatMap(heights =>
         Stream
           .eval(interfaceForHeight(heights.last.get))
-          .flatMap(interface =>
+          .flatMap((interface, parallelismScale) =>
             Stream
               .chunk(heights)
-              .parEvalMap(32)(height =>
+              .parEvalMap(16 * parallelismScale)(height =>
                 OptionT(interface.blockIdAtHeight(height)).getOrRaise(
                   new IllegalStateException("Block at Height not found")
                 )
               )
-              .parEvalMap(128)(id =>
+              .parEvalMap(32 * parallelismScale)(id =>
                 OptionT(interface.fetchHeader(id))
                   .getOrRaise(new IllegalArgumentException("Remote header not found"))
               )
               .through(noForks)
-              .through(fetchVerifyPersistPipe(interface))
+              .through(fetchVerifyPersistPipe(interface, parallelismScale))
           )
       )
       .through(adoptSparsely)
@@ -190,11 +193,15 @@ class SharedSync[F[_]: Async: Random](
         OptionT(client.blockIdAtHeight(height)).filter(_ == batchTargetId).as(client).value
       )
       interface <- SortedPeerInterface.make(providerInterfaces ++ alternativeClients)
-    } yield interface
+      parallelismScale = providerInterfaces.length + alternativeClients.length
+    } yield (interface, parallelismScale)
 
-  private def fetchVerifyPersistPipe(interface: PeerBlockchainInterface[F]): Pipe[F, BlockHeader, FullBlock] =
+  private def fetchVerifyPersistPipe(
+      interface: PeerBlockchainInterface[F],
+      parallelismScale: Int
+  ): Pipe[F, BlockHeader, FullBlock] =
     _.evalTap(PeerBlockchainHandler.checkHeader(core))
-      .parEvalMap(128)(PeerBlockchainHandler.fetchFullBlock(core, interface))
+      .parEvalMap(32 * parallelismScale)(PeerBlockchainHandler.fetchFullBlock(core, interface, parallelismScale))
       .evalTap(PeerBlockchainHandler.checkBody(core))
 
   private def noForks: Pipe[F, BlockHeader, BlockHeader] = {

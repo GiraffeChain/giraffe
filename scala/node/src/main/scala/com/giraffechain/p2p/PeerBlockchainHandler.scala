@@ -66,7 +66,11 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
     } yield ()
 
   private def inSync: F[Unit] =
-    awaitBetterBlock.race(mempoolSync).void
+    awaitBetterBlock
+      .race(mempoolSync)
+      // If the sync process completes with error, eagerly return to the sync check loop
+      .race((sharedSync.syncCompletion >> Async[F].never).voidError)
+      .void
 
   private def awaitBetterBlock: F[Unit] =
     interface.nextBlockAdoption
@@ -81,11 +85,12 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
                 .flatMap(remoteHeader =>
                   core.consensus.localChain.currentHead.flatMap(currentHeadId =>
                     if (remoteHeader.parentHeaderId == currentHeadId)
-                      PeerBlockchainHandler.checkHeader(core)(remoteHeader) >> PeerBlockchainHandler
-                        .fetchFullBlock(core, interface)(remoteHeader)
-                        .flatTap(PeerBlockchainHandler.checkBody(core))
-                        .flatTap(PeerBlockchainHandler.adoptAndLog(core))
-                        .as(true)
+                      PeerBlockchainHandler.checkHeader(core)(remoteHeader) >>
+                        PeerBlockchainHandler
+                          .fetchFullBlock(core, interface, 1)(remoteHeader)
+                          .flatTap(PeerBlockchainHandler.checkBody(core))
+                          .flatTap(PeerBlockchainHandler.adoptAndLog(core))
+                          .as(true)
                     else
                       Logger[F]
                         .debug(show"Block id=$blockId is not a direct local extension.  Checking sync.")
@@ -124,7 +129,11 @@ object PeerBlockchainHandler:
         .put(header.id, header) &> core.blockIdTree.associate(header.id, header.parentHeaderId)
     } yield ()
 
-  def fetchFullBlock[F[_]: Async](core: BlockchainCore[F], interface: PeerBlockchainInterface[F])(
+  def fetchFullBlock[F[_]: Async](
+      core: BlockchainCore[F],
+      interface: PeerBlockchainInterface[F],
+      parallelismScale: Int
+  )(
       header: BlockHeader
   ): F[FullBlock] =
     for {
@@ -139,7 +148,7 @@ object PeerBlockchainHandler:
         .getOrRaise(new IllegalArgumentException("Remote body not found"))
       transactions <- Stream
         .emits(body.transactionIds)
-        .parEvalMap(4)(id =>
+        .parEvalMap(2 * parallelismScale)(id =>
           OptionT(core.dataStores.transactions.get(id))
             .orElse(OptionT(interface.fetchTransaction(id)))
             .getOrRaise(new IllegalArgumentException("Remote transaction not found"))

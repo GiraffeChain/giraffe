@@ -33,7 +33,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
       .flatMap(state => state.connectedPeers.values.toList.traverse(_.close()))
       .void
 
-  def connectNext(): F[Unit] =
+  def connectNext(): F[Unit] = (
     for {
       state <- stateRef.get
       candidates <- state.connectedPeers.values.toList
@@ -61,6 +61,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
         else
           ().pure[F]
     } yield ()
+  ).handleError(e => Logger[F].warn(e)("Failed to connect to new peer"))
 
   def handleSocket(socket: Socket[F], outboundAddress: Option[SocketAddress[?]]): F[Unit] = {
     val resource = for {
