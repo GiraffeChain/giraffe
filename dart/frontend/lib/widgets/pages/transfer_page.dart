@@ -38,39 +38,33 @@ class TransferPage extends ConsumerWidget {
     return GiraffeScaffold(title: "Transfer", body: child);
   }
 
-  Widget uninitialized(BuildContext context) => Align(
-        alignment: Alignment.topLeft,
-        child: SizedBox(
-          width: 480,
-          child: GiraffeCard(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Giraffe Wallet has not been initialized.",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold))
-                    .pad8,
-                const Text(
-                        "Please navigate to the settings page to create a wallet and specify an API endpoint.",
-                        style: TextStyle(fontSize: 16))
-                    .pad8,
-                ElevatedButton.icon(
-                        onPressed: () => context.push("/"),
-                        label: const Text("Settings"),
-                        icon: const Icon(Icons.settings))
-                    .pad8,
-              ],
-            ),
-          ),
-        ),
-      );
+  Widget uninitialized(BuildContext context) => GiraffeCard(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Giraffe Wallet has not been initialized.",
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold))
+            .pad8,
+        const Text(
+                "Please navigate to the settings page to create a wallet and specify an API endpoint.",
+                style: TextStyle(fontSize: 16))
+            .pad8,
+        ElevatedButton.icon(
+                onPressed: () => context.push("/"),
+                label: const Text("Settings"),
+                icon: const Icon(Icons.settings))
+            .pad8,
+      ],
+    ),
+  );
 
   Widget body(BlockchainClient client, Wallet wallet) {
     try {
       final tx = decoded;
       return GiraffeCard(
-        child: ListView(
+        child: Column(
           children: [
             _inputsCard(tx).pad16,
             _outputsCard(tx).pad16,
