@@ -10,6 +10,7 @@ import com.giraffechain.codecs.{*, given}
 import com.giraffechain.consensus.TraversalStep
 import com.giraffechain.ledger.*
 import com.giraffechain.models.*
+import com.giraffechain.utility.DroppingStream
 import fs2.Stream
 import io.circe.syntax.*
 import io.circe.{Decoder, DecodingFailure, Encoder, Json}
@@ -128,13 +129,13 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
       case GET -> Root / "follow" =>
         IO(
           Response(
-            body = core.traversal
+            body = DroppingStream(core.traversal, buffer = 128)
               .map {
                 case TraversalStep.Applied(id)   => Json.obj("adopted" -> id.show.asJson)
                 case TraversalStep.Unapplied(id) => Json.obj("unadopted" -> id.show.asJson)
               }
               .map(_.noSpaces)
-              .mergeHaltL(JsonBlockchainRpc.keepAliveTickStream)
+              .keepAlive(1.second, "".pure[F])
               .intersperse("\n")
               .through(fs2.text.utf8.encode)
               .onError { case e =>
@@ -327,10 +328,10 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
       case GET -> Root / "block-packer" =>
         IO(
           Response(body =
-            core.ledger.blockPacker.streamed
+            DroppingStream(core.ledger.blockPacker.streamed)
               .map(full => BlockBody(full.transactions.map(_.id)))
               .map(_.asJson.noSpaces)
-              .mergeHaltL(JsonBlockchainRpc.keepAliveTickStream)
+              .keepAlive(1.second, "".pure[F])
               .intersperse("\n")
               .through(fs2.text.utf8.encode)
               .onError { case e =>
@@ -343,8 +344,6 @@ class JsonBlockchainRpc(core: BlockchainCore[IO])(using LoggerFactory[IO]) {
 }
 
 object JsonBlockchainRpc:
-  val keepAliveTickStream: Stream[IO, String] = Stream.fixedRate[IO](500.milli).as("")
-
   case class VertexQuery(label: String, where: Seq[WhereClause])
   case class EdgeQuery(label: String, a: Option[String], b: Option[String], where: Seq[WhereClause])
 
