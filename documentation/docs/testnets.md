@@ -16,12 +16,12 @@ Because this chain is still in development, it is extremely likely that a public
 
 My goal is to make it as easy as possible to _use_ the testnets. At the moment, I simply fund the public wallet and invite you to transfer _some_ tokens from it as needed. That will most likely be abused at some point, so I'll come up with a different faucet approach soon.
 
-Testnets 0 and 1 have already concluded.
+Testnets 0, 1, and 2 have already concluded.
 
-## Testnet 2
+## Testnet 3
 Open the [Wallet/App](https://testnet.giraffechain.com) to see the current state of the chain, access your funds, stake, and more.
 
 If you want to help with relay operations, you can do so using Docker.
 1. `docker volume create giraffe`
-1. `docker run -d --name giraffe --restart=always -p 2023:2023 -p 2024:2024 -v giraffe:/giraffe giraffechain/node:dev --genesis https://github.com/GiraffeChain/giraffe/raw/genesis/testnet2/b_B6HJB5v9wzpeYDUeBJA1UXmza9rxyd4MxYxvC4hRak9B.pbuf --peer testnet.giraffechain.com:2023`
+1. `docker run -d --name giraffe --restart=always -p 2023:2023 -p 2024:2024 -v giraffe:/giraffe giraffechain/node:dev --genesis https://github.com/GiraffeChain/giraffe/raw/genesis/testnet2/b_2rAZvrAFF37bSaK4fVQErkm9r92NBdsevxCZYhsJDUMt.pbuf --peer testnet.giraffechain.com:2023`
     - Note: If you are able to open your firewall for public access on port 2023, you can add the `--p2p-public-host auto` argument
