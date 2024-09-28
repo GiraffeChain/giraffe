@@ -14,6 +14,7 @@ import 'package:giraffe_frontend/blockchain/minting/staking.dart';
 import 'package:giraffe_frontend/blockchain/minting/vrf_calculator.dart';
 import 'package:giraffe_frontend/blockchain/private_testnet.dart';
 import 'package:logging/logging.dart';
+import 'package:rxdart/transformers.dart';
 
 void main(List<String> args) async {
   Logger.root.level = Level.INFO;
@@ -105,7 +106,7 @@ void main(List<String> args) async {
   }
 
   handle(canonicalHead);
-  await client.adoptions.asyncMap(client.getBlockHeaderOrRaise).forEach(handle);
+  await client.adoptions.debounceTime(Duration(milliseconds: 200)).asyncMap(client.getBlockHeaderOrRaise).forEach(handle);
 }
 
 final log = Logger("staker");

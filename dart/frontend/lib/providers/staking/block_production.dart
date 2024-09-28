@@ -75,7 +75,7 @@ class PodBlockProduction extends _$PodBlockProduction {
     Future<void> Function() cancel = () => Future.value();
     final mainSub = ConcatEagerStream([
       Stream.value(canonicalHead),
-      client.adoptedBlocks.map((b) => b.header)
+      client.adoptions.debounceTime(const Duration(milliseconds: 200)).asyncMap(client.getBlockHeaderOrRaise)
     ]).asyncMap((h) async {
       await cancel();
       final sub = blockProducer
