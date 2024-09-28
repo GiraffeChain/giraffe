@@ -5,7 +5,6 @@ import cats.effect.implicits.*
 import cats.effect.std.Random
 import cats.effect.{Async, Deferred, Ref, Resource}
 import cats.implicits.*
-import com.comcast.ip4s.{Host, Port, SocketAddress}
 import com.giraffechain.BlockchainCore
 import com.giraffechain.codecs.given
 import com.giraffechain.crypto.CryptoResources
@@ -22,7 +21,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
     sharedSync: SharedSync[F],
     localPeer: LocalPeer,
     magicBytes: Array[Byte],
-    connectOutbound: SocketAddress[?] => F[Unit],
+    connectOutbound: PeerAddress => F[Unit],
     stateRef: Ref[F, PeersManager.State[F]]
 ):
 
@@ -39,13 +38,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
       state <- stateRef.get
       candidates <- state.connectedPeers.values.toList
         .traverse(
-          _.publicStateRef.get.map(
-            _.peers.flatMap(p =>
-              (p.host.flatMap(Host.fromString), p.port.flatMap(Port.fromInt))
-                .mapN(SocketAddress.apply)
-                .tupleLeft(p.peerId)
-            )
-          )
+          _.publicStateRef.get.map(_.peers.flatMap(p => (p.host, p.port).mapN(PeerAddress.apply).map(p.peerId -> _)))
         )
         .map(
           _.flatten.toMap
@@ -63,10 +56,10 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
               state.connectedPeers.values.toList
                 .findM(cp =>
                   if (cp.outboundAddress.contains(a))
-                    false.pure[F]
+                    true.pure[F]
                   else
                     cp.publicStateRef.get
-                      .map(p => p.localPeer.host.contains(a.host.toString) && p.localPeer.port.contains(a.port))
+                      .map(p => p.localPeer.host.contains(a.host) && p.localPeer.port.contains(a.port))
                 )
                 .map(_.isEmpty)
             )
@@ -75,7 +68,7 @@ class PeersManager[F[_]: Async: Random: CryptoResources](
     } yield ()
   ).handleError(e => Logger[F].warn(e)("Failed to connect to new peer"))
 
-  def handleSocket(socket: Socket[F], outboundAddress: Option[SocketAddress[?]]): F[Unit] = {
+  def handleSocket(socket: Socket[F], outboundAddress: Option[PeerAddress]): F[Unit] = {
     val resource = for {
       _ <- Resource.onFinalize(socket.endOfInput *> socket.endOfOutput)
       remotePeerId <- Handshake.run(socket, magicBytes, localPeer.sk, localPeer.vk).timeout(5.seconds).toResource
@@ -137,8 +130,8 @@ object PeersManager:
       core: BlockchainCore[F],
       localPeer: LocalPeer,
       magicBytes: Array[Byte],
-      connectOutbound: SocketAddress[?] => F[Unit],
-      knownPeers: List[SocketAddress[?]]
+      connectOutbound: PeerAddress => F[Unit],
+      knownPeers: List[PeerAddress]
   ): Resource[F, PeersManager[F]] =
     Ref
       .of(State[F](Map.empty, Map.empty, knownPeers))
@@ -170,7 +163,7 @@ object PeersManager:
   case class State[F[_]](
       connectedPeers: Map[PeerId, PeerState[F]],
       disconnectedPeers: Map[PeerId, PeerState[F]],
-      knownPeers: List[SocketAddress[?]]
+      knownPeers: List[PeerAddress]
   ):
     def withConnectedPeer(peerId: PeerId, peerState: PeerState[F]): State[F] =
       copy(

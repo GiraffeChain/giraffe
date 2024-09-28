@@ -4,7 +4,6 @@ import cats.Monad
 import cats.effect.implicits.*
 import cats.effect.{Async, Ref, Resource}
 import cats.implicits.*
-import com.comcast.ip4s.SocketAddress
 import com.giraffechain.BlockchainCore
 import com.giraffechain.models.{PeerId, PublicP2PState}
 import fs2.io.net.Socket
@@ -15,7 +14,7 @@ case class PeerState[F[_]](
     socket: Socket[F],
     publicStateRef: Ref[F, PublicP2PState],
     finalizers: Ref[F, List[F[Unit]]],
-    outboundAddress: Option[SocketAddress[?]],
+    outboundAddress: Option[PeerAddress],
     interface: PeerBlockchainInterface[F],
     abort: F[Unit]
 ):
@@ -28,7 +27,7 @@ object PeerState:
       core: BlockchainCore[F],
       manager: PeersManager[F],
       publicP2PState: PublicP2PState,
-      outboundAddress: Option[SocketAddress[?]],
+      outboundAddress: Option[PeerAddress],
       abort: F[Unit]
   ): Resource[F, PeerState[F]] =
     for {

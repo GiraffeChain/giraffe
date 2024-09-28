@@ -5,10 +5,9 @@ import cats.MonadThrow
 import cats.effect.std.{Random, SecureRandom}
 import cats.effect.{IO, Resource, ResourceApp}
 import cats.implicits.*
-import com.comcast.ip4s.SocketAddress
 import com.giraffechain.codecs.given
 import com.giraffechain.crypto.CryptoResources
-import com.giraffechain.p2p.P2PServer
+import com.giraffechain.p2p.{P2PServer, PeerAddress}
 import com.giraffechain.rpc.*
 import fs2.io.file.{Files, Path}
 import org.typelevel.log4cats.LoggerFactory
@@ -67,7 +66,11 @@ case class RelayArgs(
     peer: List[String] = Nil,
     genesis: String = "testnet:"
 ):
-  def parsedPeers[F[_]: MonadThrow]: F[List[SocketAddress[?]]] =
+  def parsedPeers[F[_]: MonadThrow]: F[List[PeerAddress]] =
     peer.traverse(p =>
-      SocketAddress.fromString(p).toRight(new IllegalArgumentException(s"Invalid peer=$p")).pure[F].rethrow
+      p.split(":") match {
+        case Array(host, port) => PeerAddress(host, port.toInt).pure[F]
+        case Array(host)       => PeerAddress(host, 2023).pure[F]
+        case _                 => new IllegalArgumentException(s"Invalid peer=$p").raiseError[F, PeerAddress]
+      }
     )

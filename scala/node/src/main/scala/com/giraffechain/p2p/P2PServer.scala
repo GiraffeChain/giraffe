@@ -3,6 +3,7 @@ package com.giraffechain.p2p
 import com.giraffechain.BlockchainCore
 import com.giraffechain.codecs.given
 import com.giraffechain.crypto.CryptoResources
+import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.implicits.*
 import cats.effect.kernel.{Outcome, Resource}
@@ -22,8 +23,8 @@ object P2PServer:
   def serve[F[_]: Async: Network](
       bindHost: String,
       bindPort: Int,
-      handleSocket: (Socket[F], Option[SocketAddress[?]]) => F[Unit],
-      outboundConnections: Stream[F, SocketAddress[?]]
+      handleSocket: (Socket[F], Option[PeerAddress]) => F[Unit],
+      outboundConnections: Stream[F, PeerAddress]
   ): Resource[F, F[Outcome[F, Throwable, Unit]]] =
     for {
       logger <- Slf4jLogger.fromName("P2P").toResource
@@ -46,11 +47,22 @@ object P2PServer:
         .map(socket => Stream.exec(handleSocket(socket, None)))
         .parJoinUnbounded
       outboundHandler = outboundConnections
-        .evalTap(address => logger.info(show"Outbound connection to $address"))
-        .map(address =>
+        .evalMap(address =>
+          OptionT
+            .fromOption(
+              (Host.fromString(address.host), Port.fromInt(address.port))
+                .mapN(SocketAddress[Host])
+            )
+            .flatTapNone(logger.info(show"Skipping connection to invalid address=$address"))
+            .semiflatTap(_ => logger.info(show"Outbound connection to $address"))
+            .tupleLeft(address)
+            .value
+        )
+        .unNone
+        .map((address, socketAddress) =>
           Stream.exec(
             network
-              .client(address, socketOptions)
+              .client(socketAddress, socketOptions)
               .timeout(5.seconds)
               .use(handleSocket(_, address.some))
           )
@@ -67,13 +79,13 @@ object P2PServer:
       publicHost: Option[String],
       publicPort: Option[Int],
       magicBytes: Array[Byte],
-      initialPeers: List[SocketAddress[?]]
+      initialPeers: List[PeerAddress]
   ): Resource[F, F[Outcome[F, Throwable, Unit]]] =
     for {
       given Logger[F] <- Slf4jLogger.fromName("P2P").toResource
       _ <- Resource.onFinalize(Logger[F].info("P2P Terminated"))
       outboundConnectionsChannel <- Resource
-        .make(Channel.unbounded[F, SocketAddress[?]])(_.close.void)
+        .make(Channel.unbounded[F, PeerAddress])(_.close.void)
         .evalTap(channel => initialPeers.traverse(channel.send))
       derivedPublicHost <- publicHost.traverse {
         case "auto" => determinePublicIp[F].toResource
