@@ -1,5 +1,6 @@
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:rxdart/streams.dart';
 
 import 'blockchain_client.dart';
 
@@ -11,6 +12,6 @@ class PodCanonicalHead extends _$PodCanonicalHead {
   Stream<BlockId> build() async* {
     final client = ref.read(podBlockchainClientProvider)!;
     yield await client.canonicalHeadId;
-    yield* client.adoptions;
+    yield* RetryStream(() => client.adoptions);
   }
 }

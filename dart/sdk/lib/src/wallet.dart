@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:collection/collection.dart';
+import 'package:rxdart/streams.dart';
 
 typedef Signer = Future<Witness> Function(WitnessContext);
 
@@ -89,37 +90,37 @@ class Wallet {
     addLockAddress(lockAddress, lock, signer, isDefault: isDefault);
   }
 
-  Stream<Wallet> streamed(BlockchainClient client) async* {
-    Future<bool> update() async {
-      pendingOutputs.clear();
-      var wasUpdated = false;
-      for (final address in locks.keys) {
-        final utxos = await client.getLockAddressState(address);
-        final toRemove = <TransactionOutputReference>{};
-        for (final utxo in spendableOutputs.keys) {
-          if (!utxos.contains(utxo)) {
-            wasUpdated = true;
-            toRemove.add(utxo);
-          }
-        }
-        for (final utxo in toRemove) {
-          spendableOutputs.remove(utxo);
-        }
-        for (final utxo in utxos) {
-          if (!spendableOutputs.containsKey(utxo)) {
-            wasUpdated = true;
-            final output = await client.getTransactionOutput(utxo);
-            spendableOutputs[utxo] = output!;
-          }
+  Future<bool> update(BlockchainClient client) async {
+    pendingOutputs.clear();
+    var wasUpdated = false;
+    for (final address in locks.keys) {
+      final utxos = await client.getLockAddressState(address);
+      final toRemove = <TransactionOutputReference>{};
+      for (final utxo in spendableOutputs.keys) {
+        if (!utxos.contains(utxo)) {
+          wasUpdated = true;
+          toRemove.add(utxo);
         }
       }
-      return wasUpdated;
+      for (final utxo in toRemove) {
+        spendableOutputs.remove(utxo);
+      }
+      for (final utxo in utxos) {
+        if (!spendableOutputs.containsKey(utxo)) {
+          wasUpdated = true;
+          final output = await client.getTransactionOutput(utxo);
+          spendableOutputs[utxo] = output!;
+        }
+      }
     }
+    return wasUpdated;
+  }
 
-    await update();
+  Stream<Wallet> streamed(BlockchainClient client) async* {
+    await update(client);
     yield this;
-    await for (final _ in client.traversal) {
-      if (await update()) yield this;
+    await for (final _ in RetryStream(() => client.traversal)) {
+      if (await update(client)) yield this;
     }
   }
 
