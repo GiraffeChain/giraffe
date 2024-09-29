@@ -3,7 +3,7 @@ description: Giraffe blockchain SDK
 
 publish_to: 'none'
 
-version: 1.0.3
+version: 1.0.4
 
 environment:
   sdk: ^3.0.0

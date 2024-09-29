@@ -25,7 +25,7 @@ class PodBlockProduction extends _$PodBlockProduction {
   PodBlockProductionState build() => InactivePodBlockProductionState();
 
   void start() async {
-    final stakerData = ref.read(podStakingProvider);
+    final stakerData = await ref.read(podStakingProvider.future);
     if (stakerData == null) {
       throw Exception("Staker data not available");
     }
@@ -75,7 +75,9 @@ class PodBlockProduction extends _$PodBlockProduction {
     Future<void> Function() cancel = () => Future.value();
     final mainSub = ConcatEagerStream([
       Stream.value(canonicalHead),
-      RetryStream(() => client.adoptions).debounceTime(const Duration(milliseconds: 100)).asyncMap(client.getBlockHeaderOrRaise)
+      RetryStream(() => client.adoptions)
+          .debounceTime(const Duration(milliseconds: 100))
+          .asyncMap(client.getBlockHeaderOrRaise)
     ]).asyncMap((h) async {
       await cancel();
       final sub = blockProducer

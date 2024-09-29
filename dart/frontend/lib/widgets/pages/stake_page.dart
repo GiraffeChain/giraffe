@@ -34,29 +34,38 @@ class StakeView extends ConsumerWidget {
     if (client == null) {
       return const Center(child: Text("Not initialized"));
     }
-    final state = ref.watch(podStakingProvider);
-    if (state != null) {
-      return RunMinting(client: client);
-    } else {
-      return FutureBuilder(
-          future: stakingIsInitialized(ref.watch(podSecureStorageProvider))
-              .then((v) async {
-            if (v) {
-              await ref.read(podStakingProvider.notifier).initMinting();
-            }
-            return v;
-          }),
-          builder: (context, snapshot) => snapshot.hasData
-              ? (snapshot.data!
-                  ? RunMinting(client: client)
-                  : const StakingNotConfigured())
-              : snapshot.hasError
-                  ? Center(child: Text("An error occurred: ${snapshot.error}"))
-                  : loading);
+    switch (ref.watch(podStakingProvider)) {
+      case AsyncLoading():
+        return const Center(child: CircularProgressIndicator());
+      case AsyncError(:final error):
+        return errorWidget(error);
+      case AsyncValue(:final value):
+        if (value != null) {
+          return RunMinting(client: client);
+        } else {
+          return FutureBuilder(
+              future: stakingIsInitialized(ref.watch(podSecureStorageProvider))
+                  .then((v) async {
+                if (v) {
+                  await ref.read(podStakingProvider.notifier).initMinting();
+                }
+                return v;
+              }),
+              builder: (context, snapshot) => snapshot.hasData
+                  ? (snapshot.data!
+                      ? RunMinting(client: client)
+                      : const StakingNotConfigured())
+                  : snapshot.hasError
+                      ? errorWidget(snapshot.error)
+                      : loading);
+        }
     }
   }
 
   Widget get loading => const Center(child: CircularProgressIndicator());
+
+  Widget errorWidget(Object? message) =>
+      Center(child: Text("An error occurred: $message"));
 }
 
 class StakingNotConfigured extends ConsumerStatefulWidget {

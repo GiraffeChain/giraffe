@@ -7,7 +7,7 @@ part of 'block_production.dart';
 // **************************************************************************
 
 String _$podBlockProductionHash() =>
-    r'6cde631f734a3c0e697297e2171b1de029a2df45';
+    r'de6cc3d1fdfd8050fefa45e138c1086ac696c490';
 
 /// See also [PodBlockProduction].
 @ProviderFor(PodBlockProduction)

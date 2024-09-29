@@ -6,7 +6,7 @@ part of 'canonical_head.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$podCanonicalHeadHash() => r'6ffe2e3e798ca202ea901ec548cb47e8c7a4c7a4';
+String _$podCanonicalHeadHash() => r'3edbdf419d59b313d05a0815d5e40fa5434fe221';
 
 /// See also [PodCanonicalHead].
 @ProviderFor(PodCanonicalHead)
