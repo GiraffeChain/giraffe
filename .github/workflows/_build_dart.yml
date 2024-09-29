@@ -47,6 +47,7 @@ jobs:
         with:
           name: cli-staker
           path: "dart/frontend/build/bin/staker"
+          if-no-files-found: error
 
       - name: Frontend Build Web
         working-directory: ./dart/frontend
@@ -57,6 +58,7 @@ jobs:
         with:
           name: web-frontend-dist
           path: "dart/frontend/build/web"
+          if-no-files-found: error
         
       - name: Frontend Build Android
         working-directory: ./dart/frontend
@@ -67,18 +69,21 @@ jobs:
         with:
           name: android-arm64-v8a-frontend-dist
           path: "dart/frontend/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
+          if-no-files-found: error
 
       - name: Upload Android Frontend (armeabi-v7a)
         uses: actions/upload-artifact@v4
         with:
           name: android-armeabi-v7a-frontend-dist
           path: "dart/frontend/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk"
+          if-no-files-found: error
 
       - name: Upload Android Frontend (x86_64)
         uses: actions/upload-artifact@v4
         with:
           name: android-x86_64-frontend-dist
           path: "dart/frontend/build/app/outputs/flutter-apk/app-x86_64-release.apk"
+          if-no-files-found: error
         
       - name: Frontend Build Linux
         working-directory: ./dart/frontend
@@ -88,4 +93,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-deb-frontend-dist
-          path: "dart/frontend/build/linux/x64/release/debian/giraffe_1.0.0_amd64.deb"
+          path: "dart/frontend/build/linux/x64/release/debian/giraffe_*_amd64.deb"
+          if-no-files-found: error

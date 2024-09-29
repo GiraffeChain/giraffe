@@ -54,7 +54,7 @@ jobs:
             android-arm64-v8a/app-arm64-v8a-release.apk
             android-armeabi-v7a/app-armeabi-v7a-release.apk
             android-x86_64/app-x86_64-release.apk
-            linux-deb/giraffe_1.0.0_amd64.deb
+            linux-deb/giraffe_*_amd64.deb
 
   publish-docker-images:
     uses: ./.github/workflows/_docker_publish.yml
