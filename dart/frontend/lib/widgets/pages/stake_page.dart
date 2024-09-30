@@ -292,7 +292,7 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
               value: desiredStake.toDouble(),
               min: minimumRegistrationQuantity.toDouble(), // TODO
               max: (liquid + initialStake).toDouble(),
-              divisions: 69,
+              divisions: 100,
               onChanged: (value) {
                 setState(() {
                   desiredStake = value;
