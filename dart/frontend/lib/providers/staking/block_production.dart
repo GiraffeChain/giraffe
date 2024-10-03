@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:flutter_background/flutter_background.dart';
+
 import '../../blockchain/consensus/eta_calculation.dart';
 import '../../blockchain/consensus/staker_tracker.dart';
 import '../../blockchain/ledger/block_packer.dart';
@@ -71,7 +75,9 @@ class PodBlockProduction extends _$PodBlockProduction {
       BlockPackerForStakerSupportRpc(client: client),
       rewardAddress,
     );
-
+    if (Platform.isAndroid) {
+      await FlutterBackground.enableBackgroundExecution();
+    }
     Future<void> Function() cancel = () => Future.value();
     final mainSub = ConcatEagerStream([
       Stream.value(canonicalHead),
@@ -95,6 +101,9 @@ class PodBlockProduction extends _$PodBlockProduction {
     }).listen(null);
 
     Future<void> c() async {
+      if (Platform.isAndroid) {
+        await FlutterBackground.disableBackgroundExecution();
+      }
       await cancel();
       await mainSub.cancel();
     }

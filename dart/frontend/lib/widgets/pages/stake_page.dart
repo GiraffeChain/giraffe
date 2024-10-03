@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter_background/flutter_background.dart';
 import 'package:giraffe_frontend/blockchain/minting/models/staker_data.dart';
 import 'package:giraffe_frontend/providers/wallet.dart';
 import 'package:giraffe_frontend/utils.dart';
@@ -135,7 +138,7 @@ class ImportStakerState extends State<ImportStaker> {
         Row(
           children: [
             SizedBox(
-              width: 250,
+              width: 150,
               child: TextFormField(
                   obscureText: true,
                   enableSuggestions: false,
@@ -163,29 +166,34 @@ class ImportStakerState extends State<ImportStaker> {
   }
 }
 
-class RunMinting extends ConsumerWidget {
+class RunMinting extends ConsumerStatefulWidget {
   final BlockchainClient client;
 
   const RunMinting({super.key, required this.client});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConsumerStatefulWidget> createState() => RunMintingState();
+}
+
+class RunMintingState extends ConsumerState<RunMinting> {
+  @override
+  Widget build(BuildContext context) {
     final production = ref.watch(podBlockProductionProvider);
     if (production is ActivePodBlockProductionState) {
       final stop = production.stop;
       if (stop == null) {
-        return inactive(context, ref);
+        return inactive(context);
       } else {
         // TODO: code smell: not using local "stop" variable
-        return active(context, ref,
+        return active(context,
             () => ref.read(podBlockProductionProvider.notifier).stop());
       }
     } else {
-      return inactive(context, ref);
+      return inactive(context);
     }
   }
 
-  Widget active(BuildContext context, WidgetRef ref, Function() stop) => Column(
+  Widget active(BuildContext context, Function() stop) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text("Staking is active.",
@@ -208,7 +216,7 @@ class RunMinting extends ConsumerWidget {
             ).pad8,
           ),
           const Divider(),
-          editStakeSlider(ref),
+          editStakeSlider(),
           TextButton.icon(
             onPressed: stop,
             label: const Text("Stop"),
@@ -217,7 +225,7 @@ class RunMinting extends ConsumerWidget {
         ],
       );
 
-  Widget inactive(BuildContext context, WidgetRef ref) => Column(
+  Widget inactive(BuildContext context) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text("Staking is inactive.",
@@ -229,13 +237,8 @@ class RunMinting extends ConsumerWidget {
             textAlign: TextAlign.center,
           ).pad8,
           const Divider(),
-          editStakeSlider(ref),
-          TextButton.icon(
-                  onPressed: () =>
-                      ref.read(podBlockProductionProvider.notifier).start(),
-                  label: const Text("Start"),
-                  icon: const Icon(Icons.play_arrow))
-              .pad8,
+          editStakeSlider(),
+          startButton(context).pad8,
           TextButton.icon(
             onPressed: () => ref.read(podStakingProvider.notifier).reset(),
             label: const Text("Delete Staker"),
@@ -244,7 +247,31 @@ class RunMinting extends ConsumerWidget {
         ],
       );
 
-  Widget editStakeSlider(WidgetRef ref) => FutureBuilder(
+  Widget startButton(BuildContext context) => FutureBuilder(
+      future: _checkBackgroundServicePermissions(),
+      builder: (context, snapshot) {
+        if (snapshot.data ?? false) {
+          return TextButton.icon(
+            onPressed: () async {
+              await FlutterBackground.initialize(
+                  androidConfig: _flutterBackgroundServiceConfig);
+              ref.read(podBlockProductionProvider.notifier).start();
+            },
+            label: const Text("Start"),
+            icon: const Icon(Icons.play_arrow),
+          );
+        } else {
+          return TextButton.icon(
+            onPressed: () {
+              setState(() {});
+            },
+            label: const Text("Request Permissions"),
+            icon: const Icon(Icons.lock),
+          );
+        }
+      });
+
+  Widget editStakeSlider() => FutureBuilder(
       future: ref.watch(podWalletProvider.future),
       builder: (context, snapshot) => snapshot.hasData
           ? EditStakeSlider(wallet: snapshot.data!)
@@ -282,6 +309,10 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
       return const Center(child: CircularProgressIndicator());
     }
     final liquid = widget.wallet.liquidFunds;
+    final maxStakeable = liquid + initialStake;
+    if (maxStakeable < minimumRegistrationQuantity) {
+      return insufficientFunds;
+    }
     return Column(
       children: [
         Text("Staked Funds: $initialStake"),
@@ -349,9 +380,32 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
       label: const Text("Save"),
     );
   }
+
+  Widget get insufficientFunds => Column(
+        children: [
+          const Text("Insufficient funds"),
+          Text(
+              "You need at least ${minimumRegistrationQuantity.toString()} liquid funds to modify stake."),
+        ],
+      );
 }
 
 Future<bool> stakingIsInitialized(FlutterSecureStorage storage) async =>
     await storage.containsKey(key: "blockchain-staker-vrf-sk") &&
     await storage.containsKey(key: "blockchain-staker-account") &&
     await storage.containsKey(key: "blockchain-staker-operator-sk");
+
+Future<bool> _checkBackgroundServicePermissions() async {
+  if (Platform.isAndroid) {
+    return await FlutterBackground.hasPermissions;
+  }
+  return true;
+}
+
+final _flutterBackgroundServiceConfig = FlutterBackgroundAndroidConfig(
+  notificationTitle: "Giraffe Staking",
+  notificationText: "You are making blocks on Giraffe Chain.",
+  notificationImportance: AndroidNotificationImportance.normal,
+  notificationIcon:
+      AndroidResource(name: 'ic_launcher.png', defType: 'drawable'),
+);
