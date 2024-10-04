@@ -178,6 +178,7 @@ class PeerBlockchainInterfaceImpl[F[_]: Async: Logger](
     ).parJoinUnbounded
 
   private def processRequest(port: Int, data: Bytes) =
+    // TODO: Should these semantically block? Or just return immediately?
     port match {
       case MultiplexerIds.BlockIdAtHeightRequest =>
         allPortQueues.blockIdAtHeight.processRequest(data)

@@ -68,7 +68,7 @@ extension BigIntOps on BigInt {
 
 extension Int32Ops on Int32 {
   BigInt get toBigInt => BigInt.from(this.toInt());
-  List<int> toBytesBigEndian() {
+  Uint8List toBytesBigEndian() {
     Int32 value = this;
     final res = Uint8List(4);
     for (int i = 3; i >= 0; i--) {
@@ -81,7 +81,7 @@ extension Int32Ops on Int32 {
 
 extension Int64Ops on Int64 {
   BigInt get toBigInt => BigInt.parse(toString());
-  List<int> toBytesBigEndian() {
+  Uint8List toBytesBigEndian() {
     Int64 value = this;
     final res = Uint8List(8);
     for (int i = 7; i >= 0; i--) {

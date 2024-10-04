@@ -59,7 +59,8 @@ class PeerBlockchainHandler[F[_]: Async: Logger: Random](
       commonAncestorHeader <- core.dataStores.headers.getOrRaise(commonAncestorId)
       remoteHeadId <- OptionT(interface.blockIdAtHeight(0))
         .getOrRaise(new IllegalArgumentException("No Canonical Head"))
-      remoteHeader <- OptionT(interface.fetchHeader(remoteHeadId))
+      remoteHeader <- OptionT(core.dataStores.headers.get(remoteHeadId))
+        .orElseF(interface.fetchHeader(remoteHeadId))
         .getOrRaise(new IllegalArgumentException("No Canonical Head"))
       _ <- sharedSync.compare(commonAncestorHeader, remoteHeader, remotePeerState.peerId)
       _ <- inSync
