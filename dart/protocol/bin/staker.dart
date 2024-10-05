@@ -1,18 +1,8 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:giraffe_protocol/protocol.dart';
 import 'package:giraffe_sdk/sdk.dart';
-import 'package:giraffe_frontend/blockchain/common/clock.dart';
-import 'package:giraffe_frontend/blockchain/common/isolate_pool.dart';
-import 'package:giraffe_frontend/blockchain/consensus/eta_calculation.dart';
-import 'package:giraffe_frontend/blockchain/consensus/leader_election_validation.dart';
-import 'package:giraffe_frontend/blockchain/consensus/staker_tracker.dart';
-import 'package:giraffe_frontend/blockchain/ledger/block_packer.dart';
-import 'package:giraffe_frontend/blockchain/minting/block_producer.dart';
-import 'package:giraffe_frontend/blockchain/minting/models/staker_data.dart';
-import 'package:giraffe_frontend/blockchain/minting/staking.dart';
-import 'package:giraffe_frontend/blockchain/minting/vrf_calculator.dart';
-import 'package:giraffe_frontend/blockchain/private_testnet.dart';
 import 'package:logging/logging.dart';
 import 'package:rxdart/transformers.dart';
 
@@ -106,7 +96,10 @@ void main(List<String> args) async {
   }
 
   handle(canonicalHead);
-  await client.adoptions.debounceTime(Duration(milliseconds: 200)).asyncMap(client.getBlockHeaderOrRaise).forEach(handle);
+  await client.adoptions
+      .debounceTime(Duration(milliseconds: 200))
+      .asyncMap(client.getBlockHeaderOrRaise)
+      .forEach(handle);
 }
 
 final log = Logger("staker");

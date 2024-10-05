@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter_background/flutter_background.dart';
-import 'package:giraffe_frontend/blockchain/minting/models/staker_data.dart';
 import 'package:giraffe_frontend/providers/wallet.dart';
 import 'package:giraffe_frontend/utils.dart';
 import 'package:giraffe_frontend/widgets/giraffe_scaffold.dart';
+import 'package:giraffe_protocol/protocol.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../../providers/staking/block_production.dart';
@@ -253,8 +253,10 @@ class RunMintingState extends ConsumerState<RunMinting> {
         if (snapshot.data ?? false) {
           return TextButton.icon(
             onPressed: () async {
-              await FlutterBackground.initialize(
-                  androidConfig: _flutterBackgroundServiceConfig);
+              if (Platform.isAndroid) {
+                await FlutterBackground.initialize(
+                    androidConfig: _flutterBackgroundServiceConfig);
+              }
               ref.read(podBlockProductionProvider.notifier).start();
             },
             label: const Text("Start"),
@@ -310,7 +312,8 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
     }
     final liquid = widget.wallet.liquidFunds;
     final maxStakeable = liquid + initialStake;
-    if (maxStakeable < minimumRegistrationQuantity) {
+    if (maxStakeable < minimumRegistrationQuantity ||
+        Int64(desiredStake.round()) < minimumRegistrationQuantity) {
       return insufficientFunds;
     }
     return Column(

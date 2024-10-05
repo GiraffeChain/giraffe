@@ -1,6 +1,6 @@
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:giraffe_frontend/blockchain/minting/models/staker_data.dart';
+import 'minting/models/staker_data.dart';
 import 'package:hashlib/hashlib.dart';
 
 class StakingAccount {

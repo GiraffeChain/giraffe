@@ -1,10 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_background/flutter_background.dart';
+import 'package:giraffe_protocol/protocol.dart';
 
-import '../../blockchain/consensus/eta_calculation.dart';
-import '../../blockchain/consensus/staker_tracker.dart';
-import '../../blockchain/ledger/block_packer.dart';
 import '../../providers/staking/staking.dart';
 import '../../providers/wallet.dart';
 import 'package:giraffe_sdk/sdk.dart';
@@ -13,11 +11,6 @@ import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rxdart/rxdart.dart';
 
-import '../../blockchain/common/clock.dart';
-import '../../blockchain/consensus/leader_election_validation.dart';
-import '../../blockchain/minting/block_producer.dart';
-import '../../blockchain/minting/staking.dart';
-import '../../blockchain/minting/vrf_calculator.dart';
 import '../blockchain_client.dart';
 
 part 'block_production.freezed.dart';

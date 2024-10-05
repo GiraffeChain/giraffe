@@ -5,8 +5,8 @@ import 'dart:typed_data';
 import 'package:async/async.dart';
 import 'package:async_queue/async_queue.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:giraffe_frontend/blockchain/p2p/codecs.dart' as p2p_codecs;
-import 'package:giraffe_frontend/blockchain/p2p/utils.dart';
+import 'codecs.dart' as p2p_codecs;
+import 'utils.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:mutex/mutex.dart';
 

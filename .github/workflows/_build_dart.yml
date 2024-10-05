@@ -34,19 +34,23 @@ jobs:
         working-directory: ./dart/sdk
         run: dart pub get && dart run build_runner build --delete-conflicting-outputs && dart test && dart test --platform chrome
 
+      - name: Dart Node Compile and Test
+        working-directory: ./dart/node
+        run: dart pub get && dart run build_runner build --delete-conflicting-outputs && dart test
+
       - name: Frontend Compile and Test
         working-directory: ./dart/frontend
         run: flutter clean && flutter pub get && dart run build_runner build --delete-conflicting-outputs && flutter test && flutter test --platform chrome
 
       - name: Frontend Build CLI Staker
-        working-directory: ./dart/frontend
+        working-directory: ./dart/node
         run: mkdir -p build/bin && dart compile exe bin/staker.dart -o build/bin/staker
 
       - name: Upload CLI Staker
         uses: actions/upload-artifact@v4
         with:
           name: cli-staker
-          path: "dart/frontend/build/bin/staker"
+          path: "dart/node/build/bin/staker"
           if-no-files-found: error
 
       - name: Frontend Build Web

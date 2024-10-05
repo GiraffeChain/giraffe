@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:async/async.dart';
-import 'package:giraffe_frontend/blockchain/p2p/handshake.dart';
-import 'package:giraffe_frontend/blockchain/p2p/peer_interface.dart';
-import 'package:giraffe_frontend/blockchain/p2p/utils.dart';
+import 'handshake.dart';
+import 'peer_interface.dart';
+import 'utils.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:logging/logging.dart';
 

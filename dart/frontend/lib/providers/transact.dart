@@ -1,7 +1,7 @@
+import 'package:giraffe_protocol/protocol.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../blockchain/private_testnet.dart';
 
 part 'transact.freezed.dart';
 part 'transact.g.dart';

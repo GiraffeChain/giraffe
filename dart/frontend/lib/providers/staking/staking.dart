@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:giraffe_protocol/protocol.dart';
+
 import '../blockchain_client.dart';
 import '../storage.dart';
 import '../wallet.dart';
@@ -8,8 +10,6 @@ import 'package:giraffe_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../blockchain/minting/models/staker_data.dart';
-import '../../blockchain/staking_account.dart';
 
 part 'staking.g.dart';
 

@@ -7,9 +7,9 @@ import 'package:giraffe_frontend/widgets/clipboard_address_button.dart';
 import 'package:giraffe_frontend/widgets/giraffe_card.dart';
 import 'package:giraffe_frontend/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_frontend/widgets/pages/advanced_page.dart';
+import 'package:giraffe_protocol/protocol.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../blockchain/private_testnet.dart';
 import '../../providers/settings.dart';
 import '../../providers/storage.dart';
 import '../../providers/wallet_key.dart';

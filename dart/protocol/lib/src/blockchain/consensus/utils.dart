@@ -22,7 +22,7 @@ extension RatioOps on Rational {
       .bytes;
 }
 
-extension BlockHeaderOps on BlockHeader {
+extension BlockHeaderRhoOps on BlockHeader {
   Future<Uint8List> get rho =>
       ed25519Vrf.proofToHash(stakerCertificate.vrfSignature.decodeBase58);
 }

@@ -5,9 +5,9 @@ import 'package:giraffe_frontend/widgets/pages/social_page.dart';
 import 'package:giraffe_frontend/widgets/pages/stake_page.dart';
 import 'package:giraffe_frontend/widgets/pages/transaction_output_page.dart';
 import 'package:giraffe_frontend/widgets/pages/wallet_page.dart';
+import 'package:giraffe_protocol/protocol.dart';
 import 'package:go_router/go_router.dart';
 
-import '../blockchain/common/isolate_pool.dart';
 import 'widgets/pages/block_page.dart';
 import 'widgets/pages/blockchain_launcher_page.dart';
 import 'widgets/pages/blockchain_page.dart';
