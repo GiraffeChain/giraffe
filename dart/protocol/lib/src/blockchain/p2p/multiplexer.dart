@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:async/async.dart';
 import 'package:async_queue/async_queue.dart';
 import 'package:fixnum/fixnum.dart';
-import 'codecs.dart' as p2p_codecs;
+import 'codecs.dart';
 import 'utils.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:mutex/mutex.dart';
@@ -53,8 +53,8 @@ class MultiplexerPort<Request, Response> {
   final int port;
   final Future<Response> Function(Request) requestHandler;
   final MultiplexedReaderWriter readerWriter;
-  final p2p_codecs.P2PCodec<Request> requestCodec;
-  final p2p_codecs.P2PCodec<Response> responseCodec;
+  final P2PCodec<Request> requestCodec;
+  final P2PCodec<Response> responseCodec;
 
   final AsyncQueue _requestQueue = AsyncQueue.autoStart();
   final Queue<Completer<Response>> _responses = Queue();
@@ -150,60 +150,60 @@ class MultiplexerPorts {
         port: PortIds.peerStateRequest,
         requestHandler: (_) => currentState(),
         readerWriter: readerWriter,
-        requestCodec: p2p_codecs.voidCodec,
-        responseCodec: p2p_codecs.publicP2PStateCodec,
+        requestCodec: P2PCodecs.voidCodec,
+        responseCodec: P2PCodecs.publicP2PStateCodec,
       ),
       blockAdoptions: MultiplexerPort(
         port: PortIds.blockAdoptionRequest,
         requestHandler: (_) async => Future.delayed(
             Duration(days: 365), () async => throw UnimplementedError()),
         readerWriter: readerWriter,
-        requestCodec: p2p_codecs.voidCodec,
-        responseCodec: p2p_codecs.blockIdCodec,
+        requestCodec: P2PCodecs.voidCodec,
+        responseCodec: P2PCodecs.blockIdCodec,
       ),
       transactionAdoptions: MultiplexerPort(
         port: PortIds.transactionAdoptionRequest,
         requestHandler: (_) async => Future.delayed(
             Duration(days: 365), () async => throw UnimplementedError()),
         readerWriter: readerWriter,
-        requestCodec: p2p_codecs.voidCodec,
-        responseCodec: p2p_codecs.transactionIdCodec,
+        requestCodec: P2PCodecs.voidCodec,
+        responseCodec: P2PCodecs.transactionIdCodec,
       ),
       pingPong: MultiplexerPort(
         port: PortIds.pingRequest,
         requestHandler: (v) async => v,
         readerWriter: readerWriter,
-        requestCodec: p2p_codecs.bytesCodec,
-        responseCodec: p2p_codecs.bytesCodec,
+        requestCodec: P2PCodecs.bytesCodec,
+        responseCodec: P2PCodecs.bytesCodec,
       ),
       blockIdAtHeight: MultiplexerPort(
         port: PortIds.blockIdAtHeightRequest,
         requestHandler: (height) async =>
             height == Int64.ZERO || height == Int64.ONE ? genesisId : null,
         readerWriter: readerWriter,
-        requestCodec: p2p_codecs.heightCodec,
-        responseCodec: p2p_codecs.blockIdOptCodec,
+        requestCodec: P2PCodecs.heightCodec,
+        responseCodec: P2PCodecs.blockIdOptCodec,
       ),
       headers: MultiplexerPort(
         port: PortIds.headerRequest,
         requestHandler: (_) async => null,
         readerWriter: readerWriter,
-        requestCodec: p2p_codecs.blockIdCodec,
-        responseCodec: p2p_codecs.headerOptCodec,
+        requestCodec: P2PCodecs.blockIdCodec,
+        responseCodec: P2PCodecs.headerOptCodec,
       ),
       bodies: MultiplexerPort(
         port: PortIds.bodyRequest,
         requestHandler: (_) async => null,
         readerWriter: readerWriter,
-        requestCodec: p2p_codecs.blockIdCodec,
-        responseCodec: p2p_codecs.bodyOptCodec,
+        requestCodec: P2PCodecs.blockIdCodec,
+        responseCodec: P2PCodecs.bodyOptCodec,
       ),
       transactions: MultiplexerPort(
         port: PortIds.transactionRequest,
         requestHandler: (_) async => null,
         readerWriter: readerWriter,
-        requestCodec: p2p_codecs.transactionIdCodec,
-        responseCodec: p2p_codecs.transactionOptCodec,
+        requestCodec: P2PCodecs.transactionIdCodec,
+        responseCodec: P2PCodecs.transactionOptCodec,
       ),
     );
   }
