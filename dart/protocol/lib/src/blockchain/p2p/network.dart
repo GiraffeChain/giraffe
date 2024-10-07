@@ -1,26 +1,32 @@
 import 'dart:io';
 
 import 'package:async/async.dart';
+import 'package:rxdart/streams.dart';
 import '../blockchain.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:logging/logging.dart';
 
+import 'peer_handler.dart';
+import 'shared_sync.dart';
+
 class P2PNetwork {
-  final Map<PeerId, PeerState> _connectedPeers;
-  final Map<PeerAddress, PeerId?> _disconnectedPeers;
-  final Handshaker _handshaker;
+  final Map<PeerId, PeerState> connectedPeers;
+  final Map<PeerAddress, PeerId?> disconnectedPeers;
+  final Handshaker handshaker;
   final BlockchainCore core;
   final PeerId peerId;
+  final SharedSync sharedSync;
 
   P2PNetwork({
-    required Map<PeerId, PeerState> connectedPeers,
-    required Map<PeerAddress, PeerId?> disconnectedPeers,
-    required Handshaker handshaker,
+    required this.connectedPeers,
+    required this.disconnectedPeers,
+    required this.handshaker,
     required this.core,
     required this.peerId,
-  })  : _connectedPeers = connectedPeers,
-        _disconnectedPeers = disconnectedPeers,
-        _handshaker = handshaker;
+  }) : sharedSync = SharedSync(
+            core: core,
+            clientsF: () => Map.fromEntries(connectedPeers.entries
+                .map((e) => MapEntry(e.key, e.value.interface))));
 
   factory P2PNetwork.fromKnownPeers({
     required Handshaker handshaker,
@@ -46,38 +52,43 @@ class P2PNetwork {
       final socket = await Socket.connect(address.host, address.port);
       final reader = ChunkedStreamReader(socket);
       final peerId =
-          await _handshaker.shakeHands(reader.readBytesExact, socket.add);
+          await handshaker.shakeHands(reader.readBytesExact, socket.add);
       log.info("Connected to peerId=${peerId.show} at address=$address");
       final readerWriter =
           MultiplexedReaderWriter.forChunkedReader(reader, socket.add);
       final ports = await MultiplexerPorts.create(
           readerWriter, () async => currentState, core);
-      final portsSub =
-          ports.background(readerWriter).listen((_) {}, cancelOnError: true);
       final interface = PeerBlockchainInterfaceImpl(core: core, ports: ports);
       final peerState = PeerState(
         peerId: peerId,
         publicState: PublicP2PState(localPeer: ConnectedPeer(peerId: peerId)),
         outboundAddress: address,
         interface: interface,
-        abort: () async {
-          portsSub.cancel();
-        },
-        close: () async {
-          log.info("Closing peerId=${peerId.show}");
-          _connectedPeers.remove(peerId);
-          _disconnectedPeers[address] = peerId;
-          ports.close();
-          await reader.cancel();
-          socket.destroy();
-        },
       );
-      portsSub.onDone(() => peerState.close());
-      portsSub.onError((e, s) {
+      final handler = PeerBlockchainHandler(
+        core: core,
+        peerState: peerState,
+        sharedSync: sharedSync,
+      );
+      final sub = MergeStream([
+        ports.background(readerWriter),
+        handler.handle,
+      ]).listen((_) {}, cancelOnError: true);
+      peerState.onAbort(sub.cancel);
+      peerState.onClose(() async {
+        log.info("Closing peerId=${peerId.show}");
+        connectedPeers.remove(peerId);
+        disconnectedPeers[address] = peerId;
+        ports.close();
+        await reader.cancel();
+        socket.destroy();
+      });
+      sub.onDone(() => peerState.close());
+      sub.onError((e, s) {
         log.warning("Error in peerId=${peerId.show}", e, s);
         return peerState.close();
       });
-      _connectedPeers[peerId] = peerState;
+      connectedPeers[peerId] = peerState;
     } else {
       // No more peers to connect to
     }
@@ -85,11 +96,11 @@ class P2PNetwork {
 
   Future<void> close() async {
     await Future.wait(
-        _connectedPeers.values.toList().map((peerState) => peerState.close()));
+        connectedPeers.values.toList().map((peerState) => peerState.close()));
   }
 
   PublicP2PState get currentState {
-    final peers = _connectedPeers.values
+    final peers = connectedPeers.values
         .map((peerState) => peerState.publicState.localPeer)
         .toList();
     return PublicP2PState(
@@ -108,21 +119,21 @@ class P2PNetwork {
   }
 
   PeerAddress? _selectNext() {
-    if (_disconnectedPeers.isNotEmpty) {
-      final peerAddress = _disconnectedPeers.keys.first;
-      final peerIdOpt = _disconnectedPeers[peerAddress];
-      _disconnectedPeers.remove(peerAddress);
-      if (peerIdOpt != null && _connectedPeers.containsKey(peerIdOpt)) {
+    if (disconnectedPeers.isNotEmpty) {
+      final peerAddress = disconnectedPeers.keys.first;
+      final peerIdOpt = disconnectedPeers[peerAddress];
+      disconnectedPeers.remove(peerAddress);
+      if (peerIdOpt != null && connectedPeers.containsKey(peerIdOpt)) {
         return _selectNext();
       }
       return peerAddress;
-    } else if (_connectedPeers.isNotEmpty) {
-      final shuffledConnectedPeerIds = _connectedPeers.keys.toList()..shuffle();
+    } else if (connectedPeers.isNotEmpty) {
+      final shuffledConnectedPeerIds = connectedPeers.keys.toList()..shuffle();
       for (final peerId in shuffledConnectedPeerIds) {
-        final peerState = _connectedPeers[peerId]!;
+        final peerState = connectedPeers[peerId]!;
         final shuffledPeers = peerState.publicState.peers.toList()..shuffle();
         for (final peer in shuffledPeers) {
-          if (!_connectedPeers.containsKey(peer.peerId)) {
+          if (!connectedPeers.containsKey(peer.peerId)) {
             if (peer.hasHost() && peer.hasPort()) {
               return PeerAddress(host: peer.host.value, port: peer.port.value);
             }
@@ -141,17 +152,35 @@ class PeerState {
   PublicP2PState publicState;
   final PeerAddress? outboundAddress;
   final PeerBlockchainInterface interface;
-  final Future<void> Function() abort;
-  final Future<void> Function() close;
+  final List<Future<void> Function()> _abort = [];
+  final List<Future<void> Function()> _close = [];
 
   PeerState({
     required this.peerId,
     required this.publicState,
     required this.outboundAddress,
     required this.interface,
-    required this.abort,
-    required this.close,
   });
+
+  void onAbort(Future<void> Function() f) {
+    _abort.add(f);
+  }
+
+  void onClose(Future<void> Function() f) {
+    _close.add(f);
+  }
+
+  Future<void> abort() async {
+    for (final f in _abort) {
+      await f();
+    }
+  }
+
+  Future<void> close() async {
+    for (final f in _close) {
+      await f();
+    }
+  }
 }
 
 class PeerAddress {

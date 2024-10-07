@@ -17,6 +17,12 @@ abstract class PeerBlockchainInterface {
   Future<BlockId?> blockIdAtHeight(Int64 height);
   Future<Uint8List> ping(Uint8List message);
   Future<BlockId> commonAncestor();
+
+  Future<BlockHeader?> fetchHeaderAtHeight(Int64 height) async {
+    final blockId = await blockIdAtHeight(height);
+    if (blockId == null) return null;
+    return fetchHeader(blockId);
+  }
 }
 
 class PeerBlockchainInterfaceImpl extends PeerBlockchainInterface {
@@ -126,4 +132,56 @@ Future<T?> narySearch<T>(
   }
 
   return f(min, max, null);
+}
+
+class SortedPeerInterface extends PeerBlockchainInterface {
+  final Map<PeerBlockchainInterface, int> scores;
+  SortedPeerInterface(Iterable<PeerBlockchainInterface> interfaces)
+      : scores = {for (final i in interfaces) i: 0};
+
+  Future<T> useNextInterface<T>(
+      Future<T> Function(PeerBlockchainInterface) f) async {
+    final interface =
+        scores.entries.reduce((a, b) => a.value < b.value ? a : b).key;
+    scores[interface] = scores[interface]! + 1;
+    final r = await f(interface);
+    scores[interface] = scores[interface]! - 1;
+    return r;
+  }
+
+  @override
+  Future<BlockId?> blockIdAtHeight(Int64 height) =>
+      useNextInterface((interface) => interface.blockIdAtHeight(height));
+
+  @override
+  Future<BlockId> commonAncestor() =>
+      Future.error(UnsupportedError('commonAncestor'));
+
+  @override
+  Future<BlockBody?> fetchBody(BlockId id) =>
+      useNextInterface((interface) => interface.fetchBody(id));
+
+  @override
+  Future<BlockHeader?> fetchHeader(BlockId id) =>
+      useNextInterface((interface) => interface.fetchHeader(id));
+
+  @override
+  Future<Transaction?> fetchTransaction(TransactionId id) =>
+      useNextInterface((interface) => interface.fetchTransaction(id));
+
+  @override
+  Future<BlockId> nextBlockAdoption() =>
+      Future.error(UnsupportedError('nextBlockAdoption'));
+
+  @override
+  Future<TransactionId> nextTransactionNotification() =>
+      Future.error(UnsupportedError('nextTransactionNotification'));
+
+  @override
+  Future<Uint8List> ping(Uint8List message) =>
+      Future.error(UnsupportedError('ping'));
+
+  @override
+  Future<PublicP2PState> publicState() =>
+      Future.error(UnsupportedError('publicState'));
 }
