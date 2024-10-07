@@ -35,7 +35,10 @@ object BlockLoading:
         _.header.id == blockId
       )
       .map(_.update(_.fullBody.update(_.transactions.foreach(_.modify(_.withEmbeddedId)))))
-      .flatTap(fullBlock => 
-        Async[F].delay(Block(fullBlock.header, BlockBody(fullBlock.fullBody.transactions.map(_.id))))
-          .flatMap(txRootValidation.validate(_).leftMap(errors => new IllegalArgumentException(errors.toString)).rethrowT)
+      .flatTap(fullBlock =>
+        Async[F]
+          .delay(Block(fullBlock.header, BlockBody(fullBlock.fullBody.transactions.map(_.id))))
+          .flatMap(
+            txRootValidation.validate(_).leftMap(errors => new IllegalArgumentException(errors.toString)).rethrowT
+          )
       )
