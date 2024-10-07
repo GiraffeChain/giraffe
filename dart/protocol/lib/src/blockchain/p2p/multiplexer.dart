@@ -5,8 +5,7 @@ import 'dart:typed_data';
 import 'package:async/async.dart';
 import 'package:async_queue/async_queue.dart';
 import 'package:fixnum/fixnum.dart';
-import 'codecs.dart';
-import 'utils.dart';
+import '../blockchain.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:mutex/mutex.dart';
 
@@ -143,8 +142,10 @@ class MultiplexerPorts {
     };
   }
 
-  static Future<MultiplexerPorts> create(MultiplexedReaderWriter readerWriter,
-      Future<PublicP2PState> Function() currentState, BlockId genesisId) async {
+  static Future<MultiplexerPorts> create(
+      MultiplexedReaderWriter readerWriter,
+      Future<PublicP2PState> Function() currentState,
+      BlockchainCore core) async {
     return MultiplexerPorts(
       p2pState: MultiplexerPort(
         port: PortIds.peerStateRequest,
@@ -155,8 +156,7 @@ class MultiplexerPorts {
       ),
       blockAdoptions: MultiplexerPort(
         port: PortIds.blockAdoptionRequest,
-        requestHandler: (_) async => Future.delayed(
-            Duration(days: 365), () async => throw UnimplementedError()),
+        requestHandler: (_) => core.consensus.localChain.adoptions.first,
         readerWriter: readerWriter,
         requestCodec: P2PCodecs.voidCodec,
         responseCodec: P2PCodecs.blockIdCodec,
@@ -178,29 +178,28 @@ class MultiplexerPorts {
       ),
       blockIdAtHeight: MultiplexerPort(
         port: PortIds.blockIdAtHeightRequest,
-        requestHandler: (height) async =>
-            height == Int64.ZERO || height == Int64.ONE ? genesisId : null,
+        requestHandler: core.consensus.localChain.blockIdAtHeight,
         readerWriter: readerWriter,
         requestCodec: P2PCodecs.heightCodec,
         responseCodec: P2PCodecs.blockIdOptCodec,
       ),
       headers: MultiplexerPort(
         port: PortIds.headerRequest,
-        requestHandler: (_) async => null,
+        requestHandler: core.dataStores.headers.get,
         readerWriter: readerWriter,
         requestCodec: P2PCodecs.blockIdCodec,
         responseCodec: P2PCodecs.headerOptCodec,
       ),
       bodies: MultiplexerPort(
         port: PortIds.bodyRequest,
-        requestHandler: (_) async => null,
+        requestHandler: core.dataStores.bodies.get,
         readerWriter: readerWriter,
         requestCodec: P2PCodecs.blockIdCodec,
         responseCodec: P2PCodecs.bodyOptCodec,
       ),
       transactions: MultiplexerPort(
         port: PortIds.transactionRequest,
-        requestHandler: (_) async => null,
+        requestHandler: core.dataStores.transactions.get,
         readerWriter: readerWriter,
         requestCodec: P2PCodecs.transactionIdCodec,
         responseCodec: P2PCodecs.transactionOptCodec,

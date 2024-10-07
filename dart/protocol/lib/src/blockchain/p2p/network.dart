@@ -1,26 +1,22 @@
 import 'dart:io';
 
 import 'package:async/async.dart';
-import 'handshake.dart';
-import 'peer_interface.dart';
-import 'utils.dart';
+import '../blockchain.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:logging/logging.dart';
-
-import 'multiplexer.dart';
 
 class P2PNetwork {
   final Map<PeerId, PeerState> _connectedPeers;
   final Map<PeerAddress, PeerId?> _disconnectedPeers;
   final Handshaker _handshaker;
-  final BlockId genesisId;
+  final BlockchainCore core;
   final PeerId peerId;
 
   P2PNetwork({
     required Map<PeerId, PeerState> connectedPeers,
     required Map<PeerAddress, PeerId?> disconnectedPeers,
     required Handshaker handshaker,
-    required this.genesisId,
+    required this.core,
     required this.peerId,
   })  : _connectedPeers = connectedPeers,
         _disconnectedPeers = disconnectedPeers,
@@ -29,7 +25,7 @@ class P2PNetwork {
   factory P2PNetwork.fromKnownPeers({
     required Handshaker handshaker,
     required List<PeerAddress> knownPeers,
-    required BlockId genesisId,
+    required BlockchainCore core,
     required PeerId peerId,
   }) {
     final disconnectedPeers = knownPeers
@@ -38,7 +34,7 @@ class P2PNetwork {
       connectedPeers: {},
       disconnectedPeers: disconnectedPeers,
       handshaker: handshaker,
-      genesisId: genesisId,
+      core: core,
       peerId: peerId,
     );
   }
@@ -55,10 +51,10 @@ class P2PNetwork {
       final readerWriter =
           MultiplexedReaderWriter.forChunkedReader(reader, socket.add);
       final ports = await MultiplexerPorts.create(
-          readerWriter, () async => currentState, genesisId);
+          readerWriter, () async => currentState, core);
       final portsSub =
           ports.background(readerWriter).listen((_) {}, cancelOnError: true);
-      final interface = PeerBlockchainInterfaceImpl(ports: ports);
+      final interface = PeerBlockchainInterfaceImpl(core: core, ports: ports);
       final peerState = PeerState(
         peerId: peerId,
         publicState: PublicP2PState(localPeer: ConnectedPeer(peerId: peerId)),
@@ -87,11 +83,9 @@ class P2PNetwork {
     }
   }
 
-  close() async {
-    for (final id in _connectedPeers.keys.toList()) {
-      final peerState = _connectedPeers[id]!;
-      await peerState.close();
-    }
+  Future<void> close() async {
+    await Future.wait(
+        _connectedPeers.values.toList().map((peerState) => peerState.close()));
   }
 
   PublicP2PState get currentState {
@@ -106,8 +100,10 @@ class P2PNetwork {
     while (true) {
       yield null;
       await connectNext();
-      yield null;
-      await Future.delayed(const Duration(seconds: 15));
+      await for (final _
+          in Stream.periodic(const Duration(seconds: 1)).take(15)) {
+        yield null;
+      }
     }
   }
 
@@ -145,8 +141,8 @@ class PeerState {
   PublicP2PState publicState;
   final PeerAddress? outboundAddress;
   final PeerBlockchainInterface interface;
-  final Function() abort;
-  final Function() close;
+  final Future<void> Function() abort;
+  final Future<void> Function() close;
 
   PeerState({
     required this.peerId,

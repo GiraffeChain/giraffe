@@ -1,5 +1,8 @@
 import 'package:fixnum/fixnum.dart';
+import 'codecs.dart';
 import 'package:giraffe_sdk/sdk.dart';
+
+import 'genesis.dart';
 
 abstract class Store<Key, Value> {
   Future<Value?> get(Key key);
@@ -41,6 +44,26 @@ class DataStores {
       transactions: InMemoryDataStore(),
       blockHeightIndex: InMemoryDataStore(),
     );
+  }
+
+  Future<void> init(FullBlock genesis) async {
+    if (await currentEventIds
+        .contains(EventIdGetterSetters.canonicalHeadByte)) {
+      return;
+    }
+    await currentEventIds.put(
+        EventIdGetterSetters.canonicalHeadByte, genesis.header.id);
+    await currentEventIds.put(
+        EventIdGetterSetters.blockHeightTreeByte, Genesis.parentId);
+    await headers.put(genesis.header.id, genesis.header);
+    final body = BlockBody(
+        transactionIds: genesis.fullBody.transactions.map((t) => t.id));
+    await bodies.put(genesis.header.id, body);
+    await Future.wait(
+        genesis.fullBody.transactions.map((t) => transactions.put(t.id, t)));
+    await blockHeightIndex.put(Int64.ZERO, Genesis.parentId);
+    await blockIdTree
+        .put(genesis.header.id, (genesis.header.height, Genesis.parentId));
   }
 }
 

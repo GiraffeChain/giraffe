@@ -36,12 +36,18 @@ class Consensus {
         dataStores.headers.getOrRaise);
     final localChain = LocalChainImpl(
         genesis: genesis.header.id,
-        head: genesis.header.id,
+        head: await getterSetters.canonicalHead.get(),
         fetchHeader: dataStores.headers.getOrRaise,
-        blockHeightsBSS: blockHeightsBSS);
+        fetchBody: dataStores.bodies.getOrRaise,
+        blockHeightsBSS: blockHeightsBSS,
+        onAdopted: getterSetters.canonicalHead.set);
     final chainSelection = ChainSelectionImpl(
         kLookback: protocolSettings.chainSelectionKLookback,
         sWindow: protocolSettings.chainSelectionSWindow);
     return Consensus(localChain: localChain, chainSelection: chainSelection);
+  }
+
+  Future<void> close() async {
+    await localChain.close();
   }
 }

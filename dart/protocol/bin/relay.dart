@@ -18,8 +18,11 @@ void main(List<String> args) async {
   setComputeFunction(computePool.isolate);
   final parsedArgs = argParser.parse(args);
   final rawPeers = parsedArgs.multiOption("peer");
-  final rawGenesisId = parsedArgs.option("genesis")!;
-  final genesisId = decodeBlockId(rawGenesisId);
+  final genesisBytes =
+      (await httpClient.get(Uri.parse(parsedArgs.option("genesis")!)))
+          .bodyBytes;
+  final genesis = FullBlock.fromBuffer(genesisBytes);
+  final core = await BlockchainCore.make(genesis);
   assert(rawPeers.isNotEmpty, "Must specify at least one peer");
   final peers = rawPeers.map(PeerAddress.parse).toList();
   final keyPair = await ed25519.generateKeyPair();
@@ -28,9 +31,15 @@ void main(List<String> args) async {
   final network = P2PNetwork.fromKnownPeers(
       knownPeers: peers,
       handshaker: handshaker,
-      genesisId: genesisId,
+      core: core,
       peerId: PeerId(value: Base58Encode(keyPair.vk)));
-  network.background().listen((_) {}, cancelOnError: true);
+  final sub = network.background().listen((_) {}, cancelOnError: true);
+
+  await ProcessSignal.sigint.watch().first;
+
+  await sub.cancel();
+  await network.close();
+  await core.close();
 }
 
 final log = Logger("relay");

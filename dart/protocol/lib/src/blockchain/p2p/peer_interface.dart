@@ -2,7 +2,9 @@ import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:giraffe_sdk/sdk.dart';
+import 'package:rational/rational.dart';
 
+import '../blockchain_core.dart';
 import 'multiplexer.dart';
 
 abstract class PeerBlockchainInterface {
@@ -18,17 +20,38 @@ abstract class PeerBlockchainInterface {
 }
 
 class PeerBlockchainInterfaceImpl extends PeerBlockchainInterface {
+  final BlockchainCore core;
   final MultiplexerPorts ports;
 
-  PeerBlockchainInterfaceImpl({required this.ports});
+  PeerBlockchainInterfaceImpl({required this.core, required this.ports});
 
   @override
   Future<BlockId?> blockIdAtHeight(Int64 height) =>
       ports.blockIdAtHeight.request(height).timeout(defaultReadTimeout);
 
   @override
-  Future<BlockId> commonAncestor() {
-    throw UnimplementedError();
+  Future<BlockId> commonAncestor() async {
+    final localHeadId = core.consensus.localChain.head;
+    final localHeader = await core.dataStores.headers.getOrRaise(localHeadId);
+    Future<BlockId> getLocalBlockIdAtHeight(Int64 height) async {
+      final blockId = await core.consensus.localChain.blockIdAtHeight(height);
+      if (blockId == null) {
+        throw Exception('BlockId not found at height=$height');
+      }
+      return blockId;
+    }
+
+    final r1 = await quickSearch(getLocalBlockIdAtHeight, blockIdAtHeight,
+            Int64(5), localHeader.height)
+        .timeout(const Duration(seconds: 30));
+    if (r1 != null) return r1;
+    final r2 = await narySearch(getLocalBlockIdAtHeight, blockIdAtHeight,
+            Rational.fromInt(2, 3), Int64(1), localHeader.height)
+        .timeout(const Duration(seconds: 30));
+    if (r2 == null) {
+      throw StateError('Common ancestor not found');
+    }
+    return r2;
   }
 
   @override
@@ -60,3 +83,47 @@ class PeerBlockchainInterfaceImpl extends PeerBlockchainInterface {
 }
 
 const defaultReadTimeout = Duration(seconds: 5);
+
+Future<T?> quickSearch<T>(Future<T> Function(Int64) getLocal,
+    Future<T?> Function(Int64) getRemote, Int64 count, Int64 max) async {
+  T local = await getLocal(max);
+  T? remote = await getRemote(max);
+  while (local != remote && max - count >= Int64.ZERO) {
+    max--;
+    count--;
+    local = await getLocal(max);
+    remote = await getRemote(max);
+  }
+  if (local == remote) return remote;
+  return null;
+}
+
+Future<T?> narySearch<T>(
+    Future<T> Function(Int64) getLocal,
+    Future<T?> Function(Int64) getRemote,
+    Rational searchSpaceTarget,
+    Int64 min,
+    Int64 max) async {
+  Future<T?> f(Int64 max, Int64 min, T? ifNull) async {
+    if (min == max) {
+      final localValue = await getLocal(min);
+      final remoteValue = await getRemote(min);
+      if (localValue == remoteValue) {
+        return remoteValue;
+      } else {
+        return ifNull;
+      }
+    } else {
+      final targetHeight = (min + (max - min) * searchSpaceTarget.floor());
+      final localValue = await getLocal(targetHeight);
+      final remoteValue = await getRemote(targetHeight);
+      if (remoteValue == localValue) {
+        return f(targetHeight + 1, max, remoteValue);
+      } else {
+        return f(min, targetHeight, null);
+      }
+    }
+  }
+
+  return f(min, max, null);
+}
