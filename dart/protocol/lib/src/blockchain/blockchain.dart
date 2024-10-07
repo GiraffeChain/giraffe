@@ -28,4 +28,23 @@ class BlockchainCore {
     required this.blockIdTree,
     required this.consensus,
   });
+
+  static Future<BlockchainCore> make(FullBlock genesis) async {
+    final protocolSettings =
+        ProtocolSettings.defaultSettings.mergeFromMap(genesis.header.settings);
+    final clock = ClockImpl(protocolSettings.slotDuration,
+        protocolSettings.epochLength, genesis.header.timestamp);
+    final dataStores = DataStores.make();
+    final blockIdTree = BlockIdTreeImpl(
+        read: dataStores.blockIdTree.get, write: dataStores.blockIdTree.put);
+    final getterSetters = EventIdGetterSetters.make(dataStores.currentEventIds);
+    final consensus = await Consensus.make(genesis, clock, dataStores,
+        blockIdTree, protocolSettings, getterSetters);
+    return BlockchainCore(
+        protocolSettings: protocolSettings,
+        clock: clock,
+        dataStores: dataStores,
+        blockIdTree: blockIdTree,
+        consensus: consensus);
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:giraffe_sdk/sdk.dart';
 
+import 'genesis.dart';
+
 abstract class BlockIdTree {
   Future<BlockId?> parentOf(BlockId blockId);
   Future<void> associate(BlockId child, BlockId parent);
@@ -12,10 +14,8 @@ abstract class BlockIdTree {
 class BlockIdTreeImpl extends BlockIdTree {
   final Future<(Int64, BlockId)?> Function(BlockId) read;
   final Future<void> Function(BlockId, (Int64, BlockId)) write;
-  final BlockId genesisParent;
 
-  BlockIdTreeImpl(
-      {required this.read, required this.write, required this.genesisParent});
+  BlockIdTreeImpl({required this.read, required this.write});
 
   Future<(Int64, BlockId)> _readOrRaise(BlockId id) {
     return read(id).then((value) {
@@ -28,7 +28,7 @@ class BlockIdTreeImpl extends BlockIdTree {
 
   @override
   Future<void> associate(BlockId child, BlockId parent) async {
-    if (parent == genesisParent) {
+    if (parent == Genesis.parentId) {
       await write(child, (Int64(1), parent));
     } else {
       final (parentHeight, _) = await _readOrRaise(parent);
@@ -65,7 +65,7 @@ class BlockIdTreeImpl extends BlockIdTree {
 
   @override
   Future<Int64> heightOf(BlockId blockId) async {
-    if (blockId == genesisParent) {
+    if (blockId == Genesis.parentId) {
       return Int64(0);
     } else {
       final (height, _) = await _readOrRaise(blockId);
@@ -75,7 +75,7 @@ class BlockIdTreeImpl extends BlockIdTree {
 
   @override
   Future<BlockId?> parentOf(BlockId blockId) async {
-    if (blockId == genesisParent) {
+    if (blockId == Genesis.parentId) {
       return null;
     } else {
       final (_, parent) = await _readOrRaise(blockId);

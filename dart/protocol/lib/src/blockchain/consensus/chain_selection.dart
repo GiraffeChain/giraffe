@@ -26,8 +26,8 @@ enum ChainSelectionOutcome {
 }
 
 class ChainSelectionImpl extends ChainSelection {
-  final Int64 kLookback;
-  final Int64 sWindow;
+  final int kLookback;
+  final int sWindow;
 
   ChainSelectionImpl({required this.kLookback, required this.sWindow});
 

@@ -7,12 +7,12 @@ import 'package:giraffe_sdk/sdk.dart';
 import '../store.dart';
 
 class BlockHeights {
-  static Future<BlockHeightsBSS> make(
+  static BlockHeightsBSS make(
       Store<Int64, BlockId> store,
       BlockId currentId,
       BlockIdTree blockIdTree,
       Future<void> Function(BlockId) blockIdChanged,
-      FetchHeader fetchHeader) async {
+      FetchHeader fetchHeader) {
     return BlockSourcedStateImpl(
       applyBlock: (state, id) async =>
           store.put((await fetchHeader(id)).height, id).then((_) => state),
