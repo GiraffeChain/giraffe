@@ -1,10 +1,10 @@
 package com.giraffechain.utility
 
-import com.giraffechain.codecs.given
-import com.giraffechain.ledger.HeaderToBodyValidation
-import com.giraffechain.models.{BlockId, FullBlock}
 import cats.effect.Async
 import cats.implicits.*
+import com.giraffechain.codecs.given
+import com.giraffechain.ledger.HeaderToBodyValidation
+import com.giraffechain.models.*
 import fs2.io.file.{Files, Path}
 import fs2.{Chunk, Stream}
 
@@ -33,4 +33,12 @@ object BlockLoading:
       .map(b => b.copy(header = b.header.withEmbeddedId))
       .ensure(new IllegalArgumentException("Computed header ID is not the same as requested header ID"))(
         _.header.id == blockId
+      )
+      .map(_.update(_.fullBody.update(_.transactions.foreach(_.modify(_.withEmbeddedId)))))
+      .flatTap(fullBlock =>
+        Async[F]
+          .delay(Block(fullBlock.header, BlockBody(fullBlock.fullBody.transactions.map(_.id))))
+          .flatMap(
+            txRootValidation.validate(_).leftMap(errors => new IllegalArgumentException(errors.toString)).rethrowT
+          )
       )

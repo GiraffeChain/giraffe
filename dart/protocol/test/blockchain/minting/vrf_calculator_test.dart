@@ -1,8 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:giraffe_frontend/blockchain/common/clock.dart';
-import 'package:giraffe_frontend/blockchain/consensus/leader_election_validation.dart';
-import 'package:giraffe_frontend/blockchain/minting/vrf_calculator.dart';
+import 'package:giraffe_protocol/protocol.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:convert/convert.dart';
 import 'package:test/test.dart';

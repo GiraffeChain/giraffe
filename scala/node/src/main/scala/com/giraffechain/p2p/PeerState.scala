@@ -9,6 +9,7 @@ import com.giraffechain.models.{PeerId, PublicP2PState}
 import fs2.io.net.Socket
 import org.typelevel.log4cats.Logger
 
+// TODO: DisconnectedPeerState
 case class PeerState[F[_]](
     peerId: PeerId,
     socket: Socket[F],

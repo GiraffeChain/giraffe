@@ -4,11 +4,11 @@ import 'package:giraffe_frontend/widgets/giraffe_card.dart';
 import 'package:giraffe_frontend/widgets/giraffe_scaffold.dart';
 import 'package:giraffe_frontend/widgets/over_under.dart';
 import 'package:giraffe_frontend/widgets/tappable_link.dart';
+import 'package:giraffe_protocol/protocol.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/blockchain_client.dart';
 import '../bitmap_render.dart';
-import '../../blockchain/codecs.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

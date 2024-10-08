@@ -2,14 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:giraffe_frontend/blockchain/codecs.dart';
 import 'package:giraffe_frontend/widgets/giraffe_card.dart';
 import 'package:giraffe_frontend/widgets/giraffe_scaffold.dart';
+import 'package:giraffe_protocol/protocol.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../blockchain/genesis.dart';
-import '../../blockchain/private_testnet.dart';
-import '../../blockchain/staking_account.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
