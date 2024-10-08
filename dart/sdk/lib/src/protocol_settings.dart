@@ -44,11 +44,11 @@ class ProtocolSettings {
       );
 
   static const defaultAsMap = {
-    "f-effective": "3/25",
+    "f-effective": "1/50",
     "vrf-precision": "40",
-    "vrf-amplitude": "6/15",
+    "vrf-amplitude": "1/40",
     "chain-selection-k-lookback": "576",
-    "slot-duration-ms": "1000",
+    "slot-duration-ms": "500",
   };
 
   @override
