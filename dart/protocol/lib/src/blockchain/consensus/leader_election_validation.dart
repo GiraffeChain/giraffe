@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:typed_data';
 
 import '../common/models/common.dart';
@@ -35,22 +34,12 @@ final _normalizationConstant = BigInt.from(2).pow(512);
 final _thresholdCache =
     MapCache<(Rational, Int64), Rational>.lru(maximumSize: 1024);
 
-Future<Rational> _getThreshold(Rational relativeStake, Int64 slotDiffIn,
+Future<Rational> _getThreshold(Rational relativeStake, Int64 slotDiff,
     ProtocolSettings protocolSettings) async {
-  if (slotDiffIn <= protocolSettings.vrfSlotGap) {
-    return Rational.zero;
-  }
-  final slotDiff = Int64(max(
-      0,
-      min(protocolSettings.vrfLddCutoff + 1,
-          slotDiffIn.toInt() - protocolSettings.vrfSlotGap)));
   final cacheKey = (relativeStake, slotDiff);
   return (await _thresholdCache.get(cacheKey, ifAbsent: (_) {
-    final difficultyCurve = (slotDiff > protocolSettings.vrfLddCutoff)
-        ? protocolSettings.vrfBaselineDifficulty
-        : (Rational(
-                slotDiff.toBigInt, BigInt.from(protocolSettings.vrfLddCutoff)) *
-            protocolSettings.vrfAmplitude);
+    final difficultyCurve =
+        protocolSettings.vrfAmplitude * Rational(slotDiff.toBigInt);
 
     if (difficultyCurve == Rational.one) {
       return difficultyCurve;

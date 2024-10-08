@@ -1,17 +1,13 @@
 import '../common/clock.dart';
-import '../common/models/common.dart';
 import '../consensus/leader_election_validation.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import '../consensus/models/vrf_argument.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
-import 'package:rational/rational.dart';
 
 abstract class VrfCalculator {
   Future<List<int>> rhoForSlot(Int64 slot, List<int> eta);
   Future<List<int>> proofForSlot(Int64 slot, List<int> eta);
-  Future<List<Int64>> ineligibleSlots(
-      List<int> eta, (Int64, Int64) slotRange, Rational relativeStake);
 }
 
 class VrfCalculatorImpl extends VrfCalculator {
@@ -27,31 +23,6 @@ class VrfCalculatorImpl extends VrfCalculator {
 
   VrfCalculatorImpl(this.skVrf, this.clock, this.leaderElectionValidation,
       this.protocolSettings);
-
-  @override
-  Future<List<Int64>> ineligibleSlots(
-      List<int> eta, (Int64, Int64) slotRange, Rational relativeStake) async {
-    final (minSlot, maxSlot) = slotRange;
-
-    log.info(
-      "Computing ineligible slots for eta=${eta.show} range=$minSlot..$maxSlot",
-    );
-    final threshold = await leaderElectionValidation.getThreshold(
-        relativeStake, Int64(protocolSettings.vrfLddCutoff));
-    final leaderCalculations = <Slot>[];
-    forSlot(Int64 slot) async {
-      final rho = await rhoForSlot(slot, eta);
-      final isLeader =
-          await leaderElectionValidation.isEligible(threshold, rho);
-      if (!isLeader) {
-        leaderCalculations.add(slot);
-      }
-    }
-
-    await Future.wait(List.generate(
-        (maxSlot - minSlot).toInt(), (i) => forSlot(minSlot + i)));
-    return leaderCalculations..sort();
-  }
 
   @override
   Future<List<int>> proofForSlot(Int64 slot, List<int> eta) async {

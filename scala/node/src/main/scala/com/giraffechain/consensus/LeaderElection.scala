@@ -1,10 +1,10 @@
 package com.giraffechain.consensus
 
+import cats.effect.{Resource, Sync}
+import cats.implicits.*
 import com.giraffechain.Slot
 import com.giraffechain.crypto.Blake2b512
 import com.giraffechain.utility.{Exp, Log1P, Ratio}
-import cats.effect.{Resource, Sync}
-import cats.implicits.*
 import com.github.benmanes.caffeine.cache.Caffeine
 import scalacache.Entry
 import scalacache.caffeine.CaffeineCache
@@ -47,21 +47,11 @@ class LeaderElectionImpl[F[_]: Sync](
 ) extends LeaderElection[F]:
   override def getThreshold(
       relativeStake: Ratio,
-      uncappedSlotDiff: Long
+      slotDiff: Long
   ): F[Ratio] = {
-    if (uncappedSlotDiff <= protocolSettings.vrfSlotGap) Ratio.Zero.pure[F]
-    val slotDiff = (uncappedSlotDiff - protocolSettings.vrfSlotGap).min(protocolSettings.vrfLddCutoff + 1).max(0)
     cache.cachingF((relativeStake, slotDiff))(ttl = None)(
       Sync[F]
-        .delay(
-          if (slotDiff > protocolSettings.vrfLddCutoff)
-            protocolSettings.vrfBaselineDifficulty
-          else
-            Ratio(
-              BigInt(slotDiff),
-              BigInt(protocolSettings.vrfLddCutoff)
-            ) * protocolSettings.vrfAmplitude
-        )
+        .delay(protocolSettings.vrfAmplitude * slotDiff)
         .flatMap(difficultyCurve =>
           if (difficultyCurve == Ratio.One) {
             Ratio.One.pure[F]
@@ -80,13 +70,11 @@ class LeaderElectionImpl[F[_]: Sync](
       .map { testRhoHashBytes =>
         val test = Ratio(
           BigInt(Array(0x00.toByte) ++ testRhoHashBytes),
-          LeaderElectionImpl.NormalizationConstant,
-          BigInt(1)
+          LeaderElectionImpl.NormalizationConstant
         )
         threshold > test
       }
 
 object LeaderElectionImpl:
-  /** Normalization constant for test nonce hash evaluation based on 512 byte hash function output
-    */
+  // 512 comes from VRF Proof length in bits
   private val NormalizationConstant: BigInt = BigInt(2).pow(512)
