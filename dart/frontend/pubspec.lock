@@ -475,14 +475,14 @@ packages:
       path: "../protocol"
       relative: true
     source: path
-    version: "1.0.5"
+    version: "1.0.6"
   giraffe_sdk:
     dependency: "direct main"
     description:
       path: "../sdk"
       relative: true
     source: path
-    version: "1.0.5"
+    version: "1.0.6"
   glob:
     dependency: transitive
     description:

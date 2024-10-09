@@ -324,7 +324,7 @@ packages:
       path: "../sdk"
       relative: true
     source: path
-    version: "1.0.5"
+    version: "1.0.6"
   glob:
     dependency: transitive
     description:

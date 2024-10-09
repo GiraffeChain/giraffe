@@ -6,7 +6,7 @@ flutter_app:
 
 control:
   Package: giraffe
-  Version: 1.0.5
+  Version: 1.0.6
   Architecture: amd64
   Priority: optional
   Depends: libsecret-1-0,libjsoncpp1
