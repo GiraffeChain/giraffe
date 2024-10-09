@@ -1,4 +1,4 @@
-import { AccountRegistration, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Vertex } from "./models.js";
+import { AccountRegistration, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Vertex, Asset } from "./models.js";
 import bs58 from 'bs58'
 
 import blake2b from 'blake2b';
@@ -177,7 +177,8 @@ function encodeTransactionOutput(value: TransactionOutput): Uint8Array {
         encodeInt64(requireDefined(value.quantity)),
         optCodec(value.account, encodeTransactionOutputReference),
         optCodec(value.graphEntry, encodeGraphEntry),
-        optCodec(value.accountRegistration, encodeAccountRegistration)
+        optCodec(value.accountRegistration, encodeAccountRegistration),
+        optCodec(value.asset, encodeAsset)
     ]);
 }
 
@@ -205,6 +206,11 @@ function encodeGraphVertex(value: Vertex): Uint8Array {
 function encodeGraphEdge(value: Edge): Uint8Array {
     return mergeArrays([encodeUtf8(value.label), optCodec(value.data, encodeStruct), encodeTransactionOutputReference(requireDefined(value.a)), encodeTransactionOutputReference(requireDefined(value.b))]);
 }
+
+function encodeAsset(value: Asset): Uint8Array {
+    return mergeArrays([encodeTransactionOutputReference(requireDefined(value.origin)), encodeInt64(value.quantity)]);
+}
+
 function encodeStruct(value: { [key: string]: any }): Uint8Array {
     let sortedKeys = Object.keys(value).sort();
     let encodedPairs = sortedKeys.map(k => mergeArrays([encodeUtf8(k), encodeStructValue(value[k])]));

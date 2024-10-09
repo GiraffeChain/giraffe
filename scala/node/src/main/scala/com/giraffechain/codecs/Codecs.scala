@@ -1,11 +1,11 @@
 package com.giraffechain.codecs
 
+import cats.Monoid
+import cats.implicits.*
 import com.giraffechain.Bytes
 import com.giraffechain.consensus.{UnsignedBlockHeader, VrfArgument}
 import com.giraffechain.crypto.Blake2b256
 import com.giraffechain.models.*
-import cats.Monoid
-import cats.implicits.*
 import com.google.common.primitives.{Ints, Longs}
 import com.google.protobuf
 import com.google.protobuf.{ByteString, struct}
@@ -137,6 +137,7 @@ trait Codecs {
           .concat(output.account.immutableBytes)
           .concat(output.graphEntry.immutableBytes)
           .concat(output.accountRegistration.immutableBytes)
+          .concat(output.asset.immutableBytes)
 
   given ImmutableBytes[AccountRegistration] with
     extension (registration: AccountRegistration)
@@ -156,6 +157,10 @@ trait Codecs {
             .concat(e.b.immutableBytes)
         case _ => ZeroBS
       }
+
+  given ImmutableBytes[Asset] with
+    extension (asset: Asset)
+      def immutableBytes: Bytes = asset.origin.immutableBytes.concat(asset.quantity.immutableBytes)
 
   given ImmutableBytes[Lock] with
     extension (lock: Lock)

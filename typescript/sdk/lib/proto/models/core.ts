@@ -177,6 +177,7 @@ export interface TransactionOutput {
   account: TransactionOutputReference | undefined;
   graphEntry: GraphEntry | undefined;
   accountRegistration: AccountRegistration | undefined;
+  asset: Asset | undefined;
 }
 
 export interface AccountRegistration {
@@ -219,6 +220,11 @@ export interface Edge {
   data: { [key: string]: any } | undefined;
   a: TransactionOutputReference | undefined;
   b: TransactionOutputReference | undefined;
+}
+
+export interface Asset {
+  origin: TransactionOutputReference | undefined;
+  quantity: number;
 }
 
 /** An active, registered participate in the consensus protocol, for a particular epoch. */
@@ -1580,6 +1586,7 @@ function createBaseTransactionOutput(): TransactionOutput {
     account: undefined,
     graphEntry: undefined,
     accountRegistration: undefined,
+    asset: undefined,
   };
 }
 
@@ -1599,6 +1606,9 @@ export const TransactionOutput = {
     }
     if (message.accountRegistration !== undefined) {
       AccountRegistration.encode(message.accountRegistration, writer.uint32(50).fork()).join();
+    }
+    if (message.asset !== undefined) {
+      Asset.encode(message.asset, writer.uint32(58).fork()).join();
     }
     return writer;
   },
@@ -1645,6 +1655,13 @@ export const TransactionOutput = {
 
           message.accountRegistration = AccountRegistration.decode(reader, reader.uint32());
           continue;
+        case 7:
+          if (tag !== 58) {
+            break;
+          }
+
+          message.asset = Asset.decode(reader, reader.uint32());
+          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1663,6 +1680,7 @@ export const TransactionOutput = {
       accountRegistration: isSet(object.accountRegistration)
         ? AccountRegistration.fromJSON(object.accountRegistration)
         : undefined,
+      asset: isSet(object.asset) ? Asset.fromJSON(object.asset) : undefined,
     };
   },
 
@@ -1682,6 +1700,9 @@ export const TransactionOutput = {
     }
     if (message.accountRegistration !== undefined) {
       obj.accountRegistration = AccountRegistration.toJSON(message.accountRegistration);
+    }
+    if (message.asset !== undefined) {
+      obj.asset = Asset.toJSON(message.asset);
     }
     return obj;
   },
@@ -1704,6 +1725,7 @@ export const TransactionOutput = {
     message.accountRegistration = (object.accountRegistration !== undefined && object.accountRegistration !== null)
       ? AccountRegistration.fromPartial(object.accountRegistration)
       : undefined;
+    message.asset = (object.asset !== undefined && object.asset !== null) ? Asset.fromPartial(object.asset) : undefined;
     return message;
   },
 };
@@ -2133,6 +2155,82 @@ export const Edge = {
     message.b = (object.b !== undefined && object.b !== null)
       ? TransactionOutputReference.fromPartial(object.b)
       : undefined;
+    return message;
+  },
+};
+
+function createBaseAsset(): Asset {
+  return { origin: undefined, quantity: 0 };
+}
+
+export const Asset = {
+  encode(message: Asset, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.origin !== undefined) {
+      TransactionOutputReference.encode(message.origin, writer.uint32(10).fork()).join();
+    }
+    if (message.quantity !== 0) {
+      writer.uint32(16).uint64(message.quantity);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): Asset {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAsset();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          if (tag !== 10) {
+            break;
+          }
+
+          message.origin = TransactionOutputReference.decode(reader, reader.uint32());
+          continue;
+        case 2:
+          if (tag !== 16) {
+            break;
+          }
+
+          message.quantity = longToNumber(reader.uint64());
+          continue;
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Asset {
+    return {
+      origin: isSet(object.origin) ? TransactionOutputReference.fromJSON(object.origin) : undefined,
+      quantity: isSet(object.quantity) ? globalThis.Number(object.quantity) : 0,
+    };
+  },
+
+  toJSON(message: Asset): unknown {
+    const obj: any = {};
+    if (message.origin !== undefined) {
+      obj.origin = TransactionOutputReference.toJSON(message.origin);
+    }
+    if (message.quantity !== 0) {
+      obj.quantity = Math.round(message.quantity);
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<Asset>, I>>(base?: I): Asset {
+    return Asset.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<Asset>, I>>(object: I): Asset {
+    const message = createBaseAsset();
+    message.origin = (object.origin !== undefined && object.origin !== null)
+      ? TransactionOutputReference.fromPartial(object.origin)
+      : undefined;
+    message.quantity = object.quantity ?? 0;
     return message;
   },
 };

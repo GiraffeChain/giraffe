@@ -138,6 +138,7 @@ message TransactionOutput {
     TransactionOutputReference account = 3;
     GraphEntry graphEntry = 5;
     AccountRegistration accountRegistration = 6;
+    Asset asset = 7;
 }
 
 message AccountRegistration {
@@ -176,6 +177,11 @@ message Edge {
     google.protobuf.Struct data = 2;
     TransactionOutputReference a = 3 [(validate.rules).message.required = true];
     TransactionOutputReference b = 4 [(validate.rules).message.required = true];
+}
+
+message Asset {
+    TransactionOutputReference origin = 1 [(validate.rules).message.required = true];
+    uint64 quantity = 2;
 }
 
 // An active, registered participate in the consensus protocol, for a particular epoch.
