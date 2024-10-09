@@ -83,6 +83,7 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
       valueCheck(transaction) >>
       attestationValidation(transaction) >>
       dataCheck(transaction) >>
+      assetValidation(transaction) >>
       spendableUtxoCheck(context.parentBlockId, transaction)
 
   private def syntaxValidation(transaction: Transaction): Either[NonEmptyChain[String], Unit] =
@@ -180,6 +181,43 @@ class TransactionValidationImpl[F[_]: Sync: CryptoResources](
           )
         )
         .void
+
+  private def assetValidation(transaction: Transaction): ValidationResult[F] =
+    for {
+      _ <- EitherT.cond(
+        transaction.outputs.forall(_.asset.forall(_.quantity > 0L)),
+        (),
+        NonEmptyChain("NonPositveAssetQuantity")
+      )
+      assetOutputs <- EitherT.pure(
+        transaction.outputs
+          .flatMap(_.asset)
+          .foldLeft(Map.empty[TransactionOutputReference, Long])((m, a) =>
+            m + (a.origin -> (a.quantity + m.getOrElse(a.origin, 0L)))
+          )
+      )
+      transferredAssetOutputs = assetOutputs.view
+        .filterKeys(origin => !transaction.inputs.exists(_.reference == origin))
+        .toMap
+      _ <-
+        if (transferredAssetOutputs.isEmpty) EitherT.pure(())
+        else
+          EitherT
+            .liftF(transaction.inputs.traverse(input => fetchTransactionOutput(input.reference)))
+            .map(
+              _.flatMap(_.asset).foldLeft(Map.empty[TransactionOutputReference, Long])((m, a) =>
+                m + (a.origin -> (a.quantity + m.getOrElse(a.origin, 0L)))
+              )
+            )
+            .flatMap(inputAssets =>
+              EitherT.cond(
+                transferredAssetOutputs.toList
+                  .forall((origin, quantity) => inputAssets.get(origin).exists(_ >= quantity)),
+                (),
+                NonEmptyChain("InsufficientAssetQuantity")
+              )
+            )
+    } yield ()
 
   private def attestationValidation(transaction: Transaction): ValidationResult[F] =
     for {

@@ -1075,6 +1075,7 @@ class TransactionOutput extends $pb.GeneratedMessage {
     TransactionOutputReference? account,
     GraphEntry? graphEntry,
     AccountRegistration? accountRegistration,
+    Asset? asset,
   }) {
     final $result = create();
     if (lockAddress != null) {
@@ -1092,6 +1093,9 @@ class TransactionOutput extends $pb.GeneratedMessage {
     if (accountRegistration != null) {
       $result.accountRegistration = accountRegistration;
     }
+    if (asset != null) {
+      $result.asset = asset;
+    }
     return $result;
   }
   TransactionOutput._() : super();
@@ -1104,6 +1108,7 @@ class TransactionOutput extends $pb.GeneratedMessage {
     ..aOM<TransactionOutputReference>(3, _omitFieldNames ? '' : 'account', subBuilder: TransactionOutputReference.create)
     ..aOM<GraphEntry>(5, _omitFieldNames ? '' : 'graphEntry', protoName: 'graphEntry', subBuilder: GraphEntry.create)
     ..aOM<AccountRegistration>(6, _omitFieldNames ? '' : 'accountRegistration', protoName: 'accountRegistration', subBuilder: AccountRegistration.create)
+    ..aOM<Asset>(7, _omitFieldNames ? '' : 'asset', subBuilder: Asset.create)
     ..hasRequiredFields = false
   ;
 
@@ -1180,6 +1185,17 @@ class TransactionOutput extends $pb.GeneratedMessage {
   void clearAccountRegistration() => clearField(6);
   @$pb.TagNumber(6)
   AccountRegistration ensureAccountRegistration() => $_ensure(4);
+
+  @$pb.TagNumber(7)
+  Asset get asset => $_getN(5);
+  @$pb.TagNumber(7)
+  set asset(Asset v) { setField(7, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasAsset() => $_has(5);
+  @$pb.TagNumber(7)
+  void clearAsset() => clearField(7);
+  @$pb.TagNumber(7)
+  Asset ensureAsset() => $_ensure(5);
 }
 
 class AccountRegistration extends $pb.GeneratedMessage {
@@ -1583,6 +1599,72 @@ class Edge extends $pb.GeneratedMessage {
   void clearB() => clearField(4);
   @$pb.TagNumber(4)
   TransactionOutputReference ensureB() => $_ensure(3);
+}
+
+class Asset extends $pb.GeneratedMessage {
+  factory Asset({
+    TransactionOutputReference? origin,
+    $fixnum.Int64? quantity,
+  }) {
+    final $result = create();
+    if (origin != null) {
+      $result.origin = origin;
+    }
+    if (quantity != null) {
+      $result.quantity = quantity;
+    }
+    return $result;
+  }
+  Asset._() : super();
+  factory Asset.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Asset.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Asset', package: const $pb.PackageName(_omitMessageNames ? '' : 'com.giraffechain.models'), createEmptyInstance: create)
+    ..aOM<TransactionOutputReference>(1, _omitFieldNames ? '' : 'origin', subBuilder: TransactionOutputReference.create)
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'quantity', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Asset clone() => Asset()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Asset copyWith(void Function(Asset) updates) => super.copyWith((message) => updates(message as Asset)) as Asset;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Asset create() => Asset._();
+  Asset createEmptyInstance() => create();
+  static $pb.PbList<Asset> createRepeated() => $pb.PbList<Asset>();
+  @$core.pragma('dart2js:noInline')
+  static Asset getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Asset>(create);
+  static Asset? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  TransactionOutputReference get origin => $_getN(0);
+  @$pb.TagNumber(1)
+  set origin(TransactionOutputReference v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasOrigin() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearOrigin() => clearField(1);
+  @$pb.TagNumber(1)
+  TransactionOutputReference ensureOrigin() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get quantity => $_getI64(1);
+  @$pb.TagNumber(2)
+  set quantity($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasQuantity() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearQuantity() => clearField(2);
 }
 
 /// An active, registered participate in the consensus protocol, for a particular epoch.

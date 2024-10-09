@@ -255,6 +255,7 @@ const TransactionOutput$json = {
     {'1': 'account', '3': 3, '4': 1, '5': 11, '6': '.com.giraffechain.models.TransactionOutputReference', '10': 'account'},
     {'1': 'graphEntry', '3': 5, '4': 1, '5': 11, '6': '.com.giraffechain.models.GraphEntry', '10': 'graphEntry'},
     {'1': 'accountRegistration', '3': 6, '4': 1, '5': 11, '6': '.com.giraffechain.models.AccountRegistration', '10': 'accountRegistration'},
+    {'1': 'asset', '3': 7, '4': 1, '5': 11, '6': '.com.giraffechain.models.Asset', '10': 'asset'},
   ],
 };
 
@@ -266,7 +267,8 @@ final $typed_data.Uint8List transactionOutputDescriptor = $convert.base64Decode(
     '1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZVIHYWNjb3VudBJDCgpncmFwaEVudHJ5'
     'GAUgASgLMiMuY29tLmdpcmFmZmVjaGFpbi5tb2RlbHMuR3JhcGhFbnRyeVIKZ3JhcGhFbnRyeR'
     'JeChNhY2NvdW50UmVnaXN0cmF0aW9uGAYgASgLMiwuY29tLmdpcmFmZmVjaGFpbi5tb2RlbHMu'
-    'QWNjb3VudFJlZ2lzdHJhdGlvblITYWNjb3VudFJlZ2lzdHJhdGlvbg==');
+    'QWNjb3VudFJlZ2lzdHJhdGlvblITYWNjb3VudFJlZ2lzdHJhdGlvbhI0CgVhc3NldBgHIAEoCz'
+    'IeLmNvbS5naXJhZmZlY2hhaW4ubW9kZWxzLkFzc2V0UgVhc3NldA==');
 
 @$core.Deprecated('Use accountRegistrationDescriptor instead')
 const AccountRegistration$json = {
@@ -350,6 +352,21 @@ final $typed_data.Uint8List edgeDescriptor = $convert.base64Decode(
     'VHJhbnNhY3Rpb25PdXRwdXRSZWZlcmVuY2VCCPpCBYoBAhABUgFhEksKAWIYBCABKAsyMy5jb2'
     '0uZ2lyYWZmZWNoYWluLm1vZGVscy5UcmFuc2FjdGlvbk91dHB1dFJlZmVyZW5jZUII+kIFigEC'
     'EAFSAWI=');
+
+@$core.Deprecated('Use assetDescriptor instead')
+const Asset$json = {
+  '1': 'Asset',
+  '2': [
+    {'1': 'origin', '3': 1, '4': 1, '5': 11, '6': '.com.giraffechain.models.TransactionOutputReference', '8': {}, '10': 'origin'},
+    {'1': 'quantity', '3': 2, '4': 1, '5': 4, '10': 'quantity'},
+  ],
+};
+
+/// Descriptor for `Asset`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List assetDescriptor = $convert.base64Decode(
+    'CgVBc3NldBJVCgZvcmlnaW4YASABKAsyMy5jb20uZ2lyYWZmZWNoYWluLm1vZGVscy5UcmFuc2'
+    'FjdGlvbk91dHB1dFJlZmVyZW5jZUII+kIFigECEAFSBm9yaWdpbhIaCghxdWFudGl0eRgCIAEo'
+    'BFIIcXVhbnRpdHk=');
 
 @$core.Deprecated('Use activeStakerDescriptor instead')
 const ActiveStaker$json = {

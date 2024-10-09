@@ -105,6 +105,7 @@ extension TransactionOutputCodecs on TransactionOutput {
         ...condOptCodec(hasGraphEntry(), graphEntry, (v) => v.immutableBytes),
         ...condOptCodec(hasAccountRegistration(), accountRegistration,
             (v) => v.immutableBytes),
+        ...condOptCodec(hasAsset(), asset, (v) => v.immutableBytes)
       ];
 }
 
@@ -155,6 +156,13 @@ extension EdgeCodecs on Edge {
         ...condOptCodec(hasData(), data, (v) => v.immutableBytes),
         ...a.immutableBytes,
         ...b.immutableBytes,
+      ];
+}
+
+extension AssetCodecs on Asset {
+  List<int> get immutableBytes => [
+        ...origin.immutableBytes,
+        ...quantity.immutableBytes,
       ];
 }
 
