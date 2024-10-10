@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:giraffe_frontend/providers/wallet.dart';
 import 'package:giraffe_frontend/utils.dart';
@@ -250,26 +251,30 @@ class RunMintingState extends ConsumerState<RunMinting> {
   Widget startButton(BuildContext context) => FutureBuilder(
       future: _checkBackgroundServicePermissions(),
       builder: (context, snapshot) {
-        if (snapshot.data ?? false) {
-          return TextButton.icon(
-            onPressed: () async {
-              if (Platform.isAndroid) {
-                await FlutterBackground.initialize(
-                    androidConfig: _flutterBackgroundServiceConfig);
-              }
-              ref.read(podBlockProductionProvider.notifier).start();
-            },
-            label: const Text("Start"),
-            icon: const Icon(Icons.play_arrow),
-          );
+        if (snapshot.hasData) {
+          if (snapshot.data!) {
+            return TextButton.icon(
+              onPressed: () async {
+                if (isAndroidSafe) {
+                  await FlutterBackground.initialize(
+                      androidConfig: _flutterBackgroundServiceConfig);
+                }
+                ref.read(podBlockProductionProvider.notifier).start();
+              },
+              label: const Text("Start"),
+              icon: const Icon(Icons.play_arrow),
+            );
+          } else {
+            return TextButton.icon(
+              onPressed: () {
+                setState(() {});
+              },
+              label: const Text("Request Permissions"),
+              icon: const Icon(Icons.lock),
+            );
+          }
         } else {
-          return TextButton.icon(
-            onPressed: () {
-              setState(() {});
-            },
-            label: const Text("Request Permissions"),
-            icon: const Icon(Icons.lock),
-          );
+          return const CircularProgressIndicator();
         }
       });
 
@@ -325,7 +330,7 @@ class EditStakeSliderState extends ConsumerState<EditStakeSlider> {
             Slider(
               value: desiredStake.toDouble(),
               min: minimumRegistrationQuantity.toDouble(), // TODO
-              max: (liquid + initialStake).toDouble(),
+              max: maxStakeable.toDouble(),
               divisions: 100,
               onChanged: (value) {
                 setState(() {
@@ -398,11 +403,12 @@ Future<bool> stakingIsInitialized(FlutterSecureStorage storage) async =>
     await storage.containsKey(key: "blockchain-staker-account") &&
     await storage.containsKey(key: "blockchain-staker-operator-sk");
 
-Future<bool> _checkBackgroundServicePermissions() async {
-  if (Platform.isAndroid) {
-    return await FlutterBackground.hasPermissions;
+Future<bool> _checkBackgroundServicePermissions() {
+  if (isAndroidSafe) {
+    return FlutterBackground.hasPermissions;
+  } else {
+    return Future.value(true);
   }
-  return true;
 }
 
 final _flutterBackgroundServiceConfig = FlutterBackgroundAndroidConfig(

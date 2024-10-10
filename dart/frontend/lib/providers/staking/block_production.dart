@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_background/flutter_background.dart';
+import 'package:giraffe_frontend/utils.dart';
 import 'package:giraffe_protocol/protocol.dart';
 
 import '../../providers/staking/staking.dart';
@@ -68,7 +70,7 @@ class PodBlockProduction extends _$PodBlockProduction {
       BlockPackerForStakerSupportRpc(client: client),
       rewardAddress,
     );
-    if (Platform.isAndroid) {
+    if (isAndroidSafe) {
       await FlutterBackground.enableBackgroundExecution();
     }
     Future<void> Function() cancel = () => Future.value();
@@ -94,7 +96,7 @@ class PodBlockProduction extends _$PodBlockProduction {
     }).listen(null);
 
     Future<void> c() async {
-      if (Platform.isAndroid) {
+      if (isAndroidSafe) {
         await FlutterBackground.disableBackgroundExecution();
       }
       await cancel();

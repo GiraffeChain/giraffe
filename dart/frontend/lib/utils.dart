@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 extension WidgetPadOps on Widget {
@@ -11,4 +14,11 @@ extension WidgetsPadOps on Iterable<Widget> {
   List<Widget> get padAll8 => map((e) => e.pad8).toList();
   List<Widget> get padAll16 => map((e) => e.pad16).toList();
   List<Widget> padAll(double amount) => map((e) => e.pad(amount)).toList();
+}
+
+bool get isAndroidSafe {
+  if (kIsWeb) {
+    return false;
+  }
+  return Platform.isAndroid;
 }
