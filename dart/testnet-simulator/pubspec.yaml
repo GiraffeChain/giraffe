@@ -15,4 +15,5 @@ dependencies:
     path: ../protocol
   args: ^2.5.0
   fixnum: ^1.1.0
+  rxdart: ^0.28.0
 dev_dependencies:

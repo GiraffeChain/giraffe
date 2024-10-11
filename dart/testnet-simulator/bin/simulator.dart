@@ -7,6 +7,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:giraffe_protocol/protocol.dart';
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:logging/logging.dart';
+import 'package:rxdart/streams.dart';
 
 void main(List<String> args) async {
   Logger.root.level = Level.INFO;
@@ -37,9 +38,9 @@ final log = Logger("simulator");
 ArgParser get argParser {
   final parser = ArgParser();
   parser.addOption("stakers",
-      help: "The number of staker VMs to launch.", defaultsTo: "2");
+      help: "The number of staker VMs to launch.", defaultsTo: "1");
   parser.addOption("relays",
-      help: "The number of relay VMs to launch.", defaultsTo: "3");
+      help: "The number of relay VMs to launch.", defaultsTo: "1");
   parser.addOption("duration-ms",
       help: "The duration of the simulation in milliseconds.",
       defaultsTo: "600000");
@@ -83,17 +84,29 @@ class Simulator {
     server.run();
     final simulationId = "sim${DateTime.now().millisecondsSinceEpoch}";
     log.info("Simulation id=$simulationId");
-    final relays = await launchRelays(simulationId, genesis);
-    final stakers = await launchStakers(simulationId, initializers, relays);
-    log.info("Running simulation for $duration");
-    status = SimulationStatus_Running();
-    await Future.delayed(duration);
-    status = SimulationStatus_Completed(result: {});
-    log.info("Mission complete. Deleting droplets.");
-    await Future.wait(stakers.map((r) => deleteDroplet(r.id)));
-    await Future.wait(relays.map((r) => deleteDroplet(r.id)));
-    log.info("Droplets deleted.");
-    log.info("The simulation server will stay alive until manually stopped.");
+    try {
+      final relays = await launchRelays(simulationId, genesis);
+      await launchStakers(simulationId, initializers, relays);
+      log.info("Running simulation for $duration");
+      final records = <SimulationRecord>[];
+      final sub = recordsStream(relays).listen((record) {
+        log.info(
+            "Recording block id=${record.blockId} height=${record.height} slot=${record.slot} droplet ${record.dropletId}");
+        records.add(record);
+      });
+      status = SimulationStatus_Running();
+      await Future.delayed(duration);
+      await sub.cancel();
+      status = SimulationStatus_Completed(result: {
+        "records": records.map((r) => r.toJson()).toList(),
+      });
+      log.info(
+          "Mission complete. The simulation server will stay alive until manually stopped.");
+    } finally {
+      log.info("Deleting droplets");
+      await deleteSimulationDroplets(digitalOceanToken);
+      log.info("Droplets deleted.");
+    }
   }
 
   Future<List<RelayDroplet>> launchRelays(
@@ -243,19 +256,23 @@ class RelayDroplet {
       "name": "giraffe-simulation-relay-$simulationId-$index",
       "region": region,
       "size": "s-1vcpu-1gb",
-      "image": "docker-22-04",
+      "image": "docker-20-04",
       "user_data": launchScript,
+      "tags": [dropletTag],
     };
     final response = await httpClient.post(
         Uri.parse("https://api.digitalocean.com/v2/droplets"),
         headers: headers,
         body: utf8.encode(jsonEncode(bodyJson)));
-    assert(response.statusCode == 202,
-        "Failed to create container. status=${response.statusCode}");
-    final body = jsonDecode(utf8.decode(response.bodyBytes));
-    final id = body["droplet"]["id"];
-    final ips = body["droplet"]["networks"]["v4"] as List<dynamic>;
-    final ip = ips.firstWhere((ip) => ip["type"] == "public")["ip_address"]!;
+    final bodyUtf8 = utf8.decode(response.bodyBytes);
+    if (response.statusCode != 202) {
+      throw StateError(
+          "Failed to create relay droplet. status=${response.statusCode} body=${bodyUtf8}");
+    }
+
+    final body = jsonDecode(bodyUtf8);
+    final id = (body["droplet"]["id"] as int).toString();
+    final ip = await dropletIp(digitalOceanToken, id);
     log.info("Created relay container id=$id ip=$ip region=$region");
     return RelayDroplet(id: id, ip: ip);
   }
@@ -289,19 +306,22 @@ class StakingDroplet {
       "name": "giraffe-simulation-staker-$simulationId-$index",
       "region": region,
       "size": "s-1vcpu-1gb",
-      "image": "docker-22-04",
+      "image": "docker-20-04",
       "user_data": launchScript,
+      "tags": [dropletTag],
     };
     final response = await httpClient.post(
         Uri.parse("https://api.digitalocean.com/v2/droplets"),
         headers: headers,
         body: utf8.encode(jsonEncode(bodyJson)));
-    assert(response.statusCode == 202,
-        "Failed to create container. status=${response.statusCode}");
-    final body = jsonDecode(utf8.decode(response.bodyBytes));
-    final id = body["droplet"]["id"];
-    final ips = body["droplet"]["networks"]["v4"] as List<dynamic>;
-    final ip = ips.firstWhere((ip) => ip["type"] == "public")["ip_address"]!;
+    final bodyUtf8 = utf8.decode(response.bodyBytes);
+    if (response.statusCode != 202) {
+      throw StateError(
+          "Failed to create staker droplet. status=${response.statusCode} body=${bodyUtf8}");
+    }
+    final body = jsonDecode(bodyUtf8);
+    final id = (body["droplet"]["id"] as int).toString();
+    final ip = await dropletIp(digitalOceanToken, id);
     log.info(
         "Created staking container id=$id ip=$ip region=$region relay=${relay.ip}");
     return StakingDroplet(id: id, ip: ip);
@@ -310,15 +330,20 @@ class StakingDroplet {
 
 String randomRegion() => regions[Random().nextInt(regions.length)];
 const regions = [
-  "nyc",
-  "sfo",
-  "ams",
-  "sgp",
-  "lon",
-  "fra",
-  "tor",
-  "blr",
-  "syd",
+  "nyc3",
+  // "nyc1",
+  // "sfo1",
+  // "nyc2",
+  // "ams2",
+  // "sgp1",
+  // "lon1",
+  // "ams3",
+  // "fra1",
+  // "tor1",
+  // "sfo2",
+  // "blr1",
+  // "sfo3",
+  // "syd1"
 ];
 
 Future<String> publicIp() async {
@@ -330,4 +355,87 @@ Future<String> publicIp() async {
   final payload = utf8.decode(response.bodyBytes);
   final split = payload.split(',');
   return split.last;
+}
+
+Future<String> dropletIp(String digitalOceanToken, String id) async {
+  Future<String> retry(int remianiningAttempts) async {
+    final headers = {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer $digitalOceanToken",
+    };
+    final response = await httpClient.get(
+      Uri.parse("https://api.digitalocean.com/v2/droplets/$id"),
+      headers: headers,
+    );
+    final bodyUtf8 = utf8.decode(response.bodyBytes);
+    if (response.statusCode != 200) {
+      throw StateError(
+          "Failed to get droplet. status=${response.statusCode} body=${bodyUtf8}");
+    }
+    final body = jsonDecode(bodyUtf8);
+    final ips = body["droplet"]["networks"]["v4"] as List<dynamic>;
+    if (ips.isEmpty) {
+      return Future.delayed(
+          Duration(seconds: 4), () => retry(remianiningAttempts - 1));
+    }
+    final ip = ips.firstWhere((ip) => ip["type"] == "public")["ip_address"]!;
+    return ip;
+  }
+
+  return retry(10);
+}
+
+Future<void> deleteSimulationDroplets(String digitalOceanToken) async {
+  final headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer $digitalOceanToken",
+  };
+  final response = await httpClient.delete(
+    Uri.parse("https://api.digitalocean.com/v2/droplets?tag=$dropletTag"),
+    headers: headers,
+  );
+  if (response.statusCode < 300) {
+    throw StateError(
+        "Failed to delete droplets. status=${response.statusCode}");
+  }
+}
+
+const dropletTag = "giraffe-testnet-simulation";
+
+Stream<SimulationRecord> recordsStream(List<RelayDroplet> relays) =>
+    MergeStream(relays.map((r) => relayRecordsStream(r)));
+
+Stream<SimulationRecord> relayRecordsStream(RelayDroplet relay) => Stream.value(
+        BlockchainClientFromJsonRpc(baseAddress: "http://${relay.ip}:2024/api"))
+    .asyncExpand((client) => client.adoptions.asyncMap((id) async {
+          final header = await client.getBlockHeaderOrRaise(id);
+          return SimulationRecord(
+              dropletId: relay.id,
+              blockId: id.show,
+              timestamp: header.timestamp,
+              height: header.height,
+              slot: header.slot);
+        }));
+
+class SimulationRecord {
+  final String dropletId;
+  final String blockId;
+  final Int64 timestamp;
+  final Int64 height;
+  final Int64 slot;
+
+  SimulationRecord(
+      {required this.dropletId,
+      required this.blockId,
+      required this.timestamp,
+      required this.height,
+      required this.slot});
+
+  Map<String, dynamic> toJson() => {
+        "dropletId": dropletId,
+        "blockId": blockId,
+        "timestamp": timestamp.toInt(),
+        "height": height.toInt(),
+        "slot": slot.toInt(),
+      };
 }
