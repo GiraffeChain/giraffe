@@ -142,6 +142,7 @@ class Simulator {
         );
         containers.add(container);
       }
+      log.info("Awaiting blockchain API ready");
       for (final container in containers) {
         await retryableFuture(
           () async {
