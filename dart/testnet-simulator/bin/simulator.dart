@@ -123,23 +123,44 @@ class Simulator {
     final genesisUrl = "http://$ip:8080/genesis/${genesis.header.id.show}.pbuf";
     log.info("Using genesis at $genesisUrl");
     final containers = <RelayDroplet>[];
-    for (int i = 0; i < relayCount; i++) {
-      final List<String> peers;
-      if (i == 0) {
-        peers = [];
-      } else if (i == 1) {
-        peers = [containers[0].ip];
-      } else {
-        peers = [containers[i - 1].ip, containers[i - 2].ip];
+    try {
+      for (int i = 0; i < relayCount; i++) {
+        final List<String> peers;
+        if (i == 0) {
+          peers = [];
+        } else if (i == 1) {
+          peers = [containers[0].ip];
+        } else {
+          peers = [containers[i - 1].ip, containers[i - 2].ip];
+        }
+        final container = await RelayDroplet.create(
+          simulationId,
+          i,
+          digitalOceanToken,
+          genesisUrl,
+          peers.map((p) => "$p:2023").toList(),
+        );
+        containers.add(container);
       }
-      final container = await RelayDroplet.create(
-        simulationId,
-        i,
-        digitalOceanToken,
-        genesisUrl,
-        peers.map((p) => "$p:2023").toList(),
-      );
-      containers.add(container);
+      for (final container in containers) {
+        retryableFuture(
+          () async {
+            final response = await httpClient
+                .get(Uri.parse("http://${container.ip}:2024/api"));
+            if (response.statusCode != 200) {
+              throw StateError(
+                  "Failed to connect to relay http://${container.ip}:2024/api");
+            }
+          },
+          retries: 60 * 5,
+        );
+      }
+    } catch (e, s) {
+      log.severe("Failed to launch relays", e, s);
+      for (final container in containers) {
+        await deleteDroplet(container.id);
+      }
+      rethrow;
     }
     return containers;
   }
@@ -148,16 +169,27 @@ class Simulator {
       List<StakingAccount> initializers, List<RelayDroplet> relays) async {
     log.info("Launching $stakerCount staker droplets");
     final containers = <StakingDroplet>[];
-    for (int i = 0; i < initializers.length; i++) {
-      final initializer = initializers[i];
-      final container = await StakingDroplet.create(
-        simulationId,
-        i,
-        digitalOceanToken,
-        initializer,
-        relays[Random().nextInt(relays.length)],
-      );
-      containers.add(container);
+    try {
+      for (int i = 0; i < initializers.length; i++) {
+        final initializer = initializers[i];
+        final container = await StakingDroplet.create(
+          simulationId,
+          i,
+          digitalOceanToken,
+          initializer,
+          relays[Random().nextInt(relays.length)],
+        );
+        containers.add(container);
+      }
+    } catch (e, s) {
+      log.severe("Failed to launch stakers", e, s);
+      for (final container in containers) {
+        await deleteDroplet(container.id);
+      }
+      for (final container in relays) {
+        await deleteDroplet(container.id);
+      }
+      rethrow;
     }
     return containers;
   }
@@ -361,33 +393,32 @@ Future<String> publicIp() async {
   return split.last.trim();
 }
 
-Future<String> dropletIp(String digitalOceanToken, String id) async {
-  Future<String> retry(int remianiningAttempts) async {
-    final headers = {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer $digitalOceanToken",
-    };
-    final response = await httpClient.get(
-      Uri.parse("https://api.digitalocean.com/v2/droplets/$id"),
-      headers: headers,
-    );
-    final bodyUtf8 = utf8.decode(response.bodyBytes);
-    if (response.statusCode != 200) {
-      throw StateError(
-          "Failed to get droplet. status=${response.statusCode} body=${bodyUtf8}");
-    }
-    final body = jsonDecode(bodyUtf8);
-    final ips = body["droplet"]["networks"]["v4"] as List<dynamic>;
-    if (ips.isEmpty) {
-      return Future.delayed(
-          Duration(seconds: 4), () => retry(remianiningAttempts - 1));
-    }
-    final ip = ips.firstWhere((ip) => ip["type"] == "public")["ip_address"]!;
-    return ip;
-  }
-
-  return retry(10);
-}
+Future<String> dropletIp(String digitalOceanToken, String id) =>
+    retryableFuture(() async {
+      final headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $digitalOceanToken",
+      };
+      final response = await httpClient.get(
+        Uri.parse("https://api.digitalocean.com/v2/droplets/$id"),
+        headers: headers,
+      );
+      final bodyUtf8 = utf8.decode(response.bodyBytes);
+      if (response.statusCode != 200) {
+        throw StateError(
+            "Failed to get droplet. status=${response.statusCode} body=${bodyUtf8}");
+      }
+      final body = jsonDecode(bodyUtf8);
+      final ips = body["droplet"]["networks"]["v4"] as List<dynamic>;
+      if (ips.isEmpty) {
+        throw StateError("No public ip found for droplet $id");
+      }
+      final ip = ips.firstWhere((ip) => ip["type"] == "public")["ip_address"];
+      if (ip == null) {
+        throw StateError("No public ip found for droplet $id");
+      }
+      return ip as String;
+    }, retries: 60, delay: const Duration(seconds: 3));
 
 Future<void> deleteSimulationDroplets(String digitalOceanToken) async {
   final headers = {
@@ -395,10 +426,10 @@ Future<void> deleteSimulationDroplets(String digitalOceanToken) async {
     "Authorization": "Bearer $digitalOceanToken",
   };
   final response = await httpClient.delete(
-    Uri.parse("https://api.digitalocean.com/v2/droplets?tag=$dropletTag"),
+    Uri.parse("https://api.digitalocean.com/v2/droplets?tag_name=$dropletTag"),
     headers: headers,
   );
-  if (response.statusCode < 300) {
+  if (response.statusCode >= 300) {
     throw StateError(
         "Failed to delete droplets. status=${response.statusCode}");
   }
@@ -411,15 +442,16 @@ Stream<SimulationRecord> recordsStream(List<RelayDroplet> relays) =>
 
 Stream<SimulationRecord> relayRecordsStream(RelayDroplet relay) => Stream.value(
         BlockchainClientFromJsonRpc(baseAddress: "http://${relay.ip}:2024/api"))
-    .asyncExpand((client) => client.adoptions.asyncMap((id) async {
-          final header = await client.getBlockHeaderOrRaise(id);
-          return SimulationRecord(
-              dropletId: relay.id,
-              blockId: id.show,
-              timestamp: header.timestamp,
-              height: header.height,
-              slot: header.slot);
-        }));
+    .asyncExpand(
+        (client) => retryableStream(() => client.adoptions.asyncMap((id) async {
+              final header = await client.getBlockHeaderOrRaise(id);
+              return SimulationRecord(
+                  dropletId: relay.id,
+                  blockId: id.show,
+                  timestamp: header.timestamp,
+                  height: header.height,
+                  slot: header.slot);
+            })));
 
 class SimulationRecord {
   final String dropletId;
