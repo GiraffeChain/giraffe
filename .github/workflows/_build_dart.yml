@@ -42,7 +42,7 @@ jobs:
         working-directory: ./dart/frontend
         run: flutter clean && flutter pub get && dart run build_runner build --delete-conflicting-outputs && flutter test && flutter test --platform chrome
 
-      - name: Frontend Build CLI Staker
+      - name: Protocol Build CLI Staker
         working-directory: ./dart/protocol
         run: mkdir -p build/bin && dart compile exe bin/staker.dart -o build/bin/staker
 
@@ -51,6 +51,17 @@ jobs:
         with:
           name: cli-staker
           path: "dart/protocol/build/bin/staker"
+          if-no-files-found: error
+
+      - name: Build Testnet Simulator
+        working-directory: ./dart/testnet-simulator
+        run: mkdir -p build/bin && dart compile exe bin/simulator.dart -o build/bin/testnet-simulator
+
+      - name: Upload Testnet Simulator
+        uses: actions/upload-artifact@v4
+        with:
+          name: testnet-simulator
+          path: "dart/testnet-simulator/build/bin/testnet-simulator"
           if-no-files-found: error
 
       - name: Frontend Build Web
