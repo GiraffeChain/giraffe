@@ -143,7 +143,7 @@ class Simulator {
         containers.add(container);
       }
       for (final container in containers) {
-        retryableFuture(
+        await retryableFuture(
           () async {
             final response = await httpClient
                 .get(Uri.parse("http://${container.ip}:2024/api"));
