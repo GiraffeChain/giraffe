@@ -30,13 +30,17 @@ jobs:
       - name: Install flutter_to_debian
         run: dart pub global activate flutter_to_debian
 
-      - name: Dart SDK Compile and Test
+      - name: SDK Compile and Test
         working-directory: ./dart/sdk
         run: dart pub get && dart run build_runner build --delete-conflicting-outputs && dart test && dart test --platform chrome
 
-      - name: Dart Node Compile and Test
+      - name: Protocol Compile and Test
         working-directory: ./dart/protocol
         run: dart pub get && dart run build_runner build --delete-conflicting-outputs && dart test
+
+      - name: Simulator Compile and Test
+        working-directory: ./dart/testnet-simulator
+        run: dart pub get
 
       - name: Frontend Compile and Test
         working-directory: ./dart/frontend
