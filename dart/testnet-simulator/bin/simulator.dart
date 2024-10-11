@@ -89,11 +89,17 @@ class Simulator {
       await launchStakers(simulationId, initializers, relays);
       log.info("Running simulation for $duration");
       final records = <SimulationRecord>[];
-      final sub = recordsStream(relays).listen((record) {
-        log.info(
-            "Recording block id=${record.blockId} height=${record.height} slot=${record.slot} droplet ${record.dropletId}");
-        records.add(record);
-      });
+      final sub = recordsStream(relays).listen(
+        (record) {
+          log.info(
+              "Recording block id=${record.blockId} height=${record.height} slot=${record.slot} droplet ${record.dropletId}");
+          records.add(record);
+        },
+        onError: (e, s) {
+          log.severe("Error in simulation record stream", e, s);
+        },
+        onDone: () => log.info("Simulation record stream done"),
+      );
       status = SimulationStatus_Running();
       await Future.delayed(duration);
       await sub.cancel();
@@ -245,11 +251,10 @@ class RelayDroplet {
       "Content-Type": "application/json",
       "Authorization": "Bearer $digitalOceanToken",
     };
-    final launchScript = """
-    #!/bin/bash
-    ufw allow 2023
-    ufw allow 2024
-    docker run -d --restart=always --pull=always --name giraffe-simulation-relay -p 2023:2023 -p 2024:2024 giraffechain/node:dev --genesis $genesisUrl${peers.map((p) => " --peer $p").join("")}
+    final launchScript = """#!/bin/bash
+ufw allow 2023
+ufw allow 2024
+docker run -d --restart=always --pull=always --name giraffe-simulation-relay -p 2023:2023 -p 2024:2024 giraffechain/node:dev --genesis $genesisUrl${peers.map((p) => " --peer $p").join("")}
     """;
     final region = randomRegion();
     final bodyJson = {
@@ -297,9 +302,8 @@ class StakingDroplet {
     };
     final apiAddress = "http://${relay.ip}:2024/api";
     final stakerData = account.stakerData.serialized;
-    final launchScript = """
-    #!/bin/bash
-    docker run -d --restart=always --pull=always --name giraffe-simulation-staker giraffechain/staker:dev --api-address $apiAddress --staker-data $stakerData
+    final launchScript = """#!/bin/bash
+docker run -d --restart=always --pull=always --name giraffe-simulation-staker giraffechain/staker:dev --api-address $apiAddress --staker-data $stakerData
     """;
     final region = randomRegion();
     final bodyJson = {
@@ -354,7 +358,7 @@ Future<String> publicIp() async {
       "Failed to get public IP. status=${response.statusCode}");
   final payload = utf8.decode(response.bodyBytes);
   final split = payload.split(',');
-  return split.last;
+  return split.last.trim();
 }
 
 Future<String> dropletIp(String digitalOceanToken, String id) async {
