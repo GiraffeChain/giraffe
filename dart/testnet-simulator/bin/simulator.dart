@@ -443,8 +443,8 @@ Stream<SimulationRecord> recordsStream(List<RelayDroplet> relays) =>
 
 Stream<SimulationRecord> relayRecordsStream(RelayDroplet relay) => Stream.value(
         BlockchainClientFromJsonRpc(baseAddress: "http://${relay.ip}:2024/api"))
-    .asyncExpand(
-        (client) => retryableStream(() => client.adoptions.asyncMap((id) async {
+    .asyncExpand((client) => retryableStream(
+        () => RepeatStream((_) => client.adoptions).asyncMap((id) async {
               final header = await client.getBlockHeaderOrRaise(id);
               return SimulationRecord(
                   dropletId: relay.id,
