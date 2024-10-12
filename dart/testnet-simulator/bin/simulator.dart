@@ -69,8 +69,14 @@ class Simulator {
         stakerCount,
         (_) async =>
             StakingAccount.generate(Int64(1000000), lockAddress, seed())));
+    final startTime = DateTime.now()
+        .add(Duration(seconds: 16) * relayCount) // VM creation time
+        .add(Duration(seconds: 150)) // Time-to-ready
+        .add(Duration(seconds: 16) * stakerCount) // VM creation time
+        .add(Duration(seconds: 120)); // Time-to-ready
+    log.info("Setting genesis timestamp to $startTime");
     final genesis = GenesisConfig(
-      Int64(DateTime.now().millisecondsSinceEpoch),
+      Int64(startTime.millisecondsSinceEpoch),
       initializers.map((i) => i.transaction).toList(),
       [0],
       ProtocolSettings.defaultAsMap,
@@ -84,10 +90,15 @@ class Simulator {
     server.run();
     final simulationId = "sim${DateTime.now().millisecondsSinceEpoch}";
     log.info("Simulation id=$simulationId");
+    final ip = await publicIp();
+    log.info("You can view the status and results at http://$ip:8080/status");
     try {
-      final relays = await launchRelays(simulationId, genesis);
+      final relays = await launchRelays(ip, simulationId, genesis);
       await launchStakers(simulationId, initializers, relays);
-      log.info("Running simulation for $duration");
+      log.info("Waiting until genesis");
+      await Future.delayed(startTime
+          .subtract(const Duration(seconds: 10))
+          .difference(DateTime.now()));
       final records = <SimulationRecord>[];
       final sub = recordsStream(relays).listen(
         (record) {
@@ -101,13 +112,14 @@ class Simulator {
         onDone: () => log.info("Simulation record stream done"),
       );
       status = SimulationStatus_Running();
+      log.info("Running simulation for $duration");
       await Future.delayed(duration);
       await sub.cancel();
       status = SimulationStatus_Completed(result: {
         "records": records.map((r) => r.toJson()).toList(),
       });
       log.info(
-          "Mission complete. The simulation server will stay alive until manually stopped.");
+          "Mission complete. The simulation server will stay alive until manually stopped. View the results at http://$ip:8080/status");
     } finally {
       log.info("Deleting droplets");
       await deleteSimulationDroplets(digitalOceanToken);
@@ -116,12 +128,11 @@ class Simulator {
   }
 
   Future<List<RelayDroplet>> launchRelays(
-      String simulationId, FullBlock genesis) async {
-    log.info("Launching $relayCount relay droplets");
-    final ip = await publicIp();
+      String ip, String simulationId, FullBlock genesis) async {
     log.info("Simulation public ip=$ip");
     final genesisUrl = "http://$ip:8080/genesis/${genesis.header.id.show}.pbuf";
     log.info("Using genesis at $genesisUrl");
+    log.info("Launching $relayCount relay droplets");
     final containers = <RelayDroplet>[];
     try {
       for (int i = 0; i < relayCount; i++) {
@@ -366,21 +377,22 @@ docker run -d --restart=always --pull=always --name giraffe-simulation-staker gi
 }
 
 String randomRegion() => regions[Random().nextInt(regions.length)];
+// https://docs.digitalocean.com/platform/regional-availability/#droplets
 const regions = [
-  "nyc3",
+  // "nyc3",
   // "nyc1",
   // "sfo1",
-  // "nyc2",
+  "nyc2",
   // "ams2",
   // "sgp1",
   // "lon1",
-  // "ams3",
-  // "fra1",
+  "ams3",
+  "fra1",
   // "tor1",
-  // "sfo2",
+  "sfo2",
   // "blr1",
   // "sfo3",
-  // "syd1"
+  "syd1"
 ];
 
 Future<String> publicIp() async {
