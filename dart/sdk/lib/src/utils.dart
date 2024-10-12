@@ -193,7 +193,8 @@ Stream<R> retryableStream<R>(Stream<R> Function() f,
   var _retries = retries;
   while (true) {
     try {
-      await for (final x in f()) yield x;
+      yield* f();
+      return;
     } catch (e, s) {
       if (_retries == 0) rethrow;
       _retries -= 1;

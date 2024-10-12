@@ -1,0 +1,19 @@
+name: giraffe_testnet_simulator
+description: Giraffe testnet simulator
+
+publish_to: 'none'
+
+version: 1.0.6
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  giraffe_sdk:
+    path: ../sdk
+  giraffe_protocol:
+    path: ../protocol
+  args: ^2.5.0
+  fixnum: ^1.1.0
+  rxdart: ^0.28.0
+dev_dependencies:

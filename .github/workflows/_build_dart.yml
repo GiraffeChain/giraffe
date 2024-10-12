@@ -11,7 +11,7 @@ jobs:
       - name: Checkout current branch
         uses: actions/checkout@v4
       
-      - run: sudo apt-get install clang cmake git ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+      - run: sudo apt update && sudo apt-get install -y clang cmake git ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libsecret-1-dev
       
       - name: Install Flutter
         uses: subosito/flutter-action@v2
@@ -30,19 +30,23 @@ jobs:
       - name: Install flutter_to_debian
         run: dart pub global activate flutter_to_debian
 
-      - name: Dart SDK Compile and Test
+      - name: SDK Compile and Test
         working-directory: ./dart/sdk
         run: dart pub get && dart run build_runner build --delete-conflicting-outputs && dart test && dart test --platform chrome
 
-      - name: Dart Node Compile and Test
+      - name: Protocol Compile and Test
         working-directory: ./dart/protocol
         run: dart pub get && dart run build_runner build --delete-conflicting-outputs && dart test
+
+      - name: Simulator Compile and Test
+        working-directory: ./dart/testnet-simulator
+        run: dart pub get
 
       - name: Frontend Compile and Test
         working-directory: ./dart/frontend
         run: flutter clean && flutter pub get && dart run build_runner build --delete-conflicting-outputs && flutter test && flutter test --platform chrome
 
-      - name: Frontend Build CLI Staker
+      - name: Protocol Build CLI Staker
         working-directory: ./dart/protocol
         run: mkdir -p build/bin && dart compile exe bin/staker.dart -o build/bin/staker
 
@@ -51,6 +55,17 @@ jobs:
         with:
           name: cli-staker
           path: "dart/protocol/build/bin/staker"
+          if-no-files-found: error
+
+      - name: Build Testnet Simulator
+        working-directory: ./dart/testnet-simulator
+        run: mkdir -p build/bin && dart compile exe bin/simulator.dart -o build/bin/testnet-simulator
+
+      - name: Upload Testnet Simulator
+        uses: actions/upload-artifact@v4
+        with:
+          name: testnet-simulator
+          path: "dart/testnet-simulator/build/bin/testnet-simulator"
           if-no-files-found: error
 
       - name: Frontend Build Web
