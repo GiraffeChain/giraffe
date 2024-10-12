@@ -82,6 +82,8 @@ class Simulator {
       ProtocolSettings.defaultAsMap,
     ).block;
     log.info("Genesis id=${genesis.header.id.show}");
+    log.info(
+        "Genesis settings ${genesis.header.settings.entries.map((e) => "${e.key}=${e.value}").join(" ")}");
     final server = SimulatorHttpServer(
       genesis: genesis,
       status: () => status,
