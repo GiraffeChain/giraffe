@@ -466,7 +466,7 @@ Stream<SimulationRecord> relayRecordsStream(RelayDroplet relay) => Stream.value(
                 timestamp: header.timestamp,
                 height: header.height,
                 slot: header.slot,
-                staker: header.account,
+                staker: header.account.show,
               );
             })));
 
@@ -477,7 +477,7 @@ class SimulationRecord {
   final Int64 timestamp;
   final Int64 height;
   final Int64 slot;
-  final TransactionOutputReference staker;
+  final String staker;
 
   SimulationRecord({
     required this.dropletId,
@@ -491,11 +491,11 @@ class SimulationRecord {
 
   Map<String, dynamic> toJson() => {
         "dropletId": dropletId,
-        "recordTimestamp": recordTimestamp,
+        "recordTimestamp": recordTimestamp.toInt(),
         "blockId": blockId,
         "timestamp": timestamp.toInt(),
         "height": height.toInt(),
         "slot": slot.toInt(),
-        "staker": staker.show,
+        "staker": staker,
       };
 }
