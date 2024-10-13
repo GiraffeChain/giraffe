@@ -70,10 +70,10 @@ class Simulator {
         (_) async =>
             StakingAccount.generate(Int64(1000000), lockAddress, seed())));
     final startTime = DateTime.now()
-        .add(Duration(seconds: 16) * relayCount) // VM creation time
-        .add(Duration(seconds: 150)) // Time-to-ready
-        .add(Duration(seconds: 16) * stakerCount) // VM creation time
-        .add(Duration(seconds: 120)); // Time-to-ready
+        .add(Duration(seconds: 16) *
+            relayCount) // VM creation time; relays created sequentially in order to capture IP address for peers
+        .add(Duration(seconds: 150)) // Relay Time-to-ready
+        .add(Duration(seconds: 136)); // Stakers created in parallel
     log.info("Setting genesis timestamp to $startTime");
     final genesis = GenesisConfig(
       Int64(startTime.millisecondsSinceEpoch),
@@ -180,30 +180,26 @@ class Simulator {
   Future<List<StakingDroplet>> launchStakers(String simulationId,
       List<StakingAccount> initializers, List<RelayDroplet> relays) async {
     log.info("Launching $stakerCount staker droplets");
-    final containers = <StakingDroplet>[];
+    final containerFutures = <Future<StakingDroplet>>[];
+    for (int i = 0; i < initializers.length; i++) {
+      final initializer = initializers[i];
+      containerFutures.add(StakingDroplet.create(
+        simulationId,
+        i,
+        digitalOceanToken,
+        initializer,
+        relays[Random().nextInt(relays.length)],
+      ));
+    }
     try {
-      for (int i = 0; i < initializers.length; i++) {
-        final initializer = initializers[i];
-        final container = await StakingDroplet.create(
-          simulationId,
-          i,
-          digitalOceanToken,
-          initializer,
-          relays[Random().nextInt(relays.length)],
-        );
-        containers.add(container);
-      }
+      return Future.wait(containerFutures);
     } catch (e, s) {
       log.severe("Failed to launch stakers", e, s);
-      for (final container in containers) {
-        await deleteDroplet(container.id);
-      }
-      for (final container in relays) {
-        await deleteDroplet(container.id);
-      }
+      await Future.wait(containerFutures
+          .map((f) => f.then((c) => deleteDroplet(c.id)).voidError));
+      Future.wait(relays.map((r) => deleteDroplet(r.id)));
       rethrow;
     }
-    return containers;
   }
 
   Future<void> deleteDroplet(String id) async {
