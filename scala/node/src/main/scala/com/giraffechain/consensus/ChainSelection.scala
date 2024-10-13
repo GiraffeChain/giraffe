@@ -1,12 +1,12 @@
 package com.giraffechain.consensus
 
-import com.giraffechain.*
-import com.giraffechain.crypto.{Blake2b512, Ed25519VRF}
-import com.giraffechain.models.*
-import com.giraffechain.codecs.given
 import cats.data.OptionT
 import cats.effect.{Resource, Sync}
 import cats.implicits.*
+import com.giraffechain.*
+import com.giraffechain.codecs.given
+import com.giraffechain.crypto.{Blake2b512, Ed25519VRF}
+import com.giraffechain.models.*
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.*
 
@@ -111,8 +111,8 @@ class ChainSelectionImpl[F[_]: Sync](
   ): F[ChainSelectionOutcome] =
     if (x.height > y.height) ChainSelectionOutcome.XStandard.pure[F]
     else if (x.height < y.height) ChainSelectionOutcome.YStandard.pure[F]
-    else if (x.slot > y.slot) ChainSelectionOutcome.XStandard.pure[F]
-    else if (x.slot < y.slot) ChainSelectionOutcome.YStandard.pure[F]
+    else if (x.slot > y.slot) ChainSelectionOutcome.YStandard.pure[F]
+    else if (x.slot < y.slot) ChainSelectionOutcome.XStandard.pure[F]
     else
       (
         headerToRhoTestHashBigInt(x),
