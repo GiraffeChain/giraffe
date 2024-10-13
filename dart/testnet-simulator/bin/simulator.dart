@@ -101,25 +101,23 @@ class Simulator {
       await Future.delayed(startTime
           .subtract(const Duration(seconds: 10))
           .difference(DateTime.now()));
-      final records = <SimulationRecord>[];
+      final runningStatus = SimulationStatus_Running(records: []);
+      status = runningStatus;
       final sub = recordsStream(relays).listen(
         (record) {
           log.info(
               "Recording block id=${record.blockId} height=${record.height} slot=${record.slot} droplet ${record.dropletId}");
-          records.add(record);
+          runningStatus.records.add(record);
         },
         onError: (e, s) {
           log.severe("Error in simulation record stream", e, s);
         },
         onDone: () => log.info("Simulation record stream done"),
       );
-      status = SimulationStatus_Running();
       log.info("Running simulation for $duration");
       await Future.delayed(duration);
       await sub.cancel();
-      status = SimulationStatus_Completed(result: {
-        "records": records.map((r) => r.toJson()).toList(),
-      });
+      status = SimulationStatus_Completed(records: runningStatus.records);
       log.info(
           "Mission complete. The simulation server will stay alive until manually stopped. View the results at http://$ip:8080/status");
     } finally {
@@ -259,23 +257,28 @@ class SimulationStatus_Initializing extends SimulationStatus {
 }
 
 class SimulationStatus_Running extends SimulationStatus {
+  final List<SimulationRecord> records;
+
+  const SimulationStatus_Running({required this.records}) : super();
+
   @override
   Map<String, dynamic> toJson() {
     return {
       "status": "running",
+      "records": records.map((r) => r.toJson()).toList(),
     };
   }
 }
 
 class SimulationStatus_Completed extends SimulationStatus {
-  final dynamic result;
+  final List<SimulationRecord> records;
 
-  SimulationStatus_Completed({required this.result}) : super();
+  const SimulationStatus_Completed({required this.records}) : super();
   @override
   Map<String, dynamic> toJson() {
     return {
       "status": "completed",
-      "result": result,
+      "records": records.map((r) => r.toJson()).toList(),
     };
   }
 }
@@ -283,8 +286,9 @@ class SimulationStatus_Completed extends SimulationStatus {
 class RelayDroplet {
   final String id;
   final String ip;
+  final String region;
 
-  RelayDroplet({required this.id, required this.ip});
+  RelayDroplet({required this.id, required this.ip, required this.region});
 
   static Future<RelayDroplet> create(
     String simulationId,
@@ -325,7 +329,7 @@ docker run -d --restart=always --pull=always --name giraffe-simulation-relay -p 
     final id = (body["droplet"]["id"] as int).toString();
     final ip = await dropletIp(digitalOceanToken, id);
     log.info("Created relay container id=$id ip=$ip region=$region");
-    return RelayDroplet(id: id, ip: ip);
+    return RelayDroplet(id: id, ip: ip, region: region);
   }
 }
 
@@ -351,10 +355,9 @@ class StakingDroplet {
     final launchScript = """#!/bin/bash
 docker run -d --restart=always --pull=always --name giraffe-simulation-staker giraffechain/staker:dev --api-address $apiAddress --staker-data $stakerData
     """;
-    final region = randomRegion();
     final bodyJson = {
       "name": "giraffe-simulation-staker-$simulationId-$index",
-      "region": region,
+      "region": relay.region,
       "size": "s-1vcpu-1gb",
       "image": "docker-20-04",
       "user_data": launchScript,
@@ -373,7 +376,7 @@ docker run -d --restart=always --pull=always --name giraffe-simulation-staker gi
     final id = (body["droplet"]["id"] as int).toString();
     final ip = await dropletIp(digitalOceanToken, id);
     log.info(
-        "Created staking container id=$id ip=$ip region=$region relay=${relay.ip}");
+        "Created staking container id=$id ip=$ip region=${relay.region} relay=${relay.ip}");
     return StakingDroplet(id: id, ip: ip);
   }
 }
@@ -461,32 +464,42 @@ Stream<SimulationRecord> relayRecordsStream(RelayDroplet relay) => Stream.value(
         () => RepeatStream((_) => client.adoptions).asyncMap((id) async {
               final header = await client.getBlockHeaderOrRaise(id);
               return SimulationRecord(
-                  dropletId: relay.id,
-                  blockId: id.show,
-                  timestamp: header.timestamp,
-                  height: header.height,
-                  slot: header.slot);
+                dropletId: relay.id,
+                recordTimestamp: Int64(DateTime.now().millisecondsSinceEpoch),
+                blockId: id.show,
+                timestamp: header.timestamp,
+                height: header.height,
+                slot: header.slot,
+                staker: header.account,
+              );
             })));
 
 class SimulationRecord {
   final String dropletId;
+  final Int64 recordTimestamp;
   final String blockId;
   final Int64 timestamp;
   final Int64 height;
   final Int64 slot;
+  final TransactionOutputReference staker;
 
-  SimulationRecord(
-      {required this.dropletId,
-      required this.blockId,
-      required this.timestamp,
-      required this.height,
-      required this.slot});
+  SimulationRecord({
+    required this.dropletId,
+    required this.recordTimestamp,
+    required this.blockId,
+    required this.timestamp,
+    required this.height,
+    required this.slot,
+    required this.staker,
+  });
 
   Map<String, dynamic> toJson() => {
         "dropletId": dropletId,
+        "recordTimestamp": recordTimestamp,
         "blockId": blockId,
         "timestamp": timestamp.toInt(),
         "height": height.toInt(),
         "slot": slot.toInt(),
+        "staker": staker.show,
       };
 }
