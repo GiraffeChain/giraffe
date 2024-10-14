@@ -21,9 +21,11 @@ class TransactionGenerator {
       final start = DateTime.now();
       final client = clients[_random.nextInt(clients.length)];
       Wallet sender = wallets[_walletIndex];
+      await sender.update(client);
       _incIndex();
       while (sender.liquidFunds < Int64(4000)) {
         sender = wallets[_walletIndex];
+        await sender.update(client);
         _incIndex();
       }
       var recipientIndex = _random.nextInt(wallets.length);
