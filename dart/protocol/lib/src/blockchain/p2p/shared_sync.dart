@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:giraffe_protocol/protocol.dart';
@@ -254,45 +253,4 @@ class SharedSyncState {
       required this.providers,
       required this.result,
       required this.cancel});
-}
-
-Stream<O> parAsyncMapImpl<I, O>(
-    int parallelism, Stream<I> stream, Future<O> Function(I) f) {
-  bool running = false;
-  bool done = false;
-  final queue = Queue<Future<O>>();
-  final controller = StreamController<O>();
-  checkAndPush() async {
-    if (running) return;
-    running = true;
-    while (queue.isNotEmpty) {
-      final future = queue.removeFirst();
-      final o = await future;
-      controller.add(o);
-    }
-    if (done) {
-      controller.close();
-    }
-    running = false;
-  }
-
-  final sub = stream.asyncMap((i) async {
-    if (queue.length >= parallelism) {
-      await queue.first;
-    }
-    queue.add(f(i));
-    checkAndPush();
-  }).listen((_) {}, cancelOnError: true);
-  controller.onCancel = sub.cancel;
-  sub.onError(controller.addError);
-  sub.onDone(() {
-    done = true;
-    checkAndPush();
-  });
-  return controller.stream;
-}
-
-extension ParStreamOps<T> on Stream<T> {
-  Stream<O> parAsyncMap<O>(int parallelism, Future<O> Function(T) f) =>
-      parAsyncMapImpl(parallelism, this, f);
 }

@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:fixnum/fixnum.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:giraffe_frontend/providers/wallet.dart';
 import 'package:giraffe_frontend/utils.dart';

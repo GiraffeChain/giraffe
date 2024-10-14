@@ -18,6 +18,7 @@ void main(List<String> args) async {
   final parsedArgs = argParser.parse(args);
   final stakerCount = int.parse(parsedArgs.option("stakers")!);
   final relayCount = int.parse(parsedArgs.option("relays")!);
+  final walletCount = int.parse(parsedArgs.option("wallets")!);
   final tps = double.parse(parsedArgs.option("tps")!);
   final duration =
       Duration(milliseconds: int.parse(parsedArgs.option("duration-ms")!));
@@ -30,6 +31,7 @@ void main(List<String> args) async {
     stakerCount: stakerCount,
     relayCount: relayCount,
     duration: duration,
+    walletCount: walletCount,
     tps: tps,
     digitalOceanToken: digitalOceanToken,
   );
@@ -45,6 +47,8 @@ ArgParser get argParser {
   parser.addOption("duration-ms",
       help: "The duration of the simulation in milliseconds.",
       defaultsTo: "600000");
+  parser.addOption("wallets",
+      help: "Number of wallets/users to simulate.", defaultsTo: "100");
   parser.addOption("tps",
       help: "Approximate transactions-per-second to generate.",
       defaultsTo: "1");

@@ -17,6 +17,7 @@ class Simulator {
   final int stakerCount;
   final int relayCount;
   final Duration duration;
+  final int walletCount;
   final double tps;
   final String digitalOceanToken;
   SimulationStatus status = SimulationStatus_Initializing();
@@ -25,6 +26,7 @@ class Simulator {
       {required this.stakerCount,
       required this.relayCount,
       required this.duration,
+      required this.walletCount,
       required this.tps,
       required this.digitalOceanToken});
 
@@ -44,7 +46,7 @@ class Simulator {
         .add(Duration(seconds: 136)); // Stakers created in parallel
     log.info("Setting genesis timestamp to $startTime");
     log.info("Generating wallets");
-    final wallets = await createWallets(100);
+    final wallets = await createWallets(walletCount);
     final walletGenesisTransactions = wallets.map((w) => Transaction(
           outputs: [
             TransactionOutput(

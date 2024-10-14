@@ -1,6 +1,3 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:giraffe_frontend/utils.dart';
 import 'package:giraffe_protocol/protocol.dart';
