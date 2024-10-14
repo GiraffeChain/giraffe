@@ -8,6 +8,7 @@ import 'package:giraffe_sdk/sdk.dart';
 import 'package:giraffe_testnet_simulator/droplets.dart';
 import 'package:giraffe_testnet_simulator/log.dart';
 import 'package:giraffe_testnet_simulator/simulation_record.dart';
+import 'package:giraffe_testnet_simulator/transaction_generator.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'simulation_status.dart';
@@ -16,6 +17,7 @@ class Simulator {
   final int stakerCount;
   final int relayCount;
   final Duration duration;
+  final double tps;
   final String digitalOceanToken;
   SimulationStatus status = SimulationStatus_Initializing();
 
@@ -23,6 +25,7 @@ class Simulator {
       {required this.stakerCount,
       required this.relayCount,
       required this.duration,
+      required this.tps,
       required this.digitalOceanToken});
 
   Future<void> run() async {
@@ -40,9 +43,19 @@ class Simulator {
         .add(Duration(seconds: 150)) // Relay Time-to-ready
         .add(Duration(seconds: 136)); // Stakers created in parallel
     log.info("Setting genesis timestamp to $startTime");
+    log.info("Generating wallets");
+    final wallets = await createWallets(100);
+    final walletGenesisTransactions = wallets.map((w) => Transaction(
+          outputs: [
+            TransactionOutput(
+              lockAddress: w.defaultLockAddress,
+              quantity: Int64(10000000),
+            ),
+          ],
+        ));
     final genesis = GenesisConfig(
       Int64(startTime.millisecondsSinceEpoch),
-      initializers.map((i) => i.transaction).toList(),
+      [...initializers.map((i) => i.transaction), ...walletGenesisTransactions],
       [0],
       ProtocolSettings.defaultAsMap,
     ).block;
@@ -68,7 +81,7 @@ class Simulator {
           .difference(DateTime.now()));
       final runningStatus = SimulationStatus_Running(records: []);
       status = runningStatus;
-      final sub = recordsStream(relays).listen(
+      final recordsSub = recordsStream(relays).listen(
         (record) {
           log.info(
               "Recording block id=${record.blockId} height=${record.height} slot=${record.slot} droplet ${record.dropletId}");
@@ -80,8 +93,20 @@ class Simulator {
         onDone: () => log.info("Simulation record stream done"),
       );
       log.info("Running simulation for $duration");
+      await Future.delayed(const Duration(seconds: 15));
+      final transactionsSub = TransactionGenerator(
+              wallets: wallets, clients: relays.map((r) => r.client).toList())
+          .run(Duration(milliseconds: 1000 ~/ tps))
+          .listen(
+            (tx) => log.info("Broadcasted tx id=${tx.id.show}"),
+            onError: (e, s) {
+              log.severe("Error in simulation record stream", e, s);
+            },
+            onDone: () => log.info("Simulation record stream done"),
+          );
       await Future.delayed(duration);
-      await sub.cancel();
+      await transactionsSub.cancel();
+      await recordsSub.cancel();
       status = SimulationStatus_Completed(records: runningStatus.records);
       log.info(
           "Mission complete. The simulation server will stay alive until manually stopped. View the results at http://$ip:8080/status");
@@ -90,6 +115,13 @@ class Simulator {
       await deleteSimulationDroplets(digitalOceanToken);
       log.info("Droplets deleted.");
     }
+  }
+
+  Future<List<Wallet>> createWallets(int count) {
+    return Future.wait(List.generate(
+        count,
+        (_) async =>
+            Wallet.withDefaultKeyPair(await ed25519.generateKeyPair())));
   }
 
   Future<List<RelayDroplet>> launchRelays(
@@ -216,18 +248,11 @@ Future<String> publicIp() async {
 Stream<SimulationRecord> recordsStream(List<RelayDroplet> relays) =>
     MergeStream(relays.map((r) => relayRecordsStream(r)));
 
-Stream<SimulationRecord> relayRecordsStream(RelayDroplet relay) => Stream.value(
-        BlockchainClientFromJsonRpc(baseAddress: "http://${relay.ip}:2024/api"))
-    .asyncExpand((client) => retryableStream(
+Stream<SimulationRecord> relayRecordsStream(RelayDroplet relay) =>
+    Stream.value(relay.client).asyncExpand((client) => retryableStream(
         () => RepeatStream((_) => client.adoptions).asyncMap((id) async {
               final header = await client.getBlockHeaderOrRaise(id);
-              return SimulationRecord(
-                dropletId: relay.id,
-                recordTimestamp: Int64(DateTime.now().millisecondsSinceEpoch),
-                blockId: id.show,
-                timestamp: header.timestamp,
-                height: header.height,
-                slot: header.slot,
-                staker: header.account.show,
-              );
+              final body = await client.getBlockBodyOrRaise(id);
+              return SimulationRecord.fromBlock(
+                  relay, Block(header: header, body: body));
             })));

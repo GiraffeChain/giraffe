@@ -18,13 +18,19 @@ void main(List<String> args) async {
   final parsedArgs = argParser.parse(args);
   final stakerCount = int.parse(parsedArgs.option("stakers")!);
   final relayCount = int.parse(parsedArgs.option("relays")!);
+  final tps = double.parse(parsedArgs.option("tps")!);
   final duration =
       Duration(milliseconds: int.parse(parsedArgs.option("duration-ms")!));
-  final digitalOceanToken = Platform.environment["DIGITAL_OCEAN_TOKEN"]!;
+  final digitalOceanToken = Platform.environment["DIGITAL_OCEAN_TOKEN"];
+  if (digitalOceanToken == null) {
+    throw ArgumentError(
+        "DIGITAL_OCEAN_TOKEN environment variable is required.");
+  }
   final simulator = Simulator(
     stakerCount: stakerCount,
     relayCount: relayCount,
     duration: duration,
+    tps: tps,
     digitalOceanToken: digitalOceanToken,
   );
   await simulator.run();
@@ -39,5 +45,8 @@ ArgParser get argParser {
   parser.addOption("duration-ms",
       help: "The duration of the simulation in milliseconds.",
       defaultsTo: "600000");
+  parser.addOption("tps",
+      help: "Approximate transactions-per-second to generate.",
+      defaultsTo: "1");
   return parser;
 }

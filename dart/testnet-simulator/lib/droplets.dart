@@ -52,6 +52,9 @@ docker run -d --restart=always --pull=always --name giraffe-simulation-relay -p 
     log.info("Created relay container id=$id ip=$ip region=$region");
     return RelayDroplet(id: id, ip: ip, region: region);
   }
+
+  BlockchainClient get client =>
+      BlockchainClientFromJsonRpc(baseAddress: "http://$ip:2024/api");
 }
 
 class StakingDroplet {

@@ -138,7 +138,7 @@ function protoStructMinimumQuantity(struct: { [key: string]: any }): number {
 /**
  * The default quantity to be provided as a tip/reward to the block producer.
  */
-export const defaultTransactionTip = 1000;
+export const defaultTransactionTip = 150;
 
 /**
  * Checks if a transaction output is a liquid token, meaning it is not used for staking, is not an account registration, and contains no graph data.

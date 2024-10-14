@@ -123,7 +123,7 @@ Int64 protoStructMinimumQuantity(struct.Struct struct) {
   });
 }
 
-final defaultTransactionTip = Int64(1000);
+final defaultTransactionTip = Int64(150);
 
 extension FullBodyOps on FullBlockBody {
   Transaction? get rewardTransaction => transactions
