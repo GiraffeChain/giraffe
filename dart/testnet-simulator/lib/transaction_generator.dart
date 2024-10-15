@@ -16,7 +16,8 @@ class TransactionGenerator {
 
   Stream<Transaction> run(Duration period) =>
       _targets().parAsyncMap(64, (t) async {
-        final (sender, recipient, client) = t;
+        final client = clients[_random.nextInt(clients.length)];
+        final (sender, recipient) = t;
         await sender.update(client);
         final transaction = await sender.payAndAttest(
             client,
@@ -32,17 +33,15 @@ class TransactionGenerator {
         return transaction;
       }).throttleTime(period);
 
-  Stream<(Wallet sender, LockAddress recipient, BlockchainClient client)>
-      _targets() async* {
+  Stream<(Wallet sender, LockAddress recipient)> _targets() async* {
     var walletIndex = 0;
     _incIndex() => walletIndex = (walletIndex + 1) % wallets.length;
     while (true) {
-      final client = clients[_random.nextInt(clients.length)];
       Wallet sender = wallets[walletIndex];
       Wallet recipient =
           wallets[walletIndex == 0 ? wallets.length - 1 : walletIndex - 1];
       _incIndex();
-      yield (sender, recipient.defaultLockAddress, client);
+      yield (sender, recipient.defaultLockAddress);
     }
   }
 }
