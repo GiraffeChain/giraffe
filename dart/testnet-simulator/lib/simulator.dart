@@ -187,7 +187,7 @@ class Simulator {
         i,
         digitalOceanToken,
         initializer,
-        relays[Random().nextInt(relays.length)],
+        relays[i % relays.length],
       ));
     }
     try {
