@@ -1,5 +1,3 @@
-import 'simulation_record.dart';
-
 abstract class SimulationStatus {
   const SimulationStatus();
 
@@ -16,28 +14,19 @@ class SimulationStatus_Initializing extends SimulationStatus {
 }
 
 class SimulationStatus_Running extends SimulationStatus {
-  final List<SimulationRecord> records;
-
-  const SimulationStatus_Running({required this.records}) : super();
-
   @override
   Map<String, dynamic> toJson() {
     return {
       "status": "running",
-      "records": records.map((r) => r.toJson()).toList(),
     };
   }
 }
 
 class SimulationStatus_Completed extends SimulationStatus {
-  final List<SimulationRecord> records;
-
-  const SimulationStatus_Completed({required this.records}) : super();
   @override
   Map<String, dynamic> toJson() {
     return {
       "status": "completed",
-      "records": records.map((r) => r.toJson()).toList(),
     };
   }
 }

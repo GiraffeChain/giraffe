@@ -21,6 +21,8 @@ class Simulator {
   final double tps;
   final String digitalOceanToken;
   SimulationStatus status = SimulationStatus_Initializing();
+  List<AdoptionRecord> adoptionRecords = [];
+  List<BlockRecord> blockRecords = [];
 
   Simulator(
       {required this.stakerCount,
@@ -67,6 +69,8 @@ class Simulator {
     final server = SimulatorHttpServer(
       genesis: genesis,
       status: () => status,
+      adoptions: () => adoptionRecords,
+      blocks: () => blockRecords,
     );
     // No await
     server.run();
@@ -81,13 +85,13 @@ class Simulator {
       await Future.delayed(startTime
           .subtract(const Duration(seconds: 10))
           .difference(DateTime.now()));
-      final runningStatus = SimulationStatus_Running(records: []);
+      final runningStatus = SimulationStatus_Running();
       status = runningStatus;
       final recordsSub = recordsStream(relays).listen(
         (record) {
           log.info(
-              "Recording block id=${record.blockId} height=${record.height} slot=${record.slot} droplet ${record.dropletId}");
-          runningStatus.records.add(record);
+              "Recording block id=${record.blockId} droplet=${record.dropletId}");
+          adoptionRecords.add(record);
         },
         onError: (e, s) {
           log.severe("Error in simulation record stream", e, s);
@@ -109,7 +113,8 @@ class Simulator {
       await Future.delayed(duration);
       await transactionsSub.cancel();
       await recordsSub.cancel();
-      status = SimulationStatus_Completed(records: runningStatus.records);
+      blockRecords = await AdoptionRecord.blockRecords(adoptionRecords, relays);
+      status = SimulationStatus_Completed();
       log.info(
           "Mission complete. The simulation server will stay alive until manually stopped. View the results at http://$ip:8080/status");
     } finally {
@@ -218,8 +223,14 @@ class Simulator {
 class SimulatorHttpServer {
   final FullBlock genesis;
   final SimulationStatus Function() status;
+  final List<AdoptionRecord> Function() adoptions;
+  final List<BlockRecord> Function() blocks;
 
-  SimulatorHttpServer({required this.genesis, required this.status});
+  SimulatorHttpServer(
+      {required this.genesis,
+      required this.status,
+      required this.adoptions,
+      required this.blocks});
 
   Future<void> run() async {
     final server = await HttpServer.bind(InternetAddress.anyIPv4, 8080);
@@ -230,9 +241,29 @@ class SimulatorHttpServer {
         response.add(genesis.writeToBuffer());
       } else if (request.uri.path == "/status") {
         response.write(jsonEncode(status().toJson()));
+      } else if (request.uri.path == "/adoptions.csv") {
+        response.write(adoptionsCsv());
+      } else if (request.uri.path == "/blocks.csv") {
+        response.write(blocksCsv());
+      } else {
+        response.statusCode = HttpStatus.notFound;
       }
       await response.close();
     }
+  }
+
+  String adoptionsCsv() {
+    return [
+      "blockId,timestamp,dropletId",
+      ...adoptions().map((a) => a.toCsvRow())
+    ].join("\n");
+  }
+
+  String blocksCsv() {
+    return [
+      "blockId,parentBlockId,timestamp,height,slot,txCount",
+      ...blocks().map((b) => b.toCsvRow())
+    ].join("\n");
   }
 }
 
@@ -247,14 +278,13 @@ Future<String> publicIp() async {
   return split.last.trim();
 }
 
-Stream<SimulationRecord> recordsStream(List<RelayDroplet> relays) =>
+Stream<AdoptionRecord> recordsStream(List<RelayDroplet> relays) =>
     MergeStream(relays.map((r) => relayRecordsStream(r)));
 
-Stream<SimulationRecord> relayRecordsStream(RelayDroplet relay) =>
-    Stream.value(relay.client).asyncExpand((client) => retryableStream(
-        () => RepeatStream((_) => client.adoptions).asyncMap((id) async {
-              final header = await client.getBlockHeaderOrRaise(id);
-              final body = await client.getBlockBodyOrRaise(id);
-              return SimulationRecord.fromBlock(
-                  relay, Block(header: header, body: body));
-            })));
+Stream<AdoptionRecord> relayRecordsStream(RelayDroplet relay) =>
+    Stream.value(relay.client).asyncExpand((client) =>
+        retryableStream(() => RepeatStream((_) => client.adoptions)).map((id) =>
+            AdoptionRecord(
+                blockId: id,
+                timestamp: DateTime.now().millisecondsSinceEpoch,
+                dropletId: relay.id)));
