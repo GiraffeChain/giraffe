@@ -15,7 +15,7 @@ class TransactionGenerator {
   });
 
   Stream<Transaction> run(Duration period) =>
-      _targets().parAsyncMap(wallets.length ~/ 4, (t) async {
+      _targets().parAsyncMap(64, (t) async {
         final (sender, recipient, client) = t;
         await sender.update(client);
         final transaction = await sender.payAndAttest(

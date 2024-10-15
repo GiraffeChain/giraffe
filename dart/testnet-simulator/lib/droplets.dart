@@ -8,6 +8,8 @@ class RelayDroplet {
   final String id;
   final String ip;
   final String region;
+  late final BlockchainClient client =
+      BlockchainClientFromJsonRpc(baseAddress: "http://$ip:2024/api");
 
   RelayDroplet({required this.id, required this.ip, required this.region});
 
@@ -52,9 +54,6 @@ docker run -d --restart=always --pull=always --name giraffe-simulation-relay -p 
     log.info("Created relay container id=$id ip=$ip region=$region");
     return RelayDroplet(id: id, ip: ip, region: region);
   }
-
-  BlockchainClient get client =>
-      BlockchainClientFromJsonRpc(baseAddress: "http://$ip:2024/api");
 }
 
 class StakingDroplet {

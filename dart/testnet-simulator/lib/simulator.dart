@@ -160,14 +160,7 @@ class Simulator {
       log.info("Awaiting blockchain API ready");
       for (final container in containers) {
         await retryableFuture(
-          () async {
-            final response = await httpClient
-                .get(Uri.parse("http://${container.ip}:2024/api"));
-            if (response.statusCode != 200) {
-              throw StateError(
-                  "Failed to connect to relay http://${container.ip}:2024/api");
-            }
-          },
+          () => container.client.canonicalHeadId,
           retries: 60 * 5,
         );
       }
