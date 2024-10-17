@@ -207,43 +207,55 @@ Stream<R> retryableStream<R>(Stream<R> Function() f,
   }
 }
 
-Stream<O> parAsyncMapImpl<I, O>(
-    int parallelism, Stream<I> stream, Future<O> Function(I) f) {
-  bool running = false;
-  bool done = false;
-  final queue = Queue<Future<O>>();
-  final controller = StreamController<O>();
-  checkAndPush() async {
-    if (running) return;
-    running = true;
-    while (queue.isNotEmpty) {
-      final future = queue.removeFirst();
-      final o = await future;
-      controller.add(o);
-    }
-    if (done) {
-      controller.close();
-    }
-    running = false;
-  }
-
-  final sub = stream.asyncMap((i) async {
-    if (queue.length >= parallelism) {
-      await queue.first;
-    }
-    queue.add(f(i));
-    checkAndPush();
-  }).listen((_) {}, cancelOnError: true);
-  controller.onCancel = sub.cancel;
-  sub.onError(controller.addError);
-  sub.onDone(() {
-    done = true;
-    checkAndPush();
-  });
-  return controller.stream;
-}
+StreamTransformer<I, O> parAsyncMapTransformer<I, O>(
+        int parallelism, Future<O> Function(I) f) =>
+    StreamTransformer.fromBind((Stream<I> stream) async* {
+      final queue = Queue<Completer<O>>();
+      await for (final i in stream) {
+        while (queue.isNotEmpty && queue.first.isCompleted ||
+            queue.length >= parallelism) {
+          yield await queue.removeFirst().future;
+        }
+        queue.add(Completer()..complete(f(i)));
+      }
+      while (queue.isNotEmpty) {
+        yield await queue.removeFirst().future;
+      }
+    });
 
 extension ParStreamOps<T> on Stream<T> {
   Stream<O> parAsyncMap<O>(int parallelism, Future<O> Function(T) f) =>
-      parAsyncMapImpl(parallelism, this, f);
+      transform(parAsyncMapTransformer(parallelism, f));
+}
+
+extension ThrottleStreamOps<T> on Stream<T> {
+  Stream<T> rpsThrottled(double rps) => rps < 1
+      ? throttled(Duration(milliseconds: (1000 / rps).round()))
+      : bucketThrottled((rps * 10).round(), Duration(seconds: 10));
+  Stream<T> throttled(Duration duration) async* {
+    var lastSent = DateTime.now();
+    await for (final t in this) {
+      final n = DateTime.now();
+      final diff = n.difference(lastSent);
+      if (diff < duration) {
+        await Future.delayed(duration - diff);
+      }
+      lastSent = DateTime.now();
+      yield t;
+    }
+  }
+
+  Stream<T> bucketThrottled(int quantity, Duration duration) async* {
+    var lastSent = DateTime.now();
+    var dispatched = 0;
+    await for (final t in this) {
+      if (dispatched >= quantity) {
+        final n = DateTime.now();
+        await Future.delayed(duration - n.difference(lastSent));
+        lastSent = n;
+        dispatched = 0;
+      }
+      yield t;
+    }
+  }
 }

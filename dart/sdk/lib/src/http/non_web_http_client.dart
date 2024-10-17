@@ -5,4 +5,5 @@ import 'package:http/io_client.dart';
 
 final corsHeaders = <String, String>{};
 
-Client makeHttpClient() => IOClient(HttpClient()..maxConnectionsPerHost = 16);
+Client makeHttpClient() =>
+    IOClient(); // IOClient(HttpClient()..maxConnectionsPerHost = 32);
