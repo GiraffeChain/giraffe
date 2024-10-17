@@ -26,13 +26,13 @@ class AdoptionRecord {
   static Future<List<BlockRecord>> blockRecords(
       List<AdoptionRecord> adoptionRecords, List<RelayDroplet> relays) async {
     final adoptees = <BlockId, String>{};
-    for (final adoptionRecords in adoptionRecords.reversed) {
+    for (final adoptionRecords in adoptionRecords) {
       adoptees[adoptionRecords.blockId] = adoptionRecords.dropletId;
     }
     final clients =
         Map.fromEntries(relays.map((r) => MapEntry(r.id, r.client)));
-    return await Stream.fromIterable(adoptees.entries).parAsyncMap(32,
-        (entry) async {
+    final blockRecords = await Stream.fromIterable(adoptees.entries)
+        .parAsyncMap(32, (entry) async {
       final client = clients[entry.value]!;
       final header = await client.getBlockHeaderOrRaise(entry.key);
       final body = await client.getBlockBodyOrRaise(entry.key);
@@ -46,6 +46,8 @@ class AdoptionRecord {
         txCount: body.transactionIds.length,
       );
     }).toList();
+    blockRecords.sort((r, r1) => r.height.compareTo(r1.height));
+    return blockRecords;
   }
 }
 
@@ -81,5 +83,30 @@ class BlockRecord {
 
   String toCsvRow() {
     return "$blockId,$parentBlockId,$timestamp,$height,$slot,$txCount";
+  }
+}
+
+class TransactionRecord {
+  final String transactionId;
+  final String inputs;
+  final String outputs;
+
+  TransactionRecord(
+      {required this.transactionId,
+      required this.inputs,
+      required this.outputs});
+
+  factory TransactionRecord.fromTransaction(Transaction transaction) {
+    return TransactionRecord(
+      transactionId: transaction.id.show,
+      inputs: transaction.inputs.map((i) => i.reference.show).join(':'),
+      outputs: transaction.outputs
+          .map((o) => "${o.lockAddress.show}\$${o.quantity.toString()}")
+          .join(':'),
+    );
+  }
+
+  String toCsvRow() {
+    return "$transactionId,$inputs,$outputs";
   }
 }

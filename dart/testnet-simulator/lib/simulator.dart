@@ -23,6 +23,7 @@ class Simulator {
   SimulationStatus status = SimulationStatus_Initializing();
   List<AdoptionRecord> adoptionRecords = [];
   List<BlockRecord> blockRecords = [];
+  List<TransactionRecord> transactionRecords = [];
 
   Simulator(
       {required this.stakerCount,
@@ -71,6 +72,7 @@ class Simulator {
       status: () => status,
       adoptions: () => adoptionRecords,
       blocks: () => blockRecords,
+      transactions: () => transactionRecords,
     );
     // No await
     server.run();
@@ -90,7 +92,7 @@ class Simulator {
       final recordsSub = recordsStream(relays).listen(
         (record) {
           log.info(
-              "Recording block id=${record.blockId} droplet=${record.dropletId}");
+              "Recording block id=${record.blockId.show} droplet=${record.dropletId}");
           adoptionRecords.add(record);
         },
         onError: (e, s) {
@@ -100,16 +102,19 @@ class Simulator {
       );
       log.info("Running simulation for $duration");
       await Future.delayed(const Duration(seconds: 15));
-      final transactionsSub = TransactionGenerator(
-              wallets: wallets, clients: relays.map((r) => r.client).toList())
-          .run(Duration(milliseconds: 1000 ~/ tps))
-          .listen(
-            (tx) => log.info("Broadcasted tx id=${tx.id.show}"),
-            onError: (e, s) {
-              log.severe("Error in simulation record stream", e, s);
-            },
-            onDone: () => log.info("Simulation record stream done"),
-          );
+      final transactionsSub =
+          TransactionGenerator(wallets: wallets, relays: relays)
+              .run(tps)
+              .listen(
+        (tx) {
+          log.info("Broadcasted tx id=${tx.id.show}");
+          // transactionRecords.add(TransactionRecord.fromTransaction(tx));
+        },
+        onError: (e, s) {
+          log.severe("Error in simulation record stream", e, s);
+        },
+        onDone: () => log.info("Simulation record stream done"),
+      );
       await Future.delayed(duration);
       await transactionsSub.cancel();
       await recordsSub.cancel();
@@ -218,12 +223,15 @@ class SimulatorHttpServer {
   final SimulationStatus Function() status;
   final List<AdoptionRecord> Function() adoptions;
   final List<BlockRecord> Function() blocks;
+  final List<TransactionRecord> Function() transactions;
 
-  SimulatorHttpServer(
-      {required this.genesis,
-      required this.status,
-      required this.adoptions,
-      required this.blocks});
+  SimulatorHttpServer({
+    required this.genesis,
+    required this.status,
+    required this.adoptions,
+    required this.blocks,
+    required this.transactions,
+  });
 
   Future<void> run() async {
     final server = await HttpServer.bind(InternetAddress.anyIPv4, 8080);
@@ -238,6 +246,8 @@ class SimulatorHttpServer {
         response.write(adoptionsCsv());
       } else if (request.uri.path == "/blocks.csv") {
         response.write(blocksCsv());
+      } else if (request.uri.path == "/transactions.csv") {
+        response.write(transactionsCsv());
       } else {
         response.statusCode = HttpStatus.notFound;
       }
@@ -256,6 +266,13 @@ class SimulatorHttpServer {
     return [
       "blockId,parentBlockId,timestamp,height,slot,txCount",
       ...blocks().map((b) => b.toCsvRow())
+    ].join("\n");
+  }
+
+  String transactionsCsv() {
+    return [
+      "transactionId,inputs,outputs",
+      ...transactions().map((b) => b.toCsvRow())
     ].join("\n");
   }
 }
