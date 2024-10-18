@@ -16,3 +16,10 @@ pub fn rho_test_hash(rho: Vec<u8>) -> Vec<u8> {
     hasher.update("test".as_bytes());
     hasher.finalize().to_vec()
 }
+
+pub fn rho_nonce_hash(rho: Vec<u8>) -> Vec<u8> {
+    let mut hasher = Sha512::new();
+    hasher.update(rho);
+    hasher.update("nonce".as_bytes());
+    hasher.finalize().to_vec()
+}
