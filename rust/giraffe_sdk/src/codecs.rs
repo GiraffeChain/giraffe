@@ -1,13 +1,12 @@
-use crate::models;
+use crate::models::{self, BlockHeader};
 use crate::models::{
     AccountRegistration, Asset, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration,
     Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference,
     Vertex,
 };
 use base58::{FromBase58, ToBase58};
-use hex;
 use prost_types;
-use sha256;
+use sha2::{Digest, Sha256};
 
 pub fn show_block_id(block_id: &models::BlockId) -> String {
     format!("b_{}", block_id.value)
@@ -98,12 +97,83 @@ pub fn compute_transaction_id(transaction: &Transaction) -> TransactionId {
     }
 }
 
+pub trait TransactionExt {
+    fn id(&self) -> models::TransactionId;
+    fn embed_transaction_id(&mut self);
+    fn signable_bytes(&self) -> Vec<u8>;
+}
+
+impl TransactionExt for models::Transaction {
+    fn id(&self) -> models::TransactionId {
+        transaction_id(self)
+    }
+
+    fn embed_transaction_id(&mut self) {
+        embed_transaction_id(self)
+    }
+
+    fn signable_bytes(&self) -> Vec<u8> {
+        transaction_signable_bytes(self)
+    }
+}
+
+pub fn block_signable_bytes(header: &BlockHeader) -> Vec<u8> {
+    merge_arrays(&[
+        encode_block_id(&header.parent_header_id.as_ref().unwrap()),
+        from_b58(&header.tx_root),
+        encode_u64(header.timestamp),
+        encode_u64(header.height),
+        encode_u64(header.slot),
+        encode_staker_certificate(&header.staker_certificate.as_ref().unwrap()),
+        encode_transaction_output_reference(&header.account.as_ref().unwrap()),
+    ])
+}
+
+pub fn block_id(header: &BlockHeader) -> BlockId {
+    if let Some(ref id) = header.header_id {
+        id.clone()
+    } else {
+        compute_block_id(header)
+    }
+}
+
+pub fn embed_block_id(header: &mut BlockHeader) {
+    header.header_id = Some(compute_block_id(header));
+}
+
+pub fn compute_block_id(header: &BlockHeader) -> BlockId {
+    let hash = hash256(&block_signable_bytes(header));
+    BlockId {
+        value: hash.to_base58(),
+    }
+}
+
+pub trait BlockHeaderExt {
+    fn id(&self) -> models::BlockId;
+    fn embed_block_id(&mut self);
+    fn signable_bytes(&self) -> Vec<u8>;
+}
+
+impl BlockHeaderExt for models::BlockHeader {
+    fn id(&self) -> models::BlockId {
+        block_id(self)
+    }
+
+    fn embed_block_id(&mut self) {
+        embed_block_id(self)
+    }
+
+    fn signable_bytes(&self) -> Vec<u8> {
+        block_signable_bytes(self)
+    }
+}
+
 fn encode_i32(value: i32) -> Vec<u8> {
     value.to_be_bytes().to_vec()
 }
 
 fn encode_u32(value: u32) -> Vec<u8> {
-    value.to_be_bytes().to_vec()
+    encode_i32(value as i32)
 }
 
 fn encode_i64(value: i64) -> Vec<u8> {
@@ -111,7 +181,7 @@ fn encode_i64(value: i64) -> Vec<u8> {
 }
 
 fn encode_u64(value: u64) -> Vec<u8> {
-    value.to_be_bytes().to_vec()
+    encode_i64(value as i64)
 }
 
 fn encode_list<T, F>(encode_t: F, list: &[T]) -> Vec<u8>
@@ -249,12 +319,31 @@ fn encode_struct_value(value: &prost_types::Value) -> Vec<u8> {
     }
 }
 
-fn encode_utf8(value: &str) -> Vec<u8> {
+fn encode_staker_certificate(value: &models::StakerCertificate) -> Vec<u8> {
+    merge_arrays(&[
+        from_b58(&value.block_signature),
+        from_b58(&value.vrf_signature),
+        from_b58(&value.vrf_vk),
+        from_b58(&value.eta),
+    ])
+}
+
+pub fn encode_utf8(value: &str) -> Vec<u8> {
     value.as_bytes().to_vec()
 }
 
-fn hash256(data: &[u8]) -> Vec<u8> {
-    hex::FromHex::from_hex(sha256::digest(data)).unwrap()
+pub fn hash256(data: &[u8]) -> Vec<u8> {
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    hasher.finalize().to_vec()
+}
+
+pub fn to_b58(data: &[u8]) -> String {
+    data.to_base58()
+}
+
+pub fn from_b58(data: &str) -> Vec<u8> {
+    data.from_base58().unwrap()
 }
 
 fn opt_codec<T, F>(t: &Option<T>, encode: F) -> Vec<u8>
