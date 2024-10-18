@@ -1,3 +1,4 @@
+pub mod clock;
 pub mod codecs;
 pub mod consensus;
 pub mod models;
