@@ -7,12 +7,9 @@ pub struct ProtocolSettings {
     pub chain_selection_k_lookback: u64,
     pub slot_duration_ms: u64,
 }
-trait ProtolSettingsExt {
-    fn chain_selection_s_window(&self) -> u64;
-    fn epoch_length(&self) -> u64;
-}
-impl ProtolSettingsExt for ProtocolSettings {
-    fn chain_selection_s_window(&self) -> u64 {
+
+impl ProtocolSettings {
+    pub fn chain_selection_s_window(&self) -> u64 {
         (BigRational::new(
             BigInt::from(self.chain_selection_k_lookback),
             BigInt::from(4),
@@ -21,7 +18,7 @@ impl ProtolSettingsExt for ProtocolSettings {
         .to_u64_digits()
         .1[0]
     }
-    fn epoch_length(&self) -> u64 {
+    pub fn epoch_length(&self) -> u64 {
         (BigRational::new(
             BigInt::from(self.chain_selection_k_lookback),
             BigInt::from(3),

@@ -5,13 +5,10 @@ use crate::codecs::BlockHeaderExt;
 use crate::consensus::rho::rho;
 use crate::models;
 
-pub struct ChainSelectionConfig {
-    pub k_lookback: u64,
-    pub s_window: u64,
-}
+use super::protocol_settings::ProtocolSettings;
 
 pub async fn chain_selection<Fetch>(
-    config: &ChainSelectionConfig,
+    config: &ProtocolSettings,
     header_x: &models::BlockHeader,
     header_y: &models::BlockHeader,
     common_ancestor: &models::BlockHeader,
@@ -25,8 +22,8 @@ where
         return ChainSelectionOutcome::StandardX;
     } else if header_x.id() == common_ancestor.id() {
         return ChainSelectionOutcome::StandardY;
-    } else if header_x.height - common_ancestor.height <= config.k_lookback
-        && header_y.height - common_ancestor.height <= config.k_lookback
+    } else if header_x.height - common_ancestor.height <= config.chain_selection_k_lookback
+        && header_y.height - common_ancestor.height <= config.chain_selection_k_lookback
     {
         return chain_selection_standard(header_x, header_y);
     } else {
@@ -61,7 +58,7 @@ fn chain_selection_standard(
 }
 
 async fn chain_selection_density<Fetch>(
-    config: &ChainSelectionConfig,
+    config: &ProtocolSettings,
     common_ancestor: &models::BlockHeader,
     fetch_x: Fetch,
     fetch_y: Fetch,
@@ -73,7 +70,7 @@ where
     loop {
         let f = fetch_x(x_boundary.height + 1).await;
         if let Some(n) = f {
-            if n.slot - common_ancestor.slot >= config.s_window {
+            if n.slot - common_ancestor.slot >= config.chain_selection_s_window() {
                 break;
             }
             x_boundary = n;

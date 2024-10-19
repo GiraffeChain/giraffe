@@ -1,6 +1,7 @@
 pub mod clock;
 pub mod codecs;
 pub mod consensus;
+pub mod data;
 pub mod models;
 
 pub fn add(left: u64, right: u64) -> u64 {
