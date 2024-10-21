@@ -346,6 +346,10 @@ pub fn from_b58(data: &str) -> Vec<u8> {
     data.from_base58().unwrap()
 }
 
+pub fn from_b58_string(data: String) -> Vec<u8> {
+    data.from_base58().unwrap()
+}
+
 fn opt_codec<T, F>(t: &Option<T>, encode: F) -> Vec<u8>
 where
     F: Fn(&T) -> Vec<u8>,

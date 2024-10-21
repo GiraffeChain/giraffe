@@ -29,9 +29,7 @@ class PartialStakerCertificate {
   final String eta;
 
   PartialStakerCertificate(
-      {required this.vrfSignature,
-      required this.vrfVK,
-      required this.eta});
+      {required this.vrfSignature, required this.vrfVK, required this.eta});
 }
 
 extension BlockHeaderOps on BlockHeader {

@@ -108,7 +108,8 @@ class BlockProducerImpl extends BlockProducer {
       ..fullBody = body;
   }
 
-  Future<VrfHit?> _nextEligibility(SlotId parentSlotId, Int64 fromSlot, bool Function() cancelCheck) async {
+  Future<VrfHit?> _nextEligibility(
+      SlotId parentSlotId, Int64 fromSlot, bool Function() cancelCheck) async {
     var exitSlot =
         clock.epochRange(clock.epochOfSlot(parentSlotId.slot) + 1).$2;
     var test = fromSlot;

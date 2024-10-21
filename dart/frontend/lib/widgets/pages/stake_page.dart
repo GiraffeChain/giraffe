@@ -263,7 +263,11 @@ class RunMintingState extends ConsumerState<RunMinting> {
             );
           } else {
             return TextButton.icon(
-              onPressed: () {
+              onPressed: () async {
+                if (isAndroidSafe) {
+                  await FlutterBackground.initialize(
+                      androidConfig: _flutterBackgroundServiceConfig);
+                }
                 setState(() {});
               },
               label: const Text("Request Permissions"),

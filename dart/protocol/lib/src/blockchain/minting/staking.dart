@@ -75,9 +75,7 @@ class StakingImpl extends Staking {
     if (isLeader) {
       final testProof = await vrfCalculator.proofForSlot(slot, eta);
       final cert = PartialStakerCertificate(
-          vrfSignature: testProof.base58,
-          vrfVK: vkVrf.base58,
-          eta: eta.base58);
+          vrfSignature: testProof.base58, vrfVK: vkVrf.base58, eta: eta.base58);
       return VrfHit(cert, slot, threshold);
     }
     return null;
