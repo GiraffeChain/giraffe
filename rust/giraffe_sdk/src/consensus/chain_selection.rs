@@ -2,7 +2,7 @@ use std::future::Future;
 use std::pin::Pin;
 
 use crate::codecs::BlockHeaderExt;
-use crate::consensus::rho::rho;
+use crate::consensus::rho::rho_from_b58;
 use crate::models;
 
 use super::protocol_settings::ProtocolSettings;
@@ -44,8 +44,8 @@ fn chain_selection_standard(
     } else if header_y.slot > header_x.slot {
         return ChainSelectionOutcome::StandardX;
     } else {
-        let rho_x = rho(&header_x.staker_certificate.as_ref().unwrap().vrf_signature);
-        let rho_y = rho(&header_y.staker_certificate.as_ref().unwrap().vrf_signature);
+        let rho_x = rho_from_b58(&header_x.staker_certificate.as_ref().unwrap().vrf_signature);
+        let rho_y = rho_from_b58(&header_y.staker_certificate.as_ref().unwrap().vrf_signature);
         for n in 0..rho_x.len() {
             if rho_x[n] > rho_y[n] {
                 return ChainSelectionOutcome::StandardX;

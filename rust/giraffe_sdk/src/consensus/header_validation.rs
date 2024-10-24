@@ -6,27 +6,30 @@ use vrf::{
 use crate::{
     clock::Clock,
     codecs::{from_b58, BlockHeaderExt},
-    data::Storage,
+    data::FetchHeader,
     models::{BlockHeader, BlockId, SlotId},
 };
 
-use super::{eta_calculation::EtaCalCulation, protocol_settings::ProtocolSettings};
+use super::{eta_calculation::EtaCalculation, protocol_settings::ProtocolSettings};
 
-pub struct HeaderValidation {
+pub struct HeaderValidation<F: FetchHeader> {
     pub genesis_id: BlockId,
-    pub eta_calculation: EtaCalCulation,
     pub protocol_settings: ProtocolSettings,
     pub clock: Clock,
+    pub eta_calculation: EtaCalculation<F>,
+    pub fetch_header: F,
 }
 
-impl HeaderValidation {
-    pub async fn validate<S: Storage>(&self, header: &BlockHeader, storage: S) -> Result<(), &str> {
+impl<F: FetchHeader> HeaderValidation<F> {
+    pub async fn validate(&self, header: &BlockHeader) -> Result<(), &str> {
         if header.id() == self.genesis_id {
             return Ok(());
         }
-        let parent = storage
-            .fetch_header(header.parent_header_id.clone().unwrap())
-            .await;
+        let parent = self
+            .fetch_header
+            .fetch(header.parent_header_id.clone().unwrap())
+            .await
+            .ok_or("Parent header not found")?;
         if header.slot <= parent.slot {
             return Err("Non-Forward slot");
         }
@@ -39,7 +42,6 @@ impl HeaderValidation {
         let expected_eta = self
             .eta_calculation
             .next_eta(
-                storage,
                 SlotId {
                     slot: parent.slot,
                     block_id: header.parent_header_id.clone(),

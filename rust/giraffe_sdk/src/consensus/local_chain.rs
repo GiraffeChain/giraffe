@@ -1,23 +1,23 @@
-use crate::{data::Storage, models::BlockId};
-use async_broadcast::{broadcast, Receiver, Sender, TryRecvError};
+use crate::{data::FetchHeader, models::BlockId};
+use async_broadcast::{broadcast, Receiver, Sender};
 
-pub struct LocalChain<S: Storage> {
+pub struct LocalChain<S: FetchHeader> {
     pub genesis: BlockId,
     pub head: BlockId,
     pub broadcaster: Sender<BlockId>,
     pub receiver: Receiver<BlockId>,
-    pub storage: S,
+    fetch_header: S,
 }
 
-impl<S: Storage> LocalChain<S> {
-    fn new(genesis: BlockId, head: BlockId, storage: S) -> LocalChain<S> {
+impl<S: FetchHeader> LocalChain<S> {
+    fn new(genesis: BlockId, head: BlockId, fetch_header: S) -> LocalChain<S> {
         let (s, r): (Sender<BlockId>, Receiver<BlockId>) = broadcast(16);
         LocalChain {
             genesis,
             head,
             broadcaster: s,
             receiver: r,
-            storage,
+            fetch_header,
         }
     }
 }

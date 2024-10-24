@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+use std::string;
+
+use crate::minting::staking::{PartialStakerCertificate, UnsignedBlockHeader};
 use crate::models::{self, BlockHeader};
 use crate::models::{
     AccountRegistration, Asset, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration,
@@ -127,6 +131,27 @@ pub fn block_signable_bytes(header: &BlockHeader) -> Vec<u8> {
         encode_staker_certificate(&header.staker_certificate.as_ref().unwrap()),
         encode_transaction_output_reference(&header.account.as_ref().unwrap()),
     ])
+}
+
+pub fn unsigned_block_signable_bytes(header: &UnsignedBlockHeader) -> Vec<u8> {
+    merge_arrays(&[
+        encode_block_id(&header.parent_header_id.as_ref().unwrap()),
+        from_b58(&header.tx_root),
+        encode_u64(header.timestamp),
+        encode_u64(header.height),
+        encode_u64(header.slot),
+        encode_partial_staker_certificate(&header.partial_staker_certificate.as_ref().unwrap()),
+        encode_transaction_output_reference(&header.account.as_ref().unwrap()),
+        encode_block_settings(&header.settings),
+    ])
+}
+
+pub fn encode_block_settings(settings: &HashMap<String, String>) -> Vec<u8> {
+    let mut result = Vec::new();
+    for (key, value) in settings.iter() {
+        result.extend(merge_arrays(&[encode_utf8(key), encode_utf8(value)]));
+    }
+    result
 }
 
 pub fn block_id(header: &BlockHeader) -> BlockId {
@@ -321,7 +346,16 @@ fn encode_struct_value(value: &prost_types::Value) -> Vec<u8> {
 
 fn encode_staker_certificate(value: &models::StakerCertificate) -> Vec<u8> {
     merge_arrays(&[
-        from_b58(&value.block_signature),
+        // from_b58(&value.block_signature),
+        from_b58(&value.vrf_signature),
+        from_b58(&value.vrf_vk),
+        from_b58(&value.eta),
+    ])
+}
+
+fn encode_partial_staker_certificate(value: &PartialStakerCertificate) -> Vec<u8> {
+    merge_arrays(&[
+        // from_b58(&value.block_signature),
         from_b58(&value.vrf_signature),
         from_b58(&value.vrf_vk),
         from_b58(&value.eta),

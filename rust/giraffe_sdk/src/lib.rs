@@ -1,7 +1,9 @@
+pub mod block_tree;
 pub mod clock;
 pub mod codecs;
 pub mod consensus;
 pub mod data;
+pub mod minting;
 pub mod models;
 
 pub fn add(left: u64, right: u64) -> u64 {

@@ -5,6 +5,14 @@ use num_bigint::{BigInt, Sign};
 use num_rational::BigRational;
 use num_traits::{One, Signed, Zero};
 
+use super::protocol_settings::ProtocolSettings;
+
+impl ProtocolSettings {
+    pub fn get_threshold(&self, relative_stake: BigRational, slot_diff: u64) -> BigRational {
+        get_threshold(self.vrf_amplitude.clone(), relative_stake, slot_diff)
+    }
+}
+
 pub fn get_threshold(
     vrf_amplitude: BigRational,
     relative_stake: BigRational,
