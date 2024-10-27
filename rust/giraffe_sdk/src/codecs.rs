@@ -1,12 +1,10 @@
 use std::collections::HashMap;
-use std::string;
 
 use crate::minting::staking::{PartialStakerCertificate, UnsignedBlockHeader};
 use crate::models::{self, BlockHeader};
 use crate::models::{
-    AccountRegistration, Asset, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration,
-    Transaction, TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference,
-    Vertex,
+    Asset, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction,
+    TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Vertex,
 };
 use base58::{FromBase58, ToBase58};
 use prost_types;
@@ -245,22 +243,14 @@ fn encode_transaction_output(value: &TransactionOutput) -> Vec<u8> {
     merge_arrays(&[
         encode_lock_address(&value.lock_address.as_ref().unwrap()),
         encode_u64(value.quantity),
-        opt_codec(&value.account, encode_transaction_output_reference),
         opt_codec(&value.graph_entry, encode_graph_entry),
-        opt_codec(&value.account_registration, encode_account_registration),
+        opt_codec(&value.staking_registration, encode_staking_registration),
         opt_codec(&value.asset, encode_asset),
     ])
 }
 
 fn encode_lock_address(value: &LockAddress) -> Vec<u8> {
     value.value.from_base58().unwrap()
-}
-
-fn encode_account_registration(value: &AccountRegistration) -> Vec<u8> {
-    merge_arrays(&[
-        encode_lock_address(&value.association_lock.as_ref().unwrap()),
-        opt_codec(&value.staking_registration, encode_staking_registration),
-    ])
 }
 
 fn encode_graph_entry(value: &GraphEntry) -> Vec<u8> {

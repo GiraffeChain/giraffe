@@ -27,7 +27,7 @@ impl<F: FetchHeader> HeaderValidation<F> {
         }
         let parent = self
             .fetch_header
-            .fetch(header.parent_header_id.clone().unwrap())
+            .fetch_header(header.parent_header_id.clone().unwrap())
             .await
             .ok_or("Parent header not found")?;
         if header.slot <= parent.slot {

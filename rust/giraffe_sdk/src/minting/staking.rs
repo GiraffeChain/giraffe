@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use num_rational::BigRational;
 use secp256k1::{Message, Secp256k1, SecretKey};
 use vrf::{
@@ -28,7 +30,7 @@ pub struct Staker<F: FetchHeader> {
 }
 
 pub trait Staking<S: FetchHeader> {
-    async fn elect(&self, parent_slot_id: &SlotId, slot: u64) -> Option<VrfHit>;
+    fn elect(&self, parent_slot_id: &SlotId, slot: u64) -> impl Future<Output = Option<VrfHit>>;
 
     fn sign_block(&self, block: &UnsignedBlockHeader) -> BlockHeader;
 

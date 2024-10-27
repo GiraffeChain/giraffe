@@ -12,11 +12,11 @@ use crate::{
 use tokio_rusqlite::Connection;
 
 pub trait FetchHeader {
-    fn fetch(&self, block_id: BlockId) -> impl Future<Output = Option<BlockHeader>>;
+    fn fetch_header(&self, block_id: BlockId) -> impl Future<Output = Option<BlockHeader>>;
 }
 
 impl FetchHeader for Connection {
-    async fn fetch(&self, block_id: BlockId) -> Option<BlockHeader> {
+    async fn fetch_header(&self, block_id: BlockId) -> Option<BlockHeader> {
         let id = block_id.clone();
         self.call(|conn| {
             let mut stmt = conn.prepare("SELECT parent_header_id, tx_root, timestamp, height, slot, staker_certificate, account_tx, account_index, settings FROM headers WHERE block_id = ?")?;
@@ -51,18 +51,19 @@ impl FetchHeader for Connection {
 }
 
 pub trait FetchBody {
-    fn fetch(&self, block_id: BlockId) -> impl Future<Output = Option<BlockBody>>;
+    fn fetch_body(&self, block_id: BlockId) -> impl Future<Output = Option<BlockBody>>;
 }
 
 impl FetchBody for Connection {
-    async fn fetch(&self, block_id: BlockId) -> Option<BlockBody> {
+    async fn fetch_body(&self, block_id: BlockId) -> Option<BlockBody> {
         let id = block_id.clone();
         let id2 = block_id.clone();
 
         let count_opt: Option<u32> = self
             .call(|conn| {
-                let mut statement =
-                    conn.prepare("SELECT tx_count FROM bodies_c WHERE block_id = ?")?;
+                let mut statement = conn.prepare(
+                    "SELECT tx_count FROM headers WHERE block_id = ? AND tx_count IS NOT NULL",
+                )?;
                 let mut rows = statement.query([id.value])?;
                 if let Some(count_row) = rows.next()? {
                     return Ok(Some(count_row.get(0)?));
@@ -99,4 +100,83 @@ impl FetchBody for Connection {
             return None;
         }
     }
+}
+
+pub async fn init_db(connection: &Connection) {
+    connection
+        .call(|connection| {
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS headers (
+            block_id TEXT PRIMARY KEY,
+            parent_header_id TEXT,
+            tx_root TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            height INTEGER NOT NULL,
+            slot INTEGER NOT NULL,
+            staker_certificate TEXT NOT NULL,
+            account_tx TEXT NOT NULL,
+            account_index INTEGER NOT NULL,
+            settings TEXT,
+            tx_count INTEGER
+        )",
+                [],
+            )?;
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS bodies (
+            block_id TEXT NOT NULL,
+            index INTEGER NOT NULL,
+            transaction_id TEXT NOT NULL
+        )",
+                [],
+            )?;
+            // TODO: PK
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS transaction_outputs (
+            transaction_id TEXT NOT NULL,
+            index INTEGER NOT NULL,
+            quantity INTEGER NOT NULL,
+            staking_registration TEXT,
+            graph_label TEXT,
+            graph_data TEXT,
+            graph_a_id TEXT,
+            graph_a_idx INTEGER,
+            graph_b_id TEXT,
+            graph_b_idx INTEGER,
+            asset_id TEXT,
+            asset_idx INTEGER,
+            asset_quantity INTEGER,
+        )",
+                [],
+            )?;
+            // TODO: PK
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS transaction_inputs (
+            transaction_id TEXT,
+            index INTEGER,
+            spent_transaction_id TEXT,
+            spent_transaction_idx INTEGER,
+        )",
+                [],
+            )?;
+            // TODO: PK
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS staking_meta (
+            key TEXT NOT NULL,
+            value INTEGER NOT NULL,
+        )",
+                [],
+            )?;
+            // TODO: PK
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS stakers (
+            account_tx TEXT NOT NULL,
+            account_tx_idx INTEGER NOT NULL,
+        )",
+                [],
+            )?;
+
+            Ok(())
+        })
+        .await
+        .unwrap();
 }

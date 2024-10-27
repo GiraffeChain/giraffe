@@ -24,7 +24,7 @@ impl<F: FetchHeader> EtaCalculation<F> {
             let parent_epoch = self.clock.epoch_of(parent_slot_id.slot as i64);
             let parent_header = self
                 .fetch_header
-                .fetch(parent_slot_id.block_id.unwrap())
+                .fetch_header(parent_slot_id.block_id.unwrap())
                 .await
                 .unwrap();
             if parent_epoch == child_epoch {
@@ -37,7 +37,7 @@ impl<F: FetchHeader> EtaCalculation<F> {
                 while two_thirds_best.slot % self.clock.epoch_length_slots > two_thirds_length {
                     two_thirds_best = self
                         .fetch_header
-                        .fetch(two_thirds_best.parent_header_id.unwrap())
+                        .fetch_header(two_thirds_best.parent_header_id.unwrap())
                         .await
                         .unwrap();
                 }
@@ -54,7 +54,7 @@ impl<F: FetchHeader> EtaCalculation<F> {
         let mut cont = false;
         let parent = self
             .fetch_header
-            .fetch(two_thirds_best.parent_header_id.clone().unwrap())
+            .fetch_header(two_thirds_best.parent_header_id.clone().unwrap())
             .await
             .unwrap();
         if parent.slot >= (epoch_start as u64) {
@@ -64,7 +64,7 @@ impl<F: FetchHeader> EtaCalculation<F> {
         while cont {
             let parent = self
                 .fetch_header
-                .fetch(two_thirds_best.parent_header_id.clone().unwrap())
+                .fetch_header(two_thirds_best.parent_header_id.clone().unwrap())
                 .await
                 .unwrap();
             if parent.slot >= (epoch_start as u64) {

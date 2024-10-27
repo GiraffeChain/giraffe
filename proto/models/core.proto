@@ -135,16 +135,9 @@ message TransactionOutputReference {
 message TransactionOutput {
     LockAddress lockAddress = 1 [(validate.rules).message.required = true];
     uint64 quantity = 2;
-    TransactionOutputReference account = 3;
-    GraphEntry graphEntry = 5;
-    AccountRegistration accountRegistration = 6;
-    Asset asset = 7;
-}
-
-message AccountRegistration {
-    LockAddress associationLock = 1 [(validate.rules).message.required = true];
-    // Optional.  If provided, introduces a new staker to the chain.
-    StakingRegistration stakingRegistration = 2;
+    GraphEntry graphEntry = 3;
+    StakingRegistration stakingRegistration = 4;
+    Asset asset = 5;
 }
 
 // A proof-of-stake registration
@@ -189,7 +182,7 @@ message ActiveStaker {
     // The staker's registration.  If not provided, the StakingAddress is not associated with a StakingRegistration
     StakingRegistration registration = 1 [(validate.rules).message.required = true];
     // the quantity of staked tokens for the epoch
-    int64 quantity = 2;
+    uint64 quantity = 2;
 }
 
 message LockAddress {

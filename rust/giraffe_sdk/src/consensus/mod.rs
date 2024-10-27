@@ -5,3 +5,4 @@ pub mod leader_election;
 pub mod local_chain;
 pub mod protocol_settings;
 pub mod rho;
+pub mod staker_tracker;

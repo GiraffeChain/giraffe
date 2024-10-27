@@ -36,6 +36,7 @@ impl<F: FetchHeader> BlockProducer<F> {
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_millis() as u64;
+        // TODO
         let tx_root = to_b58(Vec::with_capacity(32).as_slice());
         let unsigned_header: UnsignedBlockHeader = UnsignedBlockHeader {
             parent_header_id: Some(parent_header.id()),
@@ -48,6 +49,7 @@ impl<F: FetchHeader> BlockProducer<F> {
             settings: HashMap::new(),
         };
         let header = self.staking.sign_block(&unsigned_header);
+        // TODO: Block Packer
         let full_body = FullBlockBody {
             transactions: Vec::new(),
         };

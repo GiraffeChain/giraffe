@@ -72,3 +72,16 @@ async fn get_height(connection: &Connection, id: BlockId) -> u64 {
         .await
         .unwrap()
 }
+
+pub async fn current_event_id(connection: &Connection, name: String) -> BlockId {
+    connection
+        .call(move |conn| {
+            let mut stmt = conn.prepare("SELECT block_id FROM ess WHERE name = ?")?;
+            let mut rows = stmt.query([name.clone()])?;
+            Ok(BlockId {
+                value: rows.next()?.unwrap().get(0)?,
+            })
+        })
+        .await
+        .unwrap()
+}

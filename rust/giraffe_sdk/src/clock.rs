@@ -1,3 +1,4 @@
+#[derive(Clone, PartialEq)]
 pub struct Clock {
     pub slot_duration_ms: u64,
     pub genesis_time: u64,
