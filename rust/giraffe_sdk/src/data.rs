@@ -107,7 +107,7 @@ pub async fn init_db(connection: &Connection) {
         .call(|connection| {
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS headers (
-            block_id TEXT PRIMARY KEY,
+            block_id TEXT PRIMARY KEY NOT NULL,
             parent_header_id TEXT,
             tx_root TEXT NOT NULL,
             timestamp INTEGER NOT NULL,
@@ -121,19 +121,22 @@ pub async fn init_db(connection: &Connection) {
         )",
                 [],
             )?;
+            connection.execute("CREATE INDEX headers_height_idx ON headers (height)", [])?;
+            connection.execute("CREATE INDEX headers_slot_idx ON headers (slot)", [])?;
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS bodies (
             block_id TEXT NOT NULL,
             index INTEGER NOT NULL,
-            transaction_id TEXT NOT NULL
+            transaction_id TEXT NOT NULL,
+            PRIMARY KEY (block_id, index, transaction_id),
         )",
                 [],
             )?;
-            // TODO: PK
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS transaction_outputs (
             transaction_id TEXT NOT NULL,
             index INTEGER NOT NULL,
+            PRIMARY KEY (transaction_id, index),
             quantity INTEGER NOT NULL,
             staking_registration TEXT,
             graph_label TEXT,
@@ -148,29 +151,37 @@ pub async fn init_db(connection: &Connection) {
         )",
                 [],
             )?;
-            // TODO: PK
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS transaction_inputs (
-            transaction_id TEXT,
-            index INTEGER,
-            spent_transaction_id TEXT,
-            spent_transaction_idx INTEGER,
+            transaction_id TEXT NOT NULL,
+            index INTEGER NOT NULL,
+            PRIMARY KEY (transaction_id, index),
+            spent_transaction_id TEXT NOT NULL,
+            spent_transaction_idx INTEGER NOT NULL,
         )",
                 [],
             )?;
-            // TODO: PK
+            connection.execute("CREATE INDEX transaction_inputs_spent_transaction_id_idx ON transaction_inputs (spent_transaction_id)", [])?;
+            connection.execute("CREATE INDEX transaction_inputs_spent_transaction_idx_idx ON transaction_inputs (spent_transaction_idx)", [])?;
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS staking_meta (
-            key TEXT NOT NULL,
+            key TEXT PRIMARY KEY NOT NULL,
             value INTEGER NOT NULL,
         )",
                 [],
             )?;
-            // TODO: PK
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS stakers (
             account_tx TEXT NOT NULL,
             account_tx_idx INTEGER NOT NULL,
+            PRIMARY KEY (account_tx, account_tx_idx),
+        )",
+                [],
+            )?;
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS ess (
+            key TEXT PRIMARY KEY NOT NULL,
+            block_id TEXT NOT NULL,
         )",
                 [],
             )?;
