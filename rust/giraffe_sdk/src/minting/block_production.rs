@@ -3,19 +3,19 @@ use std::{collections::HashMap, time::SystemTime};
 use crate::{
     clock::Clock,
     codecs::{to_b58, BlockHeaderExt},
-    data::FetchHeader,
+    consensus::staker_tracker::StakerTracker,
     models::{BlockHeader, FullBlock, FullBlockBody, LockAddress, SlotId},
 };
 
 use super::staking::{Staker, Staking, UnsignedBlockHeader, VrfHit};
 
-pub struct BlockProducer<F: FetchHeader> {
-    pub staking: Staker<F>,
+pub struct BlockProducer<ST: StakerTracker> {
+    pub staking: Staker<ST>,
     pub clock: Clock,
     pub reward_address: LockAddress,
 }
 
-impl<F: FetchHeader> BlockProducer<F> {
+impl<ST: StakerTracker> BlockProducer<ST> {
     pub async fn next_eligibility(&self, parent_slot_id: SlotId) -> Option<VrfHit> {
         let mut test = parent_slot_id.slot + 1;
         let exit_slot = self
@@ -45,7 +45,7 @@ impl<F: FetchHeader> BlockProducer<F> {
             height: parent_header.height + 1,
             slot: hit.slot,
             partial_staker_certificate: Some(hit.certificate.clone()),
-            account: Some(self.staking.account.clone()),
+            account: Some(hit.account),
             settings: HashMap::new(),
         };
         let header = self.staking.sign_block(&unsigned_header);

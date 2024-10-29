@@ -1,10 +1,10 @@
 use std::{future::Future, sync::Mutex};
 
 use crate::{
-    block_tree::{current_event_id, BlockTree},
+    block_tree,
     clock::Clock,
     codecs::from_b58_string,
-    data::FetchBody,
+    data,
     models::{ActiveStaker, BlockId, StakingRegistration, TransactionOutputReference},
 };
 use num_bigint::BigInt;
@@ -111,11 +111,10 @@ async fn set_state_to(
     } else {
         meta.genesis_id.clone()
     };
-    let current = current_event_id(&connection, "stakers".to_owned()).await;
+    let current = block_tree::current_event_id(&connection, "stakers".to_owned()).await;
 
-    let (unapply_chain, apply_chain) = connection
-        .find_common_ancestor(current, epoch_boundary_block.clone())
-        .await;
+    let (unapply_chain, apply_chain) =
+        block_tree::find_common_ancestor(&connection, current, epoch_boundary_block.clone()).await;
     for id in unapply_chain[1..].iter() {
         unapply_stakers(&connection, &id, &unapply_chain[0]).await;
     }
@@ -125,8 +124,7 @@ async fn set_state_to(
 }
 
 async fn apply_stakers(connection: &Connection, block_id: &BlockId) {
-    let tx_ids = connection
-        .fetch_body(block_id.clone())
+    let tx_ids = data::fetch_body(connection, block_id.clone())
         .await
         .unwrap()
         .transaction_ids;
@@ -185,8 +183,7 @@ async fn apply_stakers(connection: &Connection, block_id: &BlockId) {
 }
 
 async fn unapply_stakers(connection: &Connection, block_id: &BlockId, parent: &BlockId) {
-    let mut tx_ids = connection
-        .fetch_body(block_id.clone())
+    let mut tx_ids = data::fetch_body(connection, block_id.clone())
         .await
         .unwrap()
         .transaction_ids
@@ -262,11 +259,11 @@ async fn boundary_of(
     head: &BlockId,
     epoch: &u64,
 ) -> BlockId {
-    let current = current_event_id(connection, "epoch_boundaries".to_owned()).await;
+    let current = block_tree::current_event_id(connection, "epoch_boundaries".to_owned()).await;
 
     if current != *head {
         let (unapply_chain, apply_chain) =
-            connection.find_common_ancestor(current, head.clone()).await;
+            block_tree::find_common_ancestor(connection, current, head.clone()).await;
         let common_ancestor_id = unapply_chain[0].clone();
         let common_ancestor_slot: u64 = connection
             .call(move |conn| {

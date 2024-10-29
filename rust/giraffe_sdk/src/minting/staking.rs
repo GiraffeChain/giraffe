@@ -1,7 +1,8 @@
 use std::future::Future;
 
+use num_bigint::BigInt;
 use num_rational::BigRational;
-use secp256k1::{Message, Secp256k1, SecretKey};
+use secp256k1::Secp256k1;
 use vrf::{
     openssl::{CipherSuite, ECVRF},
     VRF,
@@ -9,27 +10,26 @@ use vrf::{
 
 use crate::{
     clock::Clock,
-    codecs::{embed_block_id, hash256, to_b58, unsigned_block_signable_bytes},
+    codecs::{embed_block_id, to_b58, unsigned_block_signable_bytes},
     consensus::{
         eta_calculation::EtaCalculation, leader_election, protocol_settings::ProtocolSettings,
-        rho::rho,
+        rho::rho, staker_tracker::StakerTracker,
     },
-    data::FetchHeader,
     models::{BlockHeader, BlockId, SlotId, StakerCertificate, TransactionOutputReference},
 };
 
-pub struct Staker<F: FetchHeader> {
-    pub account: TransactionOutputReference,
-    pub vk_vrf: Vec<u8>,
-    pub sk_vrf: Vec<u8>,
-    pub vk_operator: Vec<u8>,
-    pub sk_operator: Vec<u8>,
-    pub eta_calculation: EtaCalculation<F>,
-    pub protocol_settings: ProtocolSettings,
-    pub clock: Clock,
+pub struct Staker<ST: StakerTracker> {
+    account: TransactionOutputReference,
+    vk_vrf: Vec<u8>,
+    sk_vrf: Vec<u8>,
+    key_pair_operator: secp256k1::Keypair,
+    eta_calculation: EtaCalculation,
+    protocol_settings: ProtocolSettings,
+    clock: Clock,
+    staker_tracker: ST,
 }
 
-pub trait Staking<S: FetchHeader> {
+pub trait Staking {
     fn elect(&self, parent_slot_id: &SlotId, slot: u64) -> impl Future<Output = Option<VrfHit>>;
 
     fn sign_block(&self, block: &UnsignedBlockHeader) -> BlockHeader;
@@ -39,15 +39,27 @@ pub trait Staking<S: FetchHeader> {
     fn rho_for_slot(&self, slot: u64, eta: Vec<u8>) -> Vec<u8>;
 }
 
-impl<S: FetchHeader> Staking<S> for Staker<S> {
+impl<ST: StakerTracker> Staking for Staker<ST> {
     async fn elect(&self, parent_slot_id: &SlotId, slot: u64) -> Option<VrfHit> {
         let eta = self
             .eta_calculation
             .next_eta(parent_slot_id.clone(), slot.clone() as i64)
             .await;
-        // TODO
-        let relative_stake: Option<BigRational> = None;
-        if let Some(relative_stake) = relative_stake {
+        let staker = self
+            .staker_tracker
+            .staker(
+                &parent_slot_id.block_id.clone().unwrap(),
+                &slot,
+                &self.account,
+            )
+            .await;
+        if let Some(staker) = staker {
+            let total_stake = self
+                .staker_tracker
+                .total_active_stake(&parent_slot_id.block_id.clone().unwrap(), &slot)
+                .await;
+            let relative_stake =
+                BigRational::new(BigInt::from(staker.quantity), BigInt::from(total_stake));
             let threshold = self
                 .protocol_settings
                 .get_threshold(relative_stake, slot - parent_slot_id.slot);
@@ -64,6 +76,7 @@ impl<S: FetchHeader> Staking<S> for Staker<S> {
                     certificate,
                     slot,
                     threshold,
+                    account: self.account.clone(),
                 });
             } else {
                 return None;
@@ -74,18 +87,13 @@ impl<S: FetchHeader> Staking<S> for Staker<S> {
     }
 
     fn sign_block(&self, block: &UnsignedBlockHeader) -> BlockHeader {
-        let message = Message::from_digest(
-            hash256(unsigned_block_signable_bytes(block).as_slice())
-                .try_into()
-                .unwrap(),
-        );
+        let signable = unsigned_block_signable_bytes(block);
+        let message = signable.as_slice();
         let routine = Secp256k1::new();
-        let sk =
-            SecretKey::from_byte_array(self.sk_operator.as_slice().try_into().unwrap()).unwrap();
-        let signature = routine.sign_ecdsa(&message, &sk);
+        let signature = routine.sign_schnorr_no_aux_rand(message, &self.key_pair_operator);
         let partial = block.partial_staker_certificate.as_ref().unwrap();
         let certificate = StakerCertificate {
-            block_signature: to_b58(&signature.serialize_compact()),
+            block_signature: to_b58(signature.as_byte_array()),
             vrf_signature: partial.vrf_signature.clone(),
             vrf_vk: partial.vrf_vk.clone(),
             eta: partial.eta.clone(),
@@ -124,6 +132,7 @@ pub struct VrfHit {
     pub certificate: PartialStakerCertificate,
     pub slot: u64,
     pub threshold: BigRational,
+    pub account: TransactionOutputReference,
 }
 
 #[derive(Clone, PartialEq)]

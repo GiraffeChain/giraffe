@@ -1,23 +1,29 @@
-use crate::{data::FetchHeader, models::BlockId};
+use crate::models::BlockId;
 use async_broadcast::{broadcast, Receiver, Sender};
+use tokio_rusqlite::Connection;
 
-pub struct LocalChain<S: FetchHeader> {
+pub struct LocalChain {
     pub genesis: BlockId,
     pub head: BlockId,
-    pub broadcaster: Sender<BlockId>,
+    broadcaster: Sender<BlockId>,
     pub receiver: Receiver<BlockId>,
-    fetch_header: S,
+    connection: Connection,
 }
 
-impl<S: FetchHeader> LocalChain<S> {
-    fn new(genesis: BlockId, head: BlockId, fetch_header: S) -> LocalChain<S> {
+impl LocalChain {
+    fn new(genesis: BlockId, head: BlockId, connection: Connection) -> LocalChain {
         let (s, r): (Sender<BlockId>, Receiver<BlockId>) = broadcast(16);
         LocalChain {
             genesis,
             head,
             broadcaster: s,
             receiver: r,
-            fetch_header,
+            connection,
         }
+    }
+
+    async fn adopt(&mut self, block_id: &BlockId) {
+        self.head = block_id.clone();
+        self.broadcaster.broadcast(block_id.clone()).await.unwrap();
     }
 }
