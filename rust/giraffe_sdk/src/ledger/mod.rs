@@ -1,6 +1,6 @@
 use std::hash::Hash;
 
-use crate::models::{graph_entry, Transaction, TransactionId, TransactionOutputReference};
+use crate::models::{Transaction, TransactionId, TransactionOutputReference};
 
 pub mod utxos;
 pub mod validation;
@@ -16,21 +16,16 @@ pub fn get_dependencies(transaction: &Transaction) -> Vec<TransactionOutputRefer
         }
     }
     for output in &transaction.outputs {
-        if let Some(graph_entry) = &output.graph_entry {
-            match &graph_entry.entry {
-                Some(graph_entry::Entry::Edge(edge)) => {
-                    if let Some(a) = edge.a.clone().filter(|r| r.transaction_id.is_some()) {
-                        if !deps.contains(&a) {
-                            deps.push(a);
-                        }
-                    }
-                    if let Some(b) = edge.b.clone().filter(|r| r.transaction_id.is_some()) {
-                        if !deps.contains(&b) {
-                            deps.push(b);
-                        }
-                    }
+        if let Some(edge) = &output.edge {
+            if let Some(a) = edge.a.clone().filter(|r| r.transaction_id.is_some()) {
+                if !deps.contains(&a) {
+                    deps.push(a);
                 }
-                _ => {}
+            }
+            if let Some(b) = edge.b.clone().filter(|r| r.transaction_id.is_some()) {
+                if !deps.contains(&b) {
+                    deps.push(b);
+                }
             }
         }
     }

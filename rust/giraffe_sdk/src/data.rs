@@ -5,11 +5,11 @@ use prost_types::Struct;
 use rusqlite::{params, Row};
 
 use crate::{
-    codecs::{decode_lock_address, from_b58, from_b58_string},
+    codecs::{decode_address, from_b58, from_b58_string},
     models::{
-        graph_entry, Asset, BlockBody, BlockHeader, BlockId, Edge, GraphEntry, StakerCertificate,
-        StakingRegistration, Transaction, TransactionId, TransactionInput, TransactionOutput,
-        TransactionOutputReference, Vertex, Witness,
+        Asset, BlockBody, BlockHeader, BlockId, Edge, StakerCertificate, StakingRegistration,
+        Transaction, TransactionId, TransactionInput, TransactionOutput,
+        TransactionOutputReference, Witness,
     },
 };
 use tokio_rusqlite::Connection;
@@ -96,63 +96,52 @@ pub async fn fetch_body(connection: &Connection, block_id: BlockId) -> Option<Bl
 fn decode_transaction_output(row: &Row) -> Result<TransactionOutput, tokio_rusqlite::Error> {
     let quantity: u64 = row.get(0)?;
     let address_str: String = row.get(1)?;
-    let staking_registration_str: Option<String> = row.get(2)?;
-    let graph_label: Option<String> = row.get(4)?;
-    let graph_data: Option<String> = row.get(5)?;
-    let graph_edge_lock_address: Option<String> = row.get(6)?;
+    let asset_id: Option<String> = row.get(2)?;
+    let asset_idx: Option<u32> = row.get(3)?;
+    let asset_quantity: Option<u64> = row.get(4)?;
+    let label: Option<String> = row.get(5)?;
+    let data_str: Option<String> = row.get(6)?;
     let graph_a_id: Option<String> = row.get(7)?;
     let graph_a_idx: Option<u32> = row.get(8)?;
-    let graph_b_id: Option<String> = row.get(9)?;
+    let graph_b_id: Option<String> = row.get(910)?;
     let graph_b_idx: Option<u32> = row.get(10)?;
-    let asset_id: Option<String> = row.get(11)?;
-    let asset_idx: Option<u32> = row.get(12)?;
-    let asset_quantity: Option<u64> = row.get(13)?;
+    let staking_registration_str: Option<String> = row.get(11)?;
+    let data = data_str.map(|value| Struct::decode(from_b58(value.as_str()).as_slice()).unwrap());
     let staking_registration: Option<StakingRegistration> = staking_registration_str
         .map(|value| StakingRegistration::decode(from_b58(value.as_str()).as_slice()).unwrap());
-    let graph_entry = if let Some(label) = graph_label {
-        let data =
-            graph_data.map(|value| Struct::decode(from_b58(value.as_str()).as_slice()).unwrap());
-        let e = match (graph_a_idx, graph_b_idx) {
-            (Some(a_idx), Some(b_idx)) => graph_entry::Entry::Edge(Edge {
-                label,
-                data,
-                a: Some(TransactionOutputReference {
-                    transaction_id: graph_a_id.map(|value| TransactionId { value }),
-                    index: a_idx,
-                }),
-                b: Some(TransactionOutputReference {
-                    transaction_id: graph_b_id.map(|value| TransactionId { value }),
-                    index: b_idx,
-                }),
+    let edge = match (graph_a_idx, graph_b_idx) {
+        (Some(a_idx), Some(b_idx)) => Some(Edge {
+            a: Some(TransactionOutputReference {
+                transaction_id: graph_a_id.map(|value| TransactionId { value }),
+                index: a_idx,
             }),
-            _ => graph_entry::Entry::Vertex(Vertex {
-                label,
-                edge_lock_address: graph_edge_lock_address
-                    .map(|value| decode_lock_address(value.as_str())),
-                data,
+            b: Some(TransactionOutputReference {
+                transaction_id: graph_b_id.map(|value| TransactionId { value }),
+                index: b_idx,
             }),
-        };
-        Some(GraphEntry { entry: Some(e) })
+        }),
+        _ => None,
+    };
+    let asset = if let Some(asset_idx) = asset_idx {
+        let origin = Some(TransactionOutputReference {
+            transaction_id: asset_id.map(|value| TransactionId { value }),
+            index: asset_idx,
+        });
+        Some(Asset {
+            origin,
+            quantity: asset_quantity.unwrap(),
+        })
     } else {
         None
     };
     let output = TransactionOutput {
         quantity,
-        lock_address: Some(decode_lock_address(address_str.as_str())),
+        address: Some(decode_address(address_str.as_str())),
+        asset,
+        label,
+        data,
+        edge,
         staking_registration,
-        graph_entry,
-        asset: if let Some(asset_idx) = asset_idx {
-            let origin = Some(TransactionOutputReference {
-                transaction_id: asset_id.map(|value| TransactionId { value }),
-                index: asset_idx,
-            });
-            Some(Asset {
-                origin,
-                quantity: asset_quantity.unwrap(),
-            })
-        } else {
-            None
-        },
     };
     Ok(output)
 }
@@ -295,17 +284,16 @@ pub async fn init_db(connection: &Connection) {
             PRIMARY KEY (transaction_id, index),
             quantity INTEGER NOT NULL,
             address TEXT NOT NULL,
-            staking_registration TEXT,
-            graph_label TEXT,
-            graph_data TEXT,
-            graph_edge_lock_address TEXT,
+            asset_origin_id TEXT,
+            asset_origin_idx INTEGER,
+            asset_quantity INTEGER,
+            label TEXT,
+            data TEXT,
             graph_a_id TEXT,
             graph_a_idx INTEGER,
             graph_b_id TEXT,
             graph_b_idx INTEGER,
-            asset_origin_id TEXT,
-            asset_origin_idx INTEGER,
-            asset_quantity INTEGER,
+            staking_registration TEXT,
         )",
                 [],
             )?;

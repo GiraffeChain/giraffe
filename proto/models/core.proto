@@ -117,9 +117,9 @@ message TransactionConfirmation {
 }
 
 message Witness {
-    LockAddress lockAddress = 3 [(validate.rules).message.required = true];
-    Lock lock = 1 [(validate.rules).message.required = true];
-    Key key = 2 [(validate.rules).message.required = true];
+    Address address = 1 [(validate.rules).message.required = true];
+    Script script = 2 [(validate.rules).message.required = true];
+    Args args = 3 [(validate.rules).message.required = true];
 }
 
 message TransactionInput {
@@ -133,11 +133,13 @@ message TransactionOutputReference {
 }
 
 message TransactionOutput {
-    LockAddress lockAddress = 1 [(validate.rules).message.required = true];
+    Address address = 1 [(validate.rules).message.required = true];
     uint64 quantity = 2;
-    GraphEntry graphEntry = 3;
-    StakingRegistration stakingRegistration = 4;
-    Asset asset = 5;
+    Asset asset = 3;
+    google.protobuf.StringValue label = 4;
+    google.protobuf.Struct data = 5;
+    Edge edge = 6;
+    StakingRegistration stakingRegistration = 7;
 }
 
 // A proof-of-stake registration
@@ -152,24 +154,9 @@ message StakingRegistration {
     string vk = 2;
 }
 
-message GraphEntry {
-    oneof entry {
-        Vertex vertex = 1;
-        Edge edge = 2;
-    }
-}
-
-message Vertex {
-    string label = 1;
-    google.protobuf.Struct data = 2;
-    LockAddress edgeLockAddress = 3;
-}
-
 message Edge {
-    string label = 1;
-    google.protobuf.Struct data = 2;
-    TransactionOutputReference a = 3 [(validate.rules).message.required = true];
-    TransactionOutputReference b = 4 [(validate.rules).message.required = true];
+    TransactionOutputReference a = 1 [(validate.rules).message.required = true];
+    TransactionOutputReference b = 2[(validate.rules).message.required = true];
 }
 
 message Asset {
@@ -185,36 +172,18 @@ message ActiveStaker {
     uint64 quantity = 2;
 }
 
-message LockAddress {
+message Address {
     // Base58 encoded
     // length = 32
     string value = 1;
 }
 
-message Lock {
-
-    oneof value {
-        Ed25519 ed25519 = 1;
-    }
-
-    message Ed25519 {
-        // Base58 encoded
-        // length = 32
-        string vk = 1;
-    }
+message Script {
+    string value = 1;
 }
 
-message Key {
-
-    oneof value {
-        Ed25519 ed25519 = 1;
-    }
-
-    message Ed25519 {
-        // Base58 encoded
-        // length = 64
-        string signature = 1;
-    }
+message Args {
+    google.protobuf.Struct value = 1;
 }
 
 message PeerId {

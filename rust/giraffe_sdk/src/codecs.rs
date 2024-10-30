@@ -1,10 +1,11 @@
 use std::collections::HashMap;
+use std::ops::Add;
 
 use crate::minting::staking::{PartialStakerCertificate, UnsignedBlockHeader};
-use crate::models::{self, BlockHeader};
+use crate::models::{self, Address, BlockHeader, Script};
 use crate::models::{
-    Asset, BlockId, Edge, GraphEntry, Lock, LockAddress, StakingRegistration, Transaction,
-    TransactionId, TransactionInput, TransactionOutput, TransactionOutputReference, Vertex,
+    Asset, BlockId, Edge, StakingRegistration, Transaction, TransactionId, TransactionInput,
+    TransactionOutput, TransactionOutputReference,
 };
 use base58::{FromBase58, ToBase58};
 use prost_types;
@@ -18,8 +19,8 @@ pub fn show_transaction_id(transaciton_id: &models::TransactionId) -> String {
     format!("t_{}", transaciton_id.value)
 }
 
-pub fn show_lock_address(lock_address: &models::LockAddress) -> String {
-    format!("a_{}", lock_address.value)
+pub fn show_address(address: &models::Address) -> String {
+    format!("a_{}", address.value)
 }
 
 pub fn show_transaction_output_reference(reference: &TransactionOutputReference) -> String {
@@ -58,7 +59,7 @@ pub fn decode_transaction_id(input: &str) -> TransactionId {
     }
 }
 
-pub fn decode_lock_address(input: &str) -> LockAddress {
+pub fn decode_address(input: &str) -> Address {
     let value = if input.starts_with("a_") {
         &input[2..]
     } else {
@@ -67,7 +68,7 @@ pub fn decode_lock_address(input: &str) -> LockAddress {
     if value.from_base58().unwrap().len() != 32 {
         panic!("Invalid address");
     }
-    LockAddress {
+    Address {
         value: value.to_string(),
     }
 }
@@ -241,36 +242,22 @@ fn encode_transaction_output_reference(value: &TransactionOutputReference) -> Ve
 
 fn encode_transaction_output(value: &TransactionOutput) -> Vec<u8> {
     merge_arrays(&[
-        encode_lock_address(&value.lock_address.as_ref().unwrap()),
+        encode_address(&value.address.as_ref().unwrap()),
         encode_u64(value.quantity),
-        opt_codec(&value.graph_entry, encode_graph_entry),
-        opt_codec(&value.staking_registration, encode_staking_registration),
         opt_codec(&value.asset, encode_asset),
-    ])
-}
-
-fn encode_lock_address(value: &LockAddress) -> Vec<u8> {
-    value.value.from_base58().unwrap()
-}
-
-fn encode_graph_entry(value: &GraphEntry) -> Vec<u8> {
-    match value.entry.as_ref().unwrap() {
-        models::graph_entry::Entry::Vertex(vertex) => encode_graph_vertex(&vertex),
-        models::graph_entry::Entry::Edge(edge) => encode_graph_edge(&edge),
-    }
-}
-
-fn encode_graph_vertex(value: &Vertex) -> Vec<u8> {
-    merge_arrays(&[
-        encode_utf8(&value.label),
+        opt_codec(&value.label, encode_utf8_string),
         opt_codec(&value.data, encode_struct),
+        opt_codec(&value.edge, encode_graph_edge),
+        opt_codec(&value.staking_registration, encode_staking_registration),
     ])
+}
+
+fn encode_address(value: &Address) -> Vec<u8> {
+    value.value.from_base58().unwrap()
 }
 
 fn encode_graph_edge(value: &Edge) -> Vec<u8> {
     merge_arrays(&[
-        encode_utf8(&value.label),
-        opt_codec(&value.data, encode_struct),
         encode_transaction_output_reference(&value.a.as_ref().unwrap()),
         encode_transaction_output_reference(&value.b.as_ref().unwrap()),
     ])
@@ -306,15 +293,13 @@ fn encode_staking_registration(value: &StakingRegistration) -> Vec<u8> {
     ])
 }
 
-fn encode_lock(value: &Lock) -> Vec<u8> {
-    match value.value.as_ref().unwrap() {
-        models::lock::Value::Ed25519(ed25519) => ed25519.vk.from_base58().unwrap(),
-    }
+fn encode_script(value: &Script) -> Vec<u8> {
+    encode_utf8(&value.value)
 }
 
-pub fn lock_to_address(value: &Lock) -> LockAddress {
-    LockAddress {
-        value: hash256(&encode_lock(value)).to_base58(),
+pub fn script_to_address(value: &Script) -> Address {
+    Address {
+        value: hash256(&encode_script(value)).to_base58(),
     }
 }
 
@@ -350,6 +335,10 @@ fn encode_partial_staker_certificate(value: &PartialStakerCertificate) -> Vec<u8
         from_b58(&value.vrf_vk),
         from_b58(&value.eta),
     ])
+}
+
+pub fn encode_utf8_string(value: &String) -> Vec<u8> {
+    value.as_bytes().to_vec()
 }
 
 pub fn encode_utf8(value: &str) -> Vec<u8> {

@@ -1,42 +1,25 @@
 use prost_types::Struct;
 
-use crate::models::{graph_entry, GraphEntry, TransactionOutput};
+use crate::models::TransactionOutput;
 
 pub fn required_minimum_quantity(output: &TransactionOutput) -> u64 {
     let mut res: u64 = 100;
-    if output.staking_registration.is_some() {
-        res += 1000;
-    }
-    if let Some(graph_entry) = &output.graph_entry {
-        res += graph_entry_minimum_quantity(&graph_entry);
-    }
     if output.asset.is_some() {
         res += 100;
     }
-    res
-}
-
-fn graph_entry_minimum_quantity(graph_entry: &GraphEntry) -> u64 {
-    match &graph_entry.entry {
-        Some(graph_entry::Entry::Vertex(vertex)) => {
-            vertex.label.len() as u64 * 10
-                + vertex
-                    .data
-                    .as_ref()
-                    .map(|d| data_minimum_quantity(&d))
-                    .unwrap_or(0)
-        }
-        Some(graph_entry::Entry::Edge(edge)) => {
-            100 as u64
-                + edge.label.len() as u64 * 10
-                + edge
-                    .data
-                    .as_ref()
-                    .map(|d| data_minimum_quantity(&d))
-                    .unwrap_or(0)
-        }
-        _ => 0,
+    if let Some(label) = &output.label {
+        res += label.len() as u64 * 10;
     }
+    if let Some(data) = &output.data {
+        res += data_minimum_quantity(&data);
+    }
+    if output.edge.is_some() {
+        res += 100;
+    }
+    if output.staking_registration.is_some() {
+        res += 1000;
+    }
+    res
 }
 
 fn data_minimum_quantity(value: &Struct) -> u64 {

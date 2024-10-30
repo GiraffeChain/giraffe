@@ -4,7 +4,7 @@ use crate::{
     clock::Clock,
     codecs::{to_b58, BlockHeaderExt},
     consensus::staker_tracker::StakerTracker,
-    models::{BlockHeader, FullBlock, FullBlockBody, LockAddress, SlotId},
+    models::{Address, BlockHeader, FullBlock, FullBlockBody, SlotId},
 };
 
 use super::staking::{Staker, Staking, UnsignedBlockHeader, VrfHit};
@@ -12,7 +12,7 @@ use super::staking::{Staker, Staking, UnsignedBlockHeader, VrfHit};
 pub struct BlockProducer<ST: StakerTracker> {
     pub staking: Staker<ST>,
     pub clock: Clock,
-    pub reward_address: LockAddress,
+    pub reward_address: Address,
 }
 
 impl<ST: StakerTracker> BlockProducer<ST> {
