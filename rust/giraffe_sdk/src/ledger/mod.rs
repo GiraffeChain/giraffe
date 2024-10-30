@@ -5,6 +5,7 @@ use crate::models::{Transaction, TransactionId, TransactionOutputReference};
 pub mod utxos;
 pub mod validation;
 pub mod value_calculator;
+pub mod vm;
 
 pub fn get_dependencies(transaction: &Transaction) -> Vec<TransactionOutputReference> {
     let mut deps = Vec::new();

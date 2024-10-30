@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use rusqlite::params;
 use tokio_rusqlite::Connection;
@@ -70,7 +70,7 @@ impl LedgerValidation {
 
         asset_validation(&self.connection, transaction).await?;
 
-        // TODO: witness verification
+        super::vm::verify(transaction).await?;
 
         Ok(())
     }
