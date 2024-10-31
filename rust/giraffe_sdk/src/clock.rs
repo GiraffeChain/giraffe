@@ -1,4 +1,6 @@
-#[derive(Clone, PartialEq)]
+use crate::consensus::protocol_settings::ProtocolSettings;
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Clock {
     pub slot_duration_ms: u64,
     pub genesis_time: u64,
@@ -6,6 +8,13 @@ pub struct Clock {
 }
 
 impl Clock {
+    pub fn from_settings(protocol_settings: &ProtocolSettings, genesis_time: u64) -> Self {
+        Clock {
+            slot_duration_ms: protocol_settings.slot_duration_ms,
+            genesis_time,
+            epoch_length_slots: protocol_settings.epoch_length(),
+        }
+    }
     pub fn epoch_of(&self, slot: i64) -> i64 {
         if slot == 0 {
             return -1;

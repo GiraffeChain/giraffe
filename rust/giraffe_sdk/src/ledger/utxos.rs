@@ -1,4 +1,6 @@
-use std::sync::Mutex;
+use std::sync::Arc;
+
+use tokio::sync::Mutex;
 
 use rusqlite::params;
 use tokio_rusqlite::Connection;
@@ -8,14 +10,15 @@ use crate::{
     models::{BlockId, TransactionId, TransactionOutputReference},
 };
 
+#[derive(Debug, Clone)]
 pub struct Utxos {
-    mutex: Mutex<Connection>,
+    connection: Arc<Mutex<Connection>>,
 }
 
 impl Utxos {
     pub fn new(connection: Connection) -> Self {
         Utxos {
-            mutex: Mutex::new(connection),
+            connection: Arc::new(Mutex::new(connection)),
         }
     }
 
@@ -24,11 +27,11 @@ impl Utxos {
         head: &BlockId,
         references: Vec<TransactionOutputReference>,
     ) -> Result<bool, String> {
-        let connection = self.mutex.lock().map_err(|e| e.to_string())?;
+        let connection = self.connection.lock().await;
         update_state(&connection, head).await?;
         connection.call(move |conn| {
             for reference in references {
-            let mut statement = conn.prepare("SELECT spendable FROM transaction_outputs WHERE transaction_id = ? AND index = ? AND spendable = true")?;
+            let mut statement = conn.prepare("SELECT spendable FROM transaction_outputs WHERE transaction_id = ? AND idx = ? AND spendable = true")?;
             let mut rows = statement.query(params![reference.transaction_id.clone().unwrap().value, reference.index])?;
             if rows.next()?.is_none() {
                 return Ok(false);

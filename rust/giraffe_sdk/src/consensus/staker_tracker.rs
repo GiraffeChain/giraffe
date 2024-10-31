@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use crate::{
     block_tree,
@@ -12,15 +12,23 @@ use num_rational::BigRational;
 use prost::Message;
 use tokio_rusqlite::{params, Connection, Transaction};
 
+#[derive(Debug, Clone)]
 pub struct StakerTracker {
     clock: Clock,
     genesis_id: BlockId,
-    mutex: Mutex<Connection>,
+    connection: Arc<Mutex<Connection>>,
 }
 
 impl StakerTracker {
+    pub fn new(genesis_id: BlockId, clock: Clock, connection: Connection) -> Self {
+        StakerTracker {
+            clock,
+            genesis_id,
+            connection: Arc::new(Mutex::new(connection)),
+        }
+    }
     pub async fn total_active_stake(&self, block_id: &BlockId, slot: &u64) -> u64 {
-        let conn = self.mutex.lock().unwrap();
+        let conn = self.connection.lock().unwrap();
         set_state_to(self, &conn, block_id, slot).await;
         conn.call(|conn| {
             let mut stmt =
@@ -40,7 +48,7 @@ impl StakerTracker {
     ) -> Option<ActiveStaker> {
         let account = account.clone();
         // TODO mutex
-        let conn = self.mutex.lock().unwrap();
+        let conn = self.connection.lock().unwrap();
         set_state_to(self, &conn, block_id, slot).await;
         conn
             .call(move |conn| {
@@ -122,14 +130,14 @@ async fn apply_stakers(connection: &Connection, block_id: &BlockId) {
             let mut operations: Vec<StakeShiftOperation> = Vec::new();
             let mut stake_shift: i64 = 0;
             for tx_id in tx_ids {
-                let stmt = &mut conn.prepare("SELECT transaction_outputs.transaction_id, transaction_outputs.index, transaction_outputs.quantity FROM transaction_outputs INNER JOIN transaction_inputs ON transaction_outputs.transaction_id = transaction_inputs.spent_transaction_id AND transaction_outputs.index = transaction_inputs.spent_transaction_idx WHERE transaction_inputs.transaction_id = ? AND transaction_outputs.staking_registration IS NOT NULL")?;
+                let stmt = &mut conn.prepare("SELECT transaction_outputs.transaction_id, transaction_outputs.idx, transaction_outputs.quantity FROM transaction_outputs INNER JOIN transaction_inputs ON transaction_outputs.transaction_id = transaction_inputs.spent_transaction_id AND transaction_outputs.idx = transaction_inputs.spent_transaction_idx WHERE transaction_inputs.transaction_id = ? AND transaction_outputs.staking_registration IS NOT NULL")?;
                 let rows = &mut stmt.query([tx_id.value.clone()])?;
                 while let Some(row) = rows.next()? {
                     operations.push(StakeShiftOperation::Remove(row.get(0)?, row.get(1)?));
                     let quantity: i64 = row.get(2)?;
                     stake_shift -= quantity;
                 }
-                let stmt = &mut conn.prepare("SELECT transaction_outputs.index, transaction_outputs.quantity FROM transaction_outputs WHERE transaction_outputs.transaction_id = ? AND transaction_outputs.staking_registration IS NOT NULL")?;
+                let stmt = &mut conn.prepare("SELECT transaction_outputs.idx, transaction_outputs.quantity FROM transaction_outputs WHERE transaction_outputs.transaction_id = ? AND transaction_outputs.staking_registration IS NOT NULL")?;
                 let rows = &mut stmt.query([tx_id.value.clone()])?;
                 while let Some(row) = rows.next()? {
                     operations.push(StakeShiftOperation::Add(tx_id.value.clone(), row.get(0)?));
@@ -183,14 +191,14 @@ async fn unapply_stakers(connection: &Connection, block_id: &BlockId, parent: &B
             let mut operations: Vec<StakeShiftOperation> = Vec::new();
             let mut stake_shift: i64 = 0;
             for tx_id in tx_ids {
-                let stmt = &mut conn.prepare("SELECT transaction_outputs.index, transaction_outputs.quantity FROM transaction_outputs WHERE transaction_outputs.transaction_id = ? AND transaction_outputs.staking_registration IS NOT NULL")?;
+                let stmt = &mut conn.prepare("SELECT transaction_outputs.idx, transaction_outputs.quantity FROM transaction_outputs WHERE transaction_outputs.transaction_id = ? AND transaction_outputs.staking_registration IS NOT NULL")?;
                 let rows = &mut stmt.query([tx_id.value.clone()])?;
                 while let Some(row) = rows.next()? {
                     operations.push(StakeShiftOperation::Remove(tx_id.value.clone(), row.get(0)?));
                     let quantity: i64 = row.get(1)?;
                     stake_shift -= quantity;
                 }
-                let stmt = &mut conn.prepare("SELECT transaction_outputs.transaction_id, transaction_outputs.index, transaction_outputs.quantity FROM transaction_outputs INNER JOIN transaction_inputs ON transaction_outputs.transaction_id = transaction_inputs.spent_transaction_id AND transaction_outputs.index = transaction_inputs.spent_transaction_idx WHERE transaction_inputs.transaction_id = ? AND transaction_outputs.staking_registration IS NOT NULL")?;
+                let stmt = &mut conn.prepare("SELECT transaction_outputs.transaction_id, transaction_outputs.idx, transaction_outputs.quantity FROM transaction_outputs INNER JOIN transaction_inputs ON transaction_outputs.transaction_id = transaction_inputs.spent_transaction_id AND transaction_outputs.idx = transaction_inputs.spent_transaction_idx WHERE transaction_inputs.transaction_id = ? AND transaction_outputs.staking_registration IS NOT NULL")?;
                 let rows = &mut stmt.query([tx_id.value.clone()])?;
                 while let Some(row) = rows.next()? {
                     operations.push(StakeShiftOperation::Add(row.get(0)?, row.get(1)?));

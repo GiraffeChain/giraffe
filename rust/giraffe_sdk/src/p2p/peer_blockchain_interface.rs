@@ -1,27 +1,183 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
+use libp2p::request_response::ResponseChannel;
 use libp2p::{request_response::RequestId, PeerId};
 use prost::Message;
 use tokio::io;
-use tokio::sync::{oneshot, Mutex};
+use tokio::sync::oneshot;
 
-use crate::models::{BlockBody, BlockHeader, BlockId, PublicP2pState, Transaction, TransactionId};
+use crate::blockchain::Blockchain;
+use crate::data;
+use crate::models::{
+    BlockBody, BlockHeader, BlockId, ConnectedPeer, PublicP2pState, Transaction, TransactionId,
+};
 
 use super::{ReqMessage, ResMessage};
 
-pub struct PeerState<'a> {
+pub struct PeerState {
     peer_id: PeerId,
-    behaviour: Arc<Mutex<&'a mut super::Swarm>>,
+    swarm: Arc<tokio::sync::Mutex<super::Swarm>>,
+    blockchain: Arc<tokio::sync::Mutex<Blockchain>>,
     pending_requests: Arc<Mutex<HashMap<RequestId, oneshot::Sender<ResMessage>>>>,
 }
 
-impl PeerState<'_> {
-    pub fn new<'a>(peer_id: PeerId, behaviour: Arc<Mutex<&'a mut super::Swarm>>) -> PeerState<'a> {
+impl PeerState {
+    pub fn new(
+        peer_id: PeerId,
+        swarm: Arc<tokio::sync::Mutex<super::Swarm>>,
+        blockchain: Arc<tokio::sync::Mutex<Blockchain>>,
+    ) -> PeerState {
         PeerState {
             peer_id,
-            behaviour,
+            swarm,
+            blockchain,
             pending_requests: Arc::new(Mutex::new(HashMap::new())),
         }
+    }
+    pub async fn handle_request(
+        &self,
+        req: ReqMessage,
+        channel: ResponseChannel<ResMessage>,
+    ) -> Result<(), io::Error> {
+        match req.port {
+            multiplexer_ids::PING => self
+                .swarm
+                .lock()
+                .await
+                .behaviour_mut()
+                .send_response(channel, ResMessage { data: req.data })
+                .map_err(|_| io::Error::other("Failed to handle response")),
+            multiplexer_ids::PEER_STATE => {
+                let swarm = self.swarm.lock().await;
+                let peer_id = swarm.local_peer_id().clone();
+                let local_addresses: Vec<String> =
+                    swarm.external_addresses().map(|v| v.to_string()).collect();
+                let public_state = PublicP2pState {
+                    local_peer: Some(ConnectedPeer {
+                        peer_id: peer_id.to_string(),
+                        addresses: local_addresses,
+                    }),
+                    peers: vec![],
+                };
+                let data = public_state.encode_to_vec();
+                self.swarm
+                    .lock()
+                    .await
+                    .behaviour_mut()
+                    .send_response(channel, ResMessage { data })
+                    .map_err(|_| io::Error::other("Failed to handle response"))
+            }
+            multiplexer_ids::BLOCK_ADOPTION => {
+                let block_id = self
+                    .blockchain
+                    .lock()
+                    .await
+                    .consensus
+                    .local_chain
+                    .receiver
+                    .recv()
+                    .await
+                    .map_err(|_| io::Error::new(std::io::ErrorKind::InvalidData, "Not BlockId"))?;
+                let data = block_id.encode_to_vec();
+                self.swarm
+                    .lock()
+                    .await
+                    .behaviour_mut()
+                    .send_response(channel, ResMessage { data })
+                    .map_err(|_| io::Error::other("Failed to handle response"))
+            }
+            multiplexer_ids::TRANSACTION_NOTIFICATION => {
+                todo!()
+            }
+            multiplexer_ids::HEADER => {
+                let block_id = BlockId::decode(req.data.as_slice())
+                    .map_err(|_| io::Error::new(std::io::ErrorKind::InvalidData, "Not BlockId"))?;
+                let blockchain = self.blockchain.lock().await;
+                let header = data::fetch_header(&blockchain.connection, block_id).await;
+                let data = header.map_or(vec![], |v| v.encode_to_vec());
+                self.swarm
+                    .lock()
+                    .await
+                    .behaviour_mut()
+                    .send_response(channel, ResMessage { data })
+                    .map_err(|_| io::Error::other("Failed to handle response"))
+            }
+            multiplexer_ids::BODY => {
+                let block_id = BlockId::decode(req.data.as_slice())
+                    .map_err(|_| io::Error::new(std::io::ErrorKind::InvalidData, "Not BlockId"))?;
+                let blockchain = self.blockchain.lock().await;
+                let body = data::fetch_body(&blockchain.connection, block_id).await;
+                let data = body.map_or(vec![], |v| v.encode_to_vec());
+                self.swarm
+                    .lock()
+                    .await
+                    .behaviour_mut()
+                    .send_response(channel, ResMessage { data })
+                    .map_err(|_| io::Error::other("Failed to handle response"))
+            }
+            multiplexer_ids::TRANSACTION => {
+                let tx_id = TransactionId::decode(req.data.as_slice()).map_err(|_| {
+                    io::Error::new(std::io::ErrorKind::InvalidData, "Not TransactionId")
+                })?;
+                let blockchain = self.blockchain.lock().await;
+                let tx = data::fetch_transaction(&blockchain.connection, tx_id).await;
+                let data = tx.map_or(vec![], |v| v.encode_to_vec());
+                self.swarm
+                    .lock()
+                    .await
+                    .behaviour_mut()
+                    .send_response(channel, ResMessage { data })
+                    .map_err(|_| io::Error::other("Failed to handle response"))
+            }
+            multiplexer_ids::BLOCK_ID_AT_HEIGHT => {
+                let height = i64::from_be_bytes(
+                    req.data
+                        .as_slice()
+                        .try_into()
+                        .map_err(|_| io::Error::new(std::io::ErrorKind::InvalidData, "Not i64"))?,
+                );
+                let mut blockchain = self.blockchain.lock().await;
+                let id = blockchain
+                    .consensus
+                    .local_chain
+                    .block_id_at_height(height)
+                    .await
+                    .map_err(|_| io::Error::other("Failed to handle response"))?;
+                let data = id.map_or(vec![], |v| v.encode_to_vec());
+                self.swarm
+                    .lock()
+                    .await
+                    .behaviour_mut()
+                    .send_response(channel, ResMessage { data })
+                    .map_err(|_| io::Error::other("Failed to handle response"))
+            }
+            _ => Err(io::Error::other("Invalid port")),
+        }
+    }
+    pub async fn handle_response(
+        &self,
+        request_id: &RequestId,
+        res: ResMessage,
+    ) -> Result<(), io::Error> {
+        if let Some(sender) = self
+            .pending_requests
+            .lock()
+            .map_err(|e| io::Error::other("Failed to handle response"))?
+            .remove(request_id)
+        {
+            let _ = sender
+                .send(res.clone())
+                .map_err(|_| io::Error::other("Failed to handle response"))?;
+        } else {
+            return Err(io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid request id",
+            ));
+        }
+        Ok(())
     }
     pub async fn ping(&self, bytes: Vec<u8>) -> Result<Vec<u8>, io::Error> {
         let data = self.request(multiplexer_ids::PING, bytes).await?;
@@ -103,12 +259,15 @@ impl PeerState<'_> {
     pub async fn request(&self, port: u8, data: Vec<u8>) -> Result<Vec<u8>, io::Error> {
         let (sender, receiver) = oneshot::channel::<ResMessage>();
         let id = self
-            .behaviour
+            .swarm
             .lock()
             .await
             .behaviour_mut()
             .send_request(&self.peer_id, ReqMessage { port, data });
-        self.pending_requests.lock().await.insert(id, sender);
+        self.pending_requests
+            .lock()
+            .map_err(|_| io::Error::other("Failed to handle request"))?
+            .insert(id, sender);
         let res = receiver
             .await
             .map_err(|_| io::Error::other("OneShot error"))?;

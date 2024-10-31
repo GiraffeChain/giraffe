@@ -1,5 +1,6 @@
 use std::hash::Hash;
 
+use tokio_rusqlite::Connection;
 use utxos::Utxos;
 use validation::LedgerValidation;
 
@@ -13,6 +14,17 @@ pub mod vm;
 pub struct Ledger {
     pub utxos: Utxos,
     pub ledger_validation: LedgerValidation,
+}
+
+impl Ledger {
+    pub fn new(connection: &Connection) -> Self {
+        let utxos = Utxos::new(connection.clone());
+        let ledger_validation = LedgerValidation::new(connection.clone(), utxos.clone());
+        Ledger {
+            utxos,
+            ledger_validation,
+        }
+    }
 }
 
 pub fn get_dependencies(transaction: &Transaction) -> Vec<TransactionOutputReference> {

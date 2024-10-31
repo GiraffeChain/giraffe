@@ -1,3 +1,4 @@
+use libp2p::core::connection;
 use num_bigint::BigInt;
 use num_rational::BigRational;
 use sha2::{Digest, Sha256};
@@ -29,6 +30,23 @@ pub struct HeaderValidation {
 }
 
 impl HeaderValidation {
+    pub fn new(
+        genesis_id: BlockId,
+        protocol_settings: ProtocolSettings,
+        clock: Clock,
+        eta_calculation: EtaCalculation,
+        staker_tracker: StakerTracker,
+        connection: Connection,
+    ) -> Self {
+        HeaderValidation {
+            genesis_id,
+            protocol_settings,
+            clock,
+            eta_calculation,
+            connection,
+            staker_tracker,
+        }
+    }
     pub async fn validate(&self, header: &BlockHeader) -> Result<(), String> {
         if header.id() == self.genesis_id {
             return Ok(());

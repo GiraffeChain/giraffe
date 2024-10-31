@@ -17,13 +17,12 @@ tokio = { version = "1.41.0", features = ["full"] }
 sha2 = "0.10.8"
 vrf = "0.2.4"
 secp256k1 = "0.30.0"
-rusqlite = "0.32.1"
+rusqlite = { version = "0.32.1", features = ["bundled"] }
 wasmer = "5.0.0"
 libp2p = { version = "0.52", features = [ "tokio", "gossipsub", "noise", "macros", "tcp", "yamux", "quic", "ping", "cbor", "request-response"]  }
 futures = "0.3.21"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 serde = { version ="1.0.214", features = [ "derive" ] }
-#libp2p-request-response = { version = "0.27.0", features = [ "cbor" ] }
 
 [build-dependencies]
 prost-build = "0.13.3"

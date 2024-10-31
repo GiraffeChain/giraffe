@@ -13,6 +13,9 @@ pub struct LedgerValidation {
 }
 
 impl LedgerValidation {
+    pub fn new(connection: Connection, utxos: super::utxos::Utxos) -> Self {
+        LedgerValidation {connection, utxos }
+    }
     pub async fn verify_transaction(
         &self,
         head: &BlockId,
@@ -43,7 +46,7 @@ impl LedgerValidation {
                 .connection
                 .call(move |conn| {
                     conn.query_row(
-                "SELECT quantity FROM transaction_outputs WHERE transaction_id = ? AND index = ?",
+                "SELECT quantity FROM transaction_outputs WHERE transaction_id = ? AND idx = ?",
                 params![reference.transaction_id.unwrap().value, reference.index],
                 |row| row.get(0),
             ).map_err(|e| tokio_rusqlite::Error::Rusqlite(e))
@@ -109,7 +112,7 @@ async fn asset_validation(
             let mut input_assets: HashMap<TransactionOutputReference, u64> = HashMap::new();
             for input in &t {
                 let reference = input.reference.clone().unwrap();
-                let mut statement = conn.prepare("SELECT asset_origin_id, asset_origin_idx, asset_quantity FROM transaction_outputs WHERE transaction_id = ? AND index = ? AND asset_origin_id IS NOT NULL AND asset_origin_idx IS NOT NULL")?;
+                let mut statement = conn.prepare("SELECT asset_origin_id, asset_origin_idx, asset_quantity FROM transaction_outputs WHERE transaction_id = ? AND idx = ? AND asset_origin_id IS NOT NULL AND asset_origin_idx IS NOT NULL")?;
                 let mut rows = statement.query(params![reference.transaction_id.unwrap().value, reference.index])?;
                 if let Some(row) = rows.next()? {
                     let id_str: String = row.get(0)?;

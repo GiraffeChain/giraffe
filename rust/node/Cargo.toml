@@ -1,0 +1,9 @@
+[package]
+name = "giraffe_node"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+giraffe_sdk = { path = "../giraffe_sdk" }
+tokio-rusqlite = "0.6.0"
+tokio = { version = "1.41.0", features = ["full"] }

@@ -3,7 +3,6 @@ use std::{collections::HashMap, time::SystemTime};
 use crate::{
     clock::Clock,
     codecs::{to_b58, BlockHeaderExt},
-    consensus::staker_tracker::StakerTracker,
     models::{Address, BlockHeader, FullBlock, FullBlockBody, SlotId},
 };
 

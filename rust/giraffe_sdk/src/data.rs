@@ -69,9 +69,8 @@ pub fn fetch_body_sync(
                 transaction_ids: vec![],
             }));
         } else {
-            let mut statement = conn.prepare(
-                "SELECT transaction_id FROM bodies WHERE block_id = ? ORDER BY index ASC",
-            )?;
+            let mut statement = conn
+                .prepare("SELECT transaction_id FROM bodies WHERE block_id = ? ORDER BY idx ASC")?;
             let mut rows = statement.query([block_id.value])?;
             let mut txs = Vec::new();
             while let Some(row) = rows.next()? {
@@ -151,7 +150,7 @@ pub fn fetch_transaction_output_sync(
     transaction_id: TransactionId,
     index: u32,
 ) -> Result<Option<TransactionOutput>, tokio_rusqlite::Error> {
-    let mut statement = conn.prepare("SELECT quantity, address, staking_registration, graph_label, graph_data, graph_edge_lock_address, graph_a_id, graph_a_idx, graph_b_id, graph_b_idx, asset_id, asset_idx, asset_quantity FROM transaction_outputs WHERE transaction_id = ? AND index = ? LIMIT 1")?;
+    let mut statement = conn.prepare("SELECT quantity, address, staking_registration, graph_label, graph_data, graph_edge_lock_address, graph_a_id, graph_a_idx, graph_b_id, graph_b_idx, asset_id, asset_idx, asset_quantity FROM transaction_outputs WHERE transaction_id = ? AND idx = ? LIMIT 1")?;
     let mut rows = statement.query(params![transaction_id.value, index])?;
     if let Some(row) = rows.next()? {
         decode_transaction_output(row).map(|v| Some(v))
@@ -164,7 +163,7 @@ pub fn fetch_transaction_outputs_sync(
     conn: &rusqlite::Connection,
     transaction_id: TransactionId,
 ) -> Result<Vec<TransactionOutput>, tokio_rusqlite::Error> {
-    let mut statement = conn.prepare("SELECT quantity, address, staking_registration, graph_label, graph_data, graph_edge_lock_address, graph_a_id, graph_a_idx, graph_b_id, graph_b_idx, asset_id, asset_idx, asset_quantity FROM transaction_outputs WHERE transaction_id = ? ORDER BY index ASC")?;
+    let mut statement = conn.prepare("SELECT quantity, address, staking_registration, graph_label, graph_data, graph_edge_lock_address, graph_a_id, graph_a_idx, graph_b_id, graph_b_idx, asset_id, asset_idx, asset_quantity FROM transaction_outputs WHERE transaction_id = ? ORDER BY idx ASC")?;
     let mut rows = statement.query([transaction_id.value])?;
     let mut outputs = Vec::new();
     while let Some(row) = rows.next()? {
@@ -178,7 +177,7 @@ pub fn fetch_transaction_inputs_sync(
     conn: &rusqlite::Connection,
     transaction_id: TransactionId,
 ) -> Result<Vec<TransactionInput>, tokio_rusqlite::Error> {
-    let mut statement = conn.prepare("SELECT spent_transaction_id, spent_transaction_idx FROM transaction_inputs WHERE transaction_id = ? ORDER BY index ASC")?;
+    let mut statement = conn.prepare("SELECT spent_transaction_id, spent_transaction_idx FROM transaction_inputs WHERE transaction_id = ? ORDER BY idx ASC")?;
     let mut rows = statement.query([transaction_id.clone().value])?;
     let mut inputs = Vec::new();
     while let Some(row) = rows.next()? {
@@ -237,7 +236,7 @@ pub async fn fetch_transaction(
         .unwrap()
 }
 
-pub async fn init_db(connection: &Connection) {
+pub async fn init_db(connection: &Connection) -> Result<(), Error> {
     connection
         .call(|connection| {
             connection.execute(
@@ -261,9 +260,9 @@ pub async fn init_db(connection: &Connection) {
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS bodies (
             block_id TEXT NOT NULL,
-            index INTEGER NOT NULL,
+            idx INTEGER NOT NULL,
             transaction_id TEXT NOT NULL,
-            PRIMARY KEY (block_id, index, transaction_id),
+            PRIMARY KEY (block_id, idx, transaction_id)
         )",
                 [],
             )?;
@@ -280,8 +279,7 @@ pub async fn init_db(connection: &Connection) {
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS transaction_outputs (
             transaction_id TEXT NOT NULL,
-            index INTEGER NOT NULL,
-            PRIMARY KEY (transaction_id, index),
+            idx INTEGER NOT NULL,
             quantity INTEGER NOT NULL,
             address TEXT NOT NULL,
             asset_origin_id TEXT,
@@ -294,6 +292,7 @@ pub async fn init_db(connection: &Connection) {
             graph_b_id TEXT,
             graph_b_idx INTEGER,
             staking_registration TEXT,
+            PRIMARY KEY (transaction_id, idx)
         )",
                 [],
             )?;
@@ -301,10 +300,10 @@ pub async fn init_db(connection: &Connection) {
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS transaction_inputs (
             transaction_id TEXT NOT NULL,
-            index INTEGER NOT NULL,
-            PRIMARY KEY (transaction_id, index),
+            idx INTEGER NOT NULL,
             spent_transaction_id TEXT NOT NULL,
             spent_transaction_idx INTEGER NOT NULL,
+            PRIMARY KEY (transaction_id, idx)
         )",
                 [],
             )?;
@@ -313,7 +312,7 @@ pub async fn init_db(connection: &Connection) {
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS staking_meta (
             key TEXT PRIMARY KEY NOT NULL,
-            value INTEGER NOT NULL,
+            value INTEGER NOT NULL
         )",
                 [],
             )?;
@@ -321,20 +320,31 @@ pub async fn init_db(connection: &Connection) {
                 "CREATE TABLE IF NOT EXISTS stakers (
             account_tx TEXT NOT NULL,
             account_tx_idx INTEGER NOT NULL,
-            PRIMARY KEY (account_tx, account_tx_idx),
+            PRIMARY KEY (account_tx, account_tx_idx)
         )",
                 [],
             )?;
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS ess (
             key TEXT PRIMARY KEY NOT NULL,
-            block_id TEXT NOT NULL,
+            block_id TEXT NOT NULL
         )",
                 [],
             )?;
 
             Ok(())
         })
-        .await
-        .unwrap();
+        .await?;
+    Ok(())
+}
+
+#[derive(Debug)]
+pub enum Error {
+    Rusqlite(tokio_rusqlite::Error),
+}
+
+impl From<tokio_rusqlite::Error> for Error {
+    fn from(value: tokio_rusqlite::Error) -> Self {
+        Error::Rusqlite(value)
+    }
 }
