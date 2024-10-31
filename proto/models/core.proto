@@ -186,19 +186,14 @@ message Args {
     google.protobuf.Struct value = 1;
 }
 
-message PeerId {
-    // Base58 encoded
-    // length = 32
-    string value = 1;
-}
-
 message PublicP2PState {
     ConnectedPeer localPeer = 1 [(validate.rules).message.required = true];
     repeated ConnectedPeer peers = 2;
 }
 
 message ConnectedPeer {
-    PeerId peerId = 1 [(validate.rules).message.required = true];
-    google.protobuf.StringValue host = 2;
-    google.protobuf.UInt32Value port = 3;
+    string peerId = 1;
+    // Format: multiaddr
+    // example: /ip4/52.112.63.29/tcp/2023/p2p/478qfbhn78afboabo
+    repeated string addresses = 2;
 }

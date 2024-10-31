@@ -9,13 +9,13 @@ use crate::{
 
 use super::staking::{Staker, Staking, UnsignedBlockHeader, VrfHit};
 
-pub struct BlockProducer<ST: StakerTracker> {
-    pub staking: Staker<ST>,
+pub struct BlockProducer {
+    pub staking: Staker,
     pub clock: Clock,
     pub reward_address: Address,
 }
 
-impl<ST: StakerTracker> BlockProducer<ST> {
+impl BlockProducer {
     pub async fn next_eligibility(&self, parent_slot_id: SlotId) -> Option<VrfHit> {
         let mut test = parent_slot_id.slot + 1;
         let exit_slot = self

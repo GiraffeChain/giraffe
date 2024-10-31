@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ops::Add;
 
 use crate::minting::staking::{PartialStakerCertificate, UnsignedBlockHeader};
 use crate::models::{self, Address, BlockHeader, Script};

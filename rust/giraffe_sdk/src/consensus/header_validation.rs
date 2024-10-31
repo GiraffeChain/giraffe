@@ -19,16 +19,16 @@ use super::{
     rho::rho_from_b58, staker_tracker::StakerTracker,
 };
 
-pub struct HeaderValidation<ST: StakerTracker> {
+pub struct HeaderValidation {
     genesis_id: BlockId,
     protocol_settings: ProtocolSettings,
     clock: Clock,
     eta_calculation: EtaCalculation,
     connection: Connection,
-    staker_tracker: ST,
+    staker_tracker: StakerTracker,
 }
 
-impl<ST: StakerTracker> HeaderValidation<ST> {
+impl HeaderValidation {
     pub async fn validate(&self, header: &BlockHeader) -> Result<(), String> {
         if header.id() == self.genesis_id {
             return Ok(());
@@ -91,8 +91,8 @@ async fn eta_verification(
     Ok(())
 }
 
-async fn registration_verification<ST: StakerTracker>(
-    v: &HeaderValidation<ST>,
+async fn registration_verification(
+    v: &HeaderValidation,
     header: &BlockHeader,
 ) -> Result<ActiveStaker, String> {
     let staker = v
@@ -133,8 +133,8 @@ async fn registration_verification<ST: StakerTracker>(
     Ok(staker)
 }
 
-async fn eligibility_verification<ST: StakerTracker>(
-    v: &HeaderValidation<ST>,
+async fn eligibility_verification(
+    v: &HeaderValidation,
     header: &BlockHeader,
     parent: &BlockHeader,
     staker: &ActiveStaker,

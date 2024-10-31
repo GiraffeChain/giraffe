@@ -1,4 +1,4 @@
-use std::{future::Future, sync::Mutex};
+use std::sync::Mutex;
 
 use crate::{
     block_tree,
@@ -12,39 +12,14 @@ use num_rational::BigRational;
 use prost::Message;
 use tokio_rusqlite::{params, Connection, Transaction};
 
-pub struct StakerTrackerMeta {
+pub struct StakerTracker {
     clock: Clock,
     genesis_id: BlockId,
     mutex: Mutex<Connection>,
 }
 
-pub trait StakerTracker {
-    fn total_active_stake(&self, block_id: &BlockId, slot: &u64) -> impl Future<Output = u64>;
-    fn staker(
-        &self,
-        block_id: &BlockId,
-        slot: &u64,
-        account: &TransactionOutputReference,
-    ) -> impl Future<Output = Option<ActiveStaker>>;
-    fn staker_relative_stake(
-        &self,
-        block_id: &BlockId,
-        slot: &u64,
-        account: &TransactionOutputReference,
-    ) -> impl std::future::Future<Output = Option<BigRational>> {
-        async {
-            let staker = self.staker(block_id, slot, account).await?;
-            let total = self.total_active_stake(block_id, slot).await;
-            return Some(BigRational::new(
-                BigInt::from(staker.quantity),
-                BigInt::from(total),
-            ));
-        }
-    }
-}
-
-impl StakerTracker for StakerTrackerMeta {
-    async fn total_active_stake(&self, block_id: &BlockId, slot: &u64) -> u64 {
+impl StakerTracker {
+    pub async fn total_active_stake(&self, block_id: &BlockId, slot: &u64) -> u64 {
         let conn = self.mutex.lock().unwrap();
         set_state_to(self, &conn, block_id, slot).await;
         conn.call(|conn| {
@@ -57,7 +32,7 @@ impl StakerTracker for StakerTrackerMeta {
         .unwrap()
     }
 
-    async fn staker(
+    pub async fn staker(
         &self,
         block_id: &BlockId,
         slot: &u64,
@@ -91,10 +66,24 @@ impl StakerTracker for StakerTrackerMeta {
             .await
             .unwrap()
     }
+
+    pub async fn staker_relative_stake(
+        &self,
+        block_id: &BlockId,
+        slot: &u64,
+        account: &TransactionOutputReference,
+    ) -> Option<BigRational> {
+        let staker = self.staker(block_id, slot, account).await?;
+        let total = self.total_active_stake(block_id, slot).await;
+        return Some(BigRational::new(
+            BigInt::from(staker.quantity),
+            BigInt::from(total),
+        ));
+    }
 }
 
 async fn set_state_to(
-    meta: &StakerTrackerMeta,
+    meta: &StakerTracker,
     connection: &Connection,
     block_id: &BlockId,
     slot: &u64,

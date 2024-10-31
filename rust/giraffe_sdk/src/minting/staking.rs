@@ -18,7 +18,7 @@ use crate::{
     models::{BlockHeader, BlockId, SlotId, StakerCertificate, TransactionOutputReference},
 };
 
-pub struct Staker<ST: StakerTracker> {
+pub struct Staker {
     account: TransactionOutputReference,
     vk_vrf: Vec<u8>,
     sk_vrf: Vec<u8>,
@@ -26,7 +26,7 @@ pub struct Staker<ST: StakerTracker> {
     eta_calculation: EtaCalculation,
     protocol_settings: ProtocolSettings,
     clock: Clock,
-    staker_tracker: ST,
+    staker_tracker: StakerTracker,
 }
 
 pub trait Staking {
@@ -39,7 +39,7 @@ pub trait Staking {
     fn rho_for_slot(&self, slot: u64, eta: Vec<u8>) -> Vec<u8>;
 }
 
-impl<ST: StakerTracker> Staking for Staker<ST> {
+impl Staking for Staker {
     async fn elect(&self, parent_slot_id: &SlotId, slot: u64) -> Option<VrfHit> {
         let eta = self
             .eta_calculation
