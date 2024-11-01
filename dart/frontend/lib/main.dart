@@ -20,9 +20,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'widgets/pages/transfer_page.dart';
 
+import 'package:giraffe_protocol/src/rust/api/simple.dart';
+import 'package:giraffe_protocol/src/rust/frb_generated.dart';
+
 var _isolate = LocalCompute;
 
-void main() async {
+void main1() async {
   Logger.root.level = Level.INFO;
   Logger.root.onRecord.listen((record) {
     // ignore: avoid_print
@@ -38,6 +41,23 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const ProviderScope(child: MainApp()));
+}
+
+void main() async {
+  await RustLib.init();
+  final app = MaterialApp(
+    home: Scaffold(
+      appBar: AppBar(title: const Text('Giraffe')),
+      body: Center(
+        child: FutureBuilder(
+            future: initBlockchain(),
+            builder: (context, snapshot) => snapshot.hasData
+                ? Text("Loaded")
+                : const CircularProgressIndicator()),
+      ),
+    ),
+  );
+  runApp(app);
 }
 
 class MainApp extends StatelessWidget {

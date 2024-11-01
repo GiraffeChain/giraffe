@@ -1,7 +1,7 @@
 use std::future::Future;
 use std::pin::Pin;
 
-use crate::codecs::BlockHeaderExt;
+use crate::codecs::block_id;
 use crate::consensus::rho::rho_from_b58;
 use crate::models;
 
@@ -18,9 +18,10 @@ pub async fn chain_selection<Fetch>(
 where
     Fetch: Fn(u64) -> Pin<Box<dyn Future<Output = Option<models::BlockHeader>>>>,
 {
-    if header_y.id() == common_ancestor.id() {
+    let common_ancestor_id = block_id(common_ancestor);
+    if block_id(header_y) == common_ancestor_id {
         return ChainSelectionOutcome::StandardX;
-    } else if header_x.id() == common_ancestor.id() {
+    } else if block_id(header_x) == common_ancestor_id {
         return ChainSelectionOutcome::StandardY;
     } else if header_x.height - common_ancestor.height <= config.chain_selection_k_lookback
         && header_y.height - common_ancestor.height <= config.chain_selection_k_lookback

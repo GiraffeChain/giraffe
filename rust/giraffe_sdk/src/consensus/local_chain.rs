@@ -45,7 +45,7 @@ impl LocalChain {
                 )?;
             }
             Ok(())
-        });
+        }).await.unwrap();
         self.broadcaster.broadcast(block_id.clone()).await.unwrap();
     }
 

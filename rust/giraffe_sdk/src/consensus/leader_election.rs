@@ -96,7 +96,7 @@ where
     };
     let mut cj = fj.clone();
     let mut dj = BigRational::zero();
-    let mut deltaj = BigRational::one();
+    let mut deltaj: BigRational;
     let mut error = true;
 
     for j in 1..LENTZ_ITERATIONS {

@@ -1,21 +1,20 @@
 use crate::{
     codecs::{from_b58, hash256, to_b58, transaction_id},
-    consensus::protocol_settings::{self, ProtocolSettings},
+    consensus::protocol_settings::ProtocolSettings,
     models::{
         BlockHeader, BlockId, FullBlock, FullBlockBody, StakerCertificate, Transaction,
         TransactionId, TransactionOutputReference,
     },
 };
 
-const BYTE_STRING_ZERO_32: &str = "11111111111111111111111111111111";
-const BYTE_STRING_ZERO_64: &str =
+pub const BYTE_STRING_ZERO_32: &str = "11111111111111111111111111111111";
+pub const BYTE_STRING_ZERO_64: &str =
     "1111111111111111111111111111111111111111111111111111111111111111";
-const BYTE_STRING_ZERO_80: &str =
+pub const BYTE_STRING_ZERO_80: &str =
     "11111111111111111111111111111111111111111111111111111111111111111111111111111111";
 
-const HEIGHT: u64 = 1;
-const SLOT: u64 = 0;
-const PARENT_SLOT: i64 = -1;
+pub const HEIGHT: u64 = 1;
+pub const SLOT: u64 = 0;
 pub fn parent_id() -> BlockId {
     BlockId {
         value: BYTE_STRING_ZERO_32.to_string(),

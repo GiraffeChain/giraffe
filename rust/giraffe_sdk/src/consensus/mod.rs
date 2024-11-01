@@ -53,7 +53,6 @@ impl Consensus {
         let header_validation = HeaderValidation::new(
             genesis_id.clone(),
             protocol_settings.clone(),
-            clock.clone(),
             eta_calculation.clone(),
             staker_tracker.clone(),
             connection.clone(),

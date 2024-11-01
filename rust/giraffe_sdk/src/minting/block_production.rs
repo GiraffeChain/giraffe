@@ -2,7 +2,7 @@ use std::{collections::HashMap, time::SystemTime};
 
 use crate::{
     clock::Clock,
-    codecs::{to_b58, BlockHeaderExt},
+    codecs::{block_id, to_b58},
     models::{Address, BlockHeader, FullBlock, FullBlockBody, SlotId},
 };
 
@@ -30,7 +30,7 @@ impl BlockProducer {
         None
     }
 
-    pub async fn make_block(&self, parent_header: BlockHeader, hit: VrfHit) -> FullBlock {
+    pub async fn make_block(&self, parent_header: &BlockHeader, hit: &VrfHit) -> FullBlock {
         let timestamp = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -38,13 +38,13 @@ impl BlockProducer {
         // TODO
         let tx_root = to_b58(Vec::with_capacity(32).as_slice());
         let unsigned_header: UnsignedBlockHeader = UnsignedBlockHeader {
-            parent_header_id: Some(parent_header.id()),
+            parent_header_id: Some(block_id(parent_header)),
             tx_root,
             timestamp,
             height: parent_header.height + 1,
-            slot: hit.slot,
-            partial_staker_certificate: Some(hit.certificate.clone()),
-            account: Some(hit.account),
+            slot: hit.slot.clone(),
+            partial_staker_certificate: Some(hit.clone().certificate),
+            account: Some(hit.account.clone()),
             settings: HashMap::new(),
         };
         let header = self.staking.sign_block(&unsigned_header);

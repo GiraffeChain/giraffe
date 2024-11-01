@@ -165,7 +165,7 @@ impl PeerState {
         if let Some(sender) = self
             .pending_requests
             .lock()
-            .map_err(|e| io::Error::other("Failed to handle response"))?
+            .map_err(|_| io::Error::other("Failed to handle response"))?
             .remove(request_id)
         {
             let _ = sender

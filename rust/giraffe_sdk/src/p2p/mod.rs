@@ -34,7 +34,7 @@ pub async fn start(
             )
             .map_err(|e| Error::Other(e.to_string()))?
             .with_quic()
-            .with_behaviour(|k| {
+            .with_behaviour(|_| {
                 request_response::cbor::Behaviour::<ReqMessage, ResMessage>::new(
                     [(
                         StreamProtocol::new("/blockchain/1"),

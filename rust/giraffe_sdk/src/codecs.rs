@@ -99,26 +99,6 @@ pub fn compute_transaction_id(transaction: &Transaction) -> TransactionId {
     }
 }
 
-pub trait TransactionExt {
-    fn id(&self) -> models::TransactionId;
-    fn embed_transaction_id(&mut self);
-    fn signable_bytes(&self) -> Vec<u8>;
-}
-
-impl TransactionExt for models::Transaction {
-    fn id(&self) -> models::TransactionId {
-        transaction_id(self)
-    }
-
-    fn embed_transaction_id(&mut self) {
-        embed_transaction_id(self)
-    }
-
-    fn signable_bytes(&self) -> Vec<u8> {
-        transaction_signable_bytes(self)
-    }
-}
-
 pub fn block_signable_bytes(header: &BlockHeader) -> Vec<u8> {
     merge_arrays(&[
         encode_block_id(&header.parent_header_id.as_ref().unwrap()),
@@ -168,26 +148,6 @@ pub fn compute_block_id(header: &BlockHeader) -> BlockId {
     let hash = hash256(&block_signable_bytes(header));
     BlockId {
         value: hash.to_base58(),
-    }
-}
-
-pub trait BlockHeaderExt {
-    fn id(&self) -> models::BlockId;
-    fn embed_block_id(&mut self);
-    fn signable_bytes(&self) -> Vec<u8>;
-}
-
-impl BlockHeaderExt for models::BlockHeader {
-    fn id(&self) -> models::BlockId {
-        block_id(self)
-    }
-
-    fn embed_block_id(&mut self) {
-        embed_block_id(self)
-    }
-
-    fn signable_bytes(&self) -> Vec<u8> {
-        block_signable_bytes(self)
     }
 }
 

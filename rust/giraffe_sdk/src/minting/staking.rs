@@ -9,7 +9,6 @@ use vrf::{
 };
 
 use crate::{
-    clock::Clock,
     codecs::{embed_block_id, to_b58, unsigned_block_signable_bytes},
     consensus::{
         eta_calculation::EtaCalculation, leader_election, protocol_settings::ProtocolSettings,
@@ -25,7 +24,6 @@ pub struct Staker {
     key_pair_operator: secp256k1::Keypair,
     eta_calculation: EtaCalculation,
     protocol_settings: ProtocolSettings,
-    clock: Clock,
     staker_tracker: StakerTracker,
 }
 

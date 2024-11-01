@@ -1,4 +1,3 @@
-use libp2p::core::connection;
 use num_bigint::BigInt;
 use num_rational::BigRational;
 use sha2::{Digest, Sha256};
@@ -9,8 +8,7 @@ use vrf::{
 };
 
 use crate::{
-    clock::Clock,
-    codecs::{block_signable_bytes, from_b58, from_b58_string, BlockHeaderExt},
+    codecs::{block_id, block_signable_bytes, from_b58, from_b58_string},
     data,
     models::{ActiveStaker, BlockHeader, BlockId, SlotId},
 };
@@ -20,10 +18,10 @@ use super::{
     rho::rho_from_b58, staker_tracker::StakerTracker,
 };
 
+// TODO: Slot/clock validation
 pub struct HeaderValidation {
     genesis_id: BlockId,
     protocol_settings: ProtocolSettings,
-    clock: Clock,
     eta_calculation: EtaCalculation,
     connection: Connection,
     staker_tracker: StakerTracker,
@@ -33,7 +31,6 @@ impl HeaderValidation {
     pub fn new(
         genesis_id: BlockId,
         protocol_settings: ProtocolSettings,
-        clock: Clock,
         eta_calculation: EtaCalculation,
         staker_tracker: StakerTracker,
         connection: Connection,
@@ -41,14 +38,13 @@ impl HeaderValidation {
         HeaderValidation {
             genesis_id,
             protocol_settings,
-            clock,
             eta_calculation,
             connection,
             staker_tracker,
         }
     }
     pub async fn validate(&self, header: &BlockHeader) -> Result<(), String> {
-        if header.id() == self.genesis_id {
+        if block_id(header) == self.genesis_id {
             return Ok(());
         }
         let parent = data::fetch_header(&self.connection, header.parent_header_id.clone().unwrap())
