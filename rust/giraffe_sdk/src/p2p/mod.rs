@@ -20,9 +20,9 @@ pub async fn start(
     known_peers: Vec<String>,
     blockchain: Arc<tokio::sync::Mutex<Blockchain>>,
 ) -> Result<(), Error> {
-    tracing_subscriber::fmt()
+    let _ = tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
-        .init();
+        .try_init();
 
     let swarm = Arc::new(tokio::sync::Mutex::new(
         libp2p::SwarmBuilder::with_new_identity()
@@ -70,50 +70,53 @@ pub async fn start(
 
     let peer_interfaces = Arc::new(tokio::sync::Mutex::new(HashMap::new()));
 
-    loop {
-        match swarm.clone().lock().await.select_next_some().await {
-            SwarmEvent::NewListenAddr { address, .. } => println!("Listening on {address:?}"),
-            SwarmEvent::ConnectionEstablished { peer_id, .. } => {
-                println!("Connected to {peer_id:?}");
-                let peer_state = PeerState::new(peer_id, swarm.clone(), blockchain.clone());
-                peer_interfaces
-                    .clone()
-                    .lock()
-                    .await
-                    .insert(peer_id, peer_state);
-            }
-            SwarmEvent::ConnectionClosed { peer_id, .. } => {
-                println!("Disconnected from {peer_id:?}");
-                peer_interfaces.clone().lock().await.remove(&peer_id);
-            }
-            SwarmEvent::Behaviour(event) => match event {
-                request_response::Event::Message { peer, message, .. } => {
-                    if let Some(peer_state) = peer_interfaces.clone().lock().await.get(&peer) {
-                        let r = match message {
-                            request_response::Message::Request {
-                                request, channel, ..
-                            } => peer_state.handle_request(request, channel).await,
-                            request_response::Message::Response {
-                                request_id,
-                                response,
-                            } => peer_state.handle_response(&request_id, response).await,
-                        };
-                        match r {
-                            Ok(_) => {}
-                            Err(e) => {
-                                let _ = swarm.clone().lock().await.disconnect_peer_id(peer);
-                                println!("Error: {e:?}");
-                            }
-                        }
-                    } else {
-                        println!("Received message from unknown peer {peer:?}");
-                    }
+    tokio::spawn(async move {
+        loop {
+            match swarm.clone().lock().await.select_next_some().await {
+                SwarmEvent::NewListenAddr { address, .. } => println!("Listening on {address:?}"),
+                SwarmEvent::ConnectionEstablished { peer_id, .. } => {
+                    println!("Connected to {peer_id:?}");
+                    let peer_state = PeerState::new(peer_id, swarm.clone(), blockchain.clone());
+                    peer_interfaces
+                        .clone()
+                        .lock()
+                        .await
+                        .insert(peer_id, peer_state);
                 }
+                SwarmEvent::ConnectionClosed { peer_id, .. } => {
+                    println!("Disconnected from {peer_id:?}");
+                    peer_interfaces.clone().lock().await.remove(&peer_id);
+                }
+                SwarmEvent::Behaviour(event) => match event {
+                    request_response::Event::Message { peer, message, .. } => {
+                        if let Some(peer_state) = peer_interfaces.clone().lock().await.get(&peer) {
+                            let r = match message {
+                                request_response::Message::Request {
+                                    request, channel, ..
+                                } => peer_state.handle_request(request, channel).await,
+                                request_response::Message::Response {
+                                    request_id,
+                                    response,
+                                } => peer_state.handle_response(&request_id, response).await,
+                            };
+                            match r {
+                                Ok(_) => {}
+                                Err(e) => {
+                                    let _ = swarm.clone().lock().await.disconnect_peer_id(peer);
+                                    println!("Error: {e:?}");
+                                }
+                            }
+                        } else {
+                            println!("Received message from unknown peer {peer:?}");
+                        }
+                    }
+                    _ => {}
+                },
                 _ => {}
-            },
-            _ => {}
+            }
         }
-    }
+    });
+    Ok(())
 }
 
 const DEFAULT_PORT: u32 = 2024;

@@ -1,7 +1,7 @@
 use std::vec;
 
 use crate::{
-    codecs::{hash256, script_to_address, to_b58, transaction_id},
+    codecs::{block_id, hash256, script_to_address, to_b58, transaction_id},
     genesis,
     models::{
         Address, FullBlock, Script, StakingRegistration, Transaction, TransactionOutput,
@@ -125,6 +125,10 @@ pub fn init(timestamp: u64, stakes: Vec<u64>) -> FullBlock {
     });
 
     let genesis = genesis::init(timestamp, transactions);
+    println!(
+        "Initialized testnet genesis id={:?}",
+        block_id(&genesis.header.clone().unwrap())
+    );
     genesis
 }
 

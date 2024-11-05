@@ -263,10 +263,12 @@ async fn boundary_of(
             block_tree::find_common_ancestor(connection, current, head.clone()).await;
         let common_ancestor_id = unapply_chain[0].clone();
         let common_ancestor_slot: u64 = connection
-            .call(move |conn| {
-                let mut stmt = conn.prepare("SELECT slot FROM headers WHERE block_id = ?")?;
-                let mut rows = stmt.query([common_ancestor_id.clone().value])?;
-                Ok(rows.next()?.unwrap().get(0)?)
+            .call(move |conn: &mut rusqlite::Connection| {
+                Ok(conn.query_row(
+                    "SELECT slot FROM headers WHERE block_id = ?",
+                    [common_ancestor_id.clone().value],
+                    |row| Ok(row.get(0)?),
+                )?)
             })
             .await
             .unwrap();
@@ -311,12 +313,12 @@ async fn boundary_of(
     let e = epoch.clone();
 
     let boundary = connection
-        .call(move |conn| {
-            let mut stmt = conn.prepare("SELECT block_id FROM epoch_boundaries WHERE epoch = ?")?;
-            let mut rows = stmt.query([e])?;
-            Ok(BlockId {
-                value: rows.next()?.unwrap().get(0)?,
-            })
+        .call(move |conn: &mut rusqlite::Connection| {
+            Ok(conn.query_row(
+                "SELECT block_id FROM epoch_boundaries WHERE epoch = ?",
+                [e],
+                |row| Ok(BlockId { value: row.get(0)? }),
+            )?)
         })
         .await
         .unwrap();

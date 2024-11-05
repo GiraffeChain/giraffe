@@ -49,6 +49,7 @@ impl Blockchain {
             .as_millis() as u64;
         let genesis: FullBlock = testnet::init(timestamp, vec![10000000]);
         let blockchain = Blockchain::new(genesis, db).await;
+        println!("Initialized blockchain");
         Ok(blockchain)
     }
 }

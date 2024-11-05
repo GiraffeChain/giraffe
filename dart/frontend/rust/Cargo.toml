@@ -1,0 +1,20 @@
+[package]
+name = "rust_lib_giraffe_frontend"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.5.0"
+giraffe_sdk = { path = "../../../rust/giraffe_sdk" }
+openssl = { version = "0.10.68", features = ["vendored"] }
+tokio = { version = "1.41.0", features = ["full"] }
+tokio-rusqlite = "0.6.0"
+rusqlite = { version = "0.32.1", features = ["bundled"] }
+rcgen = "0.13.1"
+prost-types = "0.13"
+
+[patch.crates-io]
+allo-isolate = { git = "https://github.com/vlad9486/allo-isolate.git", branch = "minor-fix" }

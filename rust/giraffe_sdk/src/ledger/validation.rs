@@ -73,7 +73,9 @@ impl LedgerValidation {
 
         asset_validation(&self.connection, transaction).await?;
 
-        super::vm::verify(transaction).await?;
+        if ! super::vm::verify(transaction).await? {
+            return Err("Transaction verification failed".to_string());
+        }
 
         Ok(())
     }

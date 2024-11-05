@@ -1,4 +1,3 @@
-import 'package:fpdart/fpdart.dart' hide State;
 import 'package:giraffe_frontend/utils.dart';
 import 'package:giraffe_frontend/widgets/giraffe_card.dart';
 import 'package:giraffe_frontend/widgets/giraffe_scaffold.dart';

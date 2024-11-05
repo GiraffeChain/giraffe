@@ -1,7 +1,6 @@
 import 'package:fast_base58/fast_base58.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fpdart/fpdart.dart' hide State;
 import 'package:giraffe_sdk/sdk.dart';
 import 'package:giraffe_frontend/providers/wallet.dart';
 import 'package:giraffe_frontend/utils.dart';
@@ -39,26 +38,25 @@ class TransferPage extends ConsumerWidget {
   }
 
   Widget uninitialized(BuildContext context) => GiraffeCard(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Giraffe Wallet has not been initialized.",
-                style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold))
-            .pad8,
-        const Text(
-                "Please navigate to the settings page to create a wallet and specify an API endpoint.",
-                style: TextStyle(fontSize: 16))
-            .pad8,
-        ElevatedButton.icon(
-                onPressed: () => context.push("/"),
-                label: const Text("Settings"),
-                icon: const Icon(Icons.settings))
-            .pad8,
-      ],
-    ),
-  );
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Giraffe Wallet has not been initialized.",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))
+                .pad8,
+            const Text(
+                    "Please navigate to the settings page to create a wallet and specify an API endpoint.",
+                    style: TextStyle(fontSize: 16))
+                .pad8,
+            ElevatedButton.icon(
+                    onPressed: () => context.push("/"),
+                    label: const Text("Settings"),
+                    icon: const Icon(Icons.settings))
+                .pad8,
+          ],
+        ),
+      );
 
   Widget body(BlockchainClient client, Wallet wallet) {
     try {
